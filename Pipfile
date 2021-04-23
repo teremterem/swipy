@@ -17,6 +17,9 @@ rasa = {extras = ["spacy"], version = "~=2.5.0"}
 rasa-sdk = "~=2.5.0"
 #
 rasa-x = "*"
+google-api-python-client = "*"
+google-auth-httplib2 = "*"
+google-auth-oauthlib = "*"
 
 [dev-packages]
 jupyterlab = "*"
