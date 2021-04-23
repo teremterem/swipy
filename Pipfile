@@ -19,6 +19,8 @@ rasa-sdk = "~=2.5.0"
 rasa-x = "*"
 
 [dev-packages]
+jupyterlab = "*"
+jupyterlab-kite = ">=2.0.2"
 
 [requires]
 python_version = "3.8"
