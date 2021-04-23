@@ -1,6 +1,7 @@
 .idea/
 models/
 credentials.yml
+.virtual_documents/
 
 ### VirtualEnv template
 # Virtualenv
