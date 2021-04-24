@@ -14,12 +14,14 @@
 
 # [START calendar_quickstart]
 from __future__ import print_function
+
 import datetime
 import os.path
-from googleapiclient.discovery import build
-from google_auth_oauthlib.flow import InstalledAppFlow
+
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import InstalledAppFlow
+from googleapiclient.discovery import build
 
 # If modifying these scopes, delete the file token.json.
 SCOPES = ['https://www.googleapis.com/auth/calendar.events']
@@ -68,7 +70,7 @@ def main():
             'timeZone': 'America/Los_Angeles',
         },
         'recurrence': [
-            'RRULE:FREQ=DAILY;COUNT=2'
+            'RRULE:FREQ=DAILY;COUNT=1'
         ],
         'attendees': [
             {'email': 'lpage@example.com'},
@@ -88,11 +90,11 @@ def main():
     print('Event created: %s' % (event.get('htmlLink')))
 
     # Call the Calendar API
-    now = datetime.datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
+    now = datetime.datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
     print('Getting the upcoming 10 events')
     events_result = service.events().list(calendarId='primary', timeMin=now,
-                                        maxResults=10, singleEvents=True,
-                                        orderBy='startTime').execute()
+                                          maxResults=1000, singleEvents=True,
+                                          orderBy='startTime').execute()
     events = events_result.get('items', [])
 
     if not events:
@@ -100,6 +102,7 @@ def main():
     for event in events:
         start = event['start'].get('dateTime', event['start'].get('date'))
         print(start, event['summary'])
+    print(len(events))
 
 
 if __name__ == '__main__':
