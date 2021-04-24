@@ -1,7 +1,12 @@
 .idea/
+.virtual_documents/
+
 models/
 credentials.yml
-.virtual_documents/
+
+jupyter-sandbox/credentials.json
+jupyter-sandbox/credentials_web.json
+jupyter-sandbox/token.json
 
 ### VirtualEnv template
 # Virtualenv
