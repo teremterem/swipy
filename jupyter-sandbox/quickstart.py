@@ -73,9 +73,7 @@ def main():
             'RRULE:FREQ=DAILY;COUNT=1'
         ],
         'attendees': [
-            {'email': 'lpage@example.com'},
-            {'email': 'sbrin@example.com'},
-            {'email': 'teremswell@gmail.com'},
+            {'email': 'toporok@gmail.com'},
         ],
         'reminders': {
             'useDefault': False,
