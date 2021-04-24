@@ -17,6 +17,7 @@ from __future__ import print_function
 
 import datetime
 import os.path
+from pprint import pprint
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -24,7 +25,10 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
 # If modifying these scopes, delete the file token.json.
-SCOPES = ['https://www.googleapis.com/auth/calendar.events']
+SCOPES = [
+    'https://www.googleapis.com/auth/calendar.events',
+    'https://www.googleapis.com/auth/gmail.send',
+]
 
 
 def main():
@@ -59,21 +63,37 @@ def main():
 
     event = {
         'summary': 'Google I/O 2015',
-        'location': '800 Howard St., San Francisco, CA 94103',
+        # 'location': '800 Howard St., San Francisco, CA 94103',
         'description': 'A chance to hear more about Google\'s developer products.',
         'start': {
-            'dateTime': '2021-04-24T01:00:00-07:00',
+            'dateTime': '2021-04-23T01:00:00-07:00',
             'timeZone': 'America/Los_Angeles',
         },
         'end': {
-            'dateTime': '2021-04-24T07:00:00-07:00',
+            'dateTime': '2021-04-23T07:00:00-07:00',
             'timeZone': 'America/Los_Angeles',
         },
-        'recurrence': [
-            'RRULE:FREQ=DAILY;COUNT=1'
-        ],
+        # 'recurrence': [
+        #     'RRULE:FREQ=DAILY;COUNT=1'
+        # ],
+        'conferenceData': {
+            # 'conferenceId': 'abbadwewf4',
+            'createRequest': {
+                'requestId': 'abbadwewf4',  # TODO oleksandr: generate new each time
+                'conferenceSolutionKey': {
+                    'type': 'hangoutsMeet',
+                },
+            },
+        },
         'attendees': [
-            {'email': 'toporok@gmail.com'},
+            {
+                'email': 'teremswell@gmail.com',
+                'responseStatus': 'accepted',
+            },
+            {
+                'email': 'toporok@gmail.com',
+                'responseStatus': 'accepted',
+            },
         ],
         'reminders': {
             'useDefault': False,
@@ -84,14 +104,21 @@ def main():
         },
     }
 
-    event = service.events().insert(calendarId='primary', body=event).execute()
+    event = service.events().insert(
+        calendarId='primary',
+        body=event,
+        conferenceDataVersion=1,
+        sendUpdates='all',
+        sendNotifications=True,
+    ).execute()
+    pprint(event)
     print('Event created: %s' % (event.get('htmlLink')))
 
     # Call the Calendar API
     now = datetime.datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
     print('Getting the upcoming 10 events')
     events_result = service.events().list(calendarId='primary', timeMin=now,
-                                          maxResults=1000, singleEvents=True,
+                                          maxResults=10, singleEvents=True,
                                           orderBy='startTime').execute()
     events = events_result.get('items', [])
 
