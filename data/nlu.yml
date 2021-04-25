@@ -33,6 +33,12 @@ nlu:
 
   - intent: affirm
     examples: |
+      - yes, please
+      - yes please
+      - yes pls
+      - let's try that
+      - ok, I'm in
+
       - yes
       - y
       - indeed
@@ -42,6 +48,15 @@ nlu:
 
   - intent: deny
     examples: |
+      - no, I'm ok
+      - no i'm ok
+      - no, it's ok
+      - no its ok
+      - no, I'm fine
+      - no i'm fine
+      - no, I'm fine, thanks
+      - no, thanks
+
       - no
       - n
       - never
@@ -49,6 +64,25 @@ nlu:
       - don't like that
       - no way
       - not really
+
+  - intent: how_it_works
+    examples: |
+      - how does it work?
+      - how?
+      - tell me more
+
+  - intent: dont_bother_me
+    examples: |
+      - don't bother me
+      - do not disturb me
+      - dont bother me with that
+
+  - intent: dont_bother_till
+    # TODO oleksandr: mark evening as entity ? for the sake of Duckling or purely for the sake of DIET ?
+    examples: |
+      - don't bother me till evening
+      - I'm busy till evening
+      - I am busy until evening
 
   - intent: mood_great
     examples: |
