@@ -38,6 +38,27 @@ responses:
         - I confirm with you and them that you are both ready.
         - I send both of you a video chat link.
 
+  utter_found_someone:
+    - text: |-
+        Hooray! I found someone who wants to have a video chat!
+
+
+        Are you ready?
+
+  utter_video_link:
+    - text: |-
+        Awesome! Here is the link to the video chat:
+
+
+        https://www.daily.co/
+
+  utter_let_them_go:
+    - text: |-
+        Ok, I will let that person go then😞
+
+
+        Do you want me to stop bothering you for awhile?
+
   utter_cheer_up:
     - text: "Here is something to cheer you up:"
       image: "https://i.imgur.com/nGF1K8f.jpg"
