@@ -21,6 +21,23 @@ responses:
 
         I can arrange a video chitchat with another human for you.
 
+  utter_yes_arrange:
+    - text: |-
+        Great! Let me find someone for you to chitchat with.
+
+
+        I will get back to you soon.
+
+  utter_help_lonely_person:
+    - text: |-
+        Ok, and if someone else felt lonely and wanted a video chitchat, would it be ok if I pinged you then?
+
+  utter_how_it_works:
+    - text: |-
+        - I find someone who also wants to chitchat.
+        - I confirm with you and them that you are both ready.
+        - I send both of you a video chat link.
+
   utter_cheer_up:
     - text: "Here is something to cheer you up:"
       image: "https://i.imgur.com/nGF1K8f.jpg"
