@@ -93,7 +93,7 @@ responses:
 
 
       If you change your mind, however, and decide that you want to have a chitchat with someone just let me know. I'll be here.
-      Hope to see you later. Bye!
+      Hope to see soon, bye!
   utter_iamabot:
   - text: I am a bot, powered by Rasa.
 actions:

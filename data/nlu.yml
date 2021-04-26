@@ -52,6 +52,8 @@ nlu:
     - sure
     - yes, I'm ready
     - please do
+    - yes i am
+    - yes, until the [evening](dietcls_time)
 - intent: deny
   examples: |
     - no, I'm ok
@@ -86,6 +88,7 @@ nlu:
     - I'm busy till [evening](dietcls_time)
     - I am busy until [evening](dietcls_time)
     - busy
+    - sry busy now
 - intent: mood_unhappy
   examples: |
     - my day was horrible
@@ -124,3 +127,6 @@ nlu:
     - small talk
     - let me talk to someone
     - let me talk to that person
+    - hey let me talk to smbdy
+    - I want chitchat
+    - yes, connect me
