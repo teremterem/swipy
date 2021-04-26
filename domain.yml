@@ -23,13 +23,13 @@ responses:
 
         I can arrange a video chitchat with another human for you.
 
-  utter_chitchat_offer_sad:
+  utter_sad_offer_chitchat:
     - text: |-
         Do you want to have a video chitchat with another human?
         If you're feeling down that may or may not cheer you up. It is still worth a try, though.
         Do you want me to arrange it for you?
 
-  utter_out_of_scope:
+  utter_out_of_scope_offer_chitchat:
     - text: |-
         I'm sorry, I cannot help you with that.
 
@@ -50,6 +50,9 @@ responses:
 
   utter_how_it_works:
     - text: |-
+        I can arrange a video chitchat with another human for you.
+        Here is how it works:
+
         - I find someone who also wants to chitchat.
         - I confirm with you and them that you are both ready.
         - I send both of you a video chat link.
@@ -68,16 +71,24 @@ responses:
 
         https://www.daily.co/
 
-  utter_let_them_go:
+  utter_let_them_go_stop_bothering:
     - text: |-
         Ok, I will let that person go then😞
 
 
         Do you want me to stop bothering you for awhile?
 
-  utter_goodbye:
+  utter_stop_bothering:
     - text: |-
         Do you want me to stop bothering you?
+
+  utter_hope_to_see_you_later:
+    - text: |-
+        Ok, I will not bother you.
+
+
+        If you change your mind, however, and decide that you want to have a chitchat with someone just let me know. I'll be here.
+        Hope to see you later. Bye!
 
   utter_iamabot:
     - text: |-
