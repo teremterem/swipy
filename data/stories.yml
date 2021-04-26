@@ -1,8 +1,15 @@
 version: "2.0"
-
 stories:
-
 - story: happy path
   steps:
   - intent: greet
   - action: utter_greet
+- story: Story from Conversation ID 8b3eb205fafe444593e85a772cf5efae
+  steps:
+  - intent: greet
+  - action: utter_greet
+  - intent: affirm
+  - action: utter_yes_arrange_chitchat
+  - action: utter_found_someone
+  - intent: affirm
+  - action: utter_video_link

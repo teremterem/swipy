@@ -45,6 +45,8 @@ nlu:
     - great
     - amazing
     - wonderful
+    - I would love that
+    - I am ready
 - intent: deny
   examples: |
     - no, I'm ok
