@@ -5,6 +5,7 @@ models/
 credentials.yml
 rasa.*
 events.*
+story_graph.dot
 
 jupyter-sandbox/credentials.json
 jupyter-sandbox/credentials_web.json

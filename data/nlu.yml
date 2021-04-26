@@ -15,6 +15,7 @@ nlu:
     - goodmorning
     - goodevening
     - good afternoon
+    - good [morning](dietcls_time)
 - intent: goodbye
   examples: |
     - good afternoon
@@ -47,6 +48,8 @@ nlu:
     - wonderful
     - I would love that
     - I am ready
+    - that's fine
+    - sure
 - intent: deny
   examples: |
     - no, I'm ok
@@ -64,6 +67,7 @@ nlu:
     - don't like that
     - no way
     - not really
+    - I don't feel lonely
 - intent: how_it_works
   examples: |
     - how does it work?

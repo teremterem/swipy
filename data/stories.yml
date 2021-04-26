@@ -9,3 +9,16 @@ stories:
   - action: utter_found_someone
   - intent: affirm
   - action: utter_video_link
+
+- story: interactive_story_1
+  steps:
+  - intent: greet
+    entities:
+    - dietcls_time: morning
+  - action: utter_greet
+  - intent: deny
+  - action: utter_help_lonely_person
+  - intent: affirm
+  - action: utter_found_someone
+  - intent: affirm
+  - action: utter_video_link

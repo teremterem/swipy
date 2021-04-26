@@ -1,31 +1,19 @@
 version: '2.0'
-config:
-  store_entities_as_slots: true
 session_config:
   session_expiration_time: 60
   carry_over_slots_to_new_session: true
 intents:
-- greet:
-    use_entities: true
-- goodbye:
-    use_entities: true
-- affirm:
-    use_entities: true
-- deny:
-    use_entities: true
-- how_it_works:
-    use_entities: true
-- dont_bother_me:
-    use_entities: true
-- mood_unhappy:
-    use_entities: true
-- bot_challenge:
-    use_entities: true
-- out_of_scope:
-    use_entities: true
+- affirm
+- greet
+- deny
+- goodbye
+- how_it_works
+- dont_bother_me
+- mood_unhappy
+- bot_challenge
+- out_of_scope
 entities:
 - dietcls_time
-slots: {}
 responses:
   utter_greet:
   - text: |-
@@ -94,6 +82,8 @@ responses:
       Hope to see you later. Bye!
   utter_iamabot:
   - text: I am a bot, powered by Rasa.
-actions: []
-forms: {}
-e2e_actions: []
+actions:
+- utter_found_someone
+- utter_greet
+- utter_help_lonely_person
+- utter_video_link
