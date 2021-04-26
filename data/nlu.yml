@@ -38,13 +38,16 @@ nlu:
       - yes pls
       - let's try that
       - ok, I'm in
-
       - yes
       - y
       - indeed
       - of course
       - that sounds good
       - correct
+      - perfect
+      - great
+      - amazing
+      - wonderful
 
   - intent: deny
     examples: |
@@ -56,7 +59,6 @@ nlu:
       - no i'm fine
       - no, I'm fine, thanks
       - no, thanks
-
       - no
       - n
       - never
@@ -76,21 +78,13 @@ nlu:
       - don't bother me
       - do not disturb me
       - dont bother me with that
-
-  - intent: dont_bother_till
-    # TODO oleksandr: mark evening as entity ? for the sake of Duckling or purely for the sake of DIET ?
-    examples: |
-      - don't bother me till evening
-      - I'm busy till evening
-      - I am busy until evening
+      - don't bother me till [evening](dietc_time)
+      - I'm busy till [evening](dietc_time)
+      - I am busy until [evening](dietc_time)
 
   - intent: mood_great
     examples: |
-      - perfect
-      - great
-      - amazing
       - feeling like a king
-      - wonderful
       - I am feeling very good
       - I am great
       - I am amazing
