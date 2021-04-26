@@ -84,12 +84,6 @@ nlu:
       - I'm busy till [evening](dietc_time)
       - I am busy until [evening](dietc_time)
 
-  - intent: out_of_scope
-    examples: |
-      - what's the weather like outside?
-      - weather
-      - can you do math?
-
   - intent: mood_unhappy
     examples: |
       - my day was horrible
@@ -111,3 +105,9 @@ nlu:
       - are you a human?
       - am I talking to a bot?
       - am I talking to a human?
+
+  - intent: out_of_scope
+    examples: |
+      - what's the weather like outside?
+      - weather
+      - can you do math?

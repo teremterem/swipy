@@ -5,9 +5,11 @@ intents:
   - goodbye
   - affirm
   - deny
-  - mood_great
+  - how_it_works
+  - dont_bother_me
   - mood_unhappy
   - bot_challenge
+  - out_of_scope
 
 responses:
   utter_greet:
