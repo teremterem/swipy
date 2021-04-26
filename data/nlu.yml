@@ -15,6 +15,7 @@ nlu:
     - goodmorning
     - goodevening
     - good [afternoon](dietcls_time)
+    - hey, what's up?
 - intent: goodbye
   examples: |
     - cu
@@ -48,6 +49,7 @@ nlu:
     - I am ready
     - that's fine
     - sure
+    - yes, I'm ready
 - intent: deny
   examples: |
     - no, I'm ok
@@ -107,3 +109,6 @@ nlu:
     - what's the weather like outside?
     - weather
     - can you do math?
+- intent: want_chitchat
+  examples: |
+    - I want you to connect me with somebody

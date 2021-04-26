@@ -10,7 +10,7 @@ stories:
   - intent: affirm
   - action: utter_video_link
 
-- story: user doesn't want chitchat but is ok if someone else needs it
+- story: user doesn't want to chitchat but is ok if someone else needs it
   steps:
   - intent: greet
   - action: utter_greet_offer_chitchat
