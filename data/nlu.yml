@@ -114,3 +114,8 @@ nlu:
 - intent: want_chitchat
   examples: |
     - I want you to connect me with somebody
+    - connect me with someone
+    - I want to have a chitchat
+    - chitchat
+    - I want to talk to somebody
+    - I want someone to talk to
