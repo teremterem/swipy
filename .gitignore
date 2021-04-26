@@ -3,6 +3,8 @@
 
 models/
 credentials.yml
+rasa.*
+events.*
 
 jupyter-sandbox/credentials.json
 jupyter-sandbox/credentials_web.json

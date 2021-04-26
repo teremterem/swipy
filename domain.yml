@@ -1,99 +1,99 @@
-version: "2.0"
-
+version: '2.0'
+config:
+  store_entities_as_slots: true
+session_config:
+  session_expiration_time: 60
+  carry_over_slots_to_new_session: true
 intents:
-  - greet
-  - goodbye
-  - affirm
-  - deny
-  - how_it_works
-  - dont_bother_me
-  - mood_unhappy
-  - bot_challenge
-  - out_of_scope
-
+- greet:
+    use_entities: true
+- goodbye:
+    use_entities: true
+- affirm:
+    use_entities: true
+- deny:
+    use_entities: true
+- how_it_works:
+    use_entities: true
+- dont_bother_me:
+    use_entities: true
+- mood_unhappy:
+    use_entities: true
+- bot_challenge:
+    use_entities: true
+- out_of_scope:
+    use_entities: true
+entities:
+- dietcls_time
+slots: {}
 responses:
   utter_greet:
-    - text: |-
-        Hi, my name is Swipy🙃
+  - text: |-
+      Hi, my name is Swipy🙃
 
 
-        Do you feel lonely or isolated?
-        Or maybe you just want to talk to a new person?
+      Do you feel lonely or isolated?
+      Or maybe you just want to talk to a new person?
 
 
-        I can arrange a video chitchat with another human for you.
-
+      I can arrange a video chitchat with another human for you.
   utter_sad_offer_chitchat:
-    - text: |-
-        Do you want to have a video chitchat with another human?
-        If you're feeling down that may or may not cheer you up. It is still worth a try, though.
-        Do you want me to arrange it for you?
-
+  - text: |-
+      Do you want to have a video chitchat with another human?
+      If you're feeling down that may or may not cheer you up. It is still worth a try, though.
+      Do you want me to arrange it for you?
   utter_out_of_scope_offer_chitchat:
-    - text: |-
-        I'm sorry, I cannot help you with that.
+  - text: |-
+      I'm sorry, I cannot help you with that.
 
 
-        I can arrange a video chitchat with another human for you, however.
-        Do you want me to do that for you?
-
+      I can arrange a video chitchat with another human for you, however.
+      Do you want me to do that for you?
   utter_yes_arrange_chitchat:
-    - text: |-
-        Great! Let me find someone for you to chitchat with.
+  - text: |-
+      Great! Let me find someone for you to chitchat with.
 
 
-        I will get back to you soon.
-
+      I will get back to you soon.
   utter_help_lonely_person:
-    - text: |-
-        Ok, and if someone else felt lonely and wanted a video chitchat, would it be ok if I pinged you then?
-
+  - text: Ok, and if someone else felt lonely and wanted a video chitchat, would it be ok if I pinged you then?
   utter_how_it_works:
-    - text: |-
-        I can arrange a video chitchat with another human for you.
-        Here is how it works:
+  - text: |-
+      I can arrange a video chitchat with another human for you.
+      Here is how it works:
 
-        - I find someone who also wants to chitchat.
-        - I confirm with you and them that you are both ready.
-        - I send both of you a video chat link.
-
+      - I find someone who also wants to chitchat.
+      - I confirm with you and them that you are both ready.
+      - I send both of you a video chat link.
   utter_found_someone:
-    - text: |-
-        Hooray! I found someone who wants to have a video chat!
+  - text: |-
+      Hooray! I found someone who wants to have a video chat!
 
 
-        Are you ready?
-
+      Are you ready?
   utter_video_link:
-    - text: |-
-        Awesome! Here is the link to the video chat:
+  - text: |-
+      Awesome! Here is the link to the video chat:
 
 
-        https://www.daily.co/
-
+      https://www.daily.co/
   utter_let_them_go_stop_bothering:
-    - text: |-
-        Ok, I will let that person go then😞
+  - text: |-
+      Ok, I will let that person go then😞
 
 
-        Do you want me to stop bothering you for awhile?
-
+      Do you want me to stop bothering you for awhile?
   utter_stop_bothering:
-    - text: |-
-        Do you want me to stop bothering you?
-
+  - text: Do you want me to stop bothering you?
   utter_hope_to_see_you_later:
-    - text: |-
-        Ok, I will not bother you.
+  - text: |-
+      Ok, I will not bother you.
 
 
-        If you change your mind, however, and decide that you want to have a chitchat with someone just let me know. I'll be here.
-        Hope to see you later. Bye!
-
+      If you change your mind, however, and decide that you want to have a chitchat with someone just let me know. I'll be here.
+      Hope to see you later. Bye!
   utter_iamabot:
-    - text: |-
-        I am a bot, powered by Rasa.
-
-session_config:
-  session_expiration_time: 60 # TODO oleksandr: is it possible to keep session forever? alternatively, make it very long
-  carry_over_slots_to_new_session: true
+  - text: I am a bot, powered by Rasa.
+actions: []
+forms: {}
+e2e_actions: []
