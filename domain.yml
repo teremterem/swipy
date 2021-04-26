@@ -21,7 +21,21 @@ responses:
 
         I can arrange a video chitchat with another human for you.
 
-  utter_yes_arrange:
+  utter_chitchat_offer_sad:
+    - text: |-
+        Do you want to have a video chitchat with another human?
+        If you're feeling down that may or may not cheer you up. It is still worth a try, though.
+        Do you want me to arrange it for you?
+
+  utter_out_of_scope:
+    - text: |-
+        I'm sorry, I cannot help you with that.
+
+
+        I can arrange a video chitchat with another human for you, however.
+        Do you want me to do that for you?
+
+  utter_yes_arrange_chitchat:
     - text: |-
         Great! Let me find someone for you to chitchat with.
 
@@ -59,21 +73,13 @@ responses:
 
         Do you want me to stop bothering you for awhile?
 
-  utter_cheer_up:
-    - text: "Here is something to cheer you up:"
-      image: "https://i.imgur.com/nGF1K8f.jpg"
-
-  utter_did_that_help:
-    - text: "Did that help you?"
-
-  utter_happy:
-    - text: "Great, carry on!"
-
   utter_goodbye:
-    - text: "Bye"
+    - text: |-
+        Do you want me to stop bothering you?
 
   utter_iamabot:
-    - text: "I am a bot, powered by Rasa."
+    - text: |-
+        I am a bot, powered by Rasa.
 
 session_config:
   session_expiration_time: 60 # TODO oleksandr: is it possible to keep session forever? alternatively, make it very long

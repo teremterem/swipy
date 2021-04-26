@@ -72,6 +72,8 @@ nlu:
       - how does it work?
       - how?
       - tell me more
+      - how will you do that?
+      - what do you do, specifically?
 
   - intent: dont_bother_me
     examples: |
