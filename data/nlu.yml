@@ -72,6 +72,7 @@ nlu:
     - no way
     - not really
     - I don't feel lonely
+    - no thanks
 - intent: how_it_works
   examples: |
     - how does it work?
@@ -79,6 +80,7 @@ nlu:
     - tell me more
     - how will you do that?
     - what do you do, specifically?
+    - great, and what can you do?
 - intent: dont_bother_me
   examples: |
     - don't bother me
@@ -109,6 +111,7 @@ nlu:
     - are you a human?
     - am I talking to a bot?
     - am I talking to a human?
+    - are you a real person?
 - intent: out_of_scope
   examples: |
     - what's the weather like outside?

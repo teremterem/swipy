@@ -45,3 +45,13 @@ stories:
   - action: utter_let_them_go_stop_bothering
   - intent: affirm
   - action: utter_hope_to_see_you_later
+- story: user challenged the bot, then asked how it works, but then denied any possibility of chitchat
+  steps:
+  - intent: bot_challenge
+  - action: utter_iamabot
+  - intent: how_it_works
+  - action: utter_how_it_works
+  - intent: deny
+  - action: utter_help_lonely_person
+  - intent: deny
+  - action: utter_hope_to_see_you_later
