@@ -1,113 +1,104 @@
 version: "2.0"
-
 nlu:
-  - intent: greet
-    examples: |
-      - hey
-      - hello
-      - hi
-      - hello there
-      - good morning
-      - good evening
-      - moin
-      - hey there
-      - let's go
-      - hey dude
-      - goodmorning
-      - goodevening
-      - good afternoon
-
-  - intent: goodbye
-    examples: |
-      - good afternoon
-      - cu
-      - good by
-      - cee you later
-      - good night
-      - bye
-      - goodbye
-      - have a nice day
-      - see you around
-      - bye bye
-      - see you later
-
-  - intent: affirm
-    examples: |
-      - yes, please
-      - yes please
-      - yes pls
-      - let's try that
-      - ok, I'm in
-      - yes
-      - y
-      - indeed
-      - of course
-      - that sounds good
-      - correct
-      - perfect
-      - great
-      - amazing
-      - wonderful
-
-  - intent: deny
-    examples: |
-      - no, I'm ok
-      - no i'm ok
-      - no, it's ok
-      - no its ok
-      - no, I'm fine
-      - no i'm fine
-      - no, I'm fine, thanks
-      - no, thanks
-      - no
-      - n
-      - never
-      - I don't think so
-      - don't like that
-      - no way
-      - not really
-
-  - intent: how_it_works
-    examples: |
-      - how does it work?
-      - how?
-      - tell me more
-      - how will you do that?
-      - what do you do, specifically?
-
-  - intent: dont_bother_me
-    examples: |
-      - don't bother me
-      - do not disturb me
-      - dont bother me with that
-      - don't bother me till [evening](dietcls_time)
-      - I'm busy till [evening](dietcls_time)
-      - I am busy until [evening](dietcls_time)
-
-  - intent: mood_unhappy
-    examples: |
-      - my day was horrible
-      - I am sad
-      - I don't feel very well
-      - I am disappointed
-      - super sad
-      - I'm so sad
-      - sad
-      - very sad
-      - unhappy
-      - extremly sad
-      - so saad
-      - so sad
-
-  - intent: bot_challenge
-    examples: |
-      - are you a bot?
-      - are you a human?
-      - am I talking to a bot?
-      - am I talking to a human?
-
-  - intent: out_of_scope
-    examples: |
-      - what's the weather like outside?
-      - weather
-      - can you do math?
+- intent: greet
+  examples: |
+    - hey
+    - hello
+    - hi
+    - hello there
+    - good morning
+    - good evening
+    - moin
+    - hey there
+    - let's go
+    - hey dude
+    - goodmorning
+    - goodevening
+    - good afternoon
+- intent: goodbye
+  examples: |
+    - good afternoon
+    - cu
+    - good by
+    - cee you later
+    - good night
+    - bye
+    - goodbye
+    - have a nice day
+    - see you around
+    - bye bye
+    - see you later
+- intent: affirm
+  examples: |
+    - yes, please
+    - yes please
+    - yes pls
+    - let's try that
+    - ok, I'm in
+    - yes
+    - y
+    - indeed
+    - of course
+    - that sounds good
+    - correct
+    - perfect
+    - great
+    - amazing
+    - wonderful
+- intent: deny
+  examples: |
+    - no, I'm ok
+    - no i'm ok
+    - no, it's ok
+    - no its ok
+    - no, I'm fine
+    - no i'm fine
+    - no, I'm fine, thanks
+    - no, thanks
+    - no
+    - n
+    - never
+    - I don't think so
+    - don't like that
+    - no way
+    - not really
+- intent: how_it_works
+  examples: |
+    - how does it work?
+    - how?
+    - tell me more
+    - how will you do that?
+    - what do you do, specifically?
+- intent: dont_bother_me
+  examples: |
+    - don't bother me
+    - do not disturb me
+    - dont bother me with that
+    - don't bother me till [evening](dietcls_time)
+    - I'm busy till [evening](dietcls_time)
+    - I am busy until [evening](dietcls_time)
+- intent: mood_unhappy
+  examples: |
+    - my day was horrible
+    - I am sad
+    - I don't feel very well
+    - I am disappointed
+    - super sad
+    - I'm so sad
+    - sad
+    - very sad
+    - unhappy
+    - extremly sad
+    - so saad
+    - so sad
+- intent: bot_challenge
+  examples: |
+    - are you a bot?
+    - are you a human?
+    - am I talking to a bot?
+    - am I talking to a human?
+- intent: out_of_scope
+  examples: |
+    - what's the weather like outside?
+    - weather
+    - can you do math?
