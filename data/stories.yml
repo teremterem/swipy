@@ -5,7 +5,7 @@ stories:
   - intent: greet
   - action: utter_greet_offer_chitchat
   - intent: affirm OR want_chitchat
-  - action: utter_great_arranging_chitchat
+  - action: utter_ok_arranging_chitchat
   - action: utter_found_someone
   - intent: affirm OR want_chitchat
   - action: utter_video_link
