@@ -3,19 +3,17 @@ stories:
 - story: happy path
   steps:
   - intent: greet
-  - action: utter_greet
+  - action: utter_greet_offer_chitchat
   - intent: affirm
   - action: utter_yes_arrange_chitchat
   - action: utter_found_someone
   - intent: affirm
   - action: utter_video_link
 
-- story: interactive_story_1
+- story: user doesn't want chitchat but is ok if someone else needs it
   steps:
   - intent: greet
-    entities:
-    - dietcls_time: morning
-  - action: utter_greet
+  - action: utter_greet_offer_chitchat
   - intent: deny
   - action: utter_help_lonely_person
   - intent: affirm

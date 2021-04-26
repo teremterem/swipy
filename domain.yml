@@ -15,7 +15,7 @@ intents:
 entities:
 - dietcls_time
 responses:
-  utter_greet:
+  utter_greet_offer_chitchat:
   - text: |-
       Hi, my name is Swipy🙃
 
@@ -84,6 +84,6 @@ responses:
   - text: I am a bot, powered by Rasa.
 actions:
 - utter_found_someone
-- utter_greet
+- utter_greet_offer_chitchat
 - utter_help_lonely_person
 - utter_video_link

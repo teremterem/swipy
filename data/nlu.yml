@@ -6,23 +6,21 @@ nlu:
     - hello
     - hi
     - hello there
-    - good morning
-    - good evening
+    - good [morning](dietcls_time)
+    - good [evening](dietcls_time)
     - moin
     - hey there
     - let's go
     - hey dude
     - goodmorning
     - goodevening
-    - good afternoon
-    - good [morning](dietcls_time)
+    - good [afternoon](dietcls_time)
 - intent: goodbye
   examples: |
-    - good afternoon
     - cu
     - good by
     - cee you later
-    - good night
+    - good [night](dietcls_time)
     - bye
     - goodbye
     - have a nice day
@@ -83,6 +81,7 @@ nlu:
     - don't bother me till [evening](dietcls_time)
     - I'm busy till [evening](dietcls_time)
     - I am busy until [evening](dietcls_time)
+    - busy
 - intent: mood_unhappy
   examples: |
     - my day was horrible
