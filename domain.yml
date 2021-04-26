@@ -23,6 +23,8 @@ intents:
     use_entities: true
 - out_of_scope:
     use_entities: true
+- want_chitchat:
+    use_entities: true
 entities:
 - dietcls_time
 slots: {}
