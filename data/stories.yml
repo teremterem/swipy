@@ -45,7 +45,7 @@ stories:
   - intent: affirm
   - action: utter_ok_arranging_chitchat
   - action: utter_found_someone
-- story: user doesn't want to chitchat but is ok if someone else needs it
+- story: user greeted but refused to chitchat chitchat
   steps:
   - intent: greet
   - action: utter_greet_offer_chitchat

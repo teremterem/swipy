@@ -2,7 +2,12 @@ version: "2.0"
 
 rules:
 
-  - rule: Say 'I am a bot' anytime the user challenges
+  - rule: user asked the bot if the bot is a bot
     steps:
       - intent: bot_challenge
       - action: utter_iamabot
+
+  - rule: user asked not to bother them
+    steps:
+      - intent: dont_bother_me
+      - action: utter_hope_to_see_you_later
