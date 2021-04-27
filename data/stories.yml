@@ -42,11 +42,14 @@ stories:
   - action: utter_greet_offer_chitchat
   - intent: deny
   - action: utter_help_lonely_person
-- story: user challenged the bot, then asked how it works, but then denied any possibility of chitchat
+- story: bot explained how it worked and user agreed to try it out
   steps:
-  - intent: bot_challenge
-  - action: utter_iamabot
-  - intent: how_it_works
+  - action: utter_how_it_works
+  - intent: agree
+  - action: utter_ok_arranging_chitchat
+  - action: utter_found_someone
+- story: bot explained how it worked but user denied to try it out
+  steps:
   - action: utter_how_it_works
   - intent: deny
   - action: utter_help_lonely_person
