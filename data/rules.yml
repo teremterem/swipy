@@ -7,6 +7,11 @@ rules:
       - intent: bot_challenge
       - action: utter_iamabot
 
+  - rule: user asked how the bot works
+    steps:
+      - intent: how_it_works
+      - action: utter_how_it_works
+
   - rule: user asked not to bother them
     steps:
       - intent: dont_bother_me
