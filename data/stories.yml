@@ -12,14 +12,7 @@ stories:
   - action: utter_found_someone
   - intent: deny
   - action: utter_let_them_go_stop_bothering
-  - or:
-    - intent: affirm
-    - intent: dont_bother_me
-  - action: utter_hope_to_see_you_later
-- story: bot found someone but user asked to not bother them
-  steps:
-  - action: utter_found_someone
-  - intent: dont_bother_me
+  - intent: affirm
   - action: utter_hope_to_see_you_later
 - story: bot asked to help lonely person and user agreed
   steps:
@@ -29,9 +22,7 @@ stories:
 - story: bot asked to help lonely person but user denied
   steps:
   - action: utter_help_lonely_person
-  - or:
-    - intent: deny
-    - intent: dont_bother_me
+  - intent: deny
   - action: utter_hope_to_see_you_later
 - story: user asked for chitchat directly
   steps:
