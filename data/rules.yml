@@ -1,18 +1,21 @@
 version: "2.0"
-
 rules:
-
-  - rule: user asked the bot if the bot is a bot
-    steps:
-      - intent: bot_challenge
-      - action: utter_iamabot
-
-  - rule: user asked how the bot works
-    steps:
-      - intent: how_it_works
-      - action: utter_how_it_works
-
-  - rule: user asked not to bother them
-    steps:
-      - intent: dont_bother_me
-      - action: utter_hope_to_see_you_later
+- rule: user asked the bot if the bot is a bot
+  steps:
+  - intent: bot_challenge
+  - action: utter_iamabot
+- rule: user asked how the bot works
+  steps:
+  - intent: how_it_works
+  - action: utter_how_it_works
+- rule: user asked not to bother them
+  steps:
+  - intent: dont_bother_me
+  - action: utter_hope_to_see_you_later
+- rule: bot found someone and user aggreed to join chitchat
+  steps:
+  - action: utter_found_someone
+  - or:
+    - intent: affirm
+    - intent: want_chitchat
+  - action: utter_video_link
