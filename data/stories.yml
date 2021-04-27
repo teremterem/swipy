@@ -33,13 +33,16 @@ stories:
     - intent: deny
     - intent: dont_bother_me
   - action: utter_hope_to_see_you_later
+- story: user asked for chitchat directly
+  steps:
+  - intent: want_chitchat
+  - action: utter_ok_arranging_chitchat
+  - action: utter_found_someone
 - story: user greeted and then aggreed for chitchat
   steps:
   - intent: greet
   - action: utter_greet_offer_chitchat
-  - or:
-    - intent: affirm
-    - intent: want_chitchat
+  - intent: affirm
   - action: utter_ok_arranging_chitchat
   - action: utter_found_someone
 - story: user doesn't want to chitchat but is ok if someone else needs it
@@ -48,20 +51,6 @@ stories:
   - action: utter_greet_offer_chitchat
   - intent: deny
   - action: utter_help_lonely_person
-- story: user wanted chitchat right off the bat
-  steps:
-  - intent: want_chitchat
-  - action: utter_ok_arranging_chitchat
-  - action: utter_found_someone
-- story: user greeted and then aggreed for chitchat but then declined after person was found
-  steps:
-  - intent: greet
-  - action: utter_greet_offer_chitchat
-  - or:
-    - intent: affirm
-    - intent: want_chitchat
-  - action: utter_ok_arranging_chitchat
-  - action: utter_found_someone
 - story: user challenged the bot, then asked how it works, but then denied any possibility of chitchat
   steps:
   - intent: bot_challenge
