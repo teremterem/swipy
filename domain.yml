@@ -51,6 +51,8 @@ responses:
 
       I can arrange a video chitchat with another human for you, however.
       Do you want me to do that for you?
+  utter_out_of_scope:
+  - text: I'm sorry, I cannot help you with that.
   utter_ok_arranging_chitchat:
   - text: |-
       Great! Let me find someone for you to chitchat with.
@@ -63,6 +65,7 @@ responses:
   - text: |-
       I can arrange a video chitchat with another human for you.
       Here is how it works:
+
 
       - I find someone who also wants to chitchat.
       - I confirm with you and them that you are both ready.
