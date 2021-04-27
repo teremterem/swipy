@@ -54,14 +54,22 @@ stories:
   - action: utter_greet_offer_chitchat
   - intent: deny
   - action: utter_help_lonely_person
-- story: bot explained how it worked and user agreed to try it out
+- story: bot explained how it worked (or was answering to a sad user) and user agreed to try it out
   steps:
-  - action: utter_how_it_works
+  - or:
+    - action: utter_how_it_works
+    - action: utter_sad_offer_chitchat
   - intent: agree
   - action: utter_ok_arranging_chitchat
   - action: utter_found_someone
-- story: bot explained how it worked but user denied to try it out
+- story: bot explained how it worked (or was answering to a sad user) but user denied to try it out
   steps:
-  - action: utter_how_it_works
+  - or:
+    - action: utter_how_it_works
+    - action: utter_sad_offer_chitchat
   - intent: deny
   - action: utter_help_lonely_person
+- story: user says that they are sad
+  steps:
+  - intent: mood_unhappy
+  - action: utter_sad_offer_chitchat
