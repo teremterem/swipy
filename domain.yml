@@ -25,6 +25,8 @@ intents:
     use_entities: true
 - want_chitchat:
     use_entities: true
+- agree:
+    use_entities: true
 entities:
 - dietcls_time
 slots: {}
