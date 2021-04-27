@@ -50,7 +50,7 @@ responses:
 
 
       I can arrange a video chitchat with another human for you, however.
-      Do you want me to do that for you?
+      Do you want me to do that?
   utter_out_of_scope:
   - text: I'm sorry, I cannot help you with that.
   utter_ok_arranging_chitchat:
@@ -99,10 +99,6 @@ responses:
       Hope to see soon, bye!
   utter_iamabot:
   - text: I am a bot, powered by Rasa.
-actions:
-- utter_found_someone
-- utter_greet_offer_chitchat
-- utter_help_lonely_person
-- utter_video_link
+actions: []
 forms: {}
 e2e_actions: []
