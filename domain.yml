@@ -34,12 +34,10 @@ responses:
   utter_greet_offer_chitchat:
   - text: |-
       Hi, my name is Swipy🙃
-
-
+       
       Do you feel lonely or isolated?
       Or maybe you just want to talk to a new person?
-
-
+       
       I can arrange a video chitchat with another human for you.
   utter_sad_offer_chitchat:
   - text: |-
@@ -49,8 +47,7 @@ responses:
   utter_out_of_scope_offer_chitchat:
   - text: |-
       I'm sorry, I cannot help you with that.
-
-
+       
       I can arrange a video chitchat with another human for you, however.
       Do you want me to do that?
   utter_out_of_scope:
@@ -58,8 +55,7 @@ responses:
   utter_ok_arranging_chitchat:
   - text: |-
       Great! Let me find someone for you to chitchat with.
-
-
+       
       I will get back to you soon.
   utter_help_lonely_person:
   - text: Ok, and if someone else felt lonely and wanted a video chitchat, would it be ok if I pinged you then?
@@ -67,36 +63,31 @@ responses:
   - text: |-
       I can arrange a video chitchat with another human for you.
       Here is how it works:
-
-
+       
       - I find someone who also wants to chitchat.
       - I confirm with you and them that you are both ready.
       - I send both of you a video chat link.
   utter_found_someone:
   - text: |-
       Hooray! I found someone who wants to have a video chat!
-
-
+       
       Are you ready?
   utter_video_link:
   - text: |-
       Awesome! Here is the link to the video chat:
-
-
+       
       https://www.daily.co/
   utter_let_them_go_stop_bothering:
   - text: |-
       Ok, I will let that person go then😞
-
-
+       
       Do you want me to stop bothering you for awhile?
   utter_stop_bothering:
   - text: Do you want me to stop bothering you?
   utter_hope_to_see_you_later:
   - text: |-
       Ok, I will not bother you.
-
-
+       
       If you change your mind, however, and decide that you want to have a chitchat with someone just let me know. I'll be here.
       Hope to see soon, bye!
   utter_iamabot:
