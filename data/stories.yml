@@ -30,6 +30,7 @@ stories:
   steps:
   - action: utter_help_lonely_person
   - intent: affirm
+  - action: action_hello_world
   - action: utter_found_someone
 - story: bot asked to help lonely person but user denied
   steps:
@@ -40,6 +41,7 @@ stories:
   steps:
   - intent: want_chitchat
   - action: utter_ok_arranging_chitchat
+  - action: action_hello_world
   - action: utter_found_someone
 - story: user greeted and then aggreed for chitchat
   steps:
@@ -47,6 +49,7 @@ stories:
   - action: utter_greet_offer_chitchat
   - intent: affirm
   - action: utter_ok_arranging_chitchat
+  - action: action_hello_world
   - action: utter_found_someone
 - story: user greeted but refused to chitchat chitchat
   steps:
@@ -59,6 +62,7 @@ stories:
   - action: utter_how_it_works
   - intent: agree
   - action: utter_ok_arranging_chitchat
+  - action: action_hello_world
   - action: utter_found_someone
 - story: bot explained how it worked but user denied to try it out
   steps:
@@ -70,6 +74,7 @@ stories:
   - action: utter_sad_offer_chitchat
   - intent: agree
   - action: utter_ok_arranging_chitchat
+  - action: action_hello_world
   - action: utter_found_someone
 - story: bot was answering to a sad user but user denied to try it out
   steps:
