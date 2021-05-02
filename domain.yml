@@ -27,7 +27,8 @@ intents:
     use_entities: true
 - agree:
     use_entities: true
-- EXTERNAL_hello_world
+- EXTERNAL_hello_world:
+    use_entities: true
 entities:
 - dietcls_time
 slots: {}
