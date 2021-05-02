@@ -12,6 +12,6 @@ class ActionHelloWorld(Action):
     def run(self, dispatcher: CollectingDispatcher,
             tracker: Tracker,
             domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
-        dispatcher.utter_message(text="Hello World!")
+        dispatcher.utter_message(text=str(tracker.sender_id))
 
         return []
