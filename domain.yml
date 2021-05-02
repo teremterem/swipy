@@ -93,6 +93,6 @@ responses:
   utter_iamabot:
   - text: I am a bot, powered by Rasa.
 actions:
-  - action_hello_world
+- action_hello_world
 forms: {}
 e2e_actions: []
