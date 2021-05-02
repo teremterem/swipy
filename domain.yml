@@ -92,6 +92,7 @@ responses:
       Hope to see soon, bye!
   utter_iamabot:
   - text: I am a bot, powered by Rasa.
-actions: []
+actions:
+  - action_hello_world
 forms: {}
 e2e_actions: []
