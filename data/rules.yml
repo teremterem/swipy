@@ -19,3 +19,7 @@ rules:
     - intent: affirm
     - intent: want_chitchat
   - action: utter_video_link
+- rule: EXTERNAL_hello_world
+  steps:
+  - intent: EXTERNAL_hello_world
+  - action: action_hello_world
