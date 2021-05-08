@@ -9,20 +9,19 @@ verify_ssl = true
 name = "rasa"
 
 [packages]
+# packages that the action server depends on should go here
+# TODO oleksandr: what if I also need to customize Rasa Core, thought ?
+
+[dev-packages]
 # https://github.com/RasaHQ/rasa/issues/7124#issuecomment-822225557
 regex = "~=2020.9.27"
 sanic = "<19.12.3"
 scikit-learn = "<0.24.0"
-rasa = { extras = ["spacy"], version = "~=2.5.0" }
+#rasa = { extras = ["spacy"], version = "~=2.5.0" }
+rasa = "~=2.5.0"
 rasa-sdk = "~=2.5.0"
 #
 rasa-x = "*"
-#google-api-python-client = "*"
-#google-auth-httplib2 = "*"
-#google-auth-oauthlib = "*"
-#google-auth = "*"
-
-[dev-packages]
 jupyterlab = "*"
 jupyterlab-kite = ">=2.0.2"
 
