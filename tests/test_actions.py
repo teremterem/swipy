@@ -15,6 +15,6 @@ def test_action_create_room(
     assert action.name() == 'action_create_room'
 
     actual_events = action.run(dispatcher, tracker, domain)
-    # assert actual_events == expected_events
+    assert actual_events == []
 
     assert dispatcher.messages[0]['text'] == 'unit_test_user'
