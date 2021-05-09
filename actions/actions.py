@@ -4,10 +4,10 @@ from rasa_sdk import Action, Tracker
 from rasa_sdk.executor import CollectingDispatcher
 
 
-class ActionHelloWorld(Action):
+class ActionCreateRoom(Action):
 
     def name(self) -> Text:
-        return "action_hello_world"
+        return 'action_create_room'
 
     def run(self, dispatcher: CollectingDispatcher,
             tracker: Tracker,

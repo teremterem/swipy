@@ -1,5 +1,3 @@
-from pprint import pprint
-
 from rasa_sdk import Tracker
 from rasa_sdk.executor import CollectingDispatcher
 from rasa_sdk.types import DomainDict
@@ -7,12 +5,16 @@ from rasa_sdk.types import DomainDict
 from actions import actions
 
 
-def test_action_hello_world(
+def test_action_create_room(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: DomainDict,
 ):
-    action = actions.ActionHelloWorld()
+    action = actions.ActionCreateRoom()
+
+    assert action.name() == 'action_create_room'
+
     actual_events = action.run(dispatcher, tracker, domain)
-    pprint(actual_events)
     # assert actual_events == expected_events
+
+    assert dispatcher.messages[0]['text'] == 'unit_test_user'
