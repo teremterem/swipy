@@ -11,7 +11,7 @@ name = "rasa"
 [packages]
 # packages that the action server depends on should go here
 # TODO oleksandr: what if I also need to customize Rasa Core, thought ?
-requests = "*"
+aiohttp = "*"
 
 [dev-packages]
 # https://github.com/RasaHQ/rasa/issues/7124#issuecomment-822225557
