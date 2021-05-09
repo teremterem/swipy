@@ -7,7 +7,7 @@ from rasa_sdk.types import DomainDict
 from actions import actions
 
 
-def test_action_set_onboarding(
+def test_action_hello_world(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: DomainDict,
