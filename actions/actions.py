@@ -12,6 +12,7 @@ class ActionCreateRoom(Action):
     def run(self, dispatcher: CollectingDispatcher,
             tracker: Tracker,
             domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
-        dispatcher.utter_message(text=str(tracker.sender_id))
+        # dispatcher.utter_message(text=str(tracker.sender_id))
+        dispatcher.utter_message(text='linklinklink')
 
         return []

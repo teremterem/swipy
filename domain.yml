@@ -5,7 +5,8 @@ session_config:
   session_expiration_time: 60
   carry_over_slots_to_new_session: true
 intents:
-- start
+- start:
+    use_entities: true
 - affirm:
     use_entities: true
 - greet:
@@ -28,8 +29,6 @@ intents:
     use_entities: true
 - agree:
     use_entities: true
-#- EXTERNAL_hello_world:
-#    use_entities: true
 entities:
 - dietcls_time
 slots: {}
