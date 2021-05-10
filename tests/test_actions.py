@@ -14,9 +14,23 @@ async def test_action_create_room(
         domain: DomainDict,
         mock_aioresponse: aioresponses,
 ):
-    def daily_co_callback_mock(url, headers=None, **kwargs):
+    def daily_co_callback_mock(url, headers=None, json=None, **kwargs):
         assert headers == {
             'Authorization': 'Bearer test-daily-co-api-token',
+        }
+        assert json == {
+            'privacy': 'public',
+            'properties': {
+                'enable_network_ui': False,
+                'enable_prejoin_ui': True,
+                'enable_new_call_ui': True,
+                'enable_screenshare': True,
+                'enable_chat': True,
+                'start_video_off': False,
+                'start_audio_off': False,
+                'owner_only_broadcast': False,
+                'lang': 'en',
+            },
         }
         return CallbackResult(
             payload={
