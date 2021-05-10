@@ -1,5 +1,5 @@
 import pytest
-from aioresponses import CallbackResult
+from aioresponses import CallbackResult, aioresponses
 from rasa_sdk import Tracker
 from rasa_sdk.executor import CollectingDispatcher
 from rasa_sdk.types import DomainDict
@@ -12,7 +12,7 @@ async def test_action_create_room(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: DomainDict,
-        mock_aioresponse,
+        mock_aioresponse: aioresponses,
 ):
     def daily_co_callback_mock(url, headers=None, **kwargs):
         assert headers == {
