@@ -19,7 +19,11 @@ rules:
     - intent: affirm
     - intent: want_chitchat
   - action: utter_video_link
-- rule: EXTERNAL_hello_world
+- rule: user sent /start in Telegram
   steps:
-  - intent: EXTERNAL_hello_world
-  - action: action_hello_world
+  - intent: start
+  - action: utter_greet_offer_chitchat
+#- rule: EXTERNAL_hello_world
+#  steps:
+#  - intent: EXTERNAL_hello_world
+#  - action: action_hello_world
