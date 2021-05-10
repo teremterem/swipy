@@ -27,6 +27,8 @@ jupyterlab = "*"
 jupyterlab-kite = ">=2.0.2"
 pytest = "*"
 pytest-asyncio = "*"
+aioresponses = "*"
+pytest-env = "*"
 
 [requires]
 python_version = "3.8"
