@@ -6,7 +6,7 @@ from rasa_sdk.types import DomainDict
 from actions import actions
 
 
-# @pytest.mark.asyncio
+@pytest.mark.asyncio
 async def test_action_create_room(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
@@ -19,4 +19,14 @@ async def test_action_create_room(
     actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == []
 
-    assert dispatcher.messages[0]['text'] == 'unit_test_user'
+    assert dispatcher.messages == [{
+        'attachment': None,
+        'buttons': [],
+        'custom': {},
+        'elements': [],
+        'image': None,
+        'response': 'utter_video_link',
+        'room_link': 'https://roomlink',
+        'template': 'utter_video_link',
+        'text': None,
+    }]
