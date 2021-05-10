@@ -26,6 +26,7 @@ rasa-x = "*"
 jupyterlab = "*"
 jupyterlab-kite = ">=2.0.2"
 pytest = "*"
+pytest-asyncio = "*"
 
 [requires]
 python_version = "3.8"
