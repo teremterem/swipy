@@ -78,7 +78,7 @@ responses:
   - text: |-
       Awesome! Here is the link to the video chat:
        
-      https://www.daily.co/
+      {room_link}
   utter_let_them_go_stop_bothering:
   - text: |-
       Ok, I will let that person go then😞
