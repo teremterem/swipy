@@ -11,6 +11,7 @@ name = "rasa"
 [packages]
 # packages that the action server depends on should go here
 # TODO oleksandr: what if I also need to customize Rasa Core, thought ?
+aiohttp = "*"
 
 [dev-packages]
 # https://github.com/RasaHQ/rasa/issues/7124#issuecomment-822225557
@@ -24,6 +25,10 @@ rasa-sdk = "~=2.5.0"
 rasa-x = "*"
 jupyterlab = "*"
 jupyterlab-kite = ">=2.0.2"
+pytest = "*"
+pytest-asyncio = "*"
+aioresponses = "*"
+pytest-env = "*"
 
 [requires]
 python_version = "3.8"

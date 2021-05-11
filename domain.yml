@@ -5,6 +5,8 @@ session_config:
   session_expiration_time: 60
   carry_over_slots_to_new_session: true
 intents:
+- start:
+    use_entities: true
 - affirm:
     use_entities: true
 - greet:
@@ -26,8 +28,6 @@ intents:
 - want_chitchat:
     use_entities: true
 - agree:
-    use_entities: true
-- EXTERNAL_hello_world:
     use_entities: true
 entities:
 - dietcls_time
@@ -78,7 +78,7 @@ responses:
   - text: |-
       Awesome! Here is the link to the video chat:
        
-      https://www.daily.co/
+      {room_link}
   utter_let_them_go_stop_bothering:
   - text: |-
       Ok, I will let that person go then😞
@@ -95,6 +95,6 @@ responses:
   utter_iamabot:
   - text: I am a bot, powered by Rasa.
 actions:
-- action_hello_world
+- action_create_room
 forms: {}
 e2e_actions: []
