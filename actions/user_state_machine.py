@@ -37,5 +37,4 @@ class _UserVault:
         return user_state_machine
 
 
-UserVault = _UserVault
-user_vault = UserVault()
+user_vault = _UserVault()

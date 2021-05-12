@@ -1,11 +1,11 @@
 import pytest
 
-from actions.user_state_machine import UserVault, UserStateMachine
+from actions.user_state_machine import _UserVault, UserStateMachine
 
 
 @pytest.fixture
 def user_vault():
-    return UserVault()
+    return _UserVault()
 
 
 def test_get_new_user(user_vault):
