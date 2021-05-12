@@ -19,6 +19,7 @@ def test_get_new_user(user_vault):
     assert user_state_machine.sub_state_expiration is None
 
     assert user_vault._users['new_user_id'] is user_state_machine
+    assert len(user_vault._users) == 1
 
 
 def test_get_existing_user(user_vault):
@@ -27,3 +28,4 @@ def test_get_existing_user(user_vault):
     user_vault._users['existing_user_id'] = user_state_machine
 
     assert user_vault.get_user('existing_user_id') is user_state_machine
+    assert len(user_vault._users) == 1
