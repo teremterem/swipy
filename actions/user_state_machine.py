@@ -7,11 +7,12 @@ class UserState:
 
 class UserSubState:
     ASKED_TO_JOIN = 'asked_to_join'
-    WAITING_FOR_RESPONSE_TO_JOIN = 'waiting_for_response_to_join'
+    WAITING_FOR_JOIN_RESPONSE = 'waiting_for_join_response'
     ASKED_FOR_READINESS = 'asked_for_readiness'
     WAITING_FOR_READINESS_RESPONSE = 'waiting_for_readiness_response'
     CHITCHAT_IN_PROGRESS = 'chitchat_in_progress'
     MAYBE_DO_NOT_DISTURB = 'maybe_do_not_disturb'
+    LEAVE_ALONE_FOR_AWHILE = 'leave_alone_for_awhile'
 
 
 class UserStateMachine:
