@@ -49,6 +49,6 @@ class ActionCreateRoom(Action):
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('NEW DAILY CO ROOM:\n%s', pformat(created_room))
 
-        dispatcher.utter_template('utter_video_link', tracker, room_link=created_room['url'])
+        dispatcher.utter_message(response='utter_video_link', room_link=created_room['url'])
 
         return []

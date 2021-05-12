@@ -15,12 +15,12 @@ class UserSubState:
 
 
 class UserStateMachine:
-    def __init__(self, id):
-        self.id = id
+    def __init__(self, user_id):
+        self.user_id = user_id
         self.state = UserState.NEW
         self.sub_state = None
-        self.sub_state_with_whom = None
         self.sub_state_expiration = None
+        self.related_user_id = None
 
 
 class _UserVault:
