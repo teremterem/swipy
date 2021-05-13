@@ -12,6 +12,7 @@ name = "rasa"
 # packages that the action server depends on should go here
 # TODO oleksandr: what if I also need to customize Rasa Core, thought ?
 aiohttp = "*"
+boto3 = "*"
 
 [dev-packages]
 # https://github.com/RasaHQ/rasa/issues/7124#issuecomment-822225557
@@ -31,6 +32,7 @@ aioresponses = "*"
 pytest-env = "*"
 ipython = "*"
 ipdb = "*"
+moto = "*"
 
 [requires]
 python_version = "3.8"
