@@ -95,6 +95,7 @@ responses:
   utter_iamabot:
   - text: I am a bot, powered by Rasa.
 actions:
+#- action_find_someone
 - action_create_room
 forms: {}
 e2e_actions: []
