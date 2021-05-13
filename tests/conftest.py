@@ -9,7 +9,7 @@ from rasa_sdk.types import DomainDict
 
 
 @pytest.fixture
-def mock_aioresponse():
+def mock_aioresponses() -> aioresponses:
     with aioresponses() as m:
         yield m
 

@@ -24,7 +24,7 @@ class UserStateMachine:
         self.related_user_id = None
 
 
-class _UserVault:
+class _InMemoryUserVault:
     def __init__(self):
         self._users = {}
 
@@ -38,4 +38,6 @@ class _UserVault:
         return user_state_machine
 
 
-user_vault = _UserVault()
+UserVault = _InMemoryUserVault
+
+user_vault = UserVault()

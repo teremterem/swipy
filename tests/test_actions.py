@@ -12,7 +12,7 @@ async def test_action_create_room(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: DomainDict,
-        mock_aioresponse: aioresponses,
+        mock_aioresponses: aioresponses,
 ):
     def daily_co_callback_mock(url, headers=None, json=None, **kwargs):
         assert headers == {
@@ -50,7 +50,7 @@ async def test_action_create_room(
             },
         )
 
-    mock_aioresponse.post(
+    mock_aioresponses.post(
         'https://api.daily.co/v1/rooms',
         callback=daily_co_callback_mock,
     )
