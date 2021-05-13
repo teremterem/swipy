@@ -5,7 +5,7 @@ import pytest
 from actions.user_state_machine import UserVault, UserStateMachine, user_vault
 
 
-def test_user_vault_instance():
+def test_user_vault_singleton():
     assert isinstance(user_vault, UserVault)
 
 
