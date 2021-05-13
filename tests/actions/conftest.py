@@ -17,7 +17,7 @@ def mock_aioresponses() -> aioresponses:
 @pytest.fixture
 def tracker() -> Tracker:
     """Load a tracker object"""
-    with open("tests/data/initial_tracker.json") as json_file:
+    with open("tests/actions/data/initial_tracker.json") as json_file:
         tracker = Tracker.from_dict(json.load(json_file))
     return tracker
 
