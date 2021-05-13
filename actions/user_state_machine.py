@@ -1,4 +1,5 @@
-from typing import Text
+import secrets
+from typing import Text, Optional
 
 
 class UserState:
@@ -39,6 +40,14 @@ class _InMemoryUserVault:
             self._users[user_id] = user_state_machine
 
         return user_state_machine
+
+    def get_random_user(self) -> Optional[UserStateMachine]:
+        if not self._users:
+            return None
+        return secrets.choice(list(self._users.values()))
+
+    def get_random_available_user(self, current_user_id: Text) -> Optional[UserStateMachine]:
+        return None
 
 
 UserVault = _InMemoryUserVault

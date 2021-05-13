@@ -1,3 +1,5 @@
+import pytest
+
 from actions.user_state_machine import UserVault, UserStateMachine
 
 
@@ -24,3 +26,13 @@ def test_get_existing_user(
     assert len(user_vault._users) == 1
     assert user_vault.get_user('existing_user_id1') is user1
     assert len(user_vault._users) == 1
+
+
+@pytest.mark.usefixtures('user1', 'user3')
+def test_get_random_user(
+        user_vault: UserVault,
+        user2: UserStateMachine,
+):
+    assert len(user_vault._users) == 3
+    assert user_vault.get_random_user() is user2
+    assert len(user_vault._users) == 3
