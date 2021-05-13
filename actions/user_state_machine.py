@@ -1,4 +1,5 @@
 import secrets
+from abc import ABC, abstractmethod
 from typing import Text, Optional
 
 
@@ -31,7 +32,21 @@ class UserStateMachine:
         return f"{self.__class__.__name__}({repr(self.user_id)})"
 
 
-class _InMemoryUserVault:
+class UserVaultBase(ABC):
+    @abstractmethod
+    def get_user(self, user_id: Text) -> UserStateMachine:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def get_random_user(self) -> Optional[UserStateMachine]:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def get_random_available_user(self, current_user_id: Text) -> Optional[UserStateMachine]:
+        raise NotImplementedError()
+
+
+class InMemoryUserVault(UserVaultBase):
     def __init__(self) -> None:
         self._users = {}
 
@@ -61,6 +76,6 @@ class _InMemoryUserVault:
         return None
 
 
-UserVault = _InMemoryUserVault
+UserVault = InMemoryUserVault
 
 user_vault = UserVault()

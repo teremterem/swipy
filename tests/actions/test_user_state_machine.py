@@ -2,11 +2,11 @@ from unittest.mock import patch
 
 import pytest
 
-from actions.user_state_machine import UserVault, UserStateMachine, user_vault
+from actions.user_state_machine import UserVault, UserStateMachine, user_vault as user_vault_singleton
 
 
 def test_user_vault_singleton():
-    assert isinstance(user_vault, UserVault)
+    assert isinstance(user_vault_singleton, UserVault)
 
 
 def test_get_new_user(
