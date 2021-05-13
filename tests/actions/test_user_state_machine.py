@@ -3,11 +3,6 @@ import pytest
 from actions.user_state_machine import UserVault, UserStateMachine
 
 
-@pytest.fixture
-def user_vault() -> UserVault:
-    return UserVault()
-
-
 def test_get_new_user(user_vault: UserVault):
     assert user_vault._users == {}
     user_state_machine = user_vault.get_user('new_user_id')

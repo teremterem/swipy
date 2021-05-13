@@ -1,18 +1,10 @@
 import json
 
 import pytest
-from aioresponses import aioresponses
 from rasa.shared.core.domain import Domain
 from rasa_sdk import Tracker
 from rasa_sdk.executor import CollectingDispatcher
 from rasa_sdk.types import DomainDict
-
-
-@pytest.fixture
-def mock_aioresponses() -> aioresponses:
-    with aioresponses() as m:
-        yield m
-
 
 @pytest.fixture
 def tracker() -> Tracker:
