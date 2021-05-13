@@ -33,13 +33,23 @@ def test_get_existing_user(user_vault):
 
 def test_scenario1():
     """
-    user2 -> new
-    - user2, do you want to chitchat?
+    user1 -> new
+    - user1, do you want to chitchat?
     - no
     - ok to ping you if someone else felt lonely?
     - yes
-    user2 -> ok_for_chitchat
+    user1 -> ok_for_chitchat
 
-    user1 -> new
-    - user1, do you want to chitchat?
+    user2 -> new
+    - user2, do you want to chitchat?
+    - yes
+    - let me find someone, I will get back to you soon
+    user2 -> wants_chitchat
+
+    more than 5(?) minutes have passed for user2 (multiple potential partners were asked and timed out)
+
+    user1 -> ok_for_chitchat
+    - user1, there is someone, who would like to chitchat, are you in?
+    - yes
+    - ok, let me check if they are ready too... will send you a video chat link soon.
     """

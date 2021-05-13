@@ -12,7 +12,7 @@ class UserSubState:
     WAITING_FOR_READINESS_RESPONSE = 'waiting_for_readiness_response'
     CHITCHAT_IN_PROGRESS = 'chitchat_in_progress'
     MAYBE_DO_NOT_DISTURB = 'maybe_do_not_disturb'
-    LEAVE_ALONE_FOR_AWHILE = 'leave_alone_for_awhile'
+    LEAVE_ALONE_FOR_AWHILE = 'leave_alone_for_awhile'  # probably the same as maybe_do_not_disturb
 
 
 class UserStateMachine:
