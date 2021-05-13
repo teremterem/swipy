@@ -46,7 +46,7 @@ def test_get_random_user(
     assert len(user_vault._users) == 3
     assert user_vault.get_random_user() is user2
     assert len(user_vault._users) == 3
-    choice_mock.assert_called_once_with(set(user_vault._users.values()))
+    choice_mock.assert_called_once_with(list(user_vault._users.values()))
 
 
 @patch.object(UserVault, 'get_random_user')
@@ -73,3 +73,8 @@ def test_no_available_users(
 
     assert user_vault.get_random_available_user('existing_user_id1') is None
     assert get_random_user_mock.call_count == 10
+
+
+def test_create_user_state_machine_table(create_user_state_machine_table):
+    # TODO oleksandr: delete this test
+    pass

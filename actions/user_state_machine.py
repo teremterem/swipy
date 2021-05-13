@@ -1,5 +1,6 @@
 import secrets
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from typing import Text, Optional
 
 
@@ -20,16 +21,14 @@ class UserSubState:
     LEAVE_ALONE_FOR_AWHILE = 'leave_alone_for_awhile'  # probably the same as maybe_do_not_disturb
 
 
+@dataclass
 class UserStateMachine:
-    def __init__(self, user_id: Text) -> None:
-        self.user_id = user_id
-        self.state = UserState.NEW
-        self.sub_state = None
-        self.sub_state_expiration = None
-        self.related_user_id = None
-
-    def __repr__(self):
-        return f"{self.__class__.__name__}({repr(self.user_id)})"
+    user_id: Text
+    # user_uuid: Text = field(default_factory=lambda: str(uuid4()))
+    state: Text = UserState.NEW
+    sub_state: Text = None
+    sub_state_expiration: int = None
+    related_user_id: Text = None
 
 
 class UserVaultBase(ABC):
@@ -62,7 +61,7 @@ class InMemoryUserVault(UserVaultBase):
     def get_random_user(self) -> Optional[UserStateMachine]:
         if not self._users:
             return None
-        return secrets.choice(set(self._users.values()))
+        return secrets.choice(list(self._users.values()))
 
     def get_random_available_user(self, current_user_id: Text) -> Optional[UserStateMachine]:
         for _ in range(10):

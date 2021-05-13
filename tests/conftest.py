@@ -1,3 +1,5 @@
+import os
+
 import boto3
 import pytest
 from aioresponses import aioresponses
@@ -15,7 +17,12 @@ def mock_aioresponses() -> aioresponses:
         yield m
 
 
+@pytest.fixture(autouse=True)
+def unset_aws_profile() -> None:
+    os.environ.pop('AWS_PROFILE', None)
+
+
 @pytest.fixture
 def mock_ddb() -> ServiceResource:
     with mock_dynamodb2():
-        yield boto3.resource('dynamodb')
+        yield boto3.resource('dynamodb', 'us-east-1')

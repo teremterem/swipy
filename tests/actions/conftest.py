@@ -30,7 +30,8 @@ def domain() -> DomainDict:
 
 
 @pytest.fixture
-def create_user_state_machine_table(mock_ddb: ServiceResource):
+def create_user_state_machine_table(mock_ddb: ServiceResource) -> None:
+    # TODO oleksandr: simplify the schema
     # noinspection PyUnresolvedReferences
     mock_ddb.create_table(
         TableName='UserStateMachine',
