@@ -27,6 +27,9 @@ class UserStateMachine:
         self.sub_state_expiration = None
         self.related_user_id = None
 
+    def __repr__(self):
+        return f"{self.__class__.__name__}({repr(self.user_id)})"
+
 
 class _InMemoryUserVault:
     def __init__(self) -> None:
@@ -47,6 +50,14 @@ class _InMemoryUserVault:
         return secrets.choice(set(self._users.values()))
 
     def get_random_available_user(self, current_user_id: Text) -> Optional[UserStateMachine]:
+        for _ in range(10):
+            user_state_machine = self.get_random_user()
+
+            if user_state_machine.user_id == current_user_id:
+                continue
+
+            return user_state_machine
+
         return None
 
 

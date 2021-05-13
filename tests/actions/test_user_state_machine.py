@@ -37,12 +37,35 @@ def test_get_random_user(
         user_vault: UserVault,
         user2: UserStateMachine,
 ):
-    def _choice_mock(inp):
-        assert set(inp) == set(user_vault._users.values())
-        return user2
-
-    choice_mock.side_effect = _choice_mock
+    choice_mock.return_value = user2
 
     assert len(user_vault._users) == 3
     assert user_vault.get_random_user() is user2
     assert len(user_vault._users) == 3
+    choice_mock.assert_called_once_with(set(user_vault._users.values()))
+
+
+@patch.object(UserVault, 'get_random_user')
+def test_get_random_available_user(
+        get_random_user_mock,
+        user_vault: UserVault,
+        user1: UserStateMachine,
+        user2: UserStateMachine,
+        user3: UserStateMachine,
+):
+    get_random_user_mock.side_effect = [user1, user2, user3]
+
+    assert user_vault.get_random_available_user('existing_user_id1') is user2
+    assert get_random_user_mock.call_count == 2
+
+
+@patch.object(UserVault, 'get_random_user')
+def test_no_available_users(
+        get_random_user_mock,
+        user_vault: UserVault,
+        user1: UserStateMachine,
+):
+    get_random_user_mock.return_value = user1
+
+    assert user_vault.get_random_available_user('existing_user_id1') is None
+    assert get_random_user_mock.call_count == 10
