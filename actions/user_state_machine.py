@@ -1,3 +1,6 @@
+from typing import Text
+
+
 class UserState:
     NEW = 'new'
     WANTS_CHITCHAT = 'wants_chitchat'
@@ -16,7 +19,7 @@ class UserSubState:
 
 
 class UserStateMachine:
-    def __init__(self, user_id):
+    def __init__(self, user_id: Text) -> None:
         self.user_id = user_id
         self.state = UserState.NEW
         self.sub_state = None
@@ -25,10 +28,10 @@ class UserStateMachine:
 
 
 class _InMemoryUserVault:
-    def __init__(self):
+    def __init__(self) -> None:
         self._users = {}
 
-    def get_user(self, user_id):
+    def get_user(self, user_id: Text) -> UserStateMachine:
         user_state_machine = self._users.get(user_id)
 
         if user_state_machine is None:
