@@ -44,7 +44,7 @@ class _InMemoryUserVault:
     def get_random_user(self) -> Optional[UserStateMachine]:
         if not self._users:
             return None
-        return secrets.choice(list(self._users.values()))
+        return secrets.choice(set(self._users.values()))
 
     def get_random_available_user(self, current_user_id: Text) -> Optional[UserStateMachine]:
         return None

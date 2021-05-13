@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 import pytest
 
 from actions.user_state_machine import UserVault, UserStateMachine
@@ -29,10 +31,18 @@ def test_get_existing_user(
 
 
 @pytest.mark.usefixtures('user1', 'user3')
+@patch('actions.user_state_machine.secrets.choice')
 def test_get_random_user(
+        choice_mock,
         user_vault: UserVault,
         user2: UserStateMachine,
 ):
+    def _choice_mock(inp):
+        assert set(inp) == set(user_vault._users.values())
+        return user2
+
+    choice_mock.side_effect = _choice_mock
+
     assert len(user_vault._users) == 3
     assert user_vault.get_random_user() is user2
     assert len(user_vault._users) == 3
