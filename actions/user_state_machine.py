@@ -99,6 +99,20 @@ class InMemoryUserVault(NaiveUserVault):
         return list(self._users.values())
 
 
+class DdbUserVault(NaiveUserVault):
+    def _get_user(self, user_id: Text) -> UserStateMachine:
+        raise NotImplementedError()
+
+    def _put_user(self, user_state_machine: UserStateMachine) -> None:
+        raise NotImplementedError()
+
+    def _list_users(self) -> List[UserStateMachine]:
+        from actions.aws_resources import user_state_machine_table
+
+        ddb_resp = user_state_machine_table.scan()
+        return [UserStateMachine(**item) for item in ddb_resp['Items']]
+
+
 UserVault = InMemoryUserVault
 
 user_vault = UserVault()

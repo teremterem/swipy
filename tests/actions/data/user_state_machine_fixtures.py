@@ -6,11 +6,6 @@ import pytest
 from actions.user_state_machine import UserVault, UserStateMachine
 
 
-@pytest.fixture
-def user_vault() -> UserVault:
-    return UserVault()
-
-
 def _populate_user(
         user_vault: UserVault,
         user_id: Text,

@@ -7,6 +7,8 @@ from rasa_sdk import Tracker
 from rasa_sdk.executor import CollectingDispatcher
 from rasa_sdk.types import DomainDict
 
+from actions.user_state_machine import UserVault, DdbUserVault
+
 
 @pytest.fixture
 def tracker() -> Tracker:
@@ -27,6 +29,16 @@ def domain() -> DomainDict:
     """Load the domain and return it as a dictionary"""
     domain = Domain.load("domain.yml")
     return domain.as_dict()
+
+
+@pytest.fixture
+def user_vault() -> UserVault:
+    return UserVault()
+
+
+@pytest.fixture
+def ddb_user_vault() -> DdbUserVault:
+    return DdbUserVault()
 
 
 @pytest.fixture
