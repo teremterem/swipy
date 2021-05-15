@@ -1,7 +1,7 @@
 import secrets
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Text, Optional
+from typing import Text, Optional, List
 
 
 class UserState:
@@ -31,7 +31,7 @@ class UserStateMachine:
     related_user_id: Text = None
 
 
-class UserVaultBase(ABC):
+class IUserVault(ABC):
     @abstractmethod
     def get_user(self, user_id: Text) -> UserStateMachine:
         raise NotImplementedError()
@@ -45,23 +45,33 @@ class UserVaultBase(ABC):
         raise NotImplementedError()
 
 
-class InMemoryUserVault(UserVaultBase):
-    def __init__(self) -> None:
-        self._users = {}
+class NaiveUserVault(IUserVault, ABC):
+    @abstractmethod
+    def _get_user(self, user_id: Text) -> UserStateMachine:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def _put_user(self, user_state_machine: UserStateMachine) -> None:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def _list_users(self) -> List[UserStateMachine]:
+        raise NotImplementedError()
 
     def get_user(self, user_id: Text) -> UserStateMachine:
-        user_state_machine = self._users.get(user_id)
+        user_state_machine = self._get_user(user_id)
 
         if user_state_machine is None:
             user_state_machine = UserStateMachine(user_id)
-            self._users[user_id] = user_state_machine
+            self._put_user(user_state_machine)
 
         return user_state_machine
 
     def get_random_user(self) -> Optional[UserStateMachine]:
-        if not self._users:
+        user_list = self._list_users()
+        if not user_list:
             return None
-        return secrets.choice(list(self._users.values()))
+        return secrets.choice(user_list)
 
     def get_random_available_user(self, current_user_id: Text) -> Optional[UserStateMachine]:
         for _ in range(10):
@@ -73,6 +83,20 @@ class InMemoryUserVault(UserVaultBase):
             return user_state_machine
 
         return None
+
+
+class InMemoryUserVault(NaiveUserVault):
+    def __init__(self) -> None:
+        self._users = {}
+
+    def _get_user(self, user_id: Text) -> UserStateMachine:
+        return self._users.get(user_id)
+
+    def _put_user(self, user_state_machine: UserStateMachine) -> None:
+        self._users[user_state_machine.user_id] = user_state_machine
+
+    def _list_users(self) -> List[UserStateMachine]:
+        return list(self._users.values())
 
 
 UserVault = InMemoryUserVault
