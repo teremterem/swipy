@@ -16,14 +16,14 @@ def _populate_user(user_id: Text) -> UserStateMachine:
 
 @pytest.fixture
 def user1(create_user_state_machine_table) -> UserStateMachine:
-    return _populate_user('existing_ddb_user_id1')
+    return _populate_user('existing_user_id1')
 
 
 @pytest.fixture
 def user2(create_user_state_machine_table) -> UserStateMachine:
-    return _populate_user('existing_ddb_user_id2')
+    return _populate_user('existing_user_id2')
 
 
 @pytest.fixture
 def user3(create_user_state_machine_table) -> UserStateMachine:
-    return _populate_user('existing_ddb_user_id3')
+    return _populate_user('existing_user_id3')

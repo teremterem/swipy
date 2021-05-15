@@ -7,8 +7,8 @@ from actions.user_state_machine import user_vault as user_vault_singleton
 
 
 def test_user_vault_singleton() -> None:
-    assert isinstance(user_vault_singleton, UserVault)
     assert UserVault == DdbUserVault
+    assert isinstance(user_vault_singleton, UserVault)
 
 
 @pytest.mark.usefixtures('create_user_state_machine_table')
@@ -38,9 +38,11 @@ def test_get_existing_user(
         user_vault: UserVault,
         user1: UserStateMachine,
 ) -> None:
-    assert len(user_vault._users) == 1
-    assert user_vault.get_user('existing_user_id1') is user1
-    assert len(user_vault._users) == 1
+    from actions.aws_resources import user_state_machine_table
+
+    assert len(user_state_machine_table.scan()['Items']) == 1
+    assert user_vault.get_user('existing_user_id1') == user1
+    assert len(user_state_machine_table.scan()['Items']) == 1
 
 
 @pytest.mark.usefixtures('user1', 'user3')
@@ -50,18 +52,26 @@ def test_get_random_user(
         user_vault: UserVault,
         user2: UserStateMachine,
 ) -> None:
+    from actions.aws_resources import user_state_machine_table
+
     choice_mock.return_value = user2
 
-    assert len(user_vault._users) == 3
+    assert len(user_state_machine_table.scan()['Items']) == 3
+
     assert user_vault.get_random_user() is user2
-    assert len(user_vault._users) == 3
-    choice_mock.assert_called_once_with(list(user_vault._users.values()))
+
+    items = user_state_machine_table.scan()['Items']
+    assert len(items) == 3
+    choice_mock.assert_called_once_with([UserStateMachine(**item) for item in items])
 
 
+@pytest.mark.usefixtures('create_user_state_machine_table')
 def test_no_random_user(user_vault: UserVault) -> None:
-    assert not user_vault._users
+    from actions.aws_resources import user_state_machine_table
+
+    assert not user_state_machine_table.scan()['Items']
     assert user_vault.get_random_user() is None
-    assert not user_vault._users
+    assert not user_state_machine_table.scan()['Items']
 
 
 @patch.object(UserVault, 'get_random_user')
@@ -91,34 +101,32 @@ def test_no_available_users(
 
 
 def test_ddb_user_vault_list_users(
-        ddb_user_vault: DdbUserVault,
-        user1_ddb: UserStateMachine,
-        user2_ddb: UserStateMachine,
-        user3_ddb: UserStateMachine,
+        user_vault: UserVault,
+        user1: UserStateMachine,
+        user2: UserStateMachine,
+        user3: UserStateMachine,
 ) -> None:
-    assert ddb_user_vault._list_users() == [user1_ddb, user2_ddb, user3_ddb]
+    assert user_vault._list_users() == [user1, user2, user3]
 
 
 @pytest.mark.usefixtures('user1', 'user3')
 def test_ddb_user_vault_get_user(
-        ddb_user_vault: DdbUserVault,
-        user2_ddb: UserStateMachine,
+        user_vault: UserVault,
+        user2: UserStateMachine,
 ) -> None:
     from actions.aws_resources import user_state_machine_table
 
-    assert len(user_state_machine_table.scan()['Items']) == 1
-    assert ddb_user_vault._get_user('existing_ddb_user_id2') == user2_ddb
-    assert len(user_state_machine_table.scan()['Items']) == 1
+    assert len(user_state_machine_table.scan()['Items']) == 3
+    assert user_vault._get_user('existing_user_id2') == user2
+    assert len(user_state_machine_table.scan()['Items']) == 3
 
 
 @pytest.mark.usefixtures('create_user_state_machine_table')
-def test_ddb_user_vault_put_user(
-        ddb_user_vault: DdbUserVault,
-) -> None:
+def test_ddb_user_vault_put_user(user_vault: UserVault) -> None:
     from actions.aws_resources import user_state_machine_table
 
     assert not user_state_machine_table.scan()['Items']
-    ddb_user_vault._put_user(UserStateMachine('new_ddb_user_was_put'))
+    user_vault._put_user(UserStateMachine('new_ddb_user_was_put'))
     assert user_state_machine_table.scan()['Items'] == [{
         'user_id': 'new_ddb_user_was_put',
         'related_user_id': None,
