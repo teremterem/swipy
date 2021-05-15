@@ -1,6 +1,7 @@
-from sentry_sdk.integrations import boto3
+import boto3
 
-# noinspection PyUnresolvedReferences
-dynamodb = boto3.resource('dynamodb')
+# TODO oleksandr: read from env vars ?
+
+dynamodb = boto3.resource('dynamodb', 'us-east-1')
 
 user_state_machine_table = dynamodb.Table('UserStateMachine')

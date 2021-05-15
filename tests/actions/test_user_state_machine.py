@@ -75,6 +75,6 @@ def test_no_available_users(
     assert get_random_user_mock.call_count == 10
 
 
-def test_create_user_state_machine_table(create_user_state_machine_table):
+def test_create_user_state_machine_table(user1_ddb, user2_ddb, user3_ddb):
     # TODO oleksandr: delete this test
     pass
