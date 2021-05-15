@@ -86,6 +86,7 @@ class NaiveUserVault(IUserVault, ABC):
 
 
 class InMemoryUserVault(NaiveUserVault):
+    # TODO oleksandr: delete this class
     def __init__(self) -> None:
         self._users = {}
 
@@ -101,7 +102,12 @@ class InMemoryUserVault(NaiveUserVault):
 
 class DdbUserVault(NaiveUserVault):
     def _get_user(self, user_id: Text) -> UserStateMachine:
-        raise NotImplementedError()
+        # TODO oleksandr: is there a better way to ensure that tests have a chance to mock boto3 ?
+        from actions.aws_resources import user_state_machine_table
+
+        # TODO oleksandr: should I resolve the name of the field ('user_id') from the data class somehow ?
+        ddb_resp = user_state_machine_table.get_item(Key={'user_id': user_id})
+        return UserStateMachine(**ddb_resp['Item'])
 
     def _put_user(self, user_state_machine: UserStateMachine) -> None:
         raise NotImplementedError()
