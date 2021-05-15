@@ -1,6 +1,6 @@
 import secrets
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from typing import Text, Optional, List
 
 
@@ -110,7 +110,10 @@ class DdbUserVault(NaiveUserVault):
         return UserStateMachine(**ddb_resp['Item'])
 
     def _put_user(self, user_state_machine: UserStateMachine) -> None:
-        raise NotImplementedError()
+        # TODO oleksandr: is there a better way to ensure that tests have a chance to mock boto3 ?
+        from actions.aws_resources import user_state_machine_table
+
+        user_state_machine_table.put_item(Item=asdict(user_state_machine))
 
     def _list_users(self) -> List[UserStateMachine]:
         # TODO oleksandr: is there a better way to ensure that tests have a chance to mock boto3 ?

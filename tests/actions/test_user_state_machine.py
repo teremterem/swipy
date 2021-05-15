@@ -2,7 +2,8 @@ from unittest.mock import patch
 
 import pytest
 
-from actions.user_state_machine import UserVault, UserStateMachine, user_vault as user_vault_singleton, DdbUserVault
+from actions.user_state_machine import UserVault, UserStateMachine, DdbUserVault
+from actions.user_state_machine import user_vault as user_vault_singleton
 
 
 def test_user_vault_singleton() -> None:
@@ -95,4 +96,25 @@ def test_ddb_user_vault_get_user(
         ddb_user_vault: DdbUserVault,
         user2_ddb: UserStateMachine,
 ) -> None:
+    from actions.aws_resources import user_state_machine_table
+
+    assert len(user_state_machine_table.scan()['Items']) == 1
     assert ddb_user_vault._get_user('existing_ddb_user_id2') == user2_ddb
+    assert len(user_state_machine_table.scan()['Items']) == 1
+
+
+@pytest.mark.usefixtures('create_user_state_machine_table')
+def test_ddb_user_vault_put_user(
+        ddb_user_vault: DdbUserVault,
+) -> None:
+    from actions.aws_resources import user_state_machine_table
+
+    assert not user_state_machine_table.scan()['Items']
+    ddb_user_vault._put_user(UserStateMachine('new_ddb_user_was_put'))
+    assert user_state_machine_table.scan()['Items'] == [{
+        'user_id': 'new_ddb_user_was_put',
+        'related_user_id': None,
+        'state': 'new',
+        'sub_state': None,
+        'sub_state_expiration': None,
+    }]

@@ -24,6 +24,9 @@ def unset_aws_profile() -> None:
     os.environ.pop('AWS_PROFILE', None)
 
 
+os.environ.pop('AWS_PROFILE', None)
+
+
 @pytest.fixture
 def mock_ddb() -> ServiceResource:
     with mock_dynamodb2():
