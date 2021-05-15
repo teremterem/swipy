@@ -37,11 +37,6 @@ def user_vault() -> UserVault:
 
 
 @pytest.fixture
-def ddb_user_vault() -> DdbUserVault:
-    return DdbUserVault()
-
-
-@pytest.fixture
 def create_user_state_machine_table(mock_ddb: ServiceResource) -> None:
     # noinspection PyUnresolvedReferences
     mock_ddb.create_table(

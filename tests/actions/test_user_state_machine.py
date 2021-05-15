@@ -8,12 +8,15 @@ from actions.user_state_machine import user_vault as user_vault_singleton
 
 def test_user_vault_singleton() -> None:
     assert isinstance(user_vault_singleton, UserVault)
+    assert UserVault == DdbUserVault
 
 
-def test_get_new_user(
-        user_vault: UserVault,
-) -> None:
-    assert user_vault._users == {}
+@pytest.mark.usefixtures('create_user_state_machine_table')
+def test_get_new_user(user_vault: UserVault) -> None:
+    from actions.aws_resources import user_state_machine_table
+
+    assert not user_state_machine_table.scan()['Items']
+
     user_state_machine = user_vault.get_user('new_user_id')
 
     assert user_state_machine.user_id == 'new_user_id'
@@ -22,8 +25,13 @@ def test_get_new_user(
     assert user_state_machine.sub_state_expiration is None
     assert user_state_machine.related_user_id is None
 
-    assert user_vault._users['new_user_id'] is user_state_machine
-    assert len(user_vault._users) == 1
+    assert user_state_machine_table.scan()['Items'] == [{
+        'user_id': 'new_user_id',
+        'related_user_id': None,
+        'state': 'new',
+        'sub_state': None,
+        'sub_state_expiration': None,
+    }]
 
 
 def test_get_existing_user(

@@ -47,7 +47,7 @@ class IUserVault(ABC):
 
 class NaiveUserVault(IUserVault, ABC):
     @abstractmethod
-    def _get_user(self, user_id: Text) -> UserStateMachine:
+    def _get_user(self, user_id: Text) -> Optional[UserStateMachine]:
         raise NotImplementedError()
 
     @abstractmethod
@@ -85,29 +85,15 @@ class NaiveUserVault(IUserVault, ABC):
         return None
 
 
-class InMemoryUserVault(NaiveUserVault):
-    # TODO oleksandr: delete this class
-    def __init__(self) -> None:
-        self._users = {}
-
-    def _get_user(self, user_id: Text) -> UserStateMachine:
-        return self._users.get(user_id)
-
-    def _put_user(self, user_state_machine: UserStateMachine) -> None:
-        self._users[user_state_machine.user_id] = user_state_machine
-
-    def _list_users(self) -> List[UserStateMachine]:
-        return list(self._users.values())
-
-
 class DdbUserVault(NaiveUserVault):
-    def _get_user(self, user_id: Text) -> UserStateMachine:
+    def _get_user(self, user_id: Text) -> Optional[UserStateMachine]:
         # TODO oleksandr: is there a better way to ensure that tests have a chance to mock boto3 ?
         from actions.aws_resources import user_state_machine_table
 
         # TODO oleksandr: should I resolve the name of the field ('user_id') from the data class somehow ?
         ddb_resp = user_state_machine_table.get_item(Key={'user_id': user_id})
-        return UserStateMachine(**ddb_resp['Item'])
+        item = ddb_resp.get('Item')
+        return None if item is None else UserStateMachine(**item)
 
     def _put_user(self, user_state_machine: UserStateMachine) -> None:
         # TODO oleksandr: is there a better way to ensure that tests have a chance to mock boto3 ?
@@ -123,6 +109,6 @@ class DdbUserVault(NaiveUserVault):
         return [UserStateMachine(**item) for item in ddb_resp['Items']]
 
 
-UserVault = InMemoryUserVault
+UserVault = DdbUserVault
 
 user_vault = UserVault()
