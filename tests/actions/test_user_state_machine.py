@@ -82,5 +82,4 @@ def test_no_available_users(
 
 
 def test_ddb_user_vault_list_users(user1_ddb, user2_ddb, user3_ddb, ddb_user_vault):
-    # TODO oleksandr: delete this test
-    pass
+    assert ddb_user_vault._list_users() == [user1_ddb, user2_ddb, user3_ddb]
