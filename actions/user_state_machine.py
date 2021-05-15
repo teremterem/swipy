@@ -107,6 +107,7 @@ class DdbUserVault(NaiveUserVault):
         raise NotImplementedError()
 
     def _list_users(self) -> List[UserStateMachine]:
+        # TODO oleksandr: is there a better way to ensure that tests have a chance to mock boto3 ?
         from actions.aws_resources import user_state_machine_table
 
         ddb_resp = user_state_machine_table.scan()

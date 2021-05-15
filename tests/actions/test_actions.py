@@ -13,7 +13,7 @@ async def test_action_create_room(
         dispatcher: CollectingDispatcher,
         domain: DomainDict,
         mock_aioresponses: aioresponses,
-):
+) -> None:
     def daily_co_callback_mock(url, headers=None, json=None, **kwargs):
         assert headers == {
             'Authorization': 'Bearer test-daily-co-api-token',
