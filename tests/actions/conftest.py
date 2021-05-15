@@ -31,38 +31,19 @@ def domain() -> DomainDict:
 
 @pytest.fixture
 def create_user_state_machine_table(mock_ddb: ServiceResource) -> None:
-    # TODO oleksandr: simplify the schema
     # noinspection PyUnresolvedReferences
     mock_ddb.create_table(
         TableName='UserStateMachine',
         AttributeDefinitions=[
             {
-                'AttributeName': 'user_uuid',
-                'AttributeType': 'S',
-            },
-            {
-                'AttributeName': 'channel_user_id',
+                'AttributeName': 'user_id',
                 'AttributeType': 'S',
             },
         ],
         KeySchema=[
             {
-                'AttributeName': 'user_uuid',
+                'AttributeName': 'user_id',
                 'KeyType': 'HASH',
-            },
-        ],
-        GlobalSecondaryIndexes=[
-            {
-                'IndexName': 'by_channel_user_id',
-                'KeySchema': [
-                    {
-                        'AttributeName': 'channel_user_id',
-                        'KeyType': 'HASH',
-                    },
-                ],
-                'Projection': {
-                    'ProjectionType': 'ALL',
-                },
             },
         ],
         BillingMode='PAY_PER_REQUEST',
