@@ -49,6 +49,12 @@ def test_get_random_user(
     choice_mock.assert_called_once_with(list(user_vault._users.values()))
 
 
+def test_no_random_user(user_vault: UserVault):
+    assert not user_vault._users
+    assert user_vault.get_random_user() is None
+    assert not user_vault._users
+
+
 @patch.object(UserVault, 'get_random_user')
 def test_get_random_available_user(
         get_random_user_mock,
