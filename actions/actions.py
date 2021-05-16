@@ -7,10 +7,10 @@ from actions.daily_co import create_room
 from actions.user_state_machine import user_vault
 
 
-class ActionCreateRoom(Action):
+class ActionFindSomeone(Action):
 
     def name(self) -> Text:
-        return 'action_create_room'  # TODO oleksandr: git this action more relevant name
+        return 'action_find_someone'
 
     async def run(
             self, dispatcher: CollectingDispatcher,

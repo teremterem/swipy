@@ -13,7 +13,7 @@ from actions.user_state_machine import user_vault, UserStateMachine
 @pytest.mark.asyncio
 @patch('actions.actions.create_room')
 @patch.object(user_vault, 'get_random_available_user')
-async def test_action_create_room(
+async def test_action_find_someone(
         mock_get_random_available_user: MagicMock,
         mock_create_room: AsyncMock,
         tracker: Tracker,
@@ -25,8 +25,8 @@ async def test_action_create_room(
     mock_get_random_available_user.return_value = user3
     mock_create_room.return_value = new_room1
 
-    action = actions.ActionCreateRoom()
-    assert action.name() == 'action_create_room'
+    action = actions.ActionFindSomeone()
+    assert action.name() == 'action_find_someone'
 
     actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == []
