@@ -31,11 +31,13 @@ async def test_action_make_user_available(
 
 
 @pytest.mark.asyncio
+@patch('actions.actions.invite_chitchat_partner')
 @patch('actions.actions.create_room')
 @patch.object(user_vault, 'get_random_available_user')
 async def test_action_find_someone(
         mock_get_random_available_user: MagicMock,
         mock_create_room: AsyncMock,
+        mock_invite_chitchat_partner: MagicMock,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: DomainDict,
@@ -63,3 +65,4 @@ async def test_action_find_someone(
         'text': None,
     }]
     mock_get_random_available_user.assert_called_once_with('unit_test_user')
+    mock_invite_chitchat_partner.assert_called_once_with('existing_user_id3', 'https://swipy.daily.co/pytestroom')
