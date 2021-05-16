@@ -21,15 +21,10 @@ def mock_aioresponses() -> aioresponses:
 
 @pytest.fixture(autouse=True)
 def unset_aws_profile() -> None:
-    # TODO oleksandr: should I use scope='session' ?
-    #  Or, maybe, some other way of ensuring that this is applied before any imports happen is needed ?
     os.environ.pop('AWS_PROFILE', None)
-
-
-os.environ.pop('AWS_PROFILE', None)
 
 
 @pytest.fixture
 def mock_ddb() -> ServiceResource:
     with mock_dynamodb2():
-        yield boto3.resource('dynamodb', 'us-east-1')
+        yield boto3.resource('dynamodb', os.environ['AWS_REGION'])

@@ -1,4 +1,5 @@
 import json
+import os
 
 import pytest
 from boto3.resources.base import ServiceResource
@@ -7,7 +8,7 @@ from rasa_sdk import Tracker
 from rasa_sdk.executor import CollectingDispatcher
 from rasa_sdk.types import DomainDict
 
-from actions.user_state_machine import UserVault, DdbUserVault
+from actions.user_state_machine import UserVault
 
 
 @pytest.fixture
@@ -38,9 +39,10 @@ def user_vault() -> UserVault:
 
 @pytest.fixture
 def create_user_state_machine_table(mock_ddb: ServiceResource) -> None:
+    user_state_machine_ddb_table_name = os.environ['USER_STATE_MACHINE_DDB_TABLE']
     # noinspection PyUnresolvedReferences
     mock_ddb.create_table(
-        TableName='UserStateMachine',
+        TableName=user_state_machine_ddb_table_name,
         AttributeDefinitions=[
             {
                 'AttributeName': 'user_id',

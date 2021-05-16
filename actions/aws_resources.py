@@ -1,7 +1,9 @@
+import os
+
 import boto3
 
-# TODO oleksandr: read from env vars ?
+AWS_REGION = os.environ['AWS_REGION']
+USER_STATE_MACHINE_DDB_TABLE = os.environ['USER_STATE_MACHINE_DDB_TABLE']
 
-dynamodb = boto3.resource('dynamodb', 'us-east-1')
-
-user_state_machine_table = dynamodb.Table('UserStateMachine')
+dynamodb = boto3.resource('dynamodb', AWS_REGION)
+user_state_machine_table = dynamodb.Table(USER_STATE_MACHINE_DDB_TABLE)

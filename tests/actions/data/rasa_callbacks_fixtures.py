@@ -1,8 +1,10 @@
+from typing import Dict, Text, Any
+
 import pytest
 
 
 @pytest.fixture
-def external_intent_response():
+def external_intent_response() -> Dict[Text, Any]:
     return {
         "tracker": {
             "sender_id": "some_sender",
