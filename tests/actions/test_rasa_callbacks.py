@@ -12,7 +12,7 @@ async def test_invite_chitchat_partner(
         mock_aioresponses: aioresponses,
         external_intent_response: Dict[Text, Any],
 ) -> None:
-    def rasa_core_callback(url, json=None, **kwargs):
+    def rasa_core_callback(url, params=None, json=None, **kwargs):
         assert json == {
             'name': 'EXTERNAL_invite_chitchat_partner',
             'entities': {
@@ -24,7 +24,7 @@ async def test_invite_chitchat_partner(
     rasa_core_callback_mock = MagicMock(side_effect=rasa_core_callback)
     # noinspection HttpUrlsUsage
     mock_aioresponses.post(
-        'http://rasa-unittest:5005/core/conversations/a_partner_id/trigger_intent'
+        'http://rasa-unittest:5005/unittest-core/conversations/a_partner_id/trigger_intent'
         '?output_channel=latest&token=rasaunittesttoken',
         callback=rasa_core_callback_mock,
     )
