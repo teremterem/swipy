@@ -6,7 +6,7 @@ from rasa_sdk import Tracker
 from rasa_sdk.executor import CollectingDispatcher
 from rasa_sdk.types import DomainDict
 
-from actions import actions
+from actions.actions import ActionFindSomeone
 from actions.user_state_machine import user_vault, UserStateMachine
 
 
@@ -25,7 +25,7 @@ async def test_action_find_someone(
     mock_get_random_available_user.return_value = user3
     mock_create_room.return_value = new_room1
 
-    action = actions.ActionFindSomeone()
+    action = ActionFindSomeone()
     assert action.name() == 'action_find_someone'
 
     actual_events = await action.run(dispatcher, tracker, domain)
