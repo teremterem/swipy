@@ -7,11 +7,12 @@ from boto3.resources.base import ServiceResource
 from moto import mock_dynamodb2
 
 pytest_plugins = [
+    "tests.actions.data.daily_co_fixtures",
     "tests.actions.data.user_state_machine_fixtures",
 ]
 
 
-@pytest.fixture
+@pytest.fixture  # TODO oleksandr: (autouse=True) ?
 def mock_aioresponses() -> aioresponses:
     with aioresponses() as m:
         yield m
