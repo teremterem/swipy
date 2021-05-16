@@ -29,9 +29,17 @@ intents:
     use_entities: true
 - agree:
     use_entities: true
+- EXTERNAL_invite_chitchat_partner:
+    use_entities: true
 entities:
 - dietcls_time
-slots: {}
+- room_link
+slots:
+  room_link:
+    type: rasa.shared.core.slots.TextSlot
+    initial_value: null
+    auto_fill: true
+    influence_conversation: false
 responses:
   utter_greet_offer_chitchat:
   - text: |-
@@ -95,7 +103,7 @@ responses:
   utter_iamabot:
   - text: I am a bot, powered by Rasa.
 actions:
-#- action_find_someone
-- action_create_room
+- action_make_user_available
+- action_find_someone
 forms: {}
 e2e_actions: []

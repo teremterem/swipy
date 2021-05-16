@@ -1,5 +1,7 @@
 import secrets
-from typing import Text, Optional
+from abc import ABC, abstractmethod
+from dataclasses import dataclass, asdict
+from typing import Text, Optional, List
 
 
 class UserState:
@@ -19,35 +21,57 @@ class UserSubState:
     LEAVE_ALONE_FOR_AWHILE = 'leave_alone_for_awhile'  # probably the same as maybe_do_not_disturb
 
 
+@dataclass
 class UserStateMachine:
-    def __init__(self, user_id: Text) -> None:
-        self.user_id = user_id
-        self.state = UserState.NEW
-        self.sub_state = None
-        self.sub_state_expiration = None
-        self.related_user_id = None
-
-    def __repr__(self):
-        return f"{self.__class__.__name__}({repr(self.user_id)})"
+    user_id: Text
+    # user_uuid: Text = field(default_factory=lambda: str(uuid4()))
+    state: Text = UserState.NEW
+    sub_state: Text = None
+    sub_state_expiration: int = None
+    related_user_id: Text = None
 
 
-class _InMemoryUserVault:
-    def __init__(self) -> None:
-        self._users = {}
+class IUserVault(ABC):
+    @abstractmethod
+    def get_user(self, user_id: Text) -> UserStateMachine:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def get_random_user(self) -> Optional[UserStateMachine]:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def get_random_available_user(self, current_user_id: Text) -> Optional[UserStateMachine]:
+        raise NotImplementedError()
+
+
+class NaiveUserVault(IUserVault, ABC):
+    @abstractmethod
+    def _get_user(self, user_id: Text) -> Optional[UserStateMachine]:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def _put_user(self, user_state_machine: UserStateMachine) -> None:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def _list_users(self) -> List[UserStateMachine]:
+        raise NotImplementedError()
 
     def get_user(self, user_id: Text) -> UserStateMachine:
-        user_state_machine = self._users.get(user_id)
+        user_state_machine = self._get_user(user_id)
 
         if user_state_machine is None:
             user_state_machine = UserStateMachine(user_id)
-            self._users[user_id] = user_state_machine
+            self._put_user(user_state_machine)
 
         return user_state_machine
 
     def get_random_user(self) -> Optional[UserStateMachine]:
-        if not self._users:
+        user_list = self._list_users()
+        if not user_list:
             return None
-        return secrets.choice(set(self._users.values()))
+        return secrets.choice(user_list)
 
     def get_random_available_user(self, current_user_id: Text) -> Optional[UserStateMachine]:
         for _ in range(10):
@@ -61,6 +85,30 @@ class _InMemoryUserVault:
         return None
 
 
-UserVault = _InMemoryUserVault
+class DdbUserVault(NaiveUserVault):
+    def _get_user(self, user_id: Text) -> Optional[UserStateMachine]:
+        # TODO oleksandr: is there a better way to ensure that tests have a chance to mock boto3 ?
+        from actions.aws_resources import user_state_machine_table
 
-user_vault = UserVault()
+        # TODO oleksandr: should I resolve the name of the field ('user_id') from the data class somehow ?
+        ddb_resp = user_state_machine_table.get_item(Key={'user_id': user_id})
+        item = ddb_resp.get('Item')
+        return None if item is None else UserStateMachine(**item)
+
+    def _put_user(self, user_state_machine: UserStateMachine) -> None:
+        # TODO oleksandr: is there a better way to ensure that tests have a chance to mock boto3 ?
+        from actions.aws_resources import user_state_machine_table
+
+        user_state_machine_table.put_item(Item=asdict(user_state_machine))
+
+    def _list_users(self) -> List[UserStateMachine]:
+        # TODO oleksandr: is there a better way to ensure that tests have a chance to mock boto3 ?
+        from actions.aws_resources import user_state_machine_table
+
+        ddb_resp = user_state_machine_table.scan()
+        return [UserStateMachine(**item) for item in ddb_resp['Items']]
+
+
+UserVault = DdbUserVault
+
+user_vault: IUserVault = UserVault()

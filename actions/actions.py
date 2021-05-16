@@ -1,54 +1,40 @@
-import logging
-import os
-from pprint import pformat
 from typing import Any, Text, Dict, List
 
-import aiohttp
 from rasa_sdk import Action, Tracker
 from rasa_sdk.executor import CollectingDispatcher
 
-logger = logging.getLogger(__name__)
+from actions.daily_co import create_room
+from actions.rasa_callbacks import invite_chitchat_partner
+from actions.user_state_machine import user_vault
 
-DAILY_CO_BASE_URL = 'https://api.daily.co/v1'
-DAILY_CO_API_TOKEN = os.environ['DAILY_CO_API_TOKEN']
 
-
-class ActionCreateRoom(Action):
-
+class ActionMakeUserAvailable(Action):
     def name(self) -> Text:
-        return 'action_create_room'
+        return 'action_make_user_available'
 
     async def run(
             self, dispatcher: CollectingDispatcher,
             tracker: Tracker,
             domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
-        async with aiohttp.ClientSession() as session:
-            room_data = {
-                'privacy': 'public',
-                'properties': {
-                    'enable_network_ui': False,
-                    'enable_prejoin_ui': True,
-                    'enable_new_call_ui': True,
-                    'enable_screenshare': True,
-                    'enable_chat': True,
-                    'start_video_off': False,
-                    'start_audio_off': False,
-                    'owner_only_broadcast': False,
-                    'lang': 'en',
-                },
-            }
-            async with session.post(
-                    f"{DAILY_CO_BASE_URL}/rooms",
-                    headers={
-                        'Authorization': f"Bearer {DAILY_CO_API_TOKEN}",
-                    },
-                    json=room_data,
-            ) as resp:
-                created_room = await resp.json()
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('NEW DAILY CO ROOM:\n%s', pformat(created_room))
+        user_vault.get_user(tracker.sender_id)
+        return []
 
-        dispatcher.utter_message(response='utter_video_link', room_link=created_room['url'])
 
+class ActionFindSomeone(Action):
+    def name(self) -> Text:
+        return 'action_find_someone'
+
+    async def run(
+            self, dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
+    ) -> List[Dict[Text, Any]]:
+        chitchat_partner = user_vault.get_random_available_user(tracker.sender_id)
+
+        created_room = await create_room()
+        room_url = created_room['url']
+        dispatcher.utter_message(response='utter_video_link', room_link=room_url)
+
+        await invite_chitchat_partner(chitchat_partner.user_id, room_url)
         return []

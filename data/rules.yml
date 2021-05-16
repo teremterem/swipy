@@ -18,12 +18,13 @@ rules:
   - or:
     - intent: affirm
     - intent: want_chitchat
-  - action: action_create_room
+  - action: action_find_someone
 - rule: user sent /start in Telegram
   steps:
   - intent: start
+  - action: action_make_user_available
   - action: utter_greet_offer_chitchat
-#- rule: EXTERNAL_hello_world
-#  steps:
-#  - intent: EXTERNAL_hello_world
-#  - action: action_hello_world
+- rule: EXTERNAL_invite_chitchat_partner
+  steps:
+  - intent: EXTERNAL_invite_chitchat_partner
+  - action: utter_video_link

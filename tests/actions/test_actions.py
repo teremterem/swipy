@@ -1,63 +1,54 @@
+from typing import Dict, Text, Any
+from unittest.mock import patch, AsyncMock, MagicMock
+
 import pytest
-from aioresponses import CallbackResult, aioresponses
 from rasa_sdk import Tracker
 from rasa_sdk.executor import CollectingDispatcher
 from rasa_sdk.types import DomainDict
 
-from actions import actions
+from actions.actions import ActionFindSomeone, ActionMakeUserAvailable
+from actions.user_state_machine import user_vault, UserStateMachine
 
 
 @pytest.mark.asyncio
-async def test_action_create_room(
+@patch.object(user_vault, 'get_user')
+async def test_action_make_user_available(
+        mock_get_user: MagicMock,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: DomainDict,
-        mock_aioresponses: aioresponses,
-):
-    def daily_co_callback_mock(url, headers=None, json=None, **kwargs):
-        assert headers == {
-            'Authorization': 'Bearer test-daily-co-api-token',
-        }
-        assert json == {
-            'privacy': 'public',
-            'properties': {
-                'enable_network_ui': False,
-                'enable_prejoin_ui': True,
-                'enable_new_call_ui': True,
-                'enable_screenshare': True,
-                'enable_chat': True,
-                'start_video_off': False,
-                'start_audio_off': False,
-                'owner_only_broadcast': False,
-                'lang': 'en',
-            },
-        }
-        return CallbackResult(
-            payload={
-                'api_created': True,
-                'config': {
-                    'enable_chat': True,
-                    'enable_network_ui': False,
-                    'enable_new_call_ui': True,
-                    'enable_prejoin_ui': True,
-                    'lang': 'en',
-                },
-                'created_at': '2021-05-09T16:41:17.424Z',
-                'id': 'eeeeeeee-1111-2222-3333-ffffffffffff',
-                'name': 'pytestroom',
-                'privacy': 'public',
-                'url': 'https://swipy.daily.co/pytestroom',
-            },
-        )
+        unit_test_user: UserStateMachine,
+) -> None:
+    mock_get_user.return_value = unit_test_user
 
-    mock_aioresponses.post(
-        'https://api.daily.co/v1/rooms',
-        callback=daily_co_callback_mock,
-    )
+    action = ActionMakeUserAvailable()
+    assert action.name() == 'action_make_user_available'
 
-    action = actions.ActionCreateRoom()
+    actual_events = await action.run(dispatcher, tracker, domain)
+    assert actual_events == []
 
-    assert action.name() == 'action_create_room'
+    mock_get_user.assert_called_once_with('unit_test_user')
+
+
+@pytest.mark.asyncio
+@patch('actions.actions.invite_chitchat_partner')
+@patch('actions.actions.create_room')
+@patch.object(user_vault, 'get_random_available_user')
+async def test_action_find_someone(
+        mock_get_random_available_user: MagicMock,
+        mock_create_room: AsyncMock,
+        mock_invite_chitchat_partner: MagicMock,
+        tracker: Tracker,
+        dispatcher: CollectingDispatcher,
+        domain: DomainDict,
+        user3: UserStateMachine,
+        new_room1: Dict[Text, Any],
+) -> None:
+    mock_get_random_available_user.return_value = user3
+    mock_create_room.return_value = new_room1
+
+    action = ActionFindSomeone()
+    assert action.name() == 'action_find_someone'
 
     actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == []
@@ -73,3 +64,5 @@ async def test_action_create_room(
         'template': 'utter_video_link',
         'text': None,
     }]
+    mock_get_random_available_user.assert_called_once_with('unit_test_user')
+    mock_invite_chitchat_partner.assert_called_once_with('existing_user_id3', 'https://swipy.daily.co/pytestroom')
