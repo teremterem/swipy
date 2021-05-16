@@ -1,4 +1,5 @@
 from typing import Dict, Text, Any
+from unittest.mock import MagicMock
 
 import pytest
 from aioresponses import CallbackResult, aioresponses
@@ -11,7 +12,7 @@ async def test_create_room(
         mock_aioresponses: aioresponses,
         new_room1: Dict[Text, Any],
 ) -> None:
-    def daily_co_callback_mock(url, headers=None, json=None, **kwargs):
+    def daily_co_callback(url, headers=None, json=None, **kwargs):
         assert headers == {
             'Authorization': 'Bearer test-daily-co-api-token',
         }
@@ -31,9 +32,11 @@ async def test_create_room(
         }
         return CallbackResult(payload=new_room1)
 
+    daily_co_callback_mock = MagicMock(side_effect=daily_co_callback)
     mock_aioresponses.post(
         'https://api.daily.co/v1/rooms',
         callback=daily_co_callback_mock,
     )
 
     assert await create_room() == new_room1
+    daily_co_callback_mock.assert_called_once()
