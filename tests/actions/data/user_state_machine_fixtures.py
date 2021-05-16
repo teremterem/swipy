@@ -27,3 +27,8 @@ def user2(create_user_state_machine_table) -> UserStateMachine:
 @pytest.fixture
 def user3(create_user_state_machine_table) -> UserStateMachine:
     return _populate_user('existing_user_id3')
+
+
+@pytest.fixture
+def unit_test_user(create_user_state_machine_table) -> UserStateMachine:
+    return _populate_user('unit_test_user')

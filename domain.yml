@@ -29,6 +29,7 @@ intents:
     use_entities: true
 - agree:
     use_entities: true
+- EXTERNAL_invite_chitchat_partner
 entities:
 - dietcls_time
 slots: {}
@@ -95,6 +96,7 @@ responses:
   utter_iamabot:
   - text: I am a bot, powered by Rasa.
 actions:
+- action_make_user_available
 - action_find_someone
 forms: {}
 e2e_actions: []

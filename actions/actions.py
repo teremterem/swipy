@@ -7,6 +7,20 @@ from actions.daily_co import create_room
 from actions.user_state_machine import user_vault
 
 
+class ActionMakeUserAvailable(Action):
+
+    def name(self) -> Text:
+        return 'action_make_user_available'
+
+    async def run(
+            self, dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
+    ) -> List[Dict[Text, Any]]:
+        user_vault.get_user(tracker.sender_id)
+        return []
+
+
 class ActionFindSomeone(Action):
 
     def name(self) -> Text:

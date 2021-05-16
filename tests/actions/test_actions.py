@@ -6,8 +6,28 @@ from rasa_sdk import Tracker
 from rasa_sdk.executor import CollectingDispatcher
 from rasa_sdk.types import DomainDict
 
-from actions.actions import ActionFindSomeone
+from actions.actions import ActionFindSomeone, ActionMakeUserAvailable
 from actions.user_state_machine import user_vault, UserStateMachine
+
+
+@pytest.mark.asyncio
+@patch.object(user_vault, 'get_user')
+async def test_action_make_user_available(
+        mock_get_user: MagicMock,
+        tracker: Tracker,
+        dispatcher: CollectingDispatcher,
+        domain: DomainDict,
+        unit_test_user: UserStateMachine,
+) -> None:
+    mock_get_user.return_value = unit_test_user
+
+    action = ActionMakeUserAvailable()
+    assert action.name() == 'action_make_user_available'
+
+    actual_events = await action.run(dispatcher, tracker, domain)
+    assert actual_events == []
+
+    mock_get_user.assert_called_once_with('unit_test_user')
 
 
 @pytest.mark.asyncio
