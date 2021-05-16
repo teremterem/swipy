@@ -111,4 +111,4 @@ class DdbUserVault(NaiveUserVault):
 
 UserVault = DdbUserVault
 
-user_vault = UserVault()
+user_vault: IUserVault = UserVault()
