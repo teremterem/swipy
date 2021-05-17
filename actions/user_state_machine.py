@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Text
+from typing import Text, Optional
 
 from transitions import Machine
 
@@ -22,7 +22,7 @@ class UserState:
 class UserModel:
     user_id: Text
     state: Text = None  # the state machine will set it to UserState.NEW if not provided explicitly
-    related_user_id: Text = None
+    related_user_id: Optional[Text] = None
 
 
 class UserStateMachine(UserModel):
@@ -37,4 +37,8 @@ class UserStateMachine(UserModel):
             trigger='request_chitchat',
             source='*',
             dest=UserState.WANTS_CHITCHAT,
+            after='after_request_chitchat',
         )
+
+    def after_request_chitchat(self):
+        self.related_user_id = None
