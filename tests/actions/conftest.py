@@ -8,7 +8,7 @@ from rasa_sdk import Tracker
 from rasa_sdk.executor import CollectingDispatcher
 from rasa_sdk.types import DomainDict
 
-from actions.user_state_machine import UserVault
+from actions.user_vault import UserVault
 
 
 @pytest.fixture

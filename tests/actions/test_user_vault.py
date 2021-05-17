@@ -3,8 +3,8 @@ from unittest.mock import patch
 
 import pytest
 
-from actions.user_state_machine import UserVault, UserStateMachine, DdbUserVault
-from actions.user_state_machine import user_vault as user_vault_singleton
+from actions.user_vault import UserVault, UserStateMachine, DdbUserVault
+from actions.user_vault import user_vault as user_vault_singleton
 
 
 def test_user_vault_singleton() -> None:
@@ -47,7 +47,7 @@ def test_get_existing_user(
 
 
 @pytest.mark.usefixtures('user1', 'user3')
-@patch('actions.user_state_machine.secrets.choice')
+@patch('actions.user_vault.secrets.choice')
 def test_get_random_user(
         choice_mock,
         user_vault: UserVault,

@@ -3,7 +3,7 @@ from typing import List, Dict, Text, Any
 
 import pytest
 
-from actions.user_state_machine import UserStateMachine
+from actions.user_vault import UserStateMachine
 
 
 def _populate_user(user_state_machine: UserStateMachine) -> UserStateMachine:

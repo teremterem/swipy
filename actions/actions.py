@@ -5,7 +5,7 @@ from rasa_sdk.executor import CollectingDispatcher
 
 from actions.daily_co import create_room
 from actions.rasa_callbacks import invite_chitchat_partner
-from actions.user_state_machine import user_vault
+from actions.user_vault import user_vault
 
 
 class ActionMakeUserAvailable(Action):
