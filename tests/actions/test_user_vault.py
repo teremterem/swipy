@@ -32,29 +32,29 @@ def test_get_new_user(user_vault: UserVault) -> None:
 
 def test_get_existing_user(
         user_vault: UserVault,
-        user1: UserStateMachine,
+        ddb_user1: UserStateMachine,
 ) -> None:
     from actions.aws_resources import user_state_machine_table
 
     assert len(user_state_machine_table.scan()['Items']) == 1
-    assert user_vault.get_user('existing_user_id1') == user1
+    assert user_vault.get_user('existing_user_id1') == ddb_user1
     assert len(user_state_machine_table.scan()['Items']) == 1
 
 
-@pytest.mark.usefixtures('user1', 'user3')
+@pytest.mark.usefixtures('ddb_user1', 'ddb_user3')
 @patch('actions.user_vault.secrets.choice')
 def test_get_random_user(
         choice_mock,
         user_vault: UserVault,
-        user2: UserStateMachine,
+        ddb_user2: UserStateMachine,
 ) -> None:
     from actions.aws_resources import user_state_machine_table
 
-    choice_mock.return_value = user2
+    choice_mock.return_value = ddb_user2
 
     assert len(user_state_machine_table.scan()['Items']) == 3
 
-    assert user_vault.get_random_user() is user2
+    assert user_vault.get_random_user() is ddb_user2
 
     items = user_state_machine_table.scan()['Items']
     assert len(items) == 3
@@ -74,13 +74,13 @@ def test_no_random_user(user_vault: UserVault) -> None:
 def test_get_random_available_user(
         get_random_user_mock,
         user_vault: UserVault,
-        user1: UserStateMachine,
-        user2: UserStateMachine,
-        user3: UserStateMachine,
+        ddb_user1: UserStateMachine,
+        ddb_user2: UserStateMachine,
+        ddb_user3: UserStateMachine,
 ) -> None:
-    get_random_user_mock.side_effect = [user1, user2, user3]
+    get_random_user_mock.side_effect = [ddb_user1, ddb_user2, ddb_user3]
 
-    assert user_vault.get_random_available_user('existing_user_id1') is user2
+    assert user_vault.get_random_available_user('existing_user_id1') is ddb_user2
     assert get_random_user_mock.call_count == 2
 
 
@@ -88,15 +88,15 @@ def test_get_random_available_user(
 def test_no_available_users(
         get_random_user_mock,
         user_vault: UserVault,
-        user1: UserStateMachine,
+        ddb_user1: UserStateMachine,
 ) -> None:
-    get_random_user_mock.return_value = user1
+    get_random_user_mock.return_value = ddb_user1
 
     assert user_vault.get_random_available_user('existing_user_id1') is None
     assert get_random_user_mock.call_count == 10
 
 
-@pytest.mark.usefixtures('user1', 'user2', 'user3')
+@pytest.mark.usefixtures('ddb_user1', 'ddb_user2', 'ddb_user3')
 def test_save_new_user(
         user_vault: UserVault,
         scan_of_three_users: List[Dict[Text, Any]],
@@ -125,7 +125,7 @@ def test_save_new_user(
     ]
 
 
-@pytest.mark.usefixtures('user1', 'user2', 'user3')
+@pytest.mark.usefixtures('ddb_user1', 'ddb_user2', 'ddb_user3')
 def test_save_existing_user(
         user_vault: UserVault,
         scan_of_three_users: List[Dict[Text, Any]],
@@ -152,26 +152,26 @@ def test_save_existing_user(
 
 def test_ddb_user_vault_list_users(
         user_vault: DdbUserVault,
-        user1: UserStateMachine,
-        user2: UserStateMachine,
-        user3: UserStateMachine,
+        ddb_user1: UserStateMachine,
+        ddb_user2: UserStateMachine,
+        ddb_user3: UserStateMachine,
 ) -> None:
-    assert user_vault._list_users() == [user1, user2, user3]
+    assert user_vault._list_users() == [ddb_user1, ddb_user2, ddb_user3]
 
 
-@pytest.mark.usefixtures('user1', 'user3')
+@pytest.mark.usefixtures('ddb_user1', 'ddb_user3')
 def test_ddb_user_vault_get_existing_user(
         user_vault: DdbUserVault,
-        user2: UserStateMachine,
+        ddb_user2: UserStateMachine,
 ) -> None:
     from actions.aws_resources import user_state_machine_table
 
     assert len(user_state_machine_table.scan()['Items']) == 3
-    assert user_vault._get_user('existing_user_id2') == user2
+    assert user_vault._get_user('existing_user_id2') == ddb_user2
     assert len(user_state_machine_table.scan()['Items']) == 3
 
 
-@pytest.mark.usefixtures('user1', 'user2', 'user3')
+@pytest.mark.usefixtures('ddb_user1', 'ddb_user2', 'ddb_user3')
 def test_ddb_user_vault_get_nonexistent_user(user_vault: DdbUserVault) -> None:
     from actions.aws_resources import user_state_machine_table
 
