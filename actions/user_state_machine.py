@@ -22,6 +22,7 @@ class UserState:
 class UserModel:
     user_id: Text
     state: Text = None  # the state machine will set it to UserState.NEW if not provided explicitly
+    related_user_id: Text = None
 
 
 class UserStateMachine(UserModel):

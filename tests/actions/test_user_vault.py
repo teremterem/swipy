@@ -23,10 +23,12 @@ def test_get_new_user(user_vault: UserVault) -> None:
 
     assert user_state_machine.user_id == 'new_user_id'
     assert user_state_machine.state == 'new'
+    assert user_state_machine.related_user_id is None
 
     assert user_state_machine_table.scan()['Items'] == [{
         'user_id': 'new_user_id',
         'state': 'new',
+        'related_user_id': None,
     }]
 
 
@@ -109,18 +111,22 @@ def test_save_new_user(
         {
             'user_id': 'existing_user_id1',
             'state': 'ok_for_chitchat',
+            'related_user_id': 'some_related_user_id',
         },
         {
             'user_id': 'existing_user_id2',
             'state': 'new',
+            'related_user_id': None,
         },
         {
             'user_id': 'existing_user_id3',
             'state': 'new',
+            'related_user_id': None,
         },
         {
             'user_id': 'new_ddb_user_was_put',
             'state': 'new',
+            'related_user_id': None,
         },
     ]
 
@@ -133,19 +139,25 @@ def test_save_existing_user(
     from actions.aws_resources import user_state_machine_table
 
     assert user_state_machine_table.scan()['Items'] == scan_of_three_users
-    user_vault.save_user(UserStateMachine(user_id='existing_user_id1', state=UserState.DO_NOT_DISTURB))
+    user_vault.save_user(UserStateMachine(
+        user_id='existing_user_id1',
+        state=UserState.DO_NOT_DISTURB,
+    ))
     assert user_state_machine_table.scan()['Items'] == [
         {
             'user_id': 'existing_user_id1',
             'state': 'do_not_disturb',  # the value used to be 'ok_for_chitchat' but we have overridden it
+            'related_user_id': None,  # the value used to be 'some_related_user_id' but we have overridden it
         },
         {
             'user_id': 'existing_user_id2',
             'state': 'new',
+            'related_user_id': None,
         },
         {
             'user_id': 'existing_user_id3',
             'state': 'new',
+            'related_user_id': None,
         },
     ]
 
