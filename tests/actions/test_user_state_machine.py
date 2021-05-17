@@ -1,3 +1,4 @@
+from typing import List, Dict, Text, Any
 from unittest.mock import patch
 
 import pytest
@@ -100,8 +101,83 @@ def test_no_available_users(
     assert get_random_user_mock.call_count == 10
 
 
-def test_ddb_user_vault_list_users(
+@pytest.mark.usefixtures('user1', 'user2', 'user3')
+def test_save_new_user(
         user_vault: UserVault,
+        scan_of_three_users: List[Dict[Text, Any]],
+) -> None:
+    from actions.aws_resources import user_state_machine_table
+
+    assert user_state_machine_table.scan()['Items'] == scan_of_three_users
+    user_vault.save_user(UserStateMachine('new_ddb_user_was_put'))
+    assert user_state_machine_table.scan()['Items'] == [
+        {
+            'user_id': 'existing_user_id1',
+            'related_user_id': None,
+            'state': 'new',
+            'sub_state': 'some_sub_state',
+            'sub_state_expiration': None,
+        },
+        {
+            'user_id': 'existing_user_id2',
+            'related_user_id': None,
+            'state': 'new',
+            'sub_state': None,
+            'sub_state_expiration': None,
+        },
+        {
+            'user_id': 'existing_user_id3',
+            'related_user_id': None,
+            'state': 'new',
+            'sub_state': None,
+            'sub_state_expiration': None,
+        },
+        {
+            'user_id': 'new_ddb_user_was_put',
+            'related_user_id': None,
+            'state': 'new',
+            'sub_state': None,
+            'sub_state_expiration': None,
+        },
+    ]
+
+
+@pytest.mark.usefixtures('user1', 'user2', 'user3')
+def test_save_existing_user(
+        user_vault: UserVault,
+        scan_of_three_users: List[Dict[Text, Any]],
+) -> None:
+    from actions.aws_resources import user_state_machine_table
+
+    assert user_state_machine_table.scan()['Items'] == scan_of_three_users
+    user_vault.save_user(UserStateMachine(user_id='existing_user_id1', state='not_so_new'))
+    assert user_state_machine_table.scan()['Items'] == [
+        {
+            'user_id': 'existing_user_id1',
+            'related_user_id': None,
+            'state': 'not_so_new',  # the value used to be 'new' but we have overridden it
+            'sub_state': None,  # the value used to be 'some_sub_state' but we have overridden it with None
+            'sub_state_expiration': None,
+        },
+        {
+            'user_id': 'existing_user_id2',
+            'related_user_id': None,
+            'state': 'new',
+            'sub_state': None,
+            'sub_state_expiration': None,
+        },
+        {
+            'user_id': 'existing_user_id3',
+            'related_user_id': None,
+            'state': 'new',
+            'sub_state': None,
+            'sub_state_expiration': None,
+        },
+    ]
+
+
+def test_ddb_user_vault_list_users(
+        user_vault: DdbUserVault,
         user1: UserStateMachine,
         user2: UserStateMachine,
         user3: UserStateMachine,
@@ -111,7 +187,7 @@ def test_ddb_user_vault_list_users(
 
 @pytest.mark.usefixtures('user1', 'user3')
 def test_ddb_user_vault_get_user(
-        user_vault: UserVault,
+        user_vault: DdbUserVault,
         user2: UserStateMachine,
 ) -> None:
     from actions.aws_resources import user_state_machine_table
@@ -121,16 +197,10 @@ def test_ddb_user_vault_get_user(
     assert len(user_state_machine_table.scan()['Items']) == 3
 
 
-@pytest.mark.usefixtures('create_user_state_machine_table')
-def test_ddb_user_vault_put_user(user_vault: UserVault) -> None:
+@pytest.mark.usefixtures('user1', 'user2', 'user3')
+def test_ddb_user_vault_get_nonexistent_user(user_vault: DdbUserVault) -> None:
     from actions.aws_resources import user_state_machine_table
 
-    assert not user_state_machine_table.scan()['Items']
-    user_vault._put_user(UserStateMachine('new_ddb_user_was_put'))
-    assert user_state_machine_table.scan()['Items'] == [{
-        'user_id': 'new_ddb_user_was_put',
-        'related_user_id': None,
-        'state': 'new',
-        'sub_state': None,
-        'sub_state_expiration': None,
-    }]
+    assert len(user_state_machine_table.scan()['Items']) == 3
+    assert user_vault._get_user('there_is_no_such_user') is None
+    assert len(user_state_machine_table.scan()['Items']) == 3

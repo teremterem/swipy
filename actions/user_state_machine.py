@@ -1,7 +1,7 @@
 import secrets
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, asdict
-from typing import Text, Optional, List
+from typing import Text, Optional, List, Type
 
 
 class UserState:
@@ -44,6 +44,10 @@ class IUserVault(ABC):
     def get_random_available_user(self, current_user_id: Text) -> Optional[UserStateMachine]:
         raise NotImplementedError()
 
+    @abstractmethod
+    def save_user(self, user: UserStateMachine) -> None:
+        raise NotImplementedError()
+
 
 class NaiveUserVault(IUserVault, ABC):
     @abstractmethod
@@ -51,11 +55,11 @@ class NaiveUserVault(IUserVault, ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def _put_user(self, user_state_machine: UserStateMachine) -> None:
+    def _list_users(self) -> List[UserStateMachine]:
         raise NotImplementedError()
 
     @abstractmethod
-    def _list_users(self) -> List[UserStateMachine]:
+    def save_user(self, user: UserStateMachine) -> None:
         raise NotImplementedError()
 
     def get_user(self, user_id: Text) -> UserStateMachine:
@@ -63,7 +67,7 @@ class NaiveUserVault(IUserVault, ABC):
 
         if user_state_machine is None:
             user_state_machine = UserStateMachine(user_id)
-            self._put_user(user_state_machine)
+            self.save_user(user_state_machine)
 
         return user_state_machine
 
@@ -95,12 +99,6 @@ class DdbUserVault(NaiveUserVault):
         item = ddb_resp.get('Item')
         return None if item is None else UserStateMachine(**item)
 
-    def _put_user(self, user_state_machine: UserStateMachine) -> None:
-        # TODO oleksandr: is there a better way to ensure that the tests have a chance to mock boto3 ?
-        from actions.aws_resources import user_state_machine_table
-
-        user_state_machine_table.put_item(Item=asdict(user_state_machine))
-
     def _list_users(self) -> List[UserStateMachine]:
         # TODO oleksandr: is there a better way to ensure that the tests have a chance to mock boto3 ?
         from actions.aws_resources import user_state_machine_table
@@ -108,7 +106,13 @@ class DdbUserVault(NaiveUserVault):
         ddb_resp = user_state_machine_table.scan()
         return [UserStateMachine(**item) for item in ddb_resp['Items']]
 
+    def save_user(self, user_state_machine: UserStateMachine) -> None:
+        # TODO oleksandr: is there a better way to ensure that the tests have a chance to mock boto3 ?
+        from actions.aws_resources import user_state_machine_table
 
-UserVault = DdbUserVault
+        user_state_machine_table.put_item(Item=asdict(user_state_machine))
+
+
+UserVault: Type[IUserVault] = DdbUserVault
 
 user_vault: IUserVault = UserVault()
