@@ -87,7 +87,7 @@ class NaiveUserVault(IUserVault, ABC):
 
 class DdbUserVault(NaiveUserVault):
     def _get_user(self, user_id: Text) -> Optional[UserStateMachine]:
-        # TODO oleksandr: is there a better way to ensure that tests have a chance to mock boto3 ?
+        # TODO oleksandr: is there a better way to ensure that the tests have a chance to mock boto3 ?
         from actions.aws_resources import user_state_machine_table
 
         # TODO oleksandr: should I resolve the name of the field ('user_id') from the data class somehow ?
@@ -96,13 +96,13 @@ class DdbUserVault(NaiveUserVault):
         return None if item is None else UserStateMachine(**item)
 
     def _put_user(self, user_state_machine: UserStateMachine) -> None:
-        # TODO oleksandr: is there a better way to ensure that tests have a chance to mock boto3 ?
+        # TODO oleksandr: is there a better way to ensure that the tests have a chance to mock boto3 ?
         from actions.aws_resources import user_state_machine_table
 
         user_state_machine_table.put_item(Item=asdict(user_state_machine))
 
     def _list_users(self) -> List[UserStateMachine]:
-        # TODO oleksandr: is there a better way to ensure that tests have a chance to mock boto3 ?
+        # TODO oleksandr: is there a better way to ensure that the tests have a chance to mock boto3 ?
         from actions.aws_resources import user_state_machine_table
 
         ddb_resp = user_state_machine_table.scan()
