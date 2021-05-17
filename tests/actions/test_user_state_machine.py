@@ -186,7 +186,7 @@ def test_ddb_user_vault_list_users(
 
 
 @pytest.mark.usefixtures('user1', 'user3')
-def test_ddb_user_vault_get_user(
+def test_ddb_user_vault_get_existing_user(
         user_vault: DdbUserVault,
         user2: UserStateMachine,
 ) -> None:
