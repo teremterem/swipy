@@ -85,6 +85,7 @@ class DdbUserVault(NaiveUserVault):
         # TODO oleksandr: is there a better way to ensure that the tests have a chance to mock boto3 ?
         from actions.aws_resources import user_state_machine_table
 
+        # https://stackoverflow.com/a/43672209/2040370
         user_state_machine_table.put_item(Item=asdict(user_state_machine))
 
 

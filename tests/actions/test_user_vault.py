@@ -137,7 +137,7 @@ def test_save_existing_user(
     assert user_state_machine_table.scan()['Items'] == [
         {
             'user_id': 'existing_user_id1',
-            'state': 'do_not_disturb',  # the value used to be 'new' but we have overridden it
+            'state': 'do_not_disturb',  # the value used to be 'ok_for_chitchat' but we have overridden it
         },
         {
             'user_id': 'existing_user_id2',
