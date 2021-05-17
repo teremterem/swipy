@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
-from actions.user_state_machine import UserStateMachine
+from actions.user_state_machine import UserStateMachine, UserState
 from actions.user_vault import UserVault, DdbUserVault
 from actions.user_vault import user_vault as user_vault_singleton
 
@@ -23,16 +23,10 @@ def test_get_new_user(user_vault: UserVault) -> None:
 
     assert user_state_machine.user_id == 'new_user_id'
     assert user_state_machine.state == 'new'
-    assert user_state_machine.sub_state is None
-    assert user_state_machine.sub_state_expiration is None
-    assert user_state_machine.related_user_id is None
 
     assert user_state_machine_table.scan()['Items'] == [{
         'user_id': 'new_user_id',
-        'related_user_id': None,
         'state': 'new',
-        'sub_state': None,
-        'sub_state_expiration': None,
     }]
 
 
@@ -114,31 +108,19 @@ def test_save_new_user(
     assert user_state_machine_table.scan()['Items'] == [
         {
             'user_id': 'existing_user_id1',
-            'related_user_id': None,
-            'state': 'new',
-            'sub_state': 'some_sub_state',
-            'sub_state_expiration': None,
+            'state': 'ok_for_chitchat',
         },
         {
             'user_id': 'existing_user_id2',
-            'related_user_id': None,
             'state': 'new',
-            'sub_state': None,
-            'sub_state_expiration': None,
         },
         {
             'user_id': 'existing_user_id3',
-            'related_user_id': None,
             'state': 'new',
-            'sub_state': None,
-            'sub_state_expiration': None,
         },
         {
             'user_id': 'new_ddb_user_was_put',
-            'related_user_id': None,
             'state': 'new',
-            'sub_state': None,
-            'sub_state_expiration': None,
         },
     ]
 
@@ -151,28 +133,19 @@ def test_save_existing_user(
     from actions.aws_resources import user_state_machine_table
 
     assert user_state_machine_table.scan()['Items'] == scan_of_three_users
-    user_vault.save_user(UserStateMachine(user_id='existing_user_id1', state='not_so_new'))
+    user_vault.save_user(UserStateMachine(user_id='existing_user_id1', state=UserState.DO_NOT_DISTURB))
     assert user_state_machine_table.scan()['Items'] == [
         {
             'user_id': 'existing_user_id1',
-            'related_user_id': None,
-            'state': 'not_so_new',  # the value used to be 'new' but we have overridden it
-            'sub_state': None,  # the value used to be 'some_sub_state' but we have overridden it with None
-            'sub_state_expiration': None,
+            'state': 'do_not_disturb',  # the value used to be 'new' but we have overridden it
         },
         {
             'user_id': 'existing_user_id2',
-            'related_user_id': None,
             'state': 'new',
-            'sub_state': None,
-            'sub_state_expiration': None,
         },
         {
             'user_id': 'existing_user_id3',
-            'related_user_id': None,
             'state': 'new',
-            'sub_state': None,
-            'sub_state_expiration': None,
         },
     ]
 
