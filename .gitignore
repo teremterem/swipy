@@ -7,7 +7,7 @@ rasa.*
 events.*
 story_graph.dot
 
-jupyter-sandbox/daily-api-token.json
+jupyter-sandbox/daily-co-api-token.txt
 
 ### VirtualEnv template
 # Virtualenv

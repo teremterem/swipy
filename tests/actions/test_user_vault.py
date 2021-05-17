@@ -3,7 +3,8 @@ from unittest.mock import patch
 
 import pytest
 
-from actions.user_vault import UserVault, UserStateMachine, DdbUserVault
+from actions.user_state_machine import UserStateMachine
+from actions.user_vault import UserVault, DdbUserVault
 from actions.user_vault import user_vault as user_vault_singleton
 
 

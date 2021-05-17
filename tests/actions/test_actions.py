@@ -7,7 +7,8 @@ from rasa_sdk.executor import CollectingDispatcher
 from rasa_sdk.types import DomainDict
 
 from actions.actions import ActionFindSomeone, ActionMakeUserAvailable
-from actions.user_vault import user_vault, UserStateMachine
+from actions.user_state_machine import UserStateMachine
+from actions.user_vault import user_vault
 
 
 @pytest.mark.asyncio
