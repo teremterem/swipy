@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
-from actions.user_state_machine import UserStateMachine
+from actions.user_state_machine import UserStateMachine, UserState
 from actions.user_vault import UserVault, DdbUserVault
 from actions.user_vault import user_vault as user_vault_singleton
 
@@ -133,7 +133,7 @@ def test_save_existing_user(
     from actions.aws_resources import user_state_machine_table
 
     assert user_state_machine_table.scan()['Items'] == scan_of_three_users
-    user_vault.save_user(UserStateMachine(user_id='existing_user_id1', state=UserStateMachine.STATE_DO_NOT_DISTURB))
+    user_vault.save_user(UserStateMachine(user_id='existing_user_id1', state=UserState.DO_NOT_DISTURB))
     assert user_state_machine_table.scan()['Items'] == [
         {
             'user_id': 'existing_user_id1',

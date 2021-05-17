@@ -3,7 +3,7 @@ from typing import List, Dict, Text, Any
 
 import pytest
 
-from actions.user_state_machine import UserStateMachine
+from actions.user_state_machine import UserStateMachine, UserState
 
 
 def _populate_user(user_state_machine: UserStateMachine) -> UserStateMachine:
@@ -23,7 +23,7 @@ def unit_test_user(create_user_state_machine_table) -> UserStateMachine:
 def user1(create_user_state_machine_table) -> UserStateMachine:
     return _populate_user(UserStateMachine(
         user_id='existing_user_id1',
-        state=UserStateMachine.STATE_OK_FOR_CHITCHAT,
+        state=UserState.OK_FOR_CHITCHAT,
     ))
 
 
