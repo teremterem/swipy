@@ -29,3 +29,9 @@ class UserStateMachine(UserModel):
         self.machine = Machine(model=self, states=self.STATES, initial=self.STATE_NEW)
         if state is not None:
             self.machine.set_state(state)
+
+        self.machine.add_transition(
+            trigger='request_chitchat',
+            source='*',
+            dest=UserStateMachine.STATE_WANTS_CHITCHAT,
+        )
