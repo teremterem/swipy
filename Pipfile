@@ -13,6 +13,7 @@ name = "rasa"
 # TODO oleksandr: what if I also need to customize Rasa Core, thought ?
 aiohttp = "*"
 boto3 = "*"
+transitions = "*"
 
 [dev-packages]
 # https://github.com/RasaHQ/rasa/issues/7124#issuecomment-822225557
