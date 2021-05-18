@@ -41,31 +41,31 @@ class UserStateMachine(UserModel):
             trigger='ask_partner',
             source='*',
             dest=UserState.WAITING_PARTNER_ANSWER,
-            after=self.after_ask_partner,
+            before=self.before_ask_partner,
         )
         # noinspection PyTypeChecker
         self.machine.add_transition(
             trigger='fail_to_find_partner',
             source='*',
             dest=UserState.OK_FOR_CHITCHAT,
-            after=self.after_fail_to_find_partner,
+            before=self.before_fail_to_find_partner,
         )
         # noinspection PyTypeChecker
         self.machine.add_transition(
             trigger='become_asked_to_join',
             source=UserState.OK_FOR_CHITCHAT,
             dest=UserState.ASKED_TO_JOIN,
-            after=self.after_become_asked_to_join,
+            before=self.before_become_asked_to_join,
         )
 
-    def after_ask_partner(self, partner: 'UserStateMachine'):
+    def before_ask_partner(self, partner: 'UserStateMachine'):
         # noinspection PyUnresolvedReferences
         partner.become_asked_to_join(self.user_id)
 
         self.related_user_id = partner.user_id
 
-    def after_fail_to_find_partner(self):
+    def before_fail_to_find_partner(self):
         self.related_user_id = None
 
-    def after_become_asked_to_join(self, asker_id: Text):
+    def before_become_asked_to_join(self, asker_id: Text):
         self.related_user_id = asker_id
