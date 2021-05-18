@@ -36,11 +36,12 @@ class UserStateMachine(UserModel):
         if state is not None:
             self.machine.set_state(state)
 
+        # noinspection PyTypeChecker
         self.machine.add_transition(
             trigger='request_chitchat',
             source='*',
             dest=UserState.WAITING_PARTNER_ANSWER,
-            after='after_request_chitchat',
+            after=self.after_request_chitchat,
         )
 
     def after_request_chitchat(self, related_user_id):
