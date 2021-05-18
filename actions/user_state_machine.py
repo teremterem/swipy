@@ -7,16 +7,14 @@ from transitions import Machine
 class UserState:
     NEW = 'new'
     WAITING_PARTNER_ANSWER = 'waiting_partner_answer'
-    OK_FOR_CHITCHAT_NEWBIE = 'ok_for_chitchat_newbie'
-    OK_FOR_CHITCHAT_VETERAN = 'ok_for_chitchat_veteran'
+    OK_FOR_CHITCHAT = 'ok_for_chitchat'
     ASKED_TO_JOIN = 'asked_to_join'
     DO_NOT_DISTURB = 'do_not_disturb'
 
     all = [
         NEW,
         WAITING_PARTNER_ANSWER,
-        OK_FOR_CHITCHAT_NEWBIE,
-        OK_FOR_CHITCHAT_VETERAN,
+        OK_FOR_CHITCHAT,
         ASKED_TO_JOIN,
         DO_NOT_DISTURB,
     ]
@@ -27,6 +25,7 @@ class UserModel:
     user_id: Text
     state: Text = None  # the state machine will set it to UserState.NEW if not provided explicitly
     related_user_id: Optional[Text] = None
+    newbie: bool = True
 
 
 class UserStateMachine(UserModel):

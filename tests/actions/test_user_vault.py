@@ -24,11 +24,13 @@ def test_get_new_user(user_vault: UserVault) -> None:
     assert user_state_machine.user_id == 'new_user_id'
     assert user_state_machine.state == 'new'
     assert user_state_machine.related_user_id is None
+    assert user_state_machine.newbie is True
 
     assert user_state_machine_table.scan()['Items'] == [{
         'user_id': 'new_user_id',
         'state': 'new',
         'related_user_id': None,
+        'newbie': True,
     }]
 
 
@@ -110,23 +112,27 @@ def test_save_new_user(
     assert user_state_machine_table.scan()['Items'] == [
         {
             'user_id': 'existing_user_id1',
-            'state': 'ok_for_chitchat_veteran',
+            'state': 'waiting_partner_answer',
             'related_user_id': 'some_related_user_id',
+            'newbie': False,
         },
         {
             'user_id': 'existing_user_id2',
             'state': 'new',
             'related_user_id': None,
+            'newbie': True,
         },
         {
             'user_id': 'existing_user_id3',
             'state': 'new',
             'related_user_id': None,
+            'newbie': True,
         },
         {
             'user_id': 'new_ddb_user_was_put',
             'state': 'new',
             'related_user_id': None,
+            'newbie': True,
         },
     ]
 
@@ -146,18 +152,21 @@ def test_save_existing_user(
     assert user_state_machine_table.scan()['Items'] == [
         {
             'user_id': 'existing_user_id1',
-            'state': 'do_not_disturb',  # the value used to be 'ok_for_chitchat_veteran' but we have overridden it
-            'related_user_id': None,  # the value used to be 'some_related_user_id' but we have overridden it
+            'state': 'do_not_disturb',  # used to be 'waiting_partner_answer' but we have overridden it
+            'related_user_id': None,  # used to be 'some_related_user_id' but we have overridden it
+            'newbie': True,  # used to be False but we have overridden it
         },
         {
             'user_id': 'existing_user_id2',
             'state': 'new',
             'related_user_id': None,
+            'newbie': True,
         },
         {
             'user_id': 'existing_user_id3',
             'state': 'new',
             'related_user_id': None,
+            'newbie': True,
         },
     ]
 
