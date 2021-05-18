@@ -29,7 +29,7 @@ class UserModel:
 
 
 class UserStateMachine(UserModel):
-    def __init__(self, *args, state=None, **kwargs):
+    def __init__(self, *args, state: Text = None, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
         self.machine = Machine(model=self, states=UserState.all, initial=UserState.NEW)
@@ -64,15 +64,25 @@ class UserStateMachine(UserModel):
             dest=UserState.ASKED_TO_JOIN,
             before=self.before_become_asked_to_join,
         )
+        # noinspection PyTypeChecker
+        self.machine.add_transition(
+            trigger='accept_invitation',
+            source=UserState.ASKED_TO_JOIN,
+            dest=UserState.OK_FOR_CHITCHAT,
+            before=self.before_accept_invitation,
+        )
 
-    def before_ask_partner(self, partner: 'UserStateMachine'):
+    def before_ask_partner(self, partner: 'UserStateMachine') -> None:
         # noinspection PyUnresolvedReferences
         partner.become_asked_to_join(self.user_id)
 
         self.related_user_id = partner.user_id
 
-    def before_become_ok_for_chitchat(self):
+    def before_become_ok_for_chitchat(self) -> None:
         self.related_user_id = None
 
-    def before_become_asked_to_join(self, asker_id: Text):
+    def before_become_asked_to_join(self, asker_id: Text) -> None:
         self.related_user_id = asker_id
+
+    def before_accept_invitation(self) -> None:
+        self.newbie = False

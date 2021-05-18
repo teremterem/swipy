@@ -113,3 +113,24 @@ def test_become_ok_for_chitchat(source_state: Text) -> None:
 
     assert user.state == 'ok_for_chitchat'
     assert user.related_user_id is None
+
+
+@pytest.mark.parametrize('newbie_status', [True, False])
+def test_accept_invitation(newbie_status) -> None:
+    user = UserStateMachine(
+        user_id='some_user_id',
+        state=UserState.ASKED_TO_JOIN,
+        related_user_id='asker_id',
+        newbie=newbie_status,
+    )
+
+    assert user.state == 'asked_to_join'
+    assert user.related_user_id == 'asker_id'
+    assert user.newbie == newbie_status
+
+    # noinspection PyUnresolvedReferences
+    user.accept_invitation()
+
+    assert user.state == 'ok_for_chitchat'
+    assert user.related_user_id is 'asker_id'
+    assert user.newbie is False  # users stop being newbies as soon as they accept their first chitchat video call
