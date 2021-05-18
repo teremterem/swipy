@@ -18,19 +18,27 @@ def test_all_expected_states() -> None:
 
 
 @pytest.mark.parametrize('source_state', all_expected_states)
-def test_request_chitchat(source_state: Text) -> None:
+def test_ask_partner(source_state: Text) -> None:
     user = UserStateMachine(
         user_id='some_user_id',
         state=source_state,
     )
-    assert user.user_id == 'some_user_id'
+    partner = UserStateMachine(
+        user_id='some_partner_id',
+        state=UserState.OK_FOR_CHITCHAT,
+    )
+
     assert user.state == source_state
     assert user.related_user_id is None
-    assert user.newbie is True
+
+    assert partner.state == UserState.OK_FOR_CHITCHAT
+    assert partner.related_user_id is None
 
     # noinspection PyUnresolvedReferences
-    user.request_chitchat('id_of_user_that_was_asked')
-    assert user.user_id == 'some_user_id'
+    user.ask_partner(partner)
+
     assert user.state == 'waiting_partner_answer'
-    assert user.related_user_id == 'id_of_user_that_was_asked'
-    assert user.newbie is True
+    assert user.related_user_id == 'some_partner_id'
+
+    assert partner.state == UserState.ASKED_TO_JOIN
+    assert partner.related_user_id == 'some_user_id'
