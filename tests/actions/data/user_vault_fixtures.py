@@ -24,7 +24,7 @@ def ddb_user1(create_user_state_machine_table) -> UserStateMachine:
     return _populate_user(UserStateMachine(
         user_id='existing_user_id1',
         state=UserState.WAITING_PARTNER_ANSWER,
-        partner_id='some_related_user_id',
+        partner_id='some_partner_id',
         newbie=False,
     ))
 
@@ -45,7 +45,7 @@ def scan_of_three_users() -> List[Dict[Text, Any]]:
         {
             'user_id': 'existing_user_id1',
             'state': 'waiting_partner_answer',
-            'partner_id': 'some_related_user_id',
+            'partner_id': 'some_partner_id',
             'newbie': False,
         },
         {

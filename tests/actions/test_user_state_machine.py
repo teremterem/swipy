@@ -59,14 +59,14 @@ def test_ask_partner_wrong_partner_state(wrong_partner_state: Text) -> None:
     partner = UserStateMachine(
         user_id='some_partner_id',
         state=wrong_partner_state,
-        partner_id='some_unrelated_user_id',
+        partner_id='some_unrelated_partner_id',
     )
 
     assert user.state == 'new'
     assert user.partner_id is None
 
     assert partner.state == wrong_partner_state
-    assert partner.partner_id == 'some_unrelated_user_id'
+    assert partner.partner_id == 'some_unrelated_partner_id'
 
     with pytest.raises(MachineError):
         # noinspection PyUnresolvedReferences
@@ -76,7 +76,7 @@ def test_ask_partner_wrong_partner_state(wrong_partner_state: Text) -> None:
     assert user.partner_id is None
 
     assert partner.state == wrong_partner_state
-    assert partner.partner_id == 'some_unrelated_user_id'
+    assert partner.partner_id == 'some_unrelated_partner_id'
 
 
 @pytest.mark.parametrize('source_state', all_expected_states)
@@ -84,11 +84,11 @@ def test_fail_to_find_partner(source_state: Text) -> None:
     user = UserStateMachine(
         user_id='some_user_id',
         state=source_state,
-        partner_id='previous_related_user_id',
+        partner_id='previous_partner_id',
     )
 
     assert user.state == source_state
-    assert user.partner_id == 'previous_related_user_id'
+    assert user.partner_id == 'previous_partner_id'
 
     # noinspection PyUnresolvedReferences
     user.fail_to_find_partner()
@@ -102,11 +102,11 @@ def test_become_ok_for_chitchat(source_state: Text) -> None:
     user = UserStateMachine(
         user_id='some_user_id',
         state=source_state,
-        partner_id='previous_related_user_id',
+        partner_id='previous_partner_id',
     )
 
     assert user.state == source_state
-    assert user.partner_id == 'previous_related_user_id'
+    assert user.partner_id == 'previous_partner_id'
 
     # noinspection PyUnresolvedReferences
     user.become_ok_for_chitchat()
@@ -146,12 +146,12 @@ def test_accept_invitation_wrong_state(wrong_state: Text) -> None:
     user = UserStateMachine(
         user_id='some_user_id',
         state=wrong_state,
-        partner_id='some_unrelated_user_id',
+        partner_id='some_unrelated_partner_id',
         newbie=True,
     )
 
     assert user.state == wrong_state
-    assert user.partner_id == 'some_unrelated_user_id'
+    assert user.partner_id == 'some_unrelated_partner_id'
     assert user.newbie is True
 
     with pytest.raises(MachineError):
@@ -159,7 +159,7 @@ def test_accept_invitation_wrong_state(wrong_state: Text) -> None:
         user.accept_invitation()
 
     assert user.state == wrong_state
-    assert user.partner_id == 'some_unrelated_user_id'
+    assert user.partner_id == 'some_unrelated_partner_id'
     assert user.newbie is True
 
 
@@ -194,12 +194,12 @@ def test_reject_invitation_wrong_state(wrong_state: Text) -> None:
     user = UserStateMachine(
         user_id='some_user_id',
         state=wrong_state,
-        partner_id='some_unrelated_user_id',
+        partner_id='some_unrelated_partner_id',
         newbie=True,
     )
 
     assert user.state == wrong_state
-    assert user.partner_id == 'some_unrelated_user_id'
+    assert user.partner_id == 'some_unrelated_partner_id'
     assert user.newbie is True
 
     with pytest.raises(MachineError):
@@ -207,5 +207,5 @@ def test_reject_invitation_wrong_state(wrong_state: Text) -> None:
         user.reject_invitation()
 
     assert user.state == wrong_state
-    assert user.partner_id == 'some_unrelated_user_id'
+    assert user.partner_id == 'some_unrelated_partner_id'
     assert user.newbie is True

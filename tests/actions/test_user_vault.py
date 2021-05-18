@@ -113,7 +113,7 @@ def test_save_new_user(
         {
             'user_id': 'existing_user_id1',
             'state': 'waiting_partner_answer',
-            'partner_id': 'some_related_user_id',
+            'partner_id': 'some_partner_id',
             'newbie': False,
         },
         {
@@ -153,7 +153,7 @@ def test_save_existing_user(
         {
             'user_id': 'existing_user_id1',
             'state': 'do_not_disturb',  # used to be 'waiting_partner_answer' but we have overridden it
-            'partner_id': None,  # used to be 'some_related_user_id' but we have overridden it
+            'partner_id': None,  # used to be 'some_partner_id' but we have overridden it
             'newbie': True,  # used to be False but we have overridden it
         },
         {
