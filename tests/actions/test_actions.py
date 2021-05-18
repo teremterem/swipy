@@ -7,7 +7,8 @@ from rasa_sdk.executor import CollectingDispatcher
 from rasa_sdk.types import DomainDict
 
 from actions.actions import ActionFindSomeone, ActionMakeUserAvailable
-from actions.user_state_machine import user_vault, UserStateMachine
+from actions.user_state_machine import UserStateMachine
+from actions.user_vault import user_vault
 
 
 @pytest.mark.asyncio
@@ -17,9 +18,9 @@ async def test_action_make_user_available(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: DomainDict,
-        unit_test_user: UserStateMachine,
+        ddb_unit_test_user: UserStateMachine,
 ) -> None:
-    mock_get_user.return_value = unit_test_user
+    mock_get_user.return_value = ddb_unit_test_user
 
     action = ActionMakeUserAvailable()
     assert action.name() == 'action_make_user_available'
@@ -41,10 +42,10 @@ async def test_action_find_someone(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: DomainDict,
-        user3: UserStateMachine,
+        ddb_user3: UserStateMachine,
         new_room1: Dict[Text, Any],
 ) -> None:
-    mock_get_random_available_user.return_value = user3
+    mock_get_random_available_user.return_value = ddb_user3
     mock_create_room.return_value = new_room1
 
     action = ActionFindSomeone()
