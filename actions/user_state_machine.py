@@ -41,7 +41,7 @@ class UserStateMachine(UserModel):
             trigger='ask_partner',
             source='*',
             dest=UserState.WAITING_PARTNER_ANSWER,
-            before=[self.before_ask_partner],
+            before=[self.set_partner_id],
         )
         # noinspection PyTypeChecker
         self.machine.add_transition(
@@ -78,12 +78,6 @@ class UserStateMachine(UserModel):
             dest=UserState.DO_NOT_DISTURB,
             before=[self.drop_partner_id],
         )
-
-    def before_ask_partner(self, partner: 'UserStateMachine') -> None:
-        # noinspection PyUnresolvedReferences
-        partner.become_asked_to_join(self.user_id)
-
-        self.partner_id = partner.user_id
 
     def set_partner_id(self, partner_id: Text) -> None:
         self.partner_id = partner_id

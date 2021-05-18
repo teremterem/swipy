@@ -24,59 +24,53 @@ def test_ask_partner(source_state: Text) -> None:
         user_id='some_user_id',
         state=source_state,
     )
-    partner = UserStateMachine(
-        user_id='some_partner_id',
-        state=UserState.OK_FOR_CHITCHAT,
-    )
-
     assert user.state == source_state
     assert user.partner_id is None
 
-    assert partner.state == 'ok_for_chitchat'
-    assert partner.partner_id is None
-
     # noinspection PyUnresolvedReferences
-    user.ask_partner(partner)
+    user.ask_partner('some_partner_id')
 
     assert user.state == 'waiting_partner_answer'
     assert user.partner_id == 'some_partner_id'
 
-    assert partner.state == 'asked_to_join'
-    assert partner.partner_id == 'some_user_id'
+
+def test_become_asked_to_join() -> None:
+    user = UserStateMachine(
+        user_id='some_user_id',
+        state=UserState.OK_FOR_CHITCHAT,
+    )
+    assert user.state == 'ok_for_chitchat'
+    assert user.partner_id is None
+
+    # noinspection PyUnresolvedReferences
+    user.become_asked_to_join('asker_id')
+
+    assert user.state == 'asked_to_join'
+    assert user.partner_id == 'asker_id'
 
 
-@pytest.mark.parametrize('wrong_partner_state', [
+@pytest.mark.parametrize('wrong_state', [
     'new',
     'waiting_partner_answer',
     'asked_to_join',
     'do_not_disturb',
 ])
-def test_ask_partner_wrong_partner_state(wrong_partner_state: Text) -> None:
+def test_become_asked_to_join_wrong_state(wrong_state: Text) -> None:
     user = UserStateMachine(
         user_id='some_user_id',
-        state=UserState.NEW,
-    )
-    partner = UserStateMachine(
-        user_id='some_partner_id',
-        state=wrong_partner_state,
+        state=wrong_state,
         partner_id='some_unrelated_partner_id',
     )
 
-    assert user.state == 'new'
-    assert user.partner_id is None
-
-    assert partner.state == wrong_partner_state
-    assert partner.partner_id == 'some_unrelated_partner_id'
+    assert user.state == wrong_state
+    assert user.partner_id == 'some_unrelated_partner_id'
 
     with pytest.raises(MachineError):
         # noinspection PyUnresolvedReferences
-        user.ask_partner(partner)
+        user.become_asked_to_join('asker_id')
 
-    assert user.state == 'new'
-    assert user.partner_id is None
-
-    assert partner.state == wrong_partner_state
-    assert partner.partner_id == 'some_unrelated_partner_id'
+    assert user.state == wrong_state
+    assert user.partner_id == 'some_unrelated_partner_id'
 
 
 @pytest.mark.parametrize('source_state', all_expected_states)
