@@ -88,8 +88,8 @@ class UserStateMachine(UserModel):
     def set_partner_id(self, partner_id: Text) -> None:
         self.partner_id = partner_id
 
-    def graduate_from_newbie(self) -> None:
-        self.newbie = False
-
     def drop_partner_id(self) -> None:
         self.partner_id = None
+
+    def graduate_from_newbie(self) -> None:
+        self.newbie = False
