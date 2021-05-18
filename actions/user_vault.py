@@ -30,11 +30,7 @@ class NaiveUserVault(IUserVault, ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def _list_available_newbie_dicts(self, exclude_user_id) -> List[Dict[Text, Any]]:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def _list_available_veteran_dicts(self, exclude_user_id) -> List[Dict[Text, Any]]:
+    def _list_available_user_dicts(self, exclude_user_id: Text, newbie: Optional[bool] = None) -> List[Dict[Text, Any]]:
         raise NotImplementedError()
 
     @abstractmethod
@@ -56,10 +52,10 @@ class NaiveUserVault(IUserVault, ABC):
         return UserStateMachine(**user_dict)
 
     def get_random_available_newbie(self, exclude_user_id: Text) -> Optional[UserStateMachine]:
-        return self._get_random_user(self._list_available_newbie_dicts(exclude_user_id))
+        return self._get_random_user(self._list_available_user_dicts(exclude_user_id, newbie=True))
 
     def get_random_available_veteran(self, exclude_user_id: Text) -> Optional[UserStateMachine]:
-        return self._get_random_user(self._list_available_veteran_dicts(exclude_user_id))
+        return self._get_random_user(self._list_available_user_dicts(exclude_user_id, newbie=False))
 
 
 class DdbUserVault(NaiveUserVault):
@@ -72,15 +68,7 @@ class DdbUserVault(NaiveUserVault):
         item = ddb_resp.get('Item')
         return None if item is None else UserStateMachine(**item)
 
-    def _list_available_newbie_dicts(self, exclude_user_id) -> List[Dict[Text, Any]]:
-        # TODO oleksandr: is there a better way to ensure that the tests have a chance to mock boto3 ?
-        from actions.aws_resources import user_state_machine_table
-
-        # TODO TODO TODO
-        ddb_resp = user_state_machine_table.scan()
-        return ddb_resp['Items']
-
-    def _list_available_veteran_dicts(self, exclude_user_id) -> List[Dict[Text, Any]]:
+    def _list_available_user_dicts(self, exclude_user_id: Text, newbie: Optional[bool] = None) -> List[Dict[Text, Any]]:
         # TODO oleksandr: is there a better way to ensure that the tests have a chance to mock boto3 ?
         from actions.aws_resources import user_state_machine_table
 
