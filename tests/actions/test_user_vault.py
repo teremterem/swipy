@@ -1,5 +1,5 @@
 from typing import List, Dict, Text, Any
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 import pytest
 
@@ -48,7 +48,7 @@ def test_get_existing_user(
 @pytest.mark.usefixtures('ddb_user1', 'ddb_user3')
 @patch('actions.user_vault.secrets.choice')
 def test_get_random_user(
-        choice_mock,
+        choice_mock: MagicMock,
         user_vault: UserVault,
         ddb_user2: UserStateMachine,
 ) -> None:
@@ -76,7 +76,7 @@ def test_no_random_user(user_vault: UserVault) -> None:
 
 @patch.object(UserVault, 'get_random_user')
 def test_get_random_available_user(
-        get_random_user_mock,
+        get_random_user_mock: MagicMock,
         user_vault: UserVault,
         ddb_user1: UserStateMachine,
         ddb_user2: UserStateMachine,
@@ -90,7 +90,7 @@ def test_get_random_available_user(
 
 @patch.object(UserVault, 'get_random_user')
 def test_no_available_users(
-        get_random_user_mock,
+        get_random_user_mock: MagicMock,
         user_vault: UserVault,
         ddb_user1: UserStateMachine,
 ) -> None:
@@ -113,13 +113,13 @@ def test_save_new_user(
         {
             'user_id': 'existing_user_id1',
             'state': 'waiting_partner_answer',
-            'partner_id': 'some_partner_id',
+            'partner_id': 'existing_user_id2',
             'newbie': False,
         },
         {
             'user_id': 'existing_user_id2',
-            'state': 'new',
-            'partner_id': None,
+            'state': 'asked_to_join',
+            'partner_id': 'existing_user_id1',
             'newbie': True,
         },
         {
@@ -153,13 +153,13 @@ def test_save_existing_user(
         {
             'user_id': 'existing_user_id1',
             'state': 'do_not_disturb',  # used to be 'waiting_partner_answer' but we have overridden it
-            'partner_id': None,  # used to be 'some_partner_id' but we have overridden it
+            'partner_id': None,  # used to be 'existing_user_id2' but we have overridden it
             'newbie': True,  # used to be False but we have overridden it
         },
         {
             'user_id': 'existing_user_id2',
-            'state': 'new',
-            'partner_id': None,
+            'state': 'asked_to_join',
+            'partner_id': 'existing_user_id1',
             'newbie': True,
         },
         {
@@ -171,13 +171,26 @@ def test_save_existing_user(
     ]
 
 
-def test_ddb_user_vault_list_users(
+@pytest.mark.usefixtures(
+    'ddb_user1',
+    'ddb_available_newbie1',
+    'ddb_available_veteran1',
+    'ddb_user2',
+    'ddb_available_newbie2',
+    'ddb_available_veteran2',
+    'ddb_user3',
+    'ddb_available_newbie3',
+    'ddb_available_veteran3',
+    'ddb_user4',
+)
+def test_ddb_user_vault_list_available_newbie_dicts(
         user_vault: DdbUserVault,
-        ddb_user1: UserStateMachine,
-        ddb_user2: UserStateMachine,
-        ddb_user3: UserStateMachine,
+        scan_of_ten_users: List[Dict[Text, Any]],
 ) -> None:
-    assert user_vault._list_users() == [ddb_user1, ddb_user2, ddb_user3]
+    from actions.aws_resources import user_state_machine_table
+
+    assert user_state_machine_table.scan()['Items'] == scan_of_ten_users
+    # assert user_vault._list_available_user_dicts() == [ddb_user1, ddb_user2, ddb_user3]
 
 
 @pytest.mark.usefixtures('ddb_user1', 'ddb_user3')
