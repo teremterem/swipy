@@ -48,7 +48,14 @@ class UserStateMachine(UserModel):
             trigger='fail_to_find_partner',
             source='*',
             dest=UserState.OK_FOR_CHITCHAT,
-            before=self.before_fail_to_find_partner,
+            before=self.before_become_ok_for_chitchat,
+        )
+        # noinspection PyTypeChecker
+        self.machine.add_transition(
+            trigger='become_ok_for_chitchat',
+            source='*',
+            dest=UserState.OK_FOR_CHITCHAT,
+            before=self.before_become_ok_for_chitchat,
         )
         # noinspection PyTypeChecker
         self.machine.add_transition(
@@ -64,7 +71,7 @@ class UserStateMachine(UserModel):
 
         self.related_user_id = partner.user_id
 
-    def before_fail_to_find_partner(self):
+    def before_become_ok_for_chitchat(self):
         self.related_user_id = None
 
     def before_become_asked_to_join(self, asker_id: Text):

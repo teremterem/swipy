@@ -95,3 +95,21 @@ def test_fail_to_find_partner(source_state: Text) -> None:
 
     assert user.state == 'ok_for_chitchat'
     assert user.related_user_id is None
+
+
+@pytest.mark.parametrize('source_state', all_expected_states)
+def test_become_ok_for_chitchat(source_state: Text) -> None:
+    user = UserStateMachine(
+        user_id='some_user_id',
+        state=source_state,
+        related_user_id='previous_related_user_id',
+    )
+
+    assert user.state == source_state
+    assert user.related_user_id == 'previous_related_user_id'
+
+    # noinspection PyUnresolvedReferences
+    user.become_ok_for_chitchat()
+
+    assert user.state == 'ok_for_chitchat'
+    assert user.related_user_id is None
