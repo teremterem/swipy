@@ -132,7 +132,7 @@ def test_accept_invitation(newbie_status) -> None:
     user.accept_invitation()
 
     assert user.state == 'ok_for_chitchat'
-    assert user.partner_id == 'asker_id'  # TODO oleksandr: are you sure this makes sense ?
+    assert user.partner_id == 'asker_id'
     assert user.newbie is False  # users stop being newbies as soon as they accept their first video chitchat
 
 
@@ -157,6 +157,54 @@ def test_accept_invitation_wrong_state(wrong_state: Text) -> None:
     with pytest.raises(MachineError):
         # noinspection PyUnresolvedReferences
         user.accept_invitation()
+
+    assert user.state == wrong_state
+    assert user.partner_id == 'some_unrelated_user_id'
+    assert user.newbie is True
+
+
+@pytest.mark.parametrize('newbie_status', [True, False])
+def test_reject_invitation(newbie_status) -> None:
+    user = UserStateMachine(
+        user_id='some_user_id',
+        state=UserState.ASKED_TO_JOIN,
+        partner_id='asker_id',
+        newbie=newbie_status,
+    )
+
+    assert user.state == 'asked_to_join'
+    assert user.partner_id == 'asker_id'
+    assert user.newbie == newbie_status
+
+    # noinspection PyUnresolvedReferences
+    user.reject_invitation()
+
+    assert user.state == 'do_not_disturb'
+    assert user.partner_id is None
+    assert user.newbie == newbie_status
+
+
+@pytest.mark.parametrize('wrong_state', [
+    'new',
+    'waiting_partner_answer',
+    'ok_for_chitchat',
+    'do_not_disturb',
+])
+def test_reject_invitation_wrong_state(wrong_state: Text) -> None:
+    user = UserStateMachine(
+        user_id='some_user_id',
+        state=wrong_state,
+        partner_id='some_unrelated_user_id',
+        newbie=True,
+    )
+
+    assert user.state == wrong_state
+    assert user.partner_id == 'some_unrelated_user_id'
+    assert user.newbie is True
+
+    with pytest.raises(MachineError):
+        # noinspection PyUnresolvedReferences
+        user.reject_invitation()
 
     assert user.state == wrong_state
     assert user.partner_id == 'some_unrelated_user_id'
