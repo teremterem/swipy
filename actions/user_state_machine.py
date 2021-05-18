@@ -44,5 +44,5 @@ class UserStateMachine(UserModel):
             after='after_request_chitchat',
         )
 
-    def after_request_chitchat(self):
-        self.related_user_id = None
+    def after_request_chitchat(self, related_user_id):
+        self.related_user_id = related_user_id

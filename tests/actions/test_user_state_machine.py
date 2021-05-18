@@ -23,14 +23,13 @@ def test_request_chitchat(source_state: Text) -> None:
     user = UserStateMachine(
         user_id='some_user_id',
         state=source_state,
-        related_user_id='test_related_user_id',
     )
     assert user.user_id == 'some_user_id'
     assert user.state == source_state
-    assert user.related_user_id == 'test_related_user_id'
+    assert user.related_user_id is None
 
     # noinspection PyUnresolvedReferences
-    user.request_chitchat()
+    user.request_chitchat('id_of_user_that_was_asked')
     assert user.user_id == 'some_user_id'
     assert user.state == 'waiting_partner_answer'
-    assert user.related_user_id is None  # when user requests chitchat we clear whatever previous partner they may had
+    assert user.related_user_id == 'id_of_user_that_was_asked'
