@@ -1,4 +1,4 @@
-from typing import List, Dict, Text, Any
+from typing import List, Dict, Text, Any, Optional
 from unittest.mock import patch, MagicMock
 
 import pytest
@@ -239,6 +239,70 @@ def test_ddb_user_vault_list_available_veteran_dicts(
             'newbie': False,
         },
     ]
+
+
+@pytest.mark.usefixtures(
+    'ddb_user1',
+    'ddb_available_newbie1',
+    'ddb_available_veteran1',
+    'ddb_user2',
+    'ddb_available_newbie2',
+    'ddb_available_veteran2',
+    'ddb_user3',
+    'ddb_available_newbie3',
+    'ddb_available_veteran3',
+    'ddb_user4',
+)
+def test_ddb_user_vault_list_available_user_dicts(
+        user_vault: DdbUserVault,
+        scan_of_ten_users: List[Dict[Text, Any]],
+) -> None:
+    from actions.aws_resources import user_state_machine_table
+
+    assert user_state_machine_table.scan()['Items'] == scan_of_ten_users
+    assert user_vault._list_available_user_dicts('existing_user_id1') == [
+        {
+            'user_id': 'available_newbie_id1',
+            'state': 'ok_for_chitchat',
+            'partner_id': None,
+            'newbie': True,
+        },
+        {
+            'user_id': 'available_veteran_id1',
+            'state': 'ok_for_chitchat',
+            'partner_id': None,
+            'newbie': False,
+        },
+        {
+            'user_id': 'available_newbie_id3',
+            'state': 'ok_for_chitchat',
+            'partner_id': None,
+            'newbie': True,
+        },
+        {
+            'user_id': 'available_veteran_id3',
+            'state': 'ok_for_chitchat',
+            'partner_id': None,
+            'newbie': False,
+        },
+    ]
+
+
+@pytest.mark.parametrize('newbie_filter', [True, False, None])
+@pytest.mark.usefixtures(
+    'ddb_user1',
+    'ddb_user2',
+    'ddb_user3',
+)
+def test_ddb_user_vault_list_no_available_users_dicts(
+        newbie_filter: Optional[bool],
+        user_vault: DdbUserVault,
+        scan_of_three_users: List[Dict[Text, Any]],
+) -> None:
+    from actions.aws_resources import user_state_machine_table
+
+    assert user_state_machine_table.scan()['Items'] == scan_of_three_users
+    assert user_vault._list_available_user_dicts('existing_user_id1', newbie=newbie_filter) == []
 
 
 @pytest.mark.usefixtures('ddb_user1', 'ddb_user3')
