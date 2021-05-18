@@ -1,7 +1,7 @@
 import secrets
 from abc import ABC, abstractmethod
 from dataclasses import asdict
-from typing import Text, Optional, List, Type
+from typing import Text, Optional, List, Type, Dict, Any
 
 from actions.user_state_machine import UserStateMachine
 
@@ -12,11 +12,11 @@ class IUserVault(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def get_random_user(self) -> Optional[UserStateMachine]:
+    def get_random_available_newbie(self, exclude_user_id: Text) -> Optional[UserStateMachine]:
         raise NotImplementedError()
 
     @abstractmethod
-    def get_random_available_user(self, current_user_id: Text) -> Optional[UserStateMachine]:
+    def get_random_available_veteran(self, exclude_user_id: Text) -> Optional[UserStateMachine]:
         raise NotImplementedError()
 
     @abstractmethod
@@ -30,7 +30,11 @@ class NaiveUserVault(IUserVault, ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def _list_users(self) -> List[UserStateMachine]:
+    def _list_available_newbie_dicts(self, exclude_user_id) -> List[Dict[Text, Any]]:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def _list_available_veteran_dicts(self, exclude_user_id) -> List[Dict[Text, Any]]:
         raise NotImplementedError()
 
     @abstractmethod
@@ -46,22 +50,16 @@ class NaiveUserVault(IUserVault, ABC):
 
         return user_state_machine
 
-    def get_random_user(self) -> Optional[UserStateMachine]:
-        user_list = self._list_users()
-        if not user_list:
-            return None
-        return secrets.choice(user_list)
+    @staticmethod
+    def _get_random_user(list_of_dicts: List[Dict[Text, Any]]) -> Optional[UserStateMachine]:
+        user_dict = secrets.choice(list_of_dicts)
+        return UserStateMachine(**user_dict)
 
-    def get_random_available_user(self, current_user_id: Text) -> Optional[UserStateMachine]:
-        for _ in range(10):
-            user_state_machine = self.get_random_user()
+    def get_random_available_newbie(self, exclude_user_id: Text) -> Optional[UserStateMachine]:
+        return self._get_random_user(self._list_available_newbie_dicts(exclude_user_id))
 
-            if user_state_machine.user_id == current_user_id:
-                continue
-
-            return user_state_machine
-
-        return None
+    def get_random_available_veteran(self, exclude_user_id: Text) -> Optional[UserStateMachine]:
+        return self._get_random_user(self._list_available_veteran_dicts(exclude_user_id))
 
 
 class DdbUserVault(NaiveUserVault):
@@ -74,12 +72,21 @@ class DdbUserVault(NaiveUserVault):
         item = ddb_resp.get('Item')
         return None if item is None else UserStateMachine(**item)
 
-    def _list_users(self) -> List[UserStateMachine]:
+    def _list_available_newbie_dicts(self, exclude_user_id) -> List[Dict[Text, Any]]:
         # TODO oleksandr: is there a better way to ensure that the tests have a chance to mock boto3 ?
         from actions.aws_resources import user_state_machine_table
 
+        # TODO TODO TODO
         ddb_resp = user_state_machine_table.scan()
-        return [UserStateMachine(**item) for item in ddb_resp['Items']]
+        return ddb_resp['Items']
+
+    def _list_available_veteran_dicts(self, exclude_user_id) -> List[Dict[Text, Any]]:
+        # TODO oleksandr: is there a better way to ensure that the tests have a chance to mock boto3 ?
+        from actions.aws_resources import user_state_machine_table
+
+        # TODO TODO TODO
+        ddb_resp = user_state_machine_table.scan()
+        return ddb_resp['Items']
 
     def save_user(self, user_state_machine: UserStateMachine) -> None:
         # TODO oleksandr: is there a better way to ensure that the tests have a chance to mock boto3 ?

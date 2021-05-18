@@ -30,7 +30,7 @@ class ActionFindSomeone(Action):
             tracker: Tracker,
             domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
-        chitchat_partner = user_vault.get_random_available_user(tracker.sender_id)
+        chitchat_partner = user_vault.get_random_available_newbie(tracker.sender_id)
 
         created_room = await create_room()
         room_url = created_room['url']
