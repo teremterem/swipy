@@ -51,7 +51,7 @@ def test_ask_partner(source_state: Text) -> None:
     'asked_to_join',
     'do_not_disturb',
 ])
-def test_ask_wrong_partner(wrong_partner_state: Text) -> None:
+def test_ask_partner_wrong_partner_state(wrong_partner_state: Text) -> None:
     user = UserStateMachine(
         user_id='some_user_id',
         state=UserState.NEW,
@@ -132,5 +132,32 @@ def test_accept_invitation(newbie_status) -> None:
     user.accept_invitation()
 
     assert user.state == 'ok_for_chitchat'
-    assert user.related_user_id is 'asker_id'
-    assert user.newbie is False  # users stop being newbies as soon as they accept their first chitchat video call
+    assert user.related_user_id == 'asker_id'  # TODO oleksandr: are you sure this makes sense ?
+    assert user.newbie is False  # users stop being newbies as soon as they accept their first video chitchat
+
+
+@pytest.mark.parametrize('wrong_state', [
+    'new',
+    'waiting_partner_answer',
+    'ok_for_chitchat',
+    'do_not_disturb',
+])
+def test_accept_invitation_wrong_state(wrong_state: Text) -> None:
+    user = UserStateMachine(
+        user_id='some_user_id',
+        state=wrong_state,
+        related_user_id='asker_id',
+        newbie=True,
+    )
+
+    assert user.state == wrong_state
+    assert user.related_user_id == 'asker_id'
+    assert user.newbie is True
+
+    with pytest.raises(MachineError):
+        # noinspection PyUnresolvedReferences
+        user.accept_invitation()
+
+    assert user.state == wrong_state
+    assert user.related_user_id == 'asker_id'
+    assert user.newbie is True
