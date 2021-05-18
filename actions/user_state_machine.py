@@ -24,7 +24,7 @@ class UserState:
 class UserModel:
     user_id: Text
     state: Text = None  # the state machine will set it to UserState.NEW if not provided explicitly
-    related_user_id: Optional[Text] = None
+    partner_id: Optional[Text] = None
     newbie: bool = True
 
 
@@ -48,14 +48,14 @@ class UserStateMachine(UserModel):
             trigger='fail_to_find_partner',
             source='*',
             dest=UserState.OK_FOR_CHITCHAT,
-            before=[self.drop_related_user_id],
+            before=[self.drop_partner_id],
         )
         # noinspection PyTypeChecker
         self.machine.add_transition(
             trigger='become_ok_for_chitchat',
             source='*',
             dest=UserState.OK_FOR_CHITCHAT,
-            before=[self.drop_related_user_id],
+            before=[self.drop_partner_id],
         )
         # noinspection PyTypeChecker
         self.machine.add_transition(
@@ -76,20 +76,20 @@ class UserStateMachine(UserModel):
             trigger='reject_invitation',
             source=UserState.ASKED_TO_JOIN,
             dest=UserState.DO_NOT_DISTURB,
-            before=[self.drop_related_user_id],
+            before=[self.drop_partner_id],
         )
 
     def before_ask_partner(self, partner: 'UserStateMachine') -> None:
         # noinspection PyUnresolvedReferences
         partner.become_asked_to_join(self.user_id)
 
-        self.related_user_id = partner.user_id
+        self.partner_id = partner.user_id
 
     def set_partner_id(self, partner_id: Text) -> None:
-        self.related_user_id = partner_id
+        self.partner_id = partner_id
 
     def graduate_from_newbie(self) -> None:
         self.newbie = False
 
-    def drop_related_user_id(self) -> None:
-        self.related_user_id = None
+    def drop_partner_id(self) -> None:
+        self.partner_id = None
