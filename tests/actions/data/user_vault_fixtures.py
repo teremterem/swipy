@@ -23,7 +23,7 @@ def ddb_unit_test_user(create_user_state_machine_table) -> UserStateMachine:
 def ddb_user1(create_user_state_machine_table) -> UserStateMachine:
     return _populate_user(UserStateMachine(
         user_id='existing_user_id1',
-        state=UserState.OK_FOR_CHITCHAT,
+        state=UserState.OK_FOR_CHITCHAT_VETERAN,
         related_user_id='some_related_user_id',
     ))
 
@@ -43,7 +43,7 @@ def scan_of_three_users() -> List[Dict[Text, Any]]:
     return [
         {
             'user_id': 'existing_user_id1',
-            'state': 'ok_for_chitchat',
+            'state': 'ok_for_chitchat_veteran',
             'related_user_id': 'some_related_user_id',
         },
         {

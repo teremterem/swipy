@@ -6,14 +6,18 @@ from transitions import Machine
 
 class UserState:
     NEW = 'new'
-    WANTS_CHITCHAT = 'wants_chitchat'
-    OK_FOR_CHITCHAT = 'ok_for_chitchat'
+    WAITING_PARTNER_ANSWER = 'waiting_partner_answer'
+    OK_FOR_CHITCHAT_NEWBIE = 'ok_for_chitchat_newbie'
+    OK_FOR_CHITCHAT_VETERAN = 'ok_for_chitchat_veteran'
+    ASKED_TO_JOIN = 'asked_to_join'
     DO_NOT_DISTURB = 'do_not_disturb'
 
     all = [
         NEW,
-        WANTS_CHITCHAT,
-        OK_FOR_CHITCHAT,
+        WAITING_PARTNER_ANSWER,
+        OK_FOR_CHITCHAT_NEWBIE,
+        OK_FOR_CHITCHAT_VETERAN,
+        ASKED_TO_JOIN,
         DO_NOT_DISTURB,
     ]
 
@@ -36,7 +40,7 @@ class UserStateMachine(UserModel):
         self.machine.add_transition(
             trigger='request_chitchat',
             source='*',
-            dest=UserState.WANTS_CHITCHAT,
+            dest=UserState.WAITING_PARTNER_ANSWER,
             after='after_request_chitchat',
         )
 

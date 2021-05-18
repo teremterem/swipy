@@ -7,8 +7,10 @@ from actions.user_state_machine import UserStateMachine
 
 @pytest.mark.parametrize('source_state', [
     'new',
-    'wants_chitchat',
-    'ok_for_chitchat',
+    'waiting_partner_answer',
+    'ok_for_chitchat_newbie',
+    'ok_for_chitchat_veteran',
+    'asked_to_join',
     'do_not_disturb',
 ])
 def test_request_chitchat(source_state: Text) -> None:
@@ -24,5 +26,5 @@ def test_request_chitchat(source_state: Text) -> None:
     # noinspection PyUnresolvedReferences
     user.request_chitchat()
     assert user.user_id == 'some_user_id'
-    assert user.state == 'wants_chitchat'
+    assert user.state == 'waiting_partner_answer'
     assert user.related_user_id is None  # when user requests chitchat we clear whatever previous partner they may had

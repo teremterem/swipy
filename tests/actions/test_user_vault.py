@@ -110,7 +110,7 @@ def test_save_new_user(
     assert user_state_machine_table.scan()['Items'] == [
         {
             'user_id': 'existing_user_id1',
-            'state': 'ok_for_chitchat',
+            'state': 'ok_for_chitchat_veteran',
             'related_user_id': 'some_related_user_id',
         },
         {
@@ -146,7 +146,7 @@ def test_save_existing_user(
     assert user_state_machine_table.scan()['Items'] == [
         {
             'user_id': 'existing_user_id1',
-            'state': 'do_not_disturb',  # the value used to be 'ok_for_chitchat' but we have overridden it
+            'state': 'do_not_disturb',  # the value used to be 'ok_for_chitchat_veteran' but we have overridden it
             'related_user_id': None,  # the value used to be 'some_related_user_id' but we have overridden it
         },
         {
