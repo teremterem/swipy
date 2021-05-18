@@ -146,12 +146,12 @@ def test_accept_invitation_wrong_state(wrong_state: Text) -> None:
     user = UserStateMachine(
         user_id='some_user_id',
         state=wrong_state,
-        related_user_id='asker_id',
+        related_user_id='some_unrelated_user_id',
         newbie=True,
     )
 
     assert user.state == wrong_state
-    assert user.related_user_id == 'asker_id'
+    assert user.related_user_id == 'some_unrelated_user_id'
     assert user.newbie is True
 
     with pytest.raises(MachineError):
@@ -159,5 +159,5 @@ def test_accept_invitation_wrong_state(wrong_state: Text) -> None:
         user.accept_invitation()
 
     assert user.state == wrong_state
-    assert user.related_user_id == 'asker_id'
+    assert user.related_user_id == 'some_unrelated_user_id'
     assert user.newbie is True
