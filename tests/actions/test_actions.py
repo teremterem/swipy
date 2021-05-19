@@ -96,10 +96,10 @@ async def test_action_find_someone(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
-        ddb_user3: UserStateMachine,
+        user3: UserStateMachine,
         new_room1: Dict[Text, Any],
 ) -> None:
-    mock_get_random_available_user.return_value = ddb_user3
+    mock_get_random_available_user.return_value = user3
     mock_create_room.return_value = new_room1
 
     action = ActionFindSomeone()
