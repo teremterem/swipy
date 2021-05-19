@@ -3,12 +3,26 @@ from unittest.mock import patch, AsyncMock, MagicMock
 
 import pytest
 from rasa_sdk import Tracker
+from rasa_sdk.events import SessionStarted, ActionExecuted
 from rasa_sdk.executor import CollectingDispatcher
-from rasa_sdk.types import DomainDict
 
-from actions.actions import ActionFindSomeone, ActionMakeUserAvailable
+from actions.actions import ActionSessionStart, ActionMakeUserAvailable, ActionFindSomeone
 from actions.user_state_machine import UserStateMachine
 from actions.user_vault import user_vault
+
+
+@pytest.mark.asyncio
+async def test_action_session_start_without_slots(
+        tracker: Tracker,
+        dispatcher: CollectingDispatcher,
+        domain: Dict[Text, Any],
+) -> None:
+    action = ActionSessionStart()
+    assert action.name() == 'action_session_start'
+
+    tracker.slots.clear()
+    events = await action.run(dispatcher, tracker, domain)
+    assert events == [SessionStarted(), ActionExecuted('action_listen')]
 
 
 @pytest.mark.asyncio
@@ -17,10 +31,10 @@ async def test_action_make_user_available(
         mock_get_user: MagicMock,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
-        domain: DomainDict,
-        ddb_unit_test_user: UserStateMachine,
+        domain: Dict[Text, Any],
+        unit_test_user: UserStateMachine,
 ) -> None:
-    mock_get_user.return_value = ddb_unit_test_user
+    mock_get_user.return_value = unit_test_user
 
     action = ActionMakeUserAvailable()
     assert action.name() == 'action_make_user_available'
@@ -41,7 +55,7 @@ async def test_action_find_someone(
         mock_invite_chitchat_partner: MagicMock,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
-        domain: DomainDict,
+        domain: Dict[Text, Any],
         ddb_user3: UserStateMachine,
         new_room1: Dict[Text, Any],
 ) -> None:
