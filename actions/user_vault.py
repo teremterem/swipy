@@ -14,11 +14,10 @@ class IUserVault(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def get_random_available_newbie(self, exclude_user_id: Text) -> Optional[UserStateMachine]:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def get_random_available_veteran(self, exclude_user_id: Text) -> Optional[UserStateMachine]:
+    def get_random_available_user(
+            self, exclude_user_id: Text,
+            newbie: Optional[bool] = None,
+    ) -> Optional[UserStateMachine]:
         raise NotImplementedError()
 
     @abstractmethod
@@ -32,7 +31,10 @@ class NaiveUserVault(IUserVault, ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def _list_available_user_dicts(self, exclude_user_id: Text, newbie: Optional[bool] = None) -> List[Dict[Text, Any]]:
+    def _list_available_user_dicts(
+            self, exclude_user_id: Text,
+            newbie: Optional[bool] = None,
+    ) -> List[Dict[Text, Any]]:
         raise NotImplementedError()
 
     @abstractmethod
@@ -48,16 +50,13 @@ class NaiveUserVault(IUserVault, ABC):
 
         return user_state_machine
 
-    @staticmethod
-    def _get_random_user(list_of_dicts: List[Dict[Text, Any]]) -> Optional[UserStateMachine]:
+    def get_random_available_user(
+            self, exclude_user_id: Text,
+            newbie: Optional[bool] = None,
+    ) -> Optional[UserStateMachine]:
+        list_of_dicts = self._list_available_user_dicts(exclude_user_id, newbie=True)
         user_dict = secrets.choice(list_of_dicts)
         return UserStateMachine(**user_dict)
-
-    def get_random_available_newbie(self, exclude_user_id: Text) -> Optional[UserStateMachine]:
-        return self._get_random_user(self._list_available_user_dicts(exclude_user_id, newbie=True))
-
-    def get_random_available_veteran(self, exclude_user_id: Text) -> Optional[UserStateMachine]:
-        return self._get_random_user(self._list_available_user_dicts(exclude_user_id, newbie=False))
 
 
 class DdbUserVault(NaiveUserVault):

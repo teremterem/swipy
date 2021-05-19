@@ -34,7 +34,7 @@ async def test_action_make_user_available(
 @pytest.mark.asyncio
 @patch('actions.actions.invite_chitchat_partner')
 @patch('actions.actions.create_room')
-@patch.object(user_vault, 'get_random_available_newbie')
+@patch.object(user_vault, 'get_random_available_user')
 async def test_action_find_someone(
         mock_get_random_available_user: MagicMock,
         mock_create_room: AsyncMock,
