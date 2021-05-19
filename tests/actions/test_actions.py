@@ -54,9 +54,10 @@ async def test_action_session_start_with_slots(
         expected_events: List[EventType],
 ):
     # set a few slots on tracker
-    slot_set_event_1 = SlotSet("my_slot", "value")
-    slot_set_event_2 = SlotSet("another-slot", "value2")
-    tracker.add_slots([slot_set_event_1, slot_set_event_2])
+    tracker.add_slots([
+        SlotSet("my_slot", "value"),
+        SlotSet("another-slot", "value2"),
+    ])
 
     domain['session_config']['carry_over_slots_to_new_session'] = carry_over_slots_to_new_session
 
