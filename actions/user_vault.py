@@ -3,7 +3,9 @@ from abc import ABC, abstractmethod
 from dataclasses import asdict
 from typing import Text, Optional, List, Type, Dict, Any
 
-from actions.user_state_machine import UserStateMachine
+from boto3.dynamodb.conditions import Key, Attr
+
+from actions.user_state_machine import UserStateMachine, UserState
 
 
 class IUserVault(ABC):
@@ -63,7 +65,6 @@ class DdbUserVault(NaiveUserVault):
         # TODO oleksandr: is there a better way to ensure that the tests have a chance to mock boto3 ?
         from actions.aws_resources import user_state_machine_table
 
-        # TODO oleksandr: should I resolve the name of the field ('user_id') from the data class somehow ?
         ddb_resp = user_state_machine_table.get_item(Key={'user_id': user_id})
         item = ddb_resp.get('Item')
         return None if item is None else UserStateMachine(**item)
@@ -72,8 +73,11 @@ class DdbUserVault(NaiveUserVault):
         # TODO oleksandr: is there a better way to ensure that the tests have a chance to mock boto3 ?
         from actions.aws_resources import user_state_machine_table
 
-        # TODO TODO TODO
-        ddb_resp = user_state_machine_table.scan()
+        ddb_resp = user_state_machine_table.query(
+            IndexName='by_state_and_newbie',
+            KeyConditionExpression=Key('state').eq(UserState.OK_FOR_CHITCHAT) & Key('newbie').eq(True),
+            FilterExpression=Attr('user_id').ne(exclude_user_id),
+        )
         return ddb_resp['Items']
 
     def save_user(self, user_state_machine: UserStateMachine) -> None:
