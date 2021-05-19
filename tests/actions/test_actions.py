@@ -26,37 +26,37 @@ async def test_action_session_start_without_slots(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "carry_over_slots_to_new_session, expected_events",
-    [
-        (
-                True,
-                [
-                    SessionStarted(),
-                    SlotSet("session_started_metadata", None),  # comes from tests/actions/data/initial_tracker.json
-                    SlotSet("room_link", None),  # comes from tests/actions/data/initial_tracker.json
-                    SlotSet("my_slot", "value"),
-                    SlotSet("another-slot", "value2"),
-                    ActionExecuted(action_name='action_listen'),
-                ],
-        ),
-        (
-                False,
-                [SessionStarted(), ActionExecuted(action_name='action_listen')],
-        ),
-    ],
-)
+@pytest.mark.parametrize('carry_over_slots_to_new_session, expected_events', [
+    (
+            True,
+            [
+                SessionStarted(),
+                SlotSet('session_started_metadata', None),  # comes from tests/actions/data/initial_tracker.json
+                SlotSet('room_link', None),  # comes from tests/actions/data/initial_tracker.json
+                SlotSet('my_slot', 'value'),
+                SlotSet('another-slot', 'value2'),
+                ActionExecuted(action_name='action_listen'),
+            ],
+    ),
+    (
+            False,
+            [
+                SessionStarted(),
+                ActionExecuted(action_name='action_listen'),
+            ],
+    ),
+])
 async def test_action_session_start_with_slots(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
         carry_over_slots_to_new_session: bool,
         expected_events: List[EventType],
-):
+) -> None:
     # set a few slots on tracker
     tracker.add_slots([
-        SlotSet("my_slot", "value"),
-        SlotSet("another-slot", "value2"),
+        SlotSet('my_slot', 'value'),
+        SlotSet('another-slot', 'value2'),
     ])
 
     domain['session_config']['carry_over_slots_to_new_session'] = carry_over_slots_to_new_session
