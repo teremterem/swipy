@@ -103,6 +103,7 @@ responses:
   utter_iamabot:
   - text: I am a bot, powered by Rasa.
 actions:
+- action_session_start
 - action_make_user_available
 - action_find_someone
 forms: {}

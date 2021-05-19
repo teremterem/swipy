@@ -1,4 +1,4 @@
-from typing import Any, Text, Dict, List
+from typing import Any, Text, Dict, List, Optional
 
 from rasa_sdk import Action, Tracker
 from rasa_sdk.executor import CollectingDispatcher
@@ -6,6 +6,48 @@ from rasa_sdk.executor import CollectingDispatcher
 from actions.daily_co import create_room
 from actions.rasa_callbacks import invite_chitchat_partner
 from actions.user_vault import user_vault
+
+
+class ActionSessionStart(Action):
+    """Applies a conversation session start.
+    Takes all `SlotSet` events from the previous session and applies them to the new
+    session.
+    """
+
+    # Optional arbitrary metadata that can be passed to the SessionStarted event.
+    metadata: Optional[Dict[Text, Any]] = None
+
+    def name(self) -> Text:
+        return 'action_session_start'
+
+    @staticmethod
+    def _slot_set_events_from_tracker(
+        tracker: "DialogueStateTracker",
+    ) -> List["SlotSet"]:
+        """Fetch SlotSet events from tracker and carry over key, value and metadata."""
+
+        return [
+            SlotSet(key=event.key, value=event.value, metadata=event.metadata)
+            for event in tracker.applied_events()
+            if isinstance(event, SlotSet)
+        ]
+
+    async def run(
+        self,
+        output_channel: "OutputChannel",
+        nlg: "NaturalLanguageGenerator",
+        tracker: "DialogueStateTracker",
+        domain: "Domain",
+    ) -> List[Event]:
+        """Runs action. Please see parent class for the full docstring."""
+        _events = [SessionStarted(metadata=self.metadata)]
+
+        if domain.session_config.carry_over_slots:
+            _events.extend(self._slot_set_events_from_tracker(tracker))
+
+        _events.append(ActionExecuted(ACTION_LISTEN_NAME))
+
+        return _events
 
 
 class ActionMakeUserAvailable(Action):
