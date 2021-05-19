@@ -1,6 +1,7 @@
-from typing import Any, Text, Dict, List, Optional
+from typing import Any, Text, Dict, List
 
 from rasa_sdk import Action, Tracker
+from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType
 from rasa_sdk.executor import CollectingDispatcher
 
 from actions.daily_co import create_room
@@ -9,43 +10,29 @@ from actions.user_vault import user_vault
 
 
 class ActionSessionStart(Action):
-    """Applies a conversation session start.
-    Takes all `SlotSet` events from the previous session and applies them to the new
-    session.
-    """
-
-    # Optional arbitrary metadata that can be passed to the SessionStarted event.
-    metadata: Optional[Dict[Text, Any]] = None
+    """Adaptation of https://github.com/RasaHQ/rasa/blob/main/rasa/core/actions/action.py ::ActionSessionStart"""
 
     def name(self) -> Text:
         return 'action_session_start'
 
     @staticmethod
-    def _slot_set_events_from_tracker(
-            tracker: "DialogueStateTracker",
-    ) -> List["SlotSet"]:
-        """Fetch SlotSet events from tracker and carry over key, value and metadata."""
-
-        return [
-            SlotSet(key=event.key, value=event.value, metadata=event.metadata)
-            for event in tracker.applied_events()
-            if isinstance(event, SlotSet)
-        ]
+    def _slot_set_events_from_tracker(tracker: Tracker) -> List[EventType]:
+        # TODO oleksandr: should I skip session_started_metadata slot ?
+        #  (in Rasa Core version of the action this metadata seems to receive some kind of special treatment)
+        return [SlotSet(key=slot[0], value=slot[1]) for slot in tracker.slots.items()]
 
     async def run(
-            self,
-            output_channel: "OutputChannel",
-            nlg: "NaturalLanguageGenerator",
-            tracker: "DialogueStateTracker",
-            domain: "Domain",
-    ) -> List[Event]:
+            self, dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
+    ) -> List[Dict[Text, Any]]:
         """Runs action. Please see parent class for the full docstring."""
-        _events = [SessionStarted(metadata=self.metadata)]
+        _events = [SessionStarted()]
 
-        if domain.session_config.carry_over_slots:
-            _events.extend(self._slot_set_events_from_tracker(tracker))
+        # if domain.session_config.carry_over_slots:  # (Rasa Core version of the action would have checked this)
+        _events.extend(self._slot_set_events_from_tracker(tracker))
 
-        _events.append(ActionExecuted(ACTION_LISTEN_NAME))
+        _events.append(ActionExecuted('action_listen'))
 
         return _events
 
