@@ -49,77 +49,45 @@ def test_get_existing_user(
 @pytest.mark.parametrize('newbie_filter', [True, False, None])
 @patch.object(UserVault, '_list_available_user_dicts')
 @patch('actions.user_vault.secrets.choice')
-def ttttest_get_random_available_user(
+def test_get_random_available_user(
         choice_mock: MagicMock,
         list_available_user_dicts_mock: MagicMock,
         user_vault: UserVault,
-        ddb_user1: UserStateMachine,
-        ddb_user2: UserStateMachine,
-        ddb_user3: UserStateMachine,
+        user1: UserStateMachine,
+        user2: UserStateMachine,
+        user3: UserStateMachine,
         newbie_filter: Optional[bool],
 ) -> None:
     # noinspection PyDataclass
-    list_of_dicts = [asdict(ddb_user1), asdict(ddb_user2), asdict(ddb_user3)]
-    list_available_user_dicts_mock.side_effect = list_of_dicts
+    list_of_dicts = [asdict(user1), asdict(user2), asdict(user3)]
+
+    list_available_user_dicts_mock.return_value = list_of_dicts
     choice_mock.return_value = list_of_dicts[1]
 
-    assert user_vault.get_random_available_user('existing_user_id1') == ddb_user2
-    assert get_random_user_mock.call_count == 2
+    assert user_vault.get_random_available_user('existing_user_id1', newbie=newbie_filter) == user2
+
+    list_available_user_dicts_mock.assert_called_once_with('existing_user_id1', newbie=newbie_filter)
+    choice_mock.assert_called_once_with(list_of_dicts)
 
 
-@pytest.mark.usefixtures('ddb_user1', 'ddb_user3')
+@pytest.mark.parametrize('newbie_filter', [True, False, None])
+@pytest.mark.parametrize('empty_list_variant', [[], None])
+@patch.object(UserVault, '_list_available_user_dicts')
 @patch('actions.user_vault.secrets.choice')
-def _______________________________test_get_random_user(
+def test_no_available_user(
         choice_mock: MagicMock,
+        list_available_user_dicts_mock: MagicMock,
         user_vault: UserVault,
-        ddb_user2: UserStateMachine,
+        newbie_filter: Optional[bool],
+        empty_list_variant: Optional[list],
 ) -> None:
-    from actions.aws_resources import user_state_machine_table
+    list_available_user_dicts_mock.return_value = empty_list_variant
+    choice_mock.side_effect = ValueError("secrets.choice shouldn't have been called with None or empty list")
 
-    choice_mock.return_value = ddb_user2
+    assert user_vault.get_random_available_user('existing_user_id1', newbie=newbie_filter) is None
 
-    assert len(user_state_machine_table.scan()['Items']) == 3
-
-    assert user_vault.get_random_user() is ddb_user2
-
-    items = user_state_machine_table.scan()['Items']
-    assert len(items) == 3
-    choice_mock.assert_called_once_with([UserStateMachine(**item) for item in items])
-
-
-@pytest.mark.usefixtures('create_user_state_machine_table')
-def _______________________________test_no_random_user(user_vault: UserVault) -> None:
-    from actions.aws_resources import user_state_machine_table
-
-    assert not user_state_machine_table.scan()['Items']
-    assert user_vault.get_random_user() is None
-    assert not user_state_machine_table.scan()['Items']
-
-
-@patch.object(UserVault, 'get_random_user')
-def _______________________________test_get_random_available_user(
-        get_random_user_mock: MagicMock,
-        user_vault: UserVault,
-        ddb_user1: UserStateMachine,
-        ddb_user2: UserStateMachine,
-        ddb_user3: UserStateMachine,
-) -> None:
-    get_random_user_mock.side_effect = [ddb_user1, ddb_user2, ddb_user3]
-
-    assert user_vault.get_random_available_user('existing_user_id1') is ddb_user2
-    assert get_random_user_mock.call_count == 2
-
-
-@patch.object(UserVault, 'get_random_user')
-def _______________________________test_no_available_users(
-        get_random_user_mock: MagicMock,
-        user_vault: UserVault,
-        ddb_user1: UserStateMachine,
-) -> None:
-    get_random_user_mock.return_value = ddb_user1
-
-    assert user_vault.get_random_available_user('existing_user_id1') is None
-    assert get_random_user_mock.call_count == 10
+    list_available_user_dicts_mock.assert_called_once_with('existing_user_id1', newbie=newbie_filter)
+    choice_mock.assert_not_called()
 
 
 @pytest.mark.usefixtures('ddb_user1', 'ddb_user2', 'ddb_user3')

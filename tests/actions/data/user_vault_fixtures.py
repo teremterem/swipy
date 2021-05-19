@@ -15,27 +15,42 @@ def _save_user_in_ddb(user_state_machine: UserStateMachine) -> UserStateMachine:
 
 
 @pytest.fixture
-def ddb_unit_test_user(create_user_state_machine_table: None, unit_test_user: UserStateMachine) -> UserStateMachine:
+def ddb_unit_test_user(
+        create_user_state_machine_table: None,
+        unit_test_user: UserStateMachine,
+) -> UserStateMachine:
     return _save_user_in_ddb(unit_test_user)
 
 
 @pytest.fixture
-def ddb_user1(create_user_state_machine_table: None, user1: UserStateMachine) -> UserStateMachine:
+def ddb_user1(
+        create_user_state_machine_table: None,
+        user1: UserStateMachine,
+) -> UserStateMachine:
     return _save_user_in_ddb(user1)
 
 
 @pytest.fixture
-def ddb_user2(create_user_state_machine_table: None, user2: UserStateMachine) -> UserStateMachine:
+def ddb_user2(
+        create_user_state_machine_table: None,
+        user2: UserStateMachine,
+) -> UserStateMachine:
     return _save_user_in_ddb(user2)
 
 
 @pytest.fixture
-def ddb_user3(create_user_state_machine_table: None, user3: UserStateMachine) -> UserStateMachine:
+def ddb_user3(
+        create_user_state_machine_table: None,
+        user3: UserStateMachine,
+) -> UserStateMachine:
     return _save_user_in_ddb(user3)
 
 
 @pytest.fixture
-def ddb_user4(create_user_state_machine_table: None, user4: UserStateMachine) -> UserStateMachine:
+def ddb_user4(
+        create_user_state_machine_table: None,
+        user4: UserStateMachine,
+) -> UserStateMachine:
     return _save_user_in_ddb(user4)
 
 

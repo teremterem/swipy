@@ -56,6 +56,9 @@ class NaiveUserVault(IUserVault, ABC):
             newbie: Optional[bool] = None,
     ) -> Optional[UserStateMachine]:
         list_of_dicts = self._list_available_user_dicts(exclude_user_id, newbie=newbie)
+        if not list_of_dicts:
+            return None
+
         user_dict = secrets.choice(list_of_dicts)
         return UserStateMachine(**user_dict)
 
@@ -82,7 +85,7 @@ class DdbUserVault(NaiveUserVault):
             KeyConditionExpression=Key('state').eq(UserState.OK_FOR_CHITCHAT),
             FilterExpression=filter_expression,
         )
-        return ddb_resp['Items']
+        return ddb_resp.get('Items', [])
 
     def save_user(self, user_state_machine: UserStateMachine) -> None:
         # TODO oleksandr: is there a better way to ensure that the tests have a chance to mock boto3 ?
