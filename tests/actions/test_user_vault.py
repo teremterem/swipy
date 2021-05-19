@@ -262,28 +262,40 @@ def test_ddb_user_vault_list_available_user_dicts(
     assert user_state_machine_table.scan()['Items'] == scan_of_ten_users
     assert user_vault._list_available_user_dicts('existing_user_id1') == [
         {
-            'user_id': 'available_newbie_id1',
-            'state': 'ok_for_chitchat',
-            'partner_id': None,
-            'newbie': True,
-        },
-        {
             'user_id': 'available_veteran_id1',
             'state': 'ok_for_chitchat',
             'partner_id': None,
             'newbie': False,
         },
         {
-            'user_id': 'available_newbie_id3',
+            'user_id': 'available_veteran_id2',
             'state': 'ok_for_chitchat',
             'partner_id': None,
-            'newbie': True,
+            'newbie': False,
         },
         {
             'user_id': 'available_veteran_id3',
             'state': 'ok_for_chitchat',
             'partner_id': None,
             'newbie': False,
+        },
+        {
+            'user_id': 'available_newbie_id1',
+            'state': 'ok_for_chitchat',
+            'partner_id': None,
+            'newbie': True,
+        },
+        {
+            'user_id': 'available_newbie_id2',
+            'state': 'ok_for_chitchat',
+            'partner_id': None,
+            'newbie': True,
+        },
+        {
+            'user_id': 'available_newbie_id3',
+            'state': 'ok_for_chitchat',
+            'partner_id': None,
+            'newbie': True,
         },
     ]
 
