@@ -22,7 +22,7 @@ class ActionSessionStart(Action):
 
     @staticmethod
     def _slot_set_events_from_tracker(
-        tracker: "DialogueStateTracker",
+            tracker: "DialogueStateTracker",
     ) -> List["SlotSet"]:
         """Fetch SlotSet events from tracker and carry over key, value and metadata."""
 
@@ -33,11 +33,11 @@ class ActionSessionStart(Action):
         ]
 
     async def run(
-        self,
-        output_channel: "OutputChannel",
-        nlg: "NaturalLanguageGenerator",
-        tracker: "DialogueStateTracker",
-        domain: "Domain",
+            self,
+            output_channel: "OutputChannel",
+            nlg: "NaturalLanguageGenerator",
+            tracker: "DialogueStateTracker",
+            domain: "Domain",
     ) -> List[Event]:
         """Runs action. Please see parent class for the full docstring."""
         _events = [SessionStarted(metadata=self.metadata)]
