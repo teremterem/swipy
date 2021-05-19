@@ -29,8 +29,8 @@ class ActionSessionStart(Action):
         """Runs action. Please see parent class for the full docstring."""
         _events = [SessionStarted()]
 
-        # if domain.session_config.carry_over_slots:  # (Rasa Core version of the action would have checked this)
-        _events.extend(self._slot_set_events_from_tracker(tracker))
+        if domain['session_config']['carry_over_slots_to_new_session']:
+            _events.extend(self._slot_set_events_from_tracker(tracker))
 
         _events.append(ActionExecuted('action_listen'))
 
