@@ -1,9 +1,9 @@
-from typing import Dict, Text, Any
+from typing import Dict, Text, Any, List
 from unittest.mock import patch, AsyncMock, MagicMock
 
 import pytest
 from rasa_sdk import Tracker
-from rasa_sdk.events import SessionStarted, ActionExecuted
+from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType
 from rasa_sdk.executor import CollectingDispatcher
 
 from actions.actions import ActionSessionStart, ActionMakeUserAvailable, ActionFindSomeone
@@ -23,6 +23,45 @@ async def test_action_session_start_without_slots(
     tracker.slots.clear()
     events = await action.run(dispatcher, tracker, domain)
     assert events == [SessionStarted(), ActionExecuted('action_listen')]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "carry_over_slots_to_new_session, expected_events",
+    [
+        (
+                True,
+                [
+                    SessionStarted(),
+                    SlotSet("session_started_metadata", None),  # comes from tests/actions/data/initial_tracker.json
+                    SlotSet("room_link", None),  # comes from tests/actions/data/initial_tracker.json
+                    SlotSet("my_slot", "value"),
+                    SlotSet("another-slot", "value2"),
+                    ActionExecuted(action_name='action_listen'),
+                ],
+        ),
+        (
+                False,
+                [SessionStarted(), ActionExecuted(action_name='action_listen')],
+        ),
+    ],
+)
+async def test_action_session_start_with_slots(
+        tracker: Tracker,
+        dispatcher: CollectingDispatcher,
+        domain: Dict[Text, Any],
+        carry_over_slots_to_new_session: bool,
+        expected_events: List[EventType],
+):
+    # set a few slots on tracker
+    slot_set_event_1 = SlotSet("my_slot", "value")
+    slot_set_event_2 = SlotSet("another-slot", "value2")
+    tracker.add_slots([slot_set_event_1, slot_set_event_2])
+
+    domain['session_config']['carry_over_slots_to_new_session'] = carry_over_slots_to_new_session
+
+    events = await ActionSessionStart().run(dispatcher, tracker, domain)
+    assert events == expected_events
 
 
 @pytest.mark.asyncio
