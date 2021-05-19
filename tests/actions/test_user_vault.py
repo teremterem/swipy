@@ -1,3 +1,4 @@
+from dataclasses import asdict
 from typing import List, Dict, Text, Any, Optional
 from unittest.mock import patch, MagicMock
 
@@ -45,9 +46,30 @@ def test_get_existing_user(
     assert len(user_state_machine_table.scan()['Items']) == 1
 
 
+@pytest.mark.parametrize('newbie_filter', [True, False, None])
+@patch.object(UserVault, '_list_available_user_dicts')
+@patch('actions.user_vault.secrets.choice')
+def ttttest_get_random_available_user(
+        choice_mock: MagicMock,
+        list_available_user_dicts_mock: MagicMock,
+        user_vault: UserVault,
+        ddb_user1: UserStateMachine,
+        ddb_user2: UserStateMachine,
+        ddb_user3: UserStateMachine,
+        newbie_filter: Optional[bool],
+) -> None:
+    # noinspection PyDataclass
+    list_of_dicts = [asdict(ddb_user1), asdict(ddb_user2), asdict(ddb_user3)]
+    list_available_user_dicts_mock.side_effect = list_of_dicts
+    choice_mock.return_value = list_of_dicts[1]
+
+    assert user_vault.get_random_available_user('existing_user_id1') == ddb_user2
+    assert get_random_user_mock.call_count == 2
+
+
 @pytest.mark.usefixtures('ddb_user1', 'ddb_user3')
 @patch('actions.user_vault.secrets.choice')
-def test_get_random_user(
+def _______________________________test_get_random_user(
         choice_mock: MagicMock,
         user_vault: UserVault,
         ddb_user2: UserStateMachine,
@@ -66,7 +88,7 @@ def test_get_random_user(
 
 
 @pytest.mark.usefixtures('create_user_state_machine_table')
-def test_no_random_user(user_vault: UserVault) -> None:
+def _______________________________test_no_random_user(user_vault: UserVault) -> None:
     from actions.aws_resources import user_state_machine_table
 
     assert not user_state_machine_table.scan()['Items']
@@ -75,7 +97,7 @@ def test_no_random_user(user_vault: UserVault) -> None:
 
 
 @patch.object(UserVault, 'get_random_user')
-def test_get_random_available_user(
+def _______________________________test_get_random_available_user(
         get_random_user_mock: MagicMock,
         user_vault: UserVault,
         ddb_user1: UserStateMachine,
@@ -89,7 +111,7 @@ def test_get_random_available_user(
 
 
 @patch.object(UserVault, 'get_random_user')
-def test_no_available_users(
+def _______________________________test_no_available_users(
         get_random_user_mock: MagicMock,
         user_vault: UserVault,
         ddb_user1: UserStateMachine,
@@ -103,11 +125,11 @@ def test_no_available_users(
 @pytest.mark.usefixtures('ddb_user1', 'ddb_user2', 'ddb_user3')
 def test_save_new_user(
         user_vault: UserVault,
-        scan_of_three_users: List[Dict[Text, Any]],
+        ddb_scan_of_three_users: List[Dict[Text, Any]],
 ) -> None:
     from actions.aws_resources import user_state_machine_table
 
-    assert user_state_machine_table.scan()['Items'] == scan_of_three_users
+    assert user_state_machine_table.scan()['Items'] == ddb_scan_of_three_users
     user_vault.save_user(UserStateMachine('new_ddb_user_was_put'))
     assert user_state_machine_table.scan()['Items'] == [
         {
@@ -140,11 +162,11 @@ def test_save_new_user(
 @pytest.mark.usefixtures('ddb_user1', 'ddb_user2', 'ddb_user3')
 def test_save_existing_user(
         user_vault: UserVault,
-        scan_of_three_users: List[Dict[Text, Any]],
+        ddb_scan_of_three_users: List[Dict[Text, Any]],
 ) -> None:
     from actions.aws_resources import user_state_machine_table
 
-    assert user_state_machine_table.scan()['Items'] == scan_of_three_users
+    assert user_state_machine_table.scan()['Items'] == ddb_scan_of_three_users
     user_vault.save_user(UserStateMachine(
         user_id='existing_user_id1',
         state=UserState.DO_NOT_DISTURB,
@@ -185,11 +207,11 @@ def test_save_existing_user(
 )
 def test_ddb_user_vault_list_available_newbie_dicts(
         user_vault: DdbUserVault,
-        scan_of_ten_users: List[Dict[Text, Any]],
+        ddb_scan_of_ten_users: List[Dict[Text, Any]],
 ) -> None:
     from actions.aws_resources import user_state_machine_table
 
-    assert user_state_machine_table.scan()['Items'] == scan_of_ten_users
+    assert user_state_machine_table.scan()['Items'] == ddb_scan_of_ten_users
     assert user_vault._list_available_user_dicts('available_newbie_id2', newbie=True) == [
         {
             'user_id': 'available_newbie_id1',
@@ -220,11 +242,11 @@ def test_ddb_user_vault_list_available_newbie_dicts(
 )
 def test_ddb_user_vault_list_available_veteran_dicts(
         user_vault: DdbUserVault,
-        scan_of_ten_users: List[Dict[Text, Any]],
+        ddb_scan_of_ten_users: List[Dict[Text, Any]],
 ) -> None:
     from actions.aws_resources import user_state_machine_table
 
-    assert user_state_machine_table.scan()['Items'] == scan_of_ten_users
+    assert user_state_machine_table.scan()['Items'] == ddb_scan_of_ten_users
     assert user_vault._list_available_user_dicts('available_veteran_id2', newbie=False) == [
         {
             'user_id': 'available_veteran_id1',
@@ -255,11 +277,11 @@ def test_ddb_user_vault_list_available_veteran_dicts(
 )
 def test_ddb_user_vault_list_available_user_dicts(
         user_vault: DdbUserVault,
-        scan_of_ten_users: List[Dict[Text, Any]],
+        ddb_scan_of_ten_users: List[Dict[Text, Any]],
 ) -> None:
     from actions.aws_resources import user_state_machine_table
 
-    assert user_state_machine_table.scan()['Items'] == scan_of_ten_users
+    assert user_state_machine_table.scan()['Items'] == ddb_scan_of_ten_users
     assert user_vault._list_available_user_dicts('existing_user_id1') == [
         {
             'user_id': 'available_newbie_id1',
@@ -309,11 +331,11 @@ def test_ddb_user_vault_list_available_user_dicts(
 def test_ddb_user_vault_list_no_available_users_dicts(
         newbie_filter: Optional[bool],
         user_vault: DdbUserVault,
-        scan_of_three_users: List[Dict[Text, Any]],
+        ddb_scan_of_three_users: List[Dict[Text, Any]],
 ) -> None:
     from actions.aws_resources import user_state_machine_table
 
-    assert user_state_machine_table.scan()['Items'] == scan_of_three_users
+    assert user_state_machine_table.scan()['Items'] == ddb_scan_of_three_users
     assert user_vault._list_available_user_dicts('existing_user_id1', newbie=newbie_filter) == []
 
 

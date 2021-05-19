@@ -42,6 +42,7 @@ class NaiveUserVault(IUserVault, ABC):
         raise NotImplementedError()
 
     def get_user(self, user_id: Text) -> UserStateMachine:
+        """Unlike `_get_user`, this method creates the user if the user does not exist yet."""
         user_state_machine = self._get_user(user_id)
 
         if user_state_machine is None:
@@ -54,7 +55,7 @@ class NaiveUserVault(IUserVault, ABC):
             self, exclude_user_id: Text,
             newbie: Optional[bool] = None,
     ) -> Optional[UserStateMachine]:
-        list_of_dicts = self._list_available_user_dicts(exclude_user_id, newbie=True)
+        list_of_dicts = self._list_available_user_dicts(exclude_user_id, newbie=newbie)
         user_dict = secrets.choice(list_of_dicts)
         return UserStateMachine(**user_dict)
 
