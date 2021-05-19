@@ -18,7 +18,7 @@ class ActionSessionStart(Action):
     @staticmethod
     def _slot_set_events_from_tracker(tracker: Tracker) -> List[EventType]:
         # TODO oleksandr: should I skip session_started_metadata slot ?
-        #  (in Rasa Core version of the action this metadata seems to receive some kind of special treatment)
+        #  (metadata seems to receive some kind of special treatment in Rasa Core version of the action)
         return [SlotSet(key=slot[0], value=slot[1]) for slot in tracker.slots.items()]
 
     async def run(
