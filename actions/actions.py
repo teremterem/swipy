@@ -12,6 +12,8 @@ from actions.user_vault import user_vault
 class ActionSessionStart(Action):
     """Adaptation of https://github.com/RasaHQ/rasa/blob/main/rasa/core/actions/action.py ::ActionSessionStart"""
 
+    SWIPER_STATE_SLOT = 'swiper_state'
+
     def name(self) -> Text:
         return 'action_session_start'
 
@@ -32,6 +34,7 @@ class ActionSessionStart(Action):
         if domain['session_config']['carry_over_slots_to_new_session']:
             _events.extend(self._slot_set_events_from_tracker(tracker))
 
+        _events.append(SlotSet(key=self.SWIPER_STATE_SLOT, value=user_vault.get_user(tracker.sender_id).state))
         _events.append(ActionExecuted('action_listen'))
 
         return _events

@@ -13,6 +13,7 @@ from actions.user_vault import user_vault
 
 
 @pytest.mark.asyncio
+@pytest.mark.usefixtures('create_user_state_machine_table')
 async def test_action_session_start_without_slots(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
