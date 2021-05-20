@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 from typing import Any, Text, Dict, List
 
 from rasa_sdk import Action, Tracker
@@ -9,10 +10,26 @@ from actions.rasa_callbacks import invite_chitchat_partner
 from actions.user_vault import UserVault
 
 
-class ActionSessionStart(Action):
-    """Adaptation of https://github.com/RasaHQ/rasa/blob/main/rasa/core/actions/action.py ::ActionSessionStart"""
-
+class BaseSwiperAction(Action, ABC):
     SWIPER_STATE_SLOT = 'swiper_state'
+
+    @abstractmethod
+    async def run(
+            self, dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
+    ) -> List[Dict[Text, Any]]:
+        raise NotImplementedError()
+
+    def __init__(self):
+        self.user_vault = UserVault()
+
+    def get_current_user(self, tracker: Tracker):
+        return self.user_vault.get_user(tracker.sender_id)
+
+
+class ActionSessionStart(BaseSwiperAction):
+    """Adaptation of https://github.com/RasaHQ/rasa/blob/main/rasa/core/actions/action.py ::ActionSessionStart"""
 
     def name(self) -> Text:
         return 'action_session_start'
@@ -34,13 +51,13 @@ class ActionSessionStart(Action):
         if domain['session_config']['carry_over_slots_to_new_session']:
             _events.extend(self._slot_set_events_from_tracker(tracker))
 
-        _events.append(SlotSet(key=self.SWIPER_STATE_SLOT, value=UserVault().get_user(tracker.sender_id).state))
+        _events.append(SlotSet(key=self.SWIPER_STATE_SLOT, value=self.get_current_user(tracker).state))
         _events.append(ActionExecuted('action_listen'))
 
         return _events
 
 
-class ActionMakeUserAvailable(Action):
+class ActionMakeUserAvailable(BaseSwiperAction):
     def name(self) -> Text:
         return 'action_make_user_available'
 
@@ -49,11 +66,11 @@ class ActionMakeUserAvailable(Action):
             tracker: Tracker,
             domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
-        UserVault().get_user(tracker.sender_id)
+        self.get_current_user(tracker)
         return []
 
 
-class ActionFindSomeone(Action):
+class ActionFindSomeone(BaseSwiperAction):
     def name(self) -> Text:
         return 'action_find_someone'
 
@@ -62,7 +79,7 @@ class ActionFindSomeone(Action):
             tracker: Tracker,
             domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
-        chitchat_partner = UserVault().get_random_available_user(tracker.sender_id)
+        chitchat_partner = self.user_vault.get_random_available_user(tracker.sender_id)
 
         created_room = await create_room()
         room_url = created_room['url']

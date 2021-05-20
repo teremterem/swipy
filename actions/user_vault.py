@@ -26,7 +26,7 @@ class IUserVault(ABC):
 
 
 class NaiveUserVault(IUserVault, ABC):
-    def __init__(self):
+    def __init__(self) -> None:
         self._user_cache = {}
 
     @abstractmethod
