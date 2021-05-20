@@ -12,7 +12,7 @@ async def test_invite_chitchat_partner(
         mock_aioresponses: aioresponses,
         external_intent_response: Dict[Text, Any],
 ) -> None:
-    def rasa_core_callback(url, params=None, json=None, **kwargs):
+    def rasa_core_callback(url, json=None, **kwargs):
         assert json == {
             'name': 'EXTERNAL_invite_chitchat_partner',
             'entities': {
