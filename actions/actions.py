@@ -34,10 +34,11 @@ class BaseSwiperAction(Action, ABC):
             domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
         user_vault = UserVault()
+
         current_user = user_vault.get_user(tracker.sender_id)
 
-        events = []
-        events.extend(await self.swipy_run(dispatcher, tracker, domain, current_user, user_vault))
+        events = list(await self.swipy_run(dispatcher, tracker, domain, current_user, user_vault))
+
         return events
 
 

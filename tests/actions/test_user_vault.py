@@ -87,21 +87,27 @@ def test_get_random_available_user(
         choice_mock: MagicMock,
         list_available_user_dicts_mock: MagicMock,
         user_vault: UserVault,
-        user1: UserStateMachine,
-        user2: UserStateMachine,
-        user3: UserStateMachine,
+        ddb_user1: UserStateMachine,
+        ddb_user2: UserStateMachine,
+        ddb_user3: UserStateMachine,
         newbie_filter: Optional[bool],
 ) -> None:
     # noinspection PyDataclass
-    list_of_dicts = [asdict(user1), asdict(user2), asdict(user3)]
+    list_of_dicts = [asdict(ddb_user1), asdict(ddb_user2), asdict(ddb_user3)]
 
     list_available_user_dicts_mock.return_value = list_of_dicts
     choice_mock.return_value = list_of_dicts[1]
 
-    assert user_vault.get_random_available_user('existing_user_id1', newbie=newbie_filter) == user2
+    actual_random_user = user_vault.get_random_available_user(
+        exclude_user_id='existing_user_id1',
+        newbie=newbie_filter,
+    )
+    assert actual_random_user == ddb_user2
 
     list_available_user_dicts_mock.assert_called_once_with('existing_user_id1', newbie=newbie_filter)
     choice_mock.assert_called_once_with(list_of_dicts)
+
+    assert user_vault.get_user('existing_user_id2') is actual_random_user  # make sure the user was cached
 
 
 @pytest.mark.parametrize('newbie_filter', [True, False, None])

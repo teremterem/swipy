@@ -73,7 +73,10 @@ class NaiveUserVault(IUserVault, ABC):
             return None
 
         user_dict = secrets.choice(list_of_dicts)
-        return UserStateMachine(**user_dict)
+        user_state_machine = UserStateMachine(**user_dict)
+
+        self._user_cache[user_state_machine.user_id] = user_state_machine
+        return user_state_machine
 
 
 class DdbUserVault(NaiveUserVault):
