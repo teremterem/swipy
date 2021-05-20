@@ -41,12 +41,14 @@ async def test_action_session_start_without_slots(
                 SlotSet('room_link', None),  # comes from tests/actions/data/initial_tracker.json
                 SlotSet('my_slot', 'value'),
                 SlotSet('another-slot', 'value2'),
+                # two more events (swiper_state slot and action_listen) are appended inside the test itself
             ],
     ),
     (
             False,
             [
                 SessionStarted(),
+                # two more events (swiper_state slot and action_listen) are appended inside the test itself
             ],
     ),
 ])
