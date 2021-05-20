@@ -7,9 +7,9 @@ from rasa_sdk import Tracker
 from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType
 from rasa_sdk.executor import CollectingDispatcher
 
-from actions.actions import ActionSessionStart, ActionMakeUserAvailable, ActionFindSomeone, BaseSwiperAction
+from actions.actions import ActionSessionStart, ActionFindSomeone, BaseSwiperAction
 from actions.user_state_machine import UserStateMachine, UserState
-from actions.user_vault import UserVault
+from actions.user_vault import UserVault, IUserVault
 
 
 @pytest.mark.asyncio
@@ -28,15 +28,17 @@ async def test_user_vault_cache_not_reused_between_action_runs(
         def name(self) -> Text:
             return 'some_swiper_action'
 
-        async def run(
+        async def swipy_run(
                 self, _dispatcher: CollectingDispatcher,
                 _tracker: Tracker,
                 _domain: Dict[Text, Any],
+                _current_user: UserStateMachine,
+                _user_vault: IUserVault,
         ) -> List[Dict[Text, Any]]:
-            self.user_vault.get_user('unit_test_user')
-            self.user_vault.get_user('unit_test_user')
-            self.user_vault.get_user(_tracker.sender_id)  # which is also 'unit_test_user'
-            self.user_vault.get_user(_tracker.sender_id)  # which is also 'unit_test_user'
+            _user_vault.get_user('unit_test_user')
+            _user_vault.get_user('unit_test_user')
+            _user_vault.get_user(_tracker.sender_id)  # which is also 'unit_test_user'
+            _user_vault.get_user(_tracker.sender_id)  # which is also 'unit_test_user'
             return []
 
     action = SomeSwiperAction()
@@ -120,28 +122,6 @@ async def test_action_session_start_with_slots(
     ]
 
     assert await ActionSessionStart().run(dispatcher, tracker, domain) == expected_events
-
-
-@pytest.mark.asyncio
-@patch.object(UserVault, 'get_user')
-async def test_action_make_user_available(
-        mock_get_user: MagicMock,
-        tracker: Tracker,
-        dispatcher: CollectingDispatcher,
-        domain: Dict[Text, Any],
-        unit_test_user: UserStateMachine,
-) -> None:
-    mock_get_user.return_value = unit_test_user
-
-    action = ActionMakeUserAvailable()
-    assert action.name() == 'action_make_user_available'
-
-    actual_events = await action.run(dispatcher, tracker, domain)
-    assert actual_events == [
-        SlotSet('swiper_state', 'new'),  # expected to be set by all actions at all times
-    ]
-
-    mock_get_user.assert_called_once_with('unit_test_user')
 
 
 @pytest.mark.asyncio

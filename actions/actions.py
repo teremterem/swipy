@@ -7,7 +7,8 @@ from rasa_sdk.executor import CollectingDispatcher
 
 from actions.daily_co import create_room
 from actions.rasa_callbacks import invite_chitchat_partner
-from actions.user_vault import UserVault
+from actions.user_state_machine import UserStateMachine
+from actions.user_vault import UserVault, IUserVault
 
 
 class BaseSwiperAction(Action, ABC):
@@ -18,18 +19,28 @@ class BaseSwiperAction(Action, ABC):
         raise NotImplementedError('An action must implement a name')
 
     @abstractmethod
+    async def swipy_run(
+            self, dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
+            current_user: UserStateMachine,
+            user_vault: IUserVault,
+    ) -> List[Dict[Text, Any]]:
+        raise NotImplementedError('Swiper action must implement its swipy_run method')
+
     async def run(
             self, dispatcher: CollectingDispatcher,
             tracker: Tracker,
             domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
-        raise NotImplementedError('An action must implement its run method')
+        current_user = self._user_vault.get_user(tracker.sender_id)
+
+        events = []
+        events.extend(await self.swipy_run(dispatcher, tracker, domain, current_user, self._user_vault))
+        return events
 
     def __init__(self):
-        self.user_vault = UserVault()
-
-    def get_current_user(self, tracker: Tracker):
-        return self.user_vault.get_user(tracker.sender_id)
+        self._user_vault = UserVault()
 
 
 class ActionSessionStart(BaseSwiperAction):
@@ -48,46 +59,37 @@ class ActionSessionStart(BaseSwiperAction):
             if slot_key != cls.SWIPER_STATE_SLOT
         ]
 
-    async def run(
+    async def swipy_run(
             self, dispatcher: CollectingDispatcher,
             tracker: Tracker,
             domain: Dict[Text, Any],
+            current_user: UserStateMachine,
+            user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
         """Runs action. Please see parent class for the full docstring."""
-        _events = [SessionStarted()]
+        events = [SessionStarted()]
 
         if domain['session_config']['carry_over_slots_to_new_session']:
-            _events.extend(self._slot_set_events_from_tracker(tracker))
+            events.extend(self._slot_set_events_from_tracker(tracker))
 
-        _events.append(SlotSet(key=self.SWIPER_STATE_SLOT, value=self.get_current_user(tracker).state))
-        _events.append(ActionExecuted('action_listen'))
+        events.append(SlotSet(key=self.SWIPER_STATE_SLOT, value=current_user.state))
+        events.append(ActionExecuted('action_listen'))
 
-        return _events
-
-
-class ActionMakeUserAvailable(BaseSwiperAction):
-    def name(self) -> Text:
-        return 'action_make_user_available'
-
-    async def run(
-            self, dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any],
-    ) -> List[Dict[Text, Any]]:
-        self.get_current_user(tracker)
-        return []
+        return events
 
 
 class ActionFindSomeone(BaseSwiperAction):
     def name(self) -> Text:
         return 'action_find_someone'
 
-    async def run(
+    async def swipy_run(
             self, dispatcher: CollectingDispatcher,
             tracker: Tracker,
             domain: Dict[Text, Any],
+            current_user: UserStateMachine,
+            user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        chitchat_partner = self.user_vault.get_random_available_user(tracker.sender_id)
+        chitchat_partner = user_vault.get_random_available_user(tracker.sender_id)
 
         created_room = await create_room()
         room_url = created_room['url']
