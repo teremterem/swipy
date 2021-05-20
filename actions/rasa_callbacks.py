@@ -11,13 +11,15 @@ RASA_PRODUCTION_HOST = os.environ['RASA_PRODUCTION_HOST']
 RASA_TOKEN = os.getenv('RASA_TOKEN')
 RASA_CORE_PATH = os.getenv('RASA_CORE_PATH', 'core/')
 
+OUTPUT_CHANNEL = 'telegram'  # seems to be more robust than 'latest'
+
 
 async def invite_chitchat_partner(user_id: Text, room_url: Text) -> None:
     intent_name = 'EXTERNAL_invite_chitchat_partner'
 
     async with aiohttp.ClientSession() as session:
         params = {
-            'output_channel': 'latest',
+            'output_channel': OUTPUT_CHANNEL,
         }
         if RASA_TOKEN:
             params['token'] = RASA_TOKEN

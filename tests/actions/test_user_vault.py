@@ -1,16 +1,15 @@
-from typing import List, Dict, Text, Any
-from unittest.mock import patch
+from dataclasses import asdict
+from typing import List, Dict, Text, Any, Optional
+from unittest.mock import patch, MagicMock
 
 import pytest
 
 from actions.user_state_machine import UserStateMachine, UserState
 from actions.user_vault import UserVault, DdbUserVault
-from actions.user_vault import user_vault as user_vault_singleton
 
 
-def test_user_vault_singleton() -> None:
+def test_user_vault_implementation_class() -> None:
     assert UserVault == DdbUserVault
-    assert isinstance(user_vault_singleton, UserVault)
 
 
 @pytest.mark.usefixtures('create_user_state_machine_table')
@@ -45,81 +44,114 @@ def test_get_existing_user(
     assert len(user_state_machine_table.scan()['Items']) == 1
 
 
-@pytest.mark.usefixtures('ddb_user1', 'ddb_user3')
-@patch('actions.user_vault.secrets.choice')
-def test_get_random_user(
-        choice_mock,
+@patch.object(UserVault, '_get_user')
+def test_get_user_from_cache(
+        mock_ddb_get_user: MagicMock,
         user_vault: UserVault,
-        ddb_user2: UserStateMachine,
+        user1: UserStateMachine,
 ) -> None:
-    from actions.aws_resources import user_state_machine_table
+    mock_ddb_get_user.return_value = user1
 
-    choice_mock.return_value = ddb_user2
-
-    assert len(user_state_machine_table.scan()['Items']) == 3
-
-    assert user_vault.get_random_user() is ddb_user2
-
-    items = user_state_machine_table.scan()['Items']
-    assert len(items) == 3
-    choice_mock.assert_called_once_with([UserStateMachine(**item) for item in items])
+    assert user_vault.get_user('existing_user_id1') is user1
+    mock_ddb_get_user.assert_called_once_with('existing_user_id1')
+    assert user_vault.get_user('existing_user_id1') is user1
+    mock_ddb_get_user.assert_called_once_with('existing_user_id1')  # it should still be one call in total
 
 
-@pytest.mark.usefixtures('create_user_state_machine_table')
-def test_no_random_user(user_vault: UserVault) -> None:
-    from actions.aws_resources import user_state_machine_table
+@patch.object(UserVault, '_get_user')
+def test_user_vault_cache_not_reused_between_instances(
+        mock_ddb_get_user: MagicMock,
+        user1: UserStateMachine,
+) -> None:
+    mock_ddb_get_user.return_value = user1
+    user_id = 'existing_user_id1'
 
-    assert not user_state_machine_table.scan()['Items']
-    assert user_vault.get_random_user() is None
-    assert not user_state_machine_table.scan()['Items']
+    user_vault1 = UserVault()
+    user_vault2 = UserVault()
+
+    user_vault1.get_user(user_id)
+    assert mock_ddb_get_user.call_count == 1
+    user_vault1.get_user(user_id)
+    assert mock_ddb_get_user.call_count == 1
+
+    user_vault2.get_user(user_id)
+    assert mock_ddb_get_user.call_count == 2
+    user_vault2.get_user(user_id)
+    assert mock_ddb_get_user.call_count == 2
 
 
-@patch.object(UserVault, 'get_random_user')
+@pytest.mark.parametrize('newbie_filter', [True, False, None])
+@patch.object(UserVault, '_list_available_user_dicts')
+@patch('actions.user_vault.secrets.choice')
 def test_get_random_available_user(
-        get_random_user_mock,
+        choice_mock: MagicMock,
+        list_available_user_dicts_mock: MagicMock,
         user_vault: UserVault,
         ddb_user1: UserStateMachine,
         ddb_user2: UserStateMachine,
         ddb_user3: UserStateMachine,
+        newbie_filter: Optional[bool],
 ) -> None:
-    get_random_user_mock.side_effect = [ddb_user1, ddb_user2, ddb_user3]
+    # noinspection PyDataclass
+    list_of_dicts = [asdict(ddb_user1), asdict(ddb_user2), asdict(ddb_user3)]
 
-    assert user_vault.get_random_available_user('existing_user_id1') is ddb_user2
-    assert get_random_user_mock.call_count == 2
+    list_available_user_dicts_mock.return_value = list_of_dicts
+    choice_mock.return_value = list_of_dicts[1]
+
+    actual_random_user = user_vault.get_random_available_user(
+        exclude_user_id='existing_user_id1',
+        newbie=newbie_filter,
+    )
+    assert actual_random_user == ddb_user2
+
+    list_available_user_dicts_mock.assert_called_once_with('existing_user_id1', newbie=newbie_filter)
+    choice_mock.assert_called_once_with(list_of_dicts)
+
+    assert user_vault.get_user(actual_random_user.user_id) is actual_random_user  # make sure the user was cached
 
 
-@patch.object(UserVault, 'get_random_user')
-def test_no_available_users(
-        get_random_user_mock,
+@pytest.mark.parametrize('newbie_filter', [True, False, None])
+@pytest.mark.parametrize('empty_list_variant', [[], None])
+@patch.object(UserVault, '_list_available_user_dicts')
+@patch('actions.user_vault.secrets.choice')
+def test_no_available_user(
+        choice_mock: MagicMock,
+        list_available_user_dicts_mock: MagicMock,
         user_vault: UserVault,
-        ddb_user1: UserStateMachine,
+        newbie_filter: Optional[bool],
+        empty_list_variant: Optional[list],
 ) -> None:
-    get_random_user_mock.return_value = ddb_user1
+    list_available_user_dicts_mock.return_value = empty_list_variant
+    choice_mock.side_effect = ValueError("secrets.choice shouldn't have been called with None or empty list")
 
-    assert user_vault.get_random_available_user('existing_user_id1') is None
-    assert get_random_user_mock.call_count == 10
+    assert user_vault.get_random_available_user('existing_user_id1', newbie=newbie_filter) is None
+
+    list_available_user_dicts_mock.assert_called_once_with('existing_user_id1', newbie=newbie_filter)
+    choice_mock.assert_not_called()
 
 
 @pytest.mark.usefixtures('ddb_user1', 'ddb_user2', 'ddb_user3')
 def test_save_new_user(
         user_vault: UserVault,
-        scan_of_three_users: List[Dict[Text, Any]],
+        ddb_scan_of_three_users: List[Dict[Text, Any]],
 ) -> None:
     from actions.aws_resources import user_state_machine_table
 
-    assert user_state_machine_table.scan()['Items'] == scan_of_three_users
-    user_vault.save_user(UserStateMachine('new_ddb_user_was_put'))
+    user_to_save = UserStateMachine('new_ddb_user_was_put')
+
+    assert user_state_machine_table.scan()['Items'] == ddb_scan_of_three_users
+    user_vault.save_user(user_to_save)
     assert user_state_machine_table.scan()['Items'] == [
         {
             'user_id': 'existing_user_id1',
             'state': 'waiting_partner_answer',
-            'partner_id': 'some_partner_id',
+            'partner_id': 'existing_user_id2',
             'newbie': False,
         },
         {
             'user_id': 'existing_user_id2',
-            'state': 'new',
-            'partner_id': None,
+            'state': 'asked_to_join',
+            'partner_id': 'existing_user_id1',
             'newbie': True,
         },
         {
@@ -135,31 +167,34 @@ def test_save_new_user(
             'newbie': True,
         },
     ]
+    assert user_vault.get_user(user_to_save.user_id) is user_to_save  # make sure the user was cached
 
 
 @pytest.mark.usefixtures('ddb_user1', 'ddb_user2', 'ddb_user3')
 def test_save_existing_user(
         user_vault: UserVault,
-        scan_of_three_users: List[Dict[Text, Any]],
+        ddb_scan_of_three_users: List[Dict[Text, Any]],
 ) -> None:
     from actions.aws_resources import user_state_machine_table
 
-    assert user_state_machine_table.scan()['Items'] == scan_of_three_users
-    user_vault.save_user(UserStateMachine(
+    user_to_save = UserStateMachine(
         user_id='existing_user_id1',
         state=UserState.DO_NOT_DISTURB,
-    ))
+    )
+
+    assert user_state_machine_table.scan()['Items'] == ddb_scan_of_three_users
+    user_vault.save_user(user_to_save)
     assert user_state_machine_table.scan()['Items'] == [
         {
             'user_id': 'existing_user_id1',
             'state': 'do_not_disturb',  # used to be 'waiting_partner_answer' but we have overridden it
-            'partner_id': None,  # used to be 'some_partner_id' but we have overridden it
+            'partner_id': None,  # used to be 'existing_user_id2' but we have overridden it
             'newbie': True,  # used to be False but we have overridden it
         },
         {
             'user_id': 'existing_user_id2',
-            'state': 'new',
-            'partner_id': None,
+            'state': 'asked_to_join',
+            'partner_id': 'existing_user_id1',
             'newbie': True,
         },
         {
@@ -169,20 +204,134 @@ def test_save_existing_user(
             'newbie': True,
         },
     ]
+    assert user_vault.get_user(user_to_save.user_id) is user_to_save  # make sure the user was cached
 
 
-def test_ddb_user_vault_list_users(
-        user_vault: DdbUserVault,
-        ddb_user1: UserStateMachine,
-        ddb_user2: UserStateMachine,
-        ddb_user3: UserStateMachine,
+@pytest.mark.usefixtures(
+    'ddb_user1',
+    'ddb_available_newbie1',
+    'ddb_available_veteran1',
+    'ddb_user2',
+    'ddb_available_newbie2',
+    'ddb_available_veteran2',
+    'ddb_user3',
+    'ddb_available_newbie3',
+    'ddb_available_veteran3',
+    'ddb_user4',
+)
+@pytest.mark.parametrize('newbie_filter, exclude_user_id, expected_ddb_scan', [
+    (
+            True,
+            'available_newbie_id2',
+            [
+                {
+                    'user_id': 'available_newbie_id1',
+                    'state': 'ok_for_chitchat',
+                    'partner_id': None,
+                    'newbie': True,
+                },
+                {
+                    'user_id': 'available_newbie_id3',
+                    'state': 'ok_for_chitchat',
+                    'partner_id': None,
+                    'newbie': True,
+                },
+            ],
+    ),
+    (
+            False,
+            'available_veteran_id2',
+            [
+                {
+                    'user_id': 'available_veteran_id1',
+                    'state': 'ok_for_chitchat',
+                    'partner_id': None,
+                    'newbie': False,
+                },
+                {
+                    'user_id': 'available_veteran_id3',
+                    'state': 'ok_for_chitchat',
+                    'partner_id': None,
+                    'newbie': False,
+                },
+            ],
+    ),
+    (
+            None,
+            'existing_user_id1',
+            [
+                {
+                    'user_id': 'available_newbie_id1',
+                    'state': 'ok_for_chitchat',
+                    'partner_id': None,
+                    'newbie': True,
+                },
+                {
+                    'user_id': 'available_veteran_id1',
+                    'state': 'ok_for_chitchat',
+                    'partner_id': None,
+                    'newbie': False,
+                },
+                {
+                    'user_id': 'available_newbie_id2',
+                    'state': 'ok_for_chitchat',
+                    'partner_id': None,
+                    'newbie': True,
+                },
+                {
+                    'user_id': 'available_veteran_id2',
+                    'state': 'ok_for_chitchat',
+                    'partner_id': None,
+                    'newbie': False,
+                },
+                {
+                    'user_id': 'available_newbie_id3',
+                    'state': 'ok_for_chitchat',
+                    'partner_id': None,
+                    'newbie': True,
+                },
+                {
+                    'user_id': 'available_veteran_id3',
+                    'state': 'ok_for_chitchat',
+                    'partner_id': None,
+                    'newbie': False,
+                },
+            ],
+    ),
+])
+def test_ddb_user_vault_list_available_user_dicts(
+        user_vault: UserVault,
+        ddb_scan_of_ten_users: List[Dict[Text, Any]],
+        newbie_filter: bool,
+        exclude_user_id: Text,
+        expected_ddb_scan: List[Dict[Text, Any]],
 ) -> None:
-    assert user_vault._list_users() == [ddb_user1, ddb_user2, ddb_user3]
+    from actions.aws_resources import user_state_machine_table
+
+    assert user_state_machine_table.scan()['Items'] == ddb_scan_of_ten_users
+    assert user_vault._list_available_user_dicts(exclude_user_id, newbie=newbie_filter) == expected_ddb_scan
+
+
+@pytest.mark.parametrize('newbie_filter', [True, False, None])
+@pytest.mark.usefixtures(
+    'ddb_user1',
+    'ddb_user2',
+    'ddb_user3',
+)
+def test_ddb_user_vault_list_no_available_users_dicts(
+        newbie_filter: Optional[bool],
+        user_vault: UserVault,
+        ddb_scan_of_three_users: List[Dict[Text, Any]],
+) -> None:
+    from actions.aws_resources import user_state_machine_table
+
+    assert user_state_machine_table.scan()['Items'] == ddb_scan_of_three_users
+    assert user_vault._list_available_user_dicts('existing_user_id1', newbie=newbie_filter) == []
 
 
 @pytest.mark.usefixtures('ddb_user1', 'ddb_user3')
 def test_ddb_user_vault_get_existing_user(
-        user_vault: DdbUserVault,
+        user_vault: UserVault,
         ddb_user2: UserStateMachine,
 ) -> None:
     from actions.aws_resources import user_state_machine_table
@@ -193,7 +342,7 @@ def test_ddb_user_vault_get_existing_user(
 
 
 @pytest.mark.usefixtures('ddb_user1', 'ddb_user2', 'ddb_user3')
-def test_ddb_user_vault_get_nonexistent_user(user_vault: DdbUserVault) -> None:
+def test_ddb_user_vault_get_nonexistent_user(user_vault: UserVault) -> None:
     from actions.aws_resources import user_state_machine_table
 
     assert len(user_state_machine_table.scan()['Items']) == 3

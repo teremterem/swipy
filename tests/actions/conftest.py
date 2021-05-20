@@ -48,11 +48,29 @@ def create_user_state_machine_table(mock_ddb: ServiceResource) -> None:
                 'AttributeName': 'user_id',
                 'AttributeType': 'S',
             },
+            {
+                'AttributeName': 'state',
+                'AttributeType': 'S',
+            },
         ],
         KeySchema=[
             {
                 'AttributeName': 'user_id',
                 'KeyType': 'HASH',
+            },
+        ],
+        GlobalSecondaryIndexes=[
+            {
+                'IndexName': 'by_state',
+                'KeySchema': [
+                    {
+                        'AttributeName': 'state',
+                        'KeyType': 'HASH',
+                    },
+                ],
+                'Projection': {
+                    'ProjectionType': 'ALL',
+                },
             },
         ],
         BillingMode='PAY_PER_REQUEST',

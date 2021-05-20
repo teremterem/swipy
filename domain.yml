@@ -35,6 +35,11 @@ entities:
 - dietcls_time
 - room_link
 slots:
+  swiper_state:
+    type: rasa.shared.core.slots.TextSlot
+    initial_value: null
+    auto_fill: false
+    influence_conversation: true
   room_link:
     type: rasa.shared.core.slots.TextSlot
     initial_value: null
@@ -45,10 +50,11 @@ responses:
   - text: |-
       Hi, my name is Swipy🙃
        
-      Do you feel lonely or isolated?
-      Or maybe you just want to talk to a new person?
+      Do you feel lonely or isolated? 👾
        
-      I can arrange a video chitchat with another human for you.
+      Or maybe you just want to talk to a new person?👩‍💼
+       
+      I can arrange a video chitchat with another human for you 😉
   utter_sad_offer_chitchat:
   - text: |-
       Do you want to have a video chitchat with another human?
@@ -103,7 +109,7 @@ responses:
   utter_iamabot:
   - text: I am a bot, powered by Rasa.
 actions:
-- action_make_user_available
+- action_session_start
 - action_find_someone
 forms: {}
 e2e_actions: []
