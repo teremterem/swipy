@@ -83,6 +83,8 @@ responses:
       - I find someone who also wants to chitchat.
       - I confirm with you and them that you are both ready.
       - I send both of you a video chat link.
+       
+      {room_link}
   utter_found_someone:
   - text: |-
       Hooray! I found someone who wants to have a video chat!

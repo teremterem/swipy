@@ -179,7 +179,8 @@ async def test_action_find_someone(
 
     actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == [
-        SlotSet('swiper_state', 'new'),  # state taken from UserVault (all actions are expected to do this)
+        SlotSet('room_link', 'https://swipy.daily.co/pytestroom'),
+        SlotSet('swiper_state', 'new'),  # state taken from UserVault (all "swiper" actions must do this)
     ]
 
     assert dispatcher.messages == [{

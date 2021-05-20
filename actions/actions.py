@@ -109,4 +109,6 @@ class ActionFindSomeone(BaseSwiperAction):
         dispatcher.utter_message(response='utter_video_link', room_link=room_url)
 
         await invite_chitchat_partner(chitchat_partner.user_id, room_url)
-        return []
+        return [
+            SlotSet(key='room_link', value=room_url),
+        ]
