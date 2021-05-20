@@ -61,10 +61,10 @@ def test_get_user_from_cache(
 @patch.object(UserVault, '_get_user')
 def test_user_vault_cache_isolation(
         mock_ddb_get_user: MagicMock,
-        user3: UserStateMachine,
+        user1: UserStateMachine,
 ) -> None:
-    mock_ddb_get_user.return_value = user3
-    user_id = 'existing_user_id3'
+    mock_ddb_get_user.return_value = user1
+    user_id = 'existing_user_id1'
 
     user_vault1 = UserVault()
     user_vault2 = UserVault()
