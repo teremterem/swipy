@@ -99,7 +99,7 @@ async def test_action_session_start_without_slots(
     actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == [
         SessionStarted(),
-        SlotSet('swiper_state', 'new'),
+        SlotSet('swiper_state', 'new'),  # state taken from UserVault
         ActionExecuted('action_listen'),
     ]
 
@@ -149,7 +149,7 @@ async def test_action_session_start_with_slots(
 
     domain['session_config']['carry_over_slots_to_new_session'] = carry_over_slots_to_new_session
     expected_events = expected_events + [
-        SlotSet('swiper_state', 'ok_for_chitchat'),  # expected to be set by all actions at all times
+        SlotSet('swiper_state', 'ok_for_chitchat'),  # state taken from UserVault rather than carried over
         ActionExecuted(action_name='action_listen'),
     ]
 
@@ -179,7 +179,7 @@ async def test_action_find_someone(
 
     actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == [
-        SlotSet('swiper_state', 'new'),  # expected to be set by all actions at all times
+        SlotSet('swiper_state', 'new'),  # state taken from UserVault (all actions are expected to do this)
     ]
 
     assert dispatcher.messages == [{
