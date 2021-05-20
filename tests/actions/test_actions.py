@@ -32,7 +32,7 @@ async def test_action_session_start_without_slots(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize('swiper_state', UserState.all)
+@pytest.mark.parametrize('swiper_state', UserState.all)  # TODO oleksandr: test only few states instead ?
 @pytest.mark.parametrize('carry_over_slots_to_new_session, expected_events', [
     (
             True,
@@ -72,12 +72,13 @@ async def test_action_session_start_with_slots(
     # set a few slots on tracker
     tracker.add_slots([
         SlotSet('my_slot', 'value'),
+        SlotSet('swiper_state', 'new'),  # expected to be replaced rather than carried over
         SlotSet('another-slot', 'value2'),
     ])
 
     domain['session_config']['carry_over_slots_to_new_session'] = carry_over_slots_to_new_session
     expected_events = expected_events + [
-        SlotSet('swiper_state', swiper_state),  # this slot is expected to be set by all actions at all times
+        SlotSet('swiper_state', swiper_state),  # expected to be set by all actions at all times
         ActionExecuted(action_name='action_listen'),
     ]
 

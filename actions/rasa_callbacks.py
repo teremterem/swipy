@@ -11,7 +11,7 @@ RASA_PRODUCTION_HOST = os.environ['RASA_PRODUCTION_HOST']
 RASA_TOKEN = os.getenv('RASA_TOKEN')
 RASA_CORE_PATH = os.getenv('RASA_CORE_PATH', 'core/')
 
-OUTPUT_CHANNEL = 'telegram'  # 'latest' doesn't seem to be reliable in local env
+OUTPUT_CHANNEL = 'telegram'  # seems to be more robust than 'latest'
 
 
 async def invite_chitchat_partner(user_id: Text, room_url: Text) -> None:
