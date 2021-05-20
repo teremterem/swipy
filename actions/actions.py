@@ -14,12 +14,16 @@ class BaseSwiperAction(Action, ABC):
     SWIPER_STATE_SLOT = 'swiper_state'
 
     @abstractmethod
+    def name(self) -> Text:
+        raise NotImplementedError('An action must implement a name')
+
+    @abstractmethod
     async def run(
             self, dispatcher: CollectingDispatcher,
             tracker: Tracker,
             domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
-        raise NotImplementedError()
+        raise NotImplementedError('An action must implement its run method')
 
     def __init__(self):
         self.user_vault = UserVault()

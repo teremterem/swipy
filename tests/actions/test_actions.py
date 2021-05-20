@@ -7,13 +7,50 @@ from rasa_sdk import Tracker
 from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType
 from rasa_sdk.executor import CollectingDispatcher
 
-from actions.actions import ActionSessionStart, ActionMakeUserAvailable, ActionFindSomeone
+from actions.actions import ActionSessionStart, ActionMakeUserAvailable, ActionFindSomeone, BaseSwiperAction
 from actions.user_state_machine import UserStateMachine, UserState
 from actions.user_vault import UserVault
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('create_user_state_machine_table')
+@pytest.mark.usefixtures('ddb_unit_test_user')
+@patch.object(UserVault, '_get_user')
+async def test_user_vault_cache_not_reused_between_action_runs(
+        mock_ddb_get_user: MagicMock,
+        tracker: Tracker,
+        dispatcher: CollectingDispatcher,
+        domain: Dict[Text, Any],
+        unit_test_user: UserStateMachine,
+) -> None:
+    mock_ddb_get_user.return_value = unit_test_user
+
+    class SomeSwiperAction(BaseSwiperAction):
+        def name(self) -> Text:
+            return 'some_swiper_action'
+
+        async def run(
+                self, _dispatcher: CollectingDispatcher,
+                _tracker: Tracker,
+                _domain: Dict[Text, Any],
+        ) -> List[Dict[Text, Any]]:
+            self.user_vault.get_user('unit_test_user')
+            self.user_vault.get_user('unit_test_user')
+            self.user_vault.get_user(_tracker.sender_id)  # which is also 'unit_test_user'
+            self.user_vault.get_user(_tracker.sender_id)  # which is also 'unit_test_user'
+            return []
+
+    action = SomeSwiperAction()
+
+    await action.run(dispatcher, tracker, domain)
+    mock_ddb_get_user.assert_called_once_with('unit_test_user')
+
+    await action.run(dispatcher, tracker, domain)
+    assert mock_ddb_get_user.call_count == 2  # new run should use new cache
+    mock_ddb_get_user.assert_called_with('unit_test_user')
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures('ddb_unit_test_user')
 async def test_action_session_start_without_slots(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
@@ -23,8 +60,8 @@ async def test_action_session_start_without_slots(
     assert action.name() == 'action_session_start'
 
     tracker.slots.clear()
-    events = await action.run(dispatcher, tracker, domain)
-    assert events == [
+    actual_events = await action.run(dispatcher, tracker, domain)
+    assert actual_events == [
         SessionStarted(),
         SlotSet('swiper_state', 'new'),
         ActionExecuted('action_listen'),
@@ -72,7 +109,7 @@ async def test_action_session_start_with_slots(
     # set a few slots on tracker
     tracker.add_slots([
         SlotSet('my_slot', 'value'),
-        SlotSet('swiper_state', 'new'),  # expected to be replaced rather than carried over
+        SlotSet('swiper_state', 'do_not_disturb'),  # expected to be replaced rather than carried over
         SlotSet('another-slot', 'value2'),
     ])
 
@@ -100,12 +137,15 @@ async def test_action_make_user_available(
     assert action.name() == 'action_make_user_available'
 
     actual_events = await action.run(dispatcher, tracker, domain)
-    assert actual_events == []
+    assert actual_events == [
+        SlotSet('swiper_state', 'new'),  # expected to be set by all actions at all times
+    ]
 
     mock_get_user.assert_called_once_with('unit_test_user')
 
 
 @pytest.mark.asyncio
+@pytest.mark.usefixtures('ddb_unit_test_user')
 @patch('actions.actions.invite_chitchat_partner')
 @patch('actions.actions.create_room')
 @patch.object(UserVault, 'get_random_available_user')
@@ -126,7 +166,9 @@ async def test_action_find_someone(
     assert action.name() == 'action_find_someone'
 
     actual_events = await action.run(dispatcher, tracker, domain)
-    assert actual_events == []
+    assert actual_events == [
+        SlotSet('swiper_state', 'new'),  # expected to be set by all actions at all times
+    ]
 
     assert dispatcher.messages == [{
         'attachment': None,

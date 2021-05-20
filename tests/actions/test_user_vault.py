@@ -59,7 +59,7 @@ def test_get_user_from_cache(
 
 
 @patch.object(UserVault, '_get_user')
-def test_user_vault_cache_isolation(
+def test_user_vault_cache_not_reused_between_instances(
         mock_ddb_get_user: MagicMock,
         user1: UserStateMachine,
 ) -> None:
