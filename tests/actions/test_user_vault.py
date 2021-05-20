@@ -45,7 +45,7 @@ def test_get_existing_user(
 
 
 @patch.object(UserVault, '_get_user')
-def test_get_get_user_from_cache(
+def test_get_user_from_cache(
         mock_ddb_get_user: MagicMock,
         user_vault: UserVault,
         user1: UserStateMachine,
