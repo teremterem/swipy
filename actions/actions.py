@@ -33,14 +33,12 @@ class BaseSwiperAction(Action, ABC):
             tracker: Tracker,
             domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
-        current_user = self._user_vault.get_user(tracker.sender_id)
+        user_vault = UserVault()
+        current_user = user_vault.get_user(tracker.sender_id)
 
         events = []
-        events.extend(await self.swipy_run(dispatcher, tracker, domain, current_user, self._user_vault))
+        events.extend(await self.swipy_run(dispatcher, tracker, domain, current_user, user_vault))
         return events
-
-    def __init__(self):
-        self._user_vault = UserVault()
 
 
 class ActionSessionStart(BaseSwiperAction):
