@@ -107,7 +107,7 @@ def test_get_random_available_user(
     list_available_user_dicts_mock.assert_called_once_with('existing_user_id1', newbie=newbie_filter)
     choice_mock.assert_called_once_with(list_of_dicts)
 
-    assert user_vault.get_user('existing_user_id2') is actual_random_user  # make sure the user was cached
+    assert user_vault.get_user(actual_random_user.user_id) is actual_random_user  # make sure the user was cached
 
 
 @pytest.mark.parametrize('newbie_filter', [True, False, None])
@@ -137,8 +137,10 @@ def test_save_new_user(
 ) -> None:
     from actions.aws_resources import user_state_machine_table
 
+    user_to_save = UserStateMachine('new_ddb_user_was_put')
+
     assert user_state_machine_table.scan()['Items'] == ddb_scan_of_three_users
-    user_vault.save_user(UserStateMachine('new_ddb_user_was_put'))
+    user_vault.save_user(user_to_save)
     assert user_state_machine_table.scan()['Items'] == [
         {
             'user_id': 'existing_user_id1',
@@ -165,6 +167,7 @@ def test_save_new_user(
             'newbie': True,
         },
     ]
+    assert user_vault.get_user(user_to_save.user_id) is user_to_save  # make sure the user was cached
 
 
 @pytest.mark.usefixtures('ddb_user1', 'ddb_user2', 'ddb_user3')
@@ -174,11 +177,13 @@ def test_save_existing_user(
 ) -> None:
     from actions.aws_resources import user_state_machine_table
 
-    assert user_state_machine_table.scan()['Items'] == ddb_scan_of_three_users
-    user_vault.save_user(UserStateMachine(
+    user_to_save = UserStateMachine(
         user_id='existing_user_id1',
         state=UserState.DO_NOT_DISTURB,
-    ))
+    )
+
+    assert user_state_machine_table.scan()['Items'] == ddb_scan_of_three_users
+    user_vault.save_user(user_to_save)
     assert user_state_machine_table.scan()['Items'] == [
         {
             'user_id': 'existing_user_id1',
@@ -199,6 +204,7 @@ def test_save_existing_user(
             'newbie': True,
         },
     ]
+    assert user_vault.get_user(user_to_save.user_id) is user_to_save  # make sure the user was cached
 
 
 @pytest.mark.usefixtures(

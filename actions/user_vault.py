@@ -41,7 +41,7 @@ class NaiveUserVault(IUserVault, ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def save_user(self, user: UserStateMachine) -> None:
+    def _save_user(self, user: UserStateMachine) -> None:
         raise NotImplementedError()
 
     def get_user(self, user_id: Text) -> UserStateMachine:
@@ -49,20 +49,20 @@ class NaiveUserVault(IUserVault, ABC):
         Unlike `_get_user`, this method creates the user if the user does not exist yet
         (as well as relies on a so called first level cache when the same user is requested multiple times).
         """
-        user_state_machine = self._user_cache.get(user_id)
+        user = self._user_cache.get(user_id)
         # we are relying on None instead of a sentinel object to test if it is a miss
         # because get_user is never expected to return None anyways
-        if user_state_machine is not None:
-            return user_state_machine
+        if user is not None:
+            return user
 
-        user_state_machine = self._get_user(user_id)
+        user = self._get_user(user_id)
 
-        if user_state_machine is None:
-            user_state_machine = UserStateMachine(user_id)
-            self.save_user(user_state_machine)
+        if user is None:
+            user = UserStateMachine(user_id)
+            self.save_user(user)
 
-        self._user_cache[user_id] = user_state_machine
-        return user_state_machine
+        self._user_cache[user_id] = user
+        return user
 
     def get_random_available_user(
             self, exclude_user_id: Text,
@@ -73,10 +73,14 @@ class NaiveUserVault(IUserVault, ABC):
             return None
 
         user_dict = secrets.choice(list_of_dicts)
-        user_state_machine = UserStateMachine(**user_dict)
+        user = UserStateMachine(**user_dict)
 
-        self._user_cache[user_state_machine.user_id] = user_state_machine
-        return user_state_machine
+        self._user_cache[user.user_id] = user
+        return user
+
+    def save_user(self, user: UserStateMachine) -> None:
+        self._save_user(user)
+        self._user_cache[user.user_id] = user
 
 
 class DdbUserVault(NaiveUserVault):
@@ -103,12 +107,12 @@ class DdbUserVault(NaiveUserVault):
         )
         return ddb_resp.get('Items', [])
 
-    def save_user(self, user_state_machine: UserStateMachine) -> None:
+    def _save_user(self, user: UserStateMachine) -> None:
         # TODO oleksandr: is there a better way to ensure that the tests have a chance to mock boto3 ?
         from actions.aws_resources import user_state_machine_table
 
         # noinspection PyDataclass
-        user_dict = asdict(user_state_machine)
+        user_dict = asdict(user)
         # https://stackoverflow.com/a/43672209/2040370
         user_state_machine_table.put_item(Item=user_dict)
 
