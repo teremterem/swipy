@@ -98,5 +98,3 @@ class DdbUserVault(NaiveUserVault):
 
 
 UserVault: Type[IUserVault] = DdbUserVault
-
-user_vault: IUserVault = UserVault()

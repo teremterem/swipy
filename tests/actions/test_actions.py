@@ -9,7 +9,7 @@ from rasa_sdk.executor import CollectingDispatcher
 
 from actions.actions import ActionSessionStart, ActionMakeUserAvailable, ActionFindSomeone
 from actions.user_state_machine import UserStateMachine, UserState
-from actions.user_vault import user_vault
+from actions.user_vault import UserVault
 
 
 @pytest.mark.asyncio
@@ -85,7 +85,7 @@ async def test_action_session_start_with_slots(
 
 
 @pytest.mark.asyncio
-@patch.object(user_vault, 'get_user')
+@patch.object(UserVault, 'get_user')
 async def test_action_make_user_available(
         mock_get_user: MagicMock,
         tracker: Tracker,
@@ -107,7 +107,7 @@ async def test_action_make_user_available(
 @pytest.mark.asyncio
 @patch('actions.actions.invite_chitchat_partner')
 @patch('actions.actions.create_room')
-@patch.object(user_vault, 'get_random_available_user')
+@patch.object(UserVault, 'get_random_available_user')
 async def test_action_find_someone(
         mock_get_random_available_user: MagicMock,
         mock_create_room: AsyncMock,

@@ -6,12 +6,10 @@ import pytest
 
 from actions.user_state_machine import UserStateMachine, UserState
 from actions.user_vault import UserVault, DdbUserVault
-from actions.user_vault import user_vault as user_vault_singleton
 
 
-def test_user_vault_singleton() -> None:
+def test_user_vault_implementation_class() -> None:
     assert UserVault == DdbUserVault
-    assert isinstance(user_vault_singleton, UserVault)
 
 
 @pytest.mark.usefixtures('create_user_state_machine_table')

@@ -6,7 +6,7 @@ from rasa_sdk.executor import CollectingDispatcher
 
 from actions.daily_co import create_room
 from actions.rasa_callbacks import invite_chitchat_partner
-from actions.user_vault import user_vault
+from actions.user_vault import UserVault
 
 
 class ActionSessionStart(Action):
@@ -34,7 +34,7 @@ class ActionSessionStart(Action):
         if domain['session_config']['carry_over_slots_to_new_session']:
             _events.extend(self._slot_set_events_from_tracker(tracker))
 
-        _events.append(SlotSet(key=self.SWIPER_STATE_SLOT, value=user_vault.get_user(tracker.sender_id).state))
+        _events.append(SlotSet(key=self.SWIPER_STATE_SLOT, value=UserVault().get_user(tracker.sender_id).state))
         _events.append(ActionExecuted('action_listen'))
 
         return _events
@@ -49,7 +49,7 @@ class ActionMakeUserAvailable(Action):
             tracker: Tracker,
             domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
-        user_vault.get_user(tracker.sender_id)
+        UserVault().get_user(tracker.sender_id)
         return []
 
 
@@ -62,7 +62,7 @@ class ActionFindSomeone(Action):
             tracker: Tracker,
             domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
-        chitchat_partner = user_vault.get_random_available_user(tracker.sender_id)
+        chitchat_partner = UserVault().get_random_available_user(tracker.sender_id)
 
         created_room = await create_room()
         room_url = created_room['url']
