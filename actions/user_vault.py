@@ -26,6 +26,9 @@ class IUserVault(ABC):
 
 
 class NaiveUserVault(IUserVault, ABC):
+    def __init__(self):
+        self._user_cache = {}
+
     @abstractmethod
     def _get_user(self, user_id: Text) -> Optional[UserStateMachine]:
         raise NotImplementedError()
@@ -42,13 +45,23 @@ class NaiveUserVault(IUserVault, ABC):
         raise NotImplementedError()
 
     def get_user(self, user_id: Text) -> UserStateMachine:
-        """Unlike `_get_user`, this method creates the user if the user does not exist yet."""
+        """
+        Unlike `_get_user`, this method creates the user if the user does not exist yet
+        (as well as relies on a so called first level cache when the same user is requested multiple times).
+        """
+        user_state_machine = self._user_cache.get(user_id)
+        # we are relying on None instead of a sentinel object to test if it is a miss
+        # because get_user is never expected to return None anyways
+        if user_state_machine is not None:
+            return user_state_machine
+
         user_state_machine = self._get_user(user_id)
 
         if user_state_machine is None:
             user_state_machine = UserStateMachine(user_id)
             self.save_user(user_state_machine)
 
+        self._user_cache[user_id] = user_state_machine
         return user_state_machine
 
     def get_random_available_user(
