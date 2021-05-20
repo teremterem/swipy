@@ -25,7 +25,7 @@ async def test_invite_chitchat_partner(
     # noinspection HttpUrlsUsage
     mock_aioresponses.post(
         'http://rasa-unittest:5005/unittest-core/conversations/a_partner_id/trigger_intent'
-        '?output_channel=latest&token=rasaunittesttoken',
+        '?output_channel=telegram&token=rasaunittesttoken',
         callback=rasa_core_callback_mock,
     )
 
