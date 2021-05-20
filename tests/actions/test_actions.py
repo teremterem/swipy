@@ -13,7 +13,6 @@ from actions.user_vault import UserVault, IUserVault
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('ddb_unit_test_user')
 @patch.object(UserVault, '_get_user')
 async def test_user_vault_cache_not_reused_between_action_runs(
         mock_ddb_get_user: MagicMock,
@@ -49,6 +48,41 @@ async def test_user_vault_cache_not_reused_between_action_runs(
     await action.run(dispatcher, tracker, domain)
     assert mock_ddb_get_user.call_count == 2  # new run should use new cache
     mock_ddb_get_user.assert_called_with('unit_test_user')
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures('ddb_unit_test_user')
+async def test_swiper_state_slot_is_set_after_action_run(
+        tracker: Tracker,
+        dispatcher: CollectingDispatcher,
+        domain: Dict[Text, Any],
+) -> None:
+    class SomeSwiperAction(BaseSwiperAction):
+        def name(self) -> Text:
+            return 'some_swiper_action'
+
+        async def swipy_run(
+                self, _dispatcher: CollectingDispatcher,
+                _tracker: Tracker,
+                _domain: Dict[Text, Any],
+                _current_user: UserStateMachine,
+                _user_vault: IUserVault,
+        ) -> List[Dict[Text, Any]]:
+            assert _current_user.user_id == 'unit_test_user'
+            assert _current_user.state == 'new'
+
+            _user_vault.save_user(UserStateMachine(
+                user_id=_current_user.user_id,
+                state=UserState.OK_FOR_CHITCHAT,
+            ))  # save a completely different instance of the current user
+            return []
+
+    action = SomeSwiperAction()
+
+    actual_events = await action.run(dispatcher, tracker, domain)
+    assert actual_events == [
+        SlotSet('swiper_state', 'ok_for_chitchat'),  # the action is expected to use the most recent value of state
+    ]
 
 
 @pytest.mark.asyncio
