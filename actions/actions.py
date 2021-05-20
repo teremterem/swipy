@@ -35,10 +35,17 @@ class BaseSwiperAction(Action, ABC):
     ) -> List[Dict[Text, Any]]:
         user_vault = UserVault()
 
-        current_user = user_vault.get_user(tracker.sender_id)
-
-        events = list(await self.swipy_run(dispatcher, tracker, domain, current_user, user_vault))
-
+        events = list(await self.swipy_run(
+            dispatcher,
+            tracker,
+            domain,
+            user_vault.get_user(tracker.sender_id),
+            user_vault,
+        ))
+        events.append(SlotSet(
+            key=self.SWIPER_STATE_SLOT,
+            value=user_vault.get_user(tracker.sender_id).state,  # invoke get_user once again (just in case)
+        ))
         return events
 
 
@@ -65,13 +72,20 @@ class ActionSessionStart(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        """Runs action. Please see parent class for the full docstring."""
         events = [SessionStarted()]
 
         if domain['session_config']['carry_over_slots_to_new_session']:
             events.extend(self._slot_set_events_from_tracker(tracker))
 
-        events.append(SlotSet(key=self.SWIPER_STATE_SLOT, value=current_user.state))
+        return events
+
+    async def run(
+            self, dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
+    ) -> List[Dict[Text, Any]]:
+        events = list(await super().run(dispatcher, tracker, domain))
+
         events.append(ActionExecuted('action_listen'))
 
         return events
