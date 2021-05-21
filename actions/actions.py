@@ -29,6 +29,7 @@ class SwiperActionResult:
     PARTNER_HAS_BEEN_ASKED = 'partner_has_been_asked'
     PARTNER_WAS_NOT_FOUND = 'partner_was_not_found'
 
+    SUCCESS = 'success'
     ERROR = 'error'
 
 
@@ -208,8 +209,29 @@ class ActionAskToJoin(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        dispatcher.utter_message(text=f"{tracker.get_slot('partner_id')}: wazzup, {current_user.user_id}?")
-        return []
+        partner = user_vault.get_user(tracker.get_slot('partner_id'))
+        if partner.state != UserState.WAITING_PARTNER_ANSWER:
+            # not throwing an exception here because the person we were supposed to ask doesn't need to be notified
+            logger.error(
+                'user %r was expected to be in state %r, but was in state %r instead',
+                partner.user_id,
+                UserState.WAITING_PARTNER_ANSWER,
+                partner.state,
+            )
+            return []
+
+        dispatcher.utter_message(template='utter_someone_wants_to_chat')
+
+        # noinspection PyUnresolvedReferences
+        current_user.become_asked_to_join(partner.user_id)
+        user_vault.save(current_user)
+
+        return [
+            SlotSet(
+                key=SWIPER_ACTION_RESULT_SLOT,
+                value=SwiperActionResult.SUCCESS,
+            ),
+        ]
 
 
 class ActionCreateRoomExperimental(BaseSwiperAction):

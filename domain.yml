@@ -113,6 +113,11 @@ responses:
       Hooray! I found someone who wants to have a video chat!
        
       Are you ready?
+  utter_someone_wants_to_chat:
+  - text: |-
+      Hey, someone wants to chitchat with you!
+       
+      Are you ready to join a video call?
   utter_video_link:
   - text: |-
       Awesome! Here is the link to the video chat:
