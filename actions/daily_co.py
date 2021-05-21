@@ -11,7 +11,7 @@ DAILY_CO_API_TOKEN = os.environ['DAILY_CO_API_TOKEN']
 
 
 async def create_room() -> dict:
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession() as session:  # TODO oleksandr: do I need to cache/reuse these sessions ?
         room_data = {
             'privacy': 'public',
             'properties': {

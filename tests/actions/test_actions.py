@@ -7,7 +7,7 @@ from rasa_sdk import Tracker
 from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType
 from rasa_sdk.executor import CollectingDispatcher
 
-from actions.actions import BaseSwiperAction, ActionSessionStart, ActionCreateRoomExperimental
+from actions import actions
 from actions.user_state_machine import UserStateMachine, UserState
 from actions.user_vault import UserVault, IUserVault
 
@@ -23,7 +23,7 @@ async def test_user_vault_cache_not_reused_between_action_runs(
 ) -> None:
     mock_ddb_get_user.return_value = unit_test_user
 
-    class SomeSwiperAction(BaseSwiperAction):
+    class SomeSwiperAction(actions.BaseSwiperAction):
         def name(self) -> Text:
             return 'some_swiper_action'
 
@@ -57,7 +57,7 @@ async def test_swiper_state_slot_is_set_after_action_run(
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
 ) -> None:
-    class SomeSwiperAction(BaseSwiperAction):
+    class SomeSwiperAction(actions.BaseSwiperAction):
         def name(self) -> Text:
             return 'some_swiper_action'
 
@@ -92,7 +92,7 @@ async def test_action_session_start_without_slots(
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
 ) -> None:
-    action = ActionSessionStart()
+    action = actions.ActionSessionStart()
     assert action.name() == 'action_session_start'
 
     tracker.slots.clear()
@@ -153,18 +153,46 @@ async def test_action_session_start_with_slots(
         ActionExecuted(action_name='action_listen'),
     ]
 
-    assert await ActionSessionStart().run(dispatcher, tracker, domain) == expected_events
+    assert await actions.ActionSessionStart().run(dispatcher, tracker, domain) == expected_events
 
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('ddb_unit_test_user')
-@patch('actions.actions.invite_chitchat_partner')
-@patch('actions.actions.create_room')
+@patch('actions.rasa_callbacks.ask_partner')
+@patch.object(UserVault, 'get_random_available_user')
+async def test_action_find_newbie_partner(
+        mock_get_random_available_user: MagicMock,
+        mock_rasa_callback_ask_partner: AsyncMock,
+        tracker: Tracker,
+        dispatcher: CollectingDispatcher,
+        domain: Dict[Text, Any],
+        available_newbie1: UserStateMachine,
+) -> None:
+    mock_get_random_available_user.return_value = available_newbie1
+
+    action = actions.ActionFindPartner()
+    assert action.name() == 'action_find_partner'
+
+    actual_events = await action.run(dispatcher, tracker, domain)
+    assert actual_events == [
+        SlotSet('swiper_action_result', 'partner_has_been_asked'),
+        SlotSet('swiper_state', 'waiting_partner_answer'),  # state taken from UserVault
+    ]
+
+    assert dispatcher.messages == []
+    mock_get_random_available_user.assert_called_once_with(exclude_user_id='unit_test_user', newbie=True)
+    mock_rasa_callback_ask_partner.assert_called_once_with('available_newbie_id1')
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures('ddb_unit_test_user')
+@patch('actions.rasa_callbacks.invite_chitchat_partner')
+@patch('actions.daily_co.create_room')
 @patch.object(UserVault, 'get_random_available_user')
 async def test_action_create_room_experimental(
         mock_get_random_available_user: MagicMock,
-        mock_create_room: AsyncMock,
-        mock_invite_chitchat_partner: MagicMock,
+        mock_daily_co_create_room: AsyncMock,
+        mock_rasa_callback_invite_chitchat_partner: AsyncMock,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
@@ -172,9 +200,9 @@ async def test_action_create_room_experimental(
         new_room1: Dict[Text, Any],
 ) -> None:
     mock_get_random_available_user.return_value = user3
-    mock_create_room.return_value = new_room1
+    mock_daily_co_create_room.return_value = new_room1
 
-    action = ActionCreateRoomExperimental()
+    action = actions.ActionCreateRoomExperimental()
     assert action.name() == 'action_create_room_experimental'
 
     actual_events = await action.run(dispatcher, tracker, domain)
@@ -195,4 +223,7 @@ async def test_action_create_room_experimental(
         'text': None,
     }]
     mock_get_random_available_user.assert_called_once_with('unit_test_user')
-    mock_invite_chitchat_partner.assert_called_once_with('existing_user_id3', 'https://swipy.daily.co/pytestroom')
+    mock_rasa_callback_invite_chitchat_partner.assert_called_once_with(
+        'existing_user_id3',
+        'https://swipy.daily.co/pytestroom',
+    )
