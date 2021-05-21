@@ -458,9 +458,6 @@ async def test_action_ask_to_join_invalid(
         receiver: UserStateMachine,
         error_log_params: List[Text],
 ) -> None:
-    action = actions.ActionAskToJoin()
-    assert action.name() == 'action_ask_to_join'
-
     user_vault = UserVault()
     user_vault.save(asker)
     user_vault.save(receiver)
@@ -469,7 +466,7 @@ async def test_action_ask_to_join_invalid(
         SlotSet('partner_id', 'an_asker'),
     ])
 
-    actual_events = await action.run(dispatcher, tracker, domain)
+    actual_events = await actions.ActionAskToJoin().run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_error', None),
         SlotSet('swiper_error_trace', None),
