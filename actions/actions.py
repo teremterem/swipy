@@ -208,7 +208,8 @@ class ActionAskToJoin(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        pass
+        dispatcher.utter_message(text='wazzup?')
+        return []
 
 
 class ActionCreateRoomExperimental(BaseSwiperAction):

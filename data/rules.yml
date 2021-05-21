@@ -23,6 +23,10 @@ rules:
   steps:
   - intent: start
   - action: utter_greet_offer_chitchat
+- rule: EXTERNAL_ask_to_join
+  steps:
+  - intent: EXTERNAL_ask_to_join
+  - action: action_ask_to_join
 - rule: EXTERNAL_invite_chitchat_partner
   steps:
   - intent: EXTERNAL_invite_chitchat_partner

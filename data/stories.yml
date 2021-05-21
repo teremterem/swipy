@@ -40,14 +40,14 @@ stories:
   steps:
   - intent: want_chitchat
   - action: utter_ok_arranging_chitchat
-  - action: utter_found_someone
+  - action: action_find_partner
 - story: user greeted and then aggreed for chitchat
   steps:
   - intent: greet
   - action: utter_greet_offer_chitchat
   - intent: affirm
   - action: utter_ok_arranging_chitchat
-  - action: utter_found_someone
+  - action: action_find_partner
 - story: user greeted but refused to chitchat chitchat
   steps:
   - intent: greet
@@ -59,7 +59,7 @@ stories:
   - action: utter_how_it_works
   - intent: agree
   - action: utter_ok_arranging_chitchat
-  - action: utter_found_someone
+  - action: action_find_partner
 - story: bot explained how it worked but user denied to try it out
   steps:
   - action: utter_how_it_works
@@ -70,7 +70,7 @@ stories:
   - action: utter_sad_offer_chitchat
   - intent: agree
   - action: utter_ok_arranging_chitchat
-  - action: utter_found_someone
+  - action: action_find_partner
 - story: bot was answering to a sad user but user denied to try it out
   steps:
   - action: utter_sad_offer_chitchat
