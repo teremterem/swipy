@@ -18,7 +18,7 @@ rules:
   - or:
     - intent: affirm
     - intent: want_chitchat
-  - action: action_find_someone
+  - action: action_create_room_experimental
 - rule: user sent /start in Telegram
   steps:
   - intent: start

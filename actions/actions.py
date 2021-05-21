@@ -91,9 +91,9 @@ class ActionSessionStart(BaseSwiperAction):
         return events
 
 
-class ActionFindSomeone(BaseSwiperAction):
+class ActionCreateRoomExperimental(BaseSwiperAction):
     def name(self) -> Text:
-        return 'action_find_someone'
+        return 'action_create_room_experimental'
 
     async def swipy_run(
             self, dispatcher: CollectingDispatcher,

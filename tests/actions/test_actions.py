@@ -7,7 +7,7 @@ from rasa_sdk import Tracker
 from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType
 from rasa_sdk.executor import CollectingDispatcher
 
-from actions.actions import ActionSessionStart, ActionFindSomeone, BaseSwiperAction
+from actions.actions import BaseSwiperAction, ActionSessionStart, ActionCreateRoomExperimental
 from actions.user_state_machine import UserStateMachine, UserState
 from actions.user_vault import UserVault, IUserVault
 
@@ -161,7 +161,7 @@ async def test_action_session_start_with_slots(
 @patch('actions.actions.invite_chitchat_partner')
 @patch('actions.actions.create_room')
 @patch.object(UserVault, 'get_random_available_user')
-async def test_action_find_someone(
+async def test_action_create_room_experimental(
         mock_get_random_available_user: MagicMock,
         mock_create_room: AsyncMock,
         mock_invite_chitchat_partner: MagicMock,
@@ -174,8 +174,8 @@ async def test_action_find_someone(
     mock_get_random_available_user.return_value = user3
     mock_create_room.return_value = new_room1
 
-    action = ActionFindSomeone()
-    assert action.name() == 'action_find_someone'
+    action = ActionCreateRoomExperimental()
+    assert action.name() == 'action_create_room_experimental'
 
     actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == [

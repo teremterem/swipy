@@ -112,6 +112,6 @@ responses:
   - text: I am a bot, powered by Rasa.
 actions:
 - action_session_start
-- action_find_someone
+- action_create_room_experimental
 forms: {}
 e2e_actions: []

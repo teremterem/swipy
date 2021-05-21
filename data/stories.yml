@@ -18,7 +18,7 @@ stories:
   - or:
     - intent: affirm
     - intent: want_chitchat
-  - action: action_find_someone
+  - action: action_create_room_experimental
 - story: bot found someone but user refused to join chitchat
   steps:
   - action: utter_found_someone
