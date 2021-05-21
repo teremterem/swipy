@@ -209,6 +209,17 @@ class ActionAskToJoin(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
+        if current_user.state != UserState.OK_FOR_CHITCHAT:
+            # not throwing an exception here because the person we were supposed to ask doesn't need to be notified
+            logger.error(
+                'current user %r is not in state %r, hence cannot be asked (actual state is %r)',
+                current_user.user_id,
+                UserState.OK_FOR_CHITCHAT,
+                current_user.state,
+            )
+            # TODO oleksandr: let the requester know somehow ?
+            return []
+
         partner = user_vault.get_user(tracker.get_slot('partner_id'))
         if partner.state != UserState.WAITING_PARTNER_ANSWER:
             # not throwing an exception here because the person we were supposed to ask doesn't need to be notified
@@ -218,7 +229,16 @@ class ActionAskToJoin(BaseSwiperAction):
                 UserState.WAITING_PARTNER_ANSWER,
                 partner.state,
             )
-            # TODO oleksandr: should requester receive feedback about this somehow ?
+            return []
+
+        if partner.partner_id != current_user.user_id:
+            # not throwing an exception here because the person we were supposed to ask doesn't need to be notified
+            logger.error(
+                "partner_id for user %r was expected to be %r (current user), but was %r instead",
+                partner.user_id,
+                current_user.user_id,
+                partner.partner_id,
+            )
             return []
 
         dispatcher.utter_message(template='utter_someone_wants_to_chat')

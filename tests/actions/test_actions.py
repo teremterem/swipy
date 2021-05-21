@@ -324,6 +324,67 @@ async def test_action_find_partner_invalid_state(
 
 
 @pytest.mark.asyncio
+@pytest.mark.usefixtures('create_user_state_machine_table')
+async def test_action_ask_to_join(
+        tracker: Tracker,
+        dispatcher: CollectingDispatcher,
+        domain: Dict[Text, Any],
+) -> None:
+    action = actions.ActionAskToJoin()
+    assert action.name() == 'action_ask_to_join'
+
+    user_vault = UserVault()
+    user_vault.save(UserStateMachine(
+        user_id='unit_test_user',
+        state='ok_for_chitchat',
+        partner_id=None,
+        newbie=True,
+    ))
+    user_vault.save(UserStateMachine(
+        user_id='an_asker',
+        state='waiting_partner_answer',
+        partner_id='unit_test_user',
+        newbie=True,
+    ))
+
+    tracker.add_slots([
+        SlotSet('partner_id', 'an_asker'),
+    ])
+
+    actual_events = await action.run(dispatcher, tracker, domain)
+    assert actual_events == [
+        SlotSet('swiper_action_result', 'success'),
+        SlotSet('swiper_error', None),
+        SlotSet('swiper_error_trace', None),
+        SlotSet('swiper_state', 'asked_to_join'),
+    ]
+    assert dispatcher.messages == [{
+        'attachment': None,
+        'buttons': [],
+        'custom': {},
+        'elements': [],
+        'image': None,
+        'response': 'utter_someone_wants_to_chat',
+        'template': 'utter_someone_wants_to_chat',
+        'text': None,
+    }]
+
+    user_vault = UserVault()  # create new instance to avoid hitting cache
+    assert user_vault.get_user('unit_test_user') == UserStateMachine(
+        user_id='unit_test_user',
+        state='asked_to_join',
+        partner_id='an_asker',
+        newbie=True,
+    )
+    assert user_vault.get_user('an_asker') == UserStateMachine(  # no changes expected
+        user_id='an_asker',
+        state='waiting_partner_answer',
+        partner_id='unit_test_user',
+        newbie=True,
+    )
+
+
+@pytest.mark.asyncio
 @pytest.mark.usefixtures('ddb_unit_test_user')
 @patch('actions.rasa_callbacks.invite_chitchat_partner')
 @patch('actions.daily_co.create_room')
