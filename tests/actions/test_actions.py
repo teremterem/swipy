@@ -179,7 +179,7 @@ async def test_action_find_partner_newbie(
     actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'partner_has_been_asked'),
-        SlotSet('swiper_state', 'waiting_partner_answer'),  # state taken from UserVault
+        SlotSet('swiper_state', 'waiting_partner_answer'),
     ]
     assert dispatcher.messages == []
 
@@ -204,7 +204,7 @@ async def test_action_find_partner_veteran(
     actual_events = await actions.ActionFindPartner().run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'partner_has_been_asked'),
-        SlotSet('swiper_state', 'waiting_partner_answer'),  # state taken from UserVault
+        SlotSet('swiper_state', 'waiting_partner_answer'),
     ]
     assert dispatcher.messages == []
 
@@ -213,6 +213,33 @@ async def test_action_find_partner_veteran(
         call(exclude_user_id='unit_test_user', newbie=False),
     ]
     mock_rasa_callback_ask_partner.assert_called_once_with('available_veteran_id1')
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures('ddb_unit_test_user')
+@patch('actions.rasa_callbacks.ask_partner')
+@patch.object(UserVault, 'get_random_available_user')
+async def test_action_find_partner_no_one(
+        mock_get_random_available_user: MagicMock,
+        mock_rasa_callback_ask_partner: AsyncMock,
+        tracker: Tracker,
+        dispatcher: CollectingDispatcher,
+        domain: Dict[Text, Any],
+) -> None:
+    mock_get_random_available_user.side_effect = [None, None]
+
+    actual_events = await actions.ActionFindPartner().run(dispatcher, tracker, domain)
+    assert actual_events == [
+        SlotSet('swiper_action_result', 'partner_was_not_found'),
+        SlotSet('swiper_state', 'ok_for_chitchat'),
+    ]
+    assert dispatcher.messages == []
+
+    assert mock_get_random_available_user.mock_calls == [
+        call(exclude_user_id='unit_test_user', newbie=True),
+        call(exclude_user_id='unit_test_user', newbie=False),
+    ]
+    mock_rasa_callback_ask_partner.assert_not_called()
 
 
 @pytest.mark.asyncio
@@ -239,7 +266,7 @@ async def test_action_create_room_experimental(
     actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('room_link', 'https://swipy.daily.co/pytestroom'),
-        SlotSet('swiper_state', 'new'),  # state taken from UserVault (all "swiper" actions must do this)
+        SlotSet('swiper_state', 'new'),
     ]
 
     assert dispatcher.messages == [{
