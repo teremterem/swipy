@@ -59,6 +59,7 @@ class BaseSwiperAction(Action, ABC):
 
         except Exception:
             logger.exception(self.name())
+            # TODO oleksandr: save exception text to a slot so it can be seen in Rasa X UI ?
             events = [
                 SlotSet(
                     key=SWIPER_ACTION_RESULT_SLOT,
@@ -140,7 +141,7 @@ class ActionFindPartner(BaseSwiperAction):
             if partner.state != UserState.OK_FOR_CHITCHAT:
                 # noinspection PyUnresolvedReferences
                 current_user.fail_to_find_partner()
-                # user_vault.save_user(current_user)
+                user_vault.save(current_user)
 
                 raise InvalidSwiperStateError(
                     f"randomly found partner {repr(partner.user_id)} is in a wrong state: {repr(partner.state)}"
@@ -150,7 +151,7 @@ class ActionFindPartner(BaseSwiperAction):
 
             # noinspection PyUnresolvedReferences
             current_user.ask_partner(partner.user_id)
-            user_vault.save_user(current_user)
+            user_vault.save(current_user)
 
             return [
                 SlotSet(
@@ -161,7 +162,7 @@ class ActionFindPartner(BaseSwiperAction):
 
         # noinspection PyUnresolvedReferences
         current_user.fail_to_find_partner()
-        user_vault.save_user(current_user)
+        user_vault.save(current_user)
 
         return [
             SlotSet(
@@ -169,6 +170,20 @@ class ActionFindPartner(BaseSwiperAction):
                 value=SwiperActionResult.PARTNER_WAS_NOT_FOUND,
             ),
         ]
+
+
+class ActionAskToJoin(BaseSwiperAction):
+    def name(self) -> Text:
+        return 'action_ask_to_join'
+
+    async def swipy_run(
+            self, dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
+            current_user: UserStateMachine,
+            user_vault: IUserVault,
+    ) -> List[Dict[Text, Any]]:
+        pass
 
 
 class ActionCreateRoomExperimental(BaseSwiperAction):
@@ -189,6 +204,10 @@ class ActionCreateRoomExperimental(BaseSwiperAction):
         dispatcher.utter_message(response='utter_video_link', room_link=room_url)
 
         await rasa_callbacks.invite_chitchat_partner(chitchat_partner.user_id, room_url)
+
+        current_user.newbie = False
+        user_vault.save(current_user)
+
         return [
             SlotSet(key='room_link', value=room_url),
         ]

@@ -5,11 +5,11 @@ from unittest.mock import patch, MagicMock
 import pytest
 
 from actions.user_state_machine import UserStateMachine, UserState
-from actions.user_vault import UserVault, DdbUserVault
+from actions.user_vault import UserVault, NaiveDdbUserVault
 
 
 def test_user_vault_implementation_class() -> None:
-    assert UserVault == DdbUserVault
+    assert UserVault == NaiveDdbUserVault
 
 
 @pytest.mark.usefixtures('create_user_state_machine_table')
@@ -140,7 +140,7 @@ def test_save_new_user(
     user_to_save = UserStateMachine('new_ddb_user_was_put')
 
     assert user_state_machine_table.scan()['Items'] == ddb_scan_of_three_users
-    user_vault.save_user(user_to_save)
+    user_vault.save(user_to_save)
     assert user_state_machine_table.scan()['Items'] == [
         {
             'user_id': 'existing_user_id1',
@@ -183,7 +183,7 @@ def test_save_existing_user(
     )
 
     assert user_state_machine_table.scan()['Items'] == ddb_scan_of_three_users
-    user_vault.save_user(user_to_save)
+    user_vault.save(user_to_save)
     assert user_state_machine_table.scan()['Items'] == [
         {
             'user_id': 'existing_user_id1',

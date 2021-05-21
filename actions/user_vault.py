@@ -21,7 +21,7 @@ class IUserVault(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def save_user(self, user: UserStateMachine) -> None:
+    def save(self, user: UserStateMachine) -> None:
         raise NotImplementedError()
 
 
@@ -59,7 +59,7 @@ class NaiveUserVault(IUserVault, ABC):
 
         if user is None:
             user = UserStateMachine(user_id)
-            self.save_user(user)
+            self._save_user(user)
 
         self._user_cache[user_id] = user
         return user
@@ -78,12 +78,12 @@ class NaiveUserVault(IUserVault, ABC):
         self._user_cache[user.user_id] = user
         return user
 
-    def save_user(self, user: UserStateMachine) -> None:
+    def save(self, user: UserStateMachine) -> None:
         self._save_user(user)
         self._user_cache[user.user_id] = user
 
 
-class DdbUserVault(NaiveUserVault):
+class NaiveDdbUserVault(NaiveUserVault):
     def _get_user(self, user_id: Text) -> Optional[UserStateMachine]:
         # TODO oleksandr: is there a better way to ensure that the tests have a chance to mock boto3 ?
         from actions.aws_resources import user_state_machine_table
@@ -117,4 +117,4 @@ class DdbUserVault(NaiveUserVault):
         user_state_machine_table.put_item(Item=user_dict)
 
 
-UserVault: Type[IUserVault] = DdbUserVault
+UserVault: Type[IUserVault] = NaiveDdbUserVault
