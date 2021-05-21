@@ -244,6 +244,36 @@ async def test_action_find_partner_no_one(
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('ddb_unit_test_user')
+@patch('actions.rasa_callbacks.ask_partner')
+@patch.object(UserVault, 'get_random_available_user')
+async def test_action_find_partner_invalid_state(
+        mock_get_random_available_user: MagicMock,
+        mock_rasa_callback_ask_partner: AsyncMock,
+        tracker: Tracker,
+        dispatcher: CollectingDispatcher,
+        domain: Dict[Text, Any],
+) -> None:
+    mock_get_random_available_user.side_effect = [None, UserStateMachine(
+        user_id='unavailable_user_id',
+        state=UserState.DO_NOT_DISTURB,
+    )]
+
+    actual_events = await actions.ActionFindPartner().run(dispatcher, tracker, domain)
+    assert actual_events == [
+        SlotSet('swiper_action_result', 'error'),
+        SlotSet('swiper_state', 'ok_for_chitchat'),
+    ]
+    assert dispatcher.messages == []
+
+    assert mock_get_random_available_user.mock_calls == [
+        call(exclude_user_id='unit_test_user', newbie=True),
+        call(exclude_user_id='unit_test_user', newbie=False),
+    ]
+    mock_rasa_callback_ask_partner.assert_not_called()
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures('ddb_unit_test_user')
 @patch('actions.rasa_callbacks.invite_chitchat_partner')
 @patch('actions.daily_co.create_room')
 @patch.object(UserVault, 'get_random_available_user')

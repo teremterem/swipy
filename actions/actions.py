@@ -8,8 +8,9 @@ from rasa_sdk.executor import CollectingDispatcher
 
 from actions import daily_co
 from actions import rasa_callbacks
-from actions.user_state_machine import UserStateMachine
+from actions.user_state_machine import UserStateMachine, UserState
 from actions.user_vault import UserVault, IUserVault
+from actions.utils import InvalidSwiperStateError
 
 logger = logging.getLogger(__name__)
 
@@ -136,6 +137,15 @@ class ActionFindPartner(BaseSwiperAction):
             )
 
         if partner:
+            if partner.state != UserState.OK_FOR_CHITCHAT:
+                # noinspection PyUnresolvedReferences
+                current_user.fail_to_find_partner()
+                # user_vault.save_user(current_user)
+
+                raise InvalidSwiperStateError(
+                    f"randomly found partner {repr(partner.user_id)} is in a wrong state: {repr(partner.state)}"
+                )
+
             await rasa_callbacks.ask_partner(partner.user_id)
 
             # noinspection PyUnresolvedReferences
