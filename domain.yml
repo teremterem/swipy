@@ -40,6 +40,11 @@ slots:
     initial_value: null
     auto_fill: false
     influence_conversation: true
+  swiper_action_result:
+    type: rasa.shared.core.slots.TextSlot
+    initial_value: null
+    auto_fill: false
+    influence_conversation: true
   room_link:
     type: rasa.shared.core.slots.TextSlot
     initial_value: null
@@ -112,6 +117,7 @@ responses:
   - text: I am a bot, powered by Rasa.
 actions:
 - action_session_start
+- action_find_partner
 - action_create_room_experimental
 forms: {}
 e2e_actions: []

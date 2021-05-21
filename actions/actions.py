@@ -10,10 +10,16 @@ from actions.rasa_callbacks import invite_chitchat_partner
 from actions.user_state_machine import UserStateMachine
 from actions.user_vault import UserVault, IUserVault
 
+SWIPER_STATE_SLOT = 'swiper_state'
+SWIPER_ACTION_RESULT_SLOT = 'swiper_action_result'
+
+
+class SwiperActionResult:
+    PARTNER_HAS_BEEN_ASKED = 'partner_has_been_asked'
+    PARTNER_WAS_NOT_FOUND = 'partner_was_not_found'
+
 
 class BaseSwiperAction(Action, ABC):
-    SWIPER_STATE_SLOT = 'swiper_state'
-
     @abstractmethod
     def name(self) -> Text:
         raise NotImplementedError('An action must implement a name')
@@ -43,7 +49,7 @@ class BaseSwiperAction(Action, ABC):
             user_vault,
         ))
         events.append(SlotSet(
-            key=self.SWIPER_STATE_SLOT,
+            key=SWIPER_STATE_SLOT,
             value=user_vault.get_user(tracker.sender_id).state,  # invoke get_user once again (just in case)
         ))
         return events
@@ -55,14 +61,14 @@ class ActionSessionStart(BaseSwiperAction):
     def name(self) -> Text:
         return 'action_session_start'
 
-    @classmethod
-    def _slot_set_events_from_tracker(cls, tracker: Tracker) -> List[EventType]:
+    @staticmethod
+    def _slot_set_events_from_tracker(tracker: Tracker) -> List[EventType]:
         # TODO oleksandr: should I skip session_started_metadata slot ?
         #  (metadata seems to receive some kind of special treatment in Rasa Core version of the action)
         return [
             SlotSet(key=slot_key, value=slot_value)
             for slot_key, slot_value in tracker.slots.items()
-            if slot_key != cls.SWIPER_STATE_SLOT
+            if slot_key != SWIPER_STATE_SLOT
         ]
 
     async def swipy_run(
@@ -89,6 +95,48 @@ class ActionSessionStart(BaseSwiperAction):
         events.append(ActionExecuted('action_listen'))
 
         return events
+
+
+class ActionFindPartner(BaseSwiperAction):
+    def name(self) -> Text:
+        return 'action_find_partner'
+
+    async def swipy_run(
+            self, dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
+            current_user: UserStateMachine,
+            user_vault: IUserVault,
+    ) -> List[Dict[Text, Any]]:
+        partner = user_vault.get_random_available_user(
+            exclude_user_id=current_user.user_id,
+            newbie=True,
+        )
+        if not partner:
+            partner = user_vault.get_random_available_user(
+                exclude_user_id=current_user.user_id,
+                newbie=False,
+            )
+
+        if partner:
+            # TODO oleksandr: ask partner (rasa callback)
+            # noinspection PyUnresolvedReferences
+            current_user.ask_partner(partner.user_id)
+            return [
+                SlotSet(
+                    key=SWIPER_ACTION_RESULT_SLOT,
+                    value=SwiperActionResult.PARTNER_HAS_BEEN_ASKED,
+                ),
+            ]
+
+        # noinspection PyUnresolvedReferences
+        current_user.fail_to_find_partner()
+        return [
+            SlotSet(
+                key=SWIPER_ACTION_RESULT_SLOT,
+                value=SwiperActionResult.PARTNER_WAS_NOT_FOUND,
+            ),
+        ]
 
 
 class ActionCreateRoomExperimental(BaseSwiperAction):

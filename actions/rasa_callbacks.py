@@ -13,11 +13,30 @@ RASA_CORE_PATH = os.getenv('RASA_CORE_PATH', 'core/')
 
 OUTPUT_CHANNEL = 'telegram'  # seems to be more robust than 'latest'
 
+EXTERNAL_ASK_PARTNER = 'EXTERNAL_ask_partner'
+
+
+async def ask_partner(partner_id: Text) -> None:
+    return await _trigger_external_rasa_intent(
+        partner_id,
+        EXTERNAL_ASK_PARTNER,
+    )
+
 
 async def invite_chitchat_partner(user_id: Text, room_url: Text) -> None:
-    intent_name = 'EXTERNAL_invite_chitchat_partner'
+    return await _trigger_external_rasa_intent(
+        user_id,
+        'EXTERNAL_invite_chitchat_partner',
+        room_link=room_url,
+    )
 
-    async with aiohttp.ClientSession() as session:
+
+async def _trigger_external_rasa_intent(
+        receiver_user_id: Text,
+        intent_name: Text,
+        **entities: Text,
+):
+    async with aiohttp.ClientSession() as session:  # TODO oleksandr: do I need to cache/reuse these sessions ?
         params = {
             'output_channel': OUTPUT_CHANNEL,
         }
@@ -25,16 +44,16 @@ async def invite_chitchat_partner(user_id: Text, room_url: Text) -> None:
             params['token'] = RASA_TOKEN
 
         async with session.post(
-                f"{RASA_PRODUCTION_HOST}/{RASA_CORE_PATH}conversations/{user_id}/trigger_intent",
+                f"{RASA_PRODUCTION_HOST}/{RASA_CORE_PATH}conversations/{receiver_user_id}/trigger_intent",
                 params=params,
                 json={
                     'name': intent_name,
-                    'entities': {
-                        'room_link': room_url,
-                    },
+                    'entities': entities,
                 },
         ) as resp:
             resp_json = await resp.json()
 
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('%s:\n%s', intent_name, pformat(resp_json))
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug('%s:\n%s', intent_name, pformat(resp_json))
+
+    return resp_json
