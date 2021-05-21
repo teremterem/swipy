@@ -218,6 +218,7 @@ class ActionAskToJoin(BaseSwiperAction):
                 UserState.WAITING_PARTNER_ANSWER,
                 partner.state,
             )
+            # TODO oleksandr: should requester receive feedback about this somehow ?
             return []
 
         dispatcher.utter_message(template='utter_someone_wants_to_chat')
