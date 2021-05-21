@@ -208,7 +208,7 @@ class ActionAskToJoin(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        dispatcher.utter_message(text='wazzup?')
+        dispatcher.utter_message(text=f"{tracker.get_slot('partner_id')}: wazzup, {current_user.user_id}?")
         return []
 
 
