@@ -1,5 +1,7 @@
 import logging
+import os
 from abc import ABC, abstractmethod
+from distutils.util import strtobool
 from typing import Any, Text, Dict, List
 
 from rasa_sdk import Action, Tracker
@@ -10,12 +12,15 @@ from actions import daily_co
 from actions import rasa_callbacks
 from actions.user_state_machine import UserStateMachine, UserState
 from actions.user_vault import UserVault, IUserVault
-from actions.utils import InvalidSwiperStateError
+from actions.utils import InvalidSwiperStateError, stack_trace_to_str
 
 logger = logging.getLogger(__name__)
 
+SEND_ERROR_STACK_TRACE_TO_SLOT = strtobool(os.getenv('SEND_ERROR_STACK_TRACE_TO_SLOT', 'yes'))
+
 SWIPER_STATE_SLOT = 'swiper_state'
 SWIPER_ACTION_RESULT_SLOT = 'swiper_action_result'
+ERROR_STACK_TRACE_SLOT = 'error_stack_trace'
 
 
 class SwiperActionResult:
@@ -57,15 +62,19 @@ class BaseSwiperAction(Action, ABC):
                 user_vault,
             ))
 
-        except Exception:
+        except Exception as e:
             logger.exception(self.name())
-            # TODO oleksandr: save exception text to a slot so it can be seen in Rasa X UI ?
             events = [
                 SlotSet(
                     key=SWIPER_ACTION_RESULT_SLOT,
                     value=SwiperActionResult.ERROR,
                 ),
             ]
+            if SEND_ERROR_STACK_TRACE_TO_SLOT:
+                events.append(SlotSet(
+                    key=ERROR_STACK_TRACE_SLOT,
+                    value=stack_trace_to_str(e),
+                ))
 
         events.append(SlotSet(
             key=SWIPER_STATE_SLOT,
