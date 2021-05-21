@@ -81,6 +81,8 @@ async def test_swiper_state_slot_is_set_after_action_run(
 
     actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == [
+        SlotSet('swiper_error', None),
+        SlotSet('swiper_error_trace', None),
         SlotSet('swiper_state', 'ok_for_chitchat'),  # the action is expected to use the most recent value of state
     ]
     assert dispatcher.messages == []
@@ -100,6 +102,8 @@ async def test_action_session_start_without_slots(
     actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == [
         SessionStarted(),
+        SlotSet('swiper_error', None),
+        SlotSet('swiper_error_trace', None),
         SlotSet('swiper_state', 'new'),  # state taken from UserVault
         ActionExecuted('action_listen'),
     ]
@@ -151,6 +155,8 @@ async def test_action_session_start_with_slots(
 
     domain['session_config']['carry_over_slots_to_new_session'] = carry_over_slots_to_new_session
     expected_events = expected_events + [
+        SlotSet('swiper_error', None),
+        SlotSet('swiper_error_trace', None),
         SlotSet('swiper_state', 'ok_for_chitchat'),  # state taken from UserVault rather than carried over
         ActionExecuted(action_name='action_listen'),
     ]
@@ -180,6 +186,8 @@ async def test_action_find_partner_newbie(
     actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'partner_has_been_asked'),
+        SlotSet('swiper_error', None),
+        SlotSet('swiper_error_trace', None),
         SlotSet('swiper_state', 'waiting_partner_answer'),
     ]
     assert dispatcher.messages == []
@@ -213,6 +221,8 @@ async def test_action_find_partner_veteran(
     actual_events = await actions.ActionFindPartner().run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'partner_has_been_asked'),
+        SlotSet('swiper_error', None),
+        SlotSet('swiper_error_trace', None),
         SlotSet('swiper_state', 'waiting_partner_answer'),
     ]
     assert dispatcher.messages == []
@@ -248,6 +258,8 @@ async def test_action_find_partner_no_one(
     actual_events = await actions.ActionFindPartner().run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'partner_was_not_found'),
+        SlotSet('swiper_error', None),
+        SlotSet('swiper_error_trace', None),
         SlotSet('swiper_state', 'ok_for_chitchat'),
     ]
     assert dispatcher.messages == []
@@ -287,7 +299,12 @@ async def test_action_find_partner_invalid_state(
     actual_events = await actions.ActionFindPartner().run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'error'),
-        SlotSet('error_stack_trace', 'stack trace goes here'),
+        SlotSet(
+            'swiper_error',
+            'InvalidSwiperStateError("randomly chosen partner \'unavailable_user_id\' '
+            'is in a wrong state: \'do_not_disturb\'")',
+        ),
+        SlotSet('swiper_error_trace', 'stack trace goes here'),
         SlotSet('swiper_state', 'ok_for_chitchat'),
     ]
     assert dispatcher.messages == []
@@ -330,6 +347,8 @@ async def test_action_create_room_experimental(
     actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('room_link', 'https://swipy.daily.co/pytestroom'),
+        SlotSet('swiper_error', None),
+        SlotSet('swiper_error_trace', None),
         SlotSet('swiper_state', 'new'),
     ]
 

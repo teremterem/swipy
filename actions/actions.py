@@ -20,7 +20,9 @@ SEND_ERROR_STACK_TRACE_TO_SLOT = strtobool(os.getenv('SEND_ERROR_STACK_TRACE_TO_
 
 SWIPER_STATE_SLOT = 'swiper_state'
 SWIPER_ACTION_RESULT_SLOT = 'swiper_action_result'
-ERROR_STACK_TRACE_SLOT = 'error_stack_trace'
+
+SWIPER_ERROR_SLOT = 'swiper_error'
+SWIPER_ERROR_TRACE_SLOT = 'swiper_error_trace'
 
 
 class SwiperActionResult:
@@ -61,6 +63,16 @@ class BaseSwiperAction(Action, ABC):
                 user_vault.get_user(tracker.sender_id),
                 user_vault,
             ))
+            events.extend([
+                SlotSet(
+                    key=SWIPER_ERROR_SLOT,
+                    value=None,
+                ),
+                SlotSet(
+                    key=SWIPER_ERROR_TRACE_SLOT,
+                    value=None,
+                ),
+            ])
 
         except Exception as e:
             logger.exception(self.name())
@@ -69,10 +81,14 @@ class BaseSwiperAction(Action, ABC):
                     key=SWIPER_ACTION_RESULT_SLOT,
                     value=SwiperActionResult.ERROR,
                 ),
+                SlotSet(
+                    key=SWIPER_ERROR_SLOT,
+                    value=repr(e),
+                ),
             ]
             if SEND_ERROR_STACK_TRACE_TO_SLOT:
                 events.append(SlotSet(
-                    key=ERROR_STACK_TRACE_SLOT,
+                    key=SWIPER_ERROR_TRACE_SLOT,
                     value=stack_trace_to_str(e),
                 ))
 
@@ -153,7 +169,7 @@ class ActionFindPartner(BaseSwiperAction):
                 user_vault.save(current_user)
 
                 raise InvalidSwiperStateError(
-                    f"randomly found partner {repr(partner.user_id)} is in a wrong state: {repr(partner.state)}"
+                    f"randomly chosen partner {repr(partner.user_id)} is in a wrong state: {repr(partner.state)}"
                 )
 
             await rasa_callbacks.ask_partner(partner.user_id)
