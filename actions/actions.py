@@ -5,6 +5,7 @@ from rasa_sdk import Action, Tracker
 from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType
 from rasa_sdk.executor import CollectingDispatcher
 
+from actions import rasa_callbacks
 from actions.daily_co import create_room
 from actions.rasa_callbacks import invite_chitchat_partner
 from actions.user_state_machine import UserStateMachine
@@ -119,9 +120,12 @@ class ActionFindPartner(BaseSwiperAction):
             )
 
         if partner:
-            # TODO oleksandr: ask partner (rasa callback)
+            await rasa_callbacks.ask_partner(partner.user_id)
+
             # noinspection PyUnresolvedReferences
             current_user.ask_partner(partner.user_id)
+            user_vault.save_user(current_user)
+
             return [
                 SlotSet(
                     key=SWIPER_ACTION_RESULT_SLOT,
@@ -131,6 +135,8 @@ class ActionFindPartner(BaseSwiperAction):
 
         # noinspection PyUnresolvedReferences
         current_user.fail_to_find_partner()
+        user_vault.save_user(current_user)
+
         return [
             SlotSet(
                 key=SWIPER_ACTION_RESULT_SLOT,
