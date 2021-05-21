@@ -234,14 +234,14 @@ class ActionAskToJoin(BaseSwiperAction):
         if partner.partner_id != current_user.user_id:
             # not throwing an exception here because the person we were supposed to ask doesn't need to be notified
             logger.error(
-                "partner_id for user %r was expected to be %r (current user), but was %r instead",
+                'partner_id for user %r was expected to be %r (current user), but was %r instead',
                 partner.user_id,
                 current_user.user_id,
                 partner.partner_id,
             )
             return []
 
-        dispatcher.utter_message(template='utter_someone_wants_to_chat')
+        dispatcher.utter_message(response='utter_someone_wants_to_chat')
 
         # noinspection PyUnresolvedReferences
         current_user.become_asked_to_join(partner.user_id)

@@ -386,7 +386,9 @@ async def test_action_ask_to_join(
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('create_user_state_machine_table')
+@patch.object(actions.logger, 'error')
 async def test_action_ask_to_join_invalid(
+        logger_error_mock: MagicMock,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
@@ -419,6 +421,13 @@ async def test_action_ask_to_join_invalid(
         SlotSet('swiper_state', 'ok_for_chitchat'),
     ]
     assert dispatcher.messages == []
+
+    logger_error_mock.assert_called_once_with(
+        'partner_id for user %r was expected to be %r (current user), but was %r instead',
+        'an_asker',
+        'unit_test_user',
+        'completely_different_user',
+    )
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(  # no changes expected
