@@ -1,3 +1,4 @@
+import logging
 from abc import ABC, abstractmethod
 from typing import Any, Text, Dict, List
 
@@ -10,6 +11,8 @@ from actions import rasa_callbacks
 from actions.user_state_machine import UserStateMachine
 from actions.user_vault import UserVault, IUserVault
 
+logger = logging.getLogger(__name__)
+
 SWIPER_STATE_SLOT = 'swiper_state'
 SWIPER_ACTION_RESULT_SLOT = 'swiper_action_result'
 
@@ -17,6 +20,8 @@ SWIPER_ACTION_RESULT_SLOT = 'swiper_action_result'
 class SwiperActionResult:
     PARTNER_HAS_BEEN_ASKED = 'partner_has_been_asked'
     PARTNER_WAS_NOT_FOUND = 'partner_was_not_found'
+
+    ERROR = 'error'
 
 
 class BaseSwiperAction(Action, ABC):
@@ -41,13 +46,25 @@ class BaseSwiperAction(Action, ABC):
     ) -> List[Dict[Text, Any]]:
         user_vault = UserVault()
 
-        events = list(await self.swipy_run(
-            dispatcher,
-            tracker,
-            domain,
-            user_vault.get_user(tracker.sender_id),
-            user_vault,
-        ))
+        # noinspection PyBroadException
+        try:
+            events = list(await self.swipy_run(
+                dispatcher,
+                tracker,
+                domain,
+                user_vault.get_user(tracker.sender_id),
+                user_vault,
+            ))
+
+        except Exception:
+            logger.exception(self.name())
+            events = [
+                SlotSet(
+                    key=SWIPER_ACTION_RESULT_SLOT,
+                    value=SwiperActionResult.ERROR,
+                ),
+            ]
+
         events.append(SlotSet(
             key=SWIPER_STATE_SLOT,
             value=user_vault.get_user(tracker.sender_id).state,  # invoke get_user once again (just in case)

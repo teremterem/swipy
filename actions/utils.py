@@ -1,0 +1,6 @@
+class SwiperError(Exception):
+    ...
+
+
+class InvalidSwiperStateError(SwiperError):
+    ...
