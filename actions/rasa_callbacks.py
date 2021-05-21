@@ -13,13 +13,14 @@ RASA_CORE_PATH = os.getenv('RASA_CORE_PATH', 'core/')
 
 OUTPUT_CHANNEL = 'telegram'  # seems to be more robust than 'latest'
 
-EXTERNAL_ASK_PARTNER = 'EXTERNAL_ask_partner'
+PARTNER_ID_ENTITY = 'partner_id'
 
 
-async def ask_partner(partner_id: Text) -> None:
+async def ask_to_join(receiver_id: Text, asker_id: Text) -> None:
     return await _trigger_external_rasa_intent(
-        partner_id,
-        EXTERNAL_ASK_PARTNER,
+        receiver_id,
+        'EXTERNAL_ask_to_join',
+        partner_id=asker_id,
     )
 
 

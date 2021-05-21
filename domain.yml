@@ -29,10 +29,13 @@ intents:
     use_entities: true
 - agree:
     use_entities: true
+- EXTERNAL_ask_to_join:
+    use_entities: true
 - EXTERNAL_invite_chitchat_partner:
     use_entities: true
 entities:
 - dietcls_time
+- partner_id
 - room_link
 slots:
   swiper_state:
@@ -54,6 +57,11 @@ slots:
     type: rasa.shared.core.slots.TextSlot
     initial_value: null
     auto_fill: false
+    influence_conversation: false
+  partner_id:
+    type: rasa.shared.core.slots.TextSlot
+    initial_value: null
+    auto_fill: true
     influence_conversation: false
   room_link:
     type: rasa.shared.core.slots.TextSlot
@@ -128,6 +136,7 @@ responses:
 actions:
 - action_session_start
 - action_find_partner
+- action_ask_to_join
 - action_create_room_experimental
 forms: {}
 e2e_actions: []

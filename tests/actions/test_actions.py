@@ -167,11 +167,11 @@ async def test_action_session_start_with_slots(
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('ddb_unit_test_user')
-@patch('actions.rasa_callbacks.ask_partner')
+@patch('actions.rasa_callbacks.ask_to_join')
 @patch.object(UserVault, 'get_random_available_user')
 async def test_action_find_partner_newbie(
         mock_get_random_available_user: MagicMock,
-        mock_rasa_callback_ask_partner: AsyncMock,
+        mock_rasa_callback_ask_to_join: AsyncMock,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
@@ -193,7 +193,7 @@ async def test_action_find_partner_newbie(
     assert dispatcher.messages == []
 
     mock_get_random_available_user.assert_called_once_with(exclude_user_id='unit_test_user', newbie=True)
-    mock_rasa_callback_ask_partner.assert_called_once_with('available_newbie_id1')
+    mock_rasa_callback_ask_to_join.assert_called_once_with('available_newbie_id1', 'unit_test_user')
 
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
         user_id='unit_test_user',
@@ -205,11 +205,11 @@ async def test_action_find_partner_newbie(
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('ddb_unit_test_user')
-@patch('actions.rasa_callbacks.ask_partner')
+@patch('actions.rasa_callbacks.ask_to_join')
 @patch.object(UserVault, 'get_random_available_user')
 async def test_action_find_partner_veteran(
         mock_get_random_available_user: MagicMock,
-        mock_rasa_callback_ask_partner: AsyncMock,
+        mock_rasa_callback_ask_to_join: AsyncMock,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
@@ -231,7 +231,7 @@ async def test_action_find_partner_veteran(
         call(exclude_user_id='unit_test_user', newbie=True),
         call(exclude_user_id='unit_test_user', newbie=False),
     ]
-    mock_rasa_callback_ask_partner.assert_called_once_with('available_veteran_id1')
+    mock_rasa_callback_ask_to_join.assert_called_once_with('available_veteran_id1', 'unit_test_user')
 
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
         user_id='unit_test_user',
@@ -243,11 +243,11 @@ async def test_action_find_partner_veteran(
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('ddb_unit_test_user')
-@patch('actions.rasa_callbacks.ask_partner')
+@patch('actions.rasa_callbacks.ask_to_join')
 @patch.object(UserVault, 'get_random_available_user')
 async def test_action_find_partner_no_one(
         mock_get_random_available_user: MagicMock,
-        mock_rasa_callback_ask_partner: AsyncMock,
+        mock_rasa_callback_ask_to_join: AsyncMock,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
@@ -268,7 +268,7 @@ async def test_action_find_partner_no_one(
         call(exclude_user_id='unit_test_user', newbie=True),
         call(exclude_user_id='unit_test_user', newbie=False),
     ]
-    mock_rasa_callback_ask_partner.assert_not_called()
+    mock_rasa_callback_ask_to_join.assert_not_called()
 
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
         user_id='unit_test_user',
@@ -281,11 +281,11 @@ async def test_action_find_partner_no_one(
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('ddb_unit_test_user')
 @patch('actions.actions.stack_trace_to_str', Mock(return_value='stack trace goes here'))
-@patch('actions.rasa_callbacks.ask_partner')
+@patch('actions.rasa_callbacks.ask_to_join')
 @patch.object(UserVault, 'get_random_available_user')
 async def test_action_find_partner_invalid_state(
         mock_get_random_available_user: MagicMock,
-        mock_rasa_callback_ask_partner: AsyncMock,
+        mock_rasa_callback_ask_to_join: AsyncMock,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
@@ -313,7 +313,7 @@ async def test_action_find_partner_invalid_state(
         call(exclude_user_id='unit_test_user', newbie=True),
         call(exclude_user_id='unit_test_user', newbie=False),
     ]
-    mock_rasa_callback_ask_partner.assert_not_called()
+    mock_rasa_callback_ask_to_join.assert_not_called()
 
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
         user_id='unit_test_user',

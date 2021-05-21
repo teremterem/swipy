@@ -8,14 +8,16 @@ from actions import rasa_callbacks
 
 
 @pytest.mark.asyncio
-async def test_ask_partner(
+async def test_ask_to_join(
         mock_aioresponses: aioresponses,
         external_intent_response: Dict[Text, Any],
 ) -> None:
     def rasa_core_callback(url, json=None, **kwargs):
         assert json == {
-            'name': 'EXTERNAL_ask_partner',
-            'entities': {},
+            'name': 'EXTERNAL_ask_to_join',
+            'entities': {
+                'partner_id': 'id_of_asker',
+            },
         }
         return CallbackResult(payload=external_intent_response)
 
@@ -27,7 +29,7 @@ async def test_ask_partner(
         callback=rasa_core_callback_mock,
     )
 
-    await rasa_callbacks.ask_partner('partner_id_to_ask')
+    await rasa_callbacks.ask_to_join('partner_id_to_ask', 'id_of_asker')
     rasa_core_callback_mock.assert_called_once()
 
 

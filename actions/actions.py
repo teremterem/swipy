@@ -172,7 +172,7 @@ class ActionFindPartner(BaseSwiperAction):
                     f"randomly chosen partner {repr(partner.user_id)} is in a wrong state: {repr(partner.state)}"
                 )
 
-            await rasa_callbacks.ask_partner(partner.user_id)
+            await rasa_callbacks.ask_to_join(partner.user_id, current_user.user_id)
 
             # noinspection PyUnresolvedReferences
             current_user.ask_partner(partner.user_id)
