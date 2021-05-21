@@ -406,6 +406,46 @@ async def test_action_ask_to_join(
                 'completely_different_user',
             ],
     ),
+    (
+            UserStateMachine(
+                user_id='an_asker',
+                state='asked_to_join',
+                partner_id='unit_test_user',
+                newbie=True,
+            ),
+            UserStateMachine(
+                user_id='unit_test_user',
+                state='ok_for_chitchat',
+                partner_id=None,
+                newbie=True,
+            ),
+            [
+                'user %r was expected to be in state %r, but was in state %r instead',
+                'an_asker',
+                'waiting_partner_answer',
+                'asked_to_join',
+            ],
+    ),
+    (
+            UserStateMachine(
+                user_id='an_asker',
+                state='waiting_partner_answer',
+                partner_id='unit_test_user',
+                newbie=True,
+            ),
+            UserStateMachine(
+                user_id='unit_test_user',
+                state='do_not_disturb',
+                partner_id=None,
+                newbie=True,
+            ),
+            [
+                'current user %r is not in state %r, hence cannot be asked (actual state is %r)',
+                'unit_test_user',
+                'ok_for_chitchat',
+                'do_not_disturb',
+            ],
+    ),
 ])
 @pytest.mark.usefixtures('create_user_state_machine_table')
 @patch.object(actions.logger, 'error')
