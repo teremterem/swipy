@@ -8,7 +8,7 @@ from actions.user_state_machine import UserStateMachine, UserState
 all_expected_states = [
     'new',
     'waiting_partner_answer',
-    'ok_for_chitchat',
+    'ok_to_chitchat',
     'asked_to_join',
     'do_not_disturb',
 ]
@@ -37,9 +37,9 @@ def test_ask_partner(source_state: Text) -> None:
 def test_become_asked_to_join() -> None:
     user = UserStateMachine(
         user_id='some_user_id',
-        state=UserState.OK_FOR_CHITCHAT,
+        state=UserState.OK_TO_CHITCHAT,
     )
-    assert user.state == 'ok_for_chitchat'
+    assert user.state == 'ok_to_chitchat'
     assert user.partner_id is None
 
     # noinspection PyUnresolvedReferences
@@ -87,12 +87,12 @@ def test_fail_to_find_partner(source_state: Text) -> None:
     # noinspection PyUnresolvedReferences
     user.fail_to_find_partner()
 
-    assert user.state == 'ok_for_chitchat'
+    assert user.state == 'ok_to_chitchat'
     assert user.partner_id is None
 
 
 @pytest.mark.parametrize('source_state', all_expected_states)
-def test_become_ok_for_chitchat(source_state: Text) -> None:
+def test_become_ok_to_chitchat(source_state: Text) -> None:
     user = UserStateMachine(
         user_id='some_user_id',
         state=source_state,
@@ -103,9 +103,9 @@ def test_become_ok_for_chitchat(source_state: Text) -> None:
     assert user.partner_id == 'previous_partner_id'
 
     # noinspection PyUnresolvedReferences
-    user.become_ok_for_chitchat()
+    user.become_ok_to_chitchat()
 
-    assert user.state == 'ok_for_chitchat'
+    assert user.state == 'ok_to_chitchat'
     assert user.partner_id is None
 
 
@@ -125,7 +125,7 @@ def test_accept_invitation(newbie_status) -> None:
     # noinspection PyUnresolvedReferences
     user.accept_invitation()
 
-    assert user.state == 'ok_for_chitchat'
+    assert user.state == 'ok_to_chitchat'
     assert user.partner_id == 'asker_id'
     assert user.newbie is False  # users stop being newbies as soon as they accept their first video chitchat
 
@@ -133,7 +133,7 @@ def test_accept_invitation(newbie_status) -> None:
 @pytest.mark.parametrize('wrong_state', [
     'new',
     'waiting_partner_answer',
-    'ok_for_chitchat',
+    'ok_to_chitchat',
     'do_not_disturb',
 ])
 def test_accept_invitation_wrong_state(wrong_state: Text) -> None:
@@ -181,7 +181,7 @@ def test_reject_invitation(newbie_status) -> None:
 @pytest.mark.parametrize('wrong_state', [
     'new',
     'waiting_partner_answer',
-    'ok_for_chitchat',
+    'ok_to_chitchat',
     'do_not_disturb',
 ])
 def test_reject_invitation_wrong_state(wrong_state: Text) -> None:

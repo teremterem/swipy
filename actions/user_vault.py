@@ -102,7 +102,7 @@ class NaiveDdbUserVault(NaiveUserVault):
 
         ddb_resp = user_state_machine_table.query(
             IndexName='by_state',
-            KeyConditionExpression=Key('state').eq(UserState.OK_FOR_CHITCHAT),
+            KeyConditionExpression=Key('state').eq(UserState.OK_TO_CHITCHAT),
             FilterExpression=filter_expression,
         )
         return ddb_resp.get('Items', [])

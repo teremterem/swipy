@@ -73,7 +73,7 @@ async def test_swiper_state_slot_is_set_after_action_run(
 
             _user_vault.save(UserStateMachine(
                 user_id=_current_user.user_id,
-                state=UserState.OK_FOR_CHITCHAT,
+                state=UserState.OK_TO_CHITCHAT,
             ))  # save a completely different instance of the current user
             return []
 
@@ -83,7 +83,7 @@ async def test_swiper_state_slot_is_set_after_action_run(
     assert actual_events == [
         SlotSet('swiper_error', None),
         SlotSet('swiper_error_trace', None),
-        SlotSet('swiper_state', 'ok_for_chitchat'),  # the action is expected to use the most recent value of state
+        SlotSet('swiper_state', 'ok_to_chitchat'),  # the action is expected to use the most recent value of state
     ]
     assert dispatcher.messages == []
 
@@ -143,7 +143,7 @@ async def test_action_session_start_with_slots(
     # noinspection PyDataclass
     user_state_machine_table.put_item(Item=asdict(UserStateMachine(
         user_id='unit_test_user',
-        state=UserState.OK_FOR_CHITCHAT,
+        state=UserState.OK_TO_CHITCHAT,
     )))
 
     # set a few slots on tracker
@@ -157,7 +157,7 @@ async def test_action_session_start_with_slots(
     expected_events = expected_events + [
         SlotSet('swiper_error', None),
         SlotSet('swiper_error_trace', None),
-        SlotSet('swiper_state', 'ok_for_chitchat'),  # state taken from UserVault rather than carried over
+        SlotSet('swiper_state', 'ok_to_chitchat'),  # state taken from UserVault rather than carried over
         ActionExecuted(action_name='action_listen'),
     ]
 
@@ -260,7 +260,7 @@ async def test_action_find_partner_no_one(
         SlotSet('swiper_action_result', 'partner_was_not_found'),
         SlotSet('swiper_error', None),
         SlotSet('swiper_error_trace', None),
-        SlotSet('swiper_state', 'ok_for_chitchat'),
+        SlotSet('swiper_state', 'ok_to_chitchat'),
     ]
     assert dispatcher.messages == []
 
@@ -272,7 +272,7 @@ async def test_action_find_partner_no_one(
 
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
         user_id='unit_test_user',
-        state='ok_for_chitchat',
+        state='ok_to_chitchat',
         partner_id=None,
         newbie=True,
     )
@@ -305,7 +305,7 @@ async def test_action_find_partner_invalid_state(
             'is in a wrong state: \'do_not_disturb\'")',
         ),
         SlotSet('swiper_error_trace', 'stack trace goes here'),
-        SlotSet('swiper_state', 'ok_for_chitchat'),
+        SlotSet('swiper_state', 'ok_to_chitchat'),
     ]
     assert dispatcher.messages == []
 
@@ -317,7 +317,7 @@ async def test_action_find_partner_invalid_state(
 
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
         user_id='unit_test_user',
-        state='ok_for_chitchat',
+        state='ok_to_chitchat',
         partner_id=None,
         newbie=True,
     )
@@ -342,7 +342,7 @@ async def test_action_ask_to_join(
     ))
     user_vault.save(UserStateMachine(
         user_id='unit_test_user',  # receiver of the ask
-        state='ok_for_chitchat',
+        state='ok_to_chitchat',
         partner_id=None,
         newbie=True,
     ))
@@ -402,7 +402,7 @@ async def test_action_ask_to_join(
             [
                 'current user %r is not in state %r, hence cannot be asked (actual state is %r)',
                 'unit_test_user',
-                'ok_for_chitchat',
+                'ok_to_chitchat',
                 'do_not_disturb',
             ],
     ),

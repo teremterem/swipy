@@ -226,13 +226,13 @@ def test_save_existing_user(
             [
                 {
                     'user_id': 'available_newbie_id1',
-                    'state': 'ok_for_chitchat',
+                    'state': 'ok_to_chitchat',
                     'partner_id': None,
                     'newbie': True,
                 },
                 {
                     'user_id': 'available_newbie_id3',
-                    'state': 'ok_for_chitchat',
+                    'state': 'ok_to_chitchat',
                     'partner_id': None,
                     'newbie': True,
                 },
@@ -244,13 +244,13 @@ def test_save_existing_user(
             [
                 {
                     'user_id': 'available_veteran_id1',
-                    'state': 'ok_for_chitchat',
+                    'state': 'ok_to_chitchat',
                     'partner_id': None,
                     'newbie': False,
                 },
                 {
                     'user_id': 'available_veteran_id3',
-                    'state': 'ok_for_chitchat',
+                    'state': 'ok_to_chitchat',
                     'partner_id': None,
                     'newbie': False,
                 },
@@ -262,37 +262,37 @@ def test_save_existing_user(
             [
                 {
                     'user_id': 'available_newbie_id1',
-                    'state': 'ok_for_chitchat',
+                    'state': 'ok_to_chitchat',
                     'partner_id': None,
                     'newbie': True,
                 },
                 {
                     'user_id': 'available_veteran_id1',
-                    'state': 'ok_for_chitchat',
+                    'state': 'ok_to_chitchat',
                     'partner_id': None,
                     'newbie': False,
                 },
                 {
                     'user_id': 'available_newbie_id2',
-                    'state': 'ok_for_chitchat',
+                    'state': 'ok_to_chitchat',
                     'partner_id': None,
                     'newbie': True,
                 },
                 {
                     'user_id': 'available_veteran_id2',
-                    'state': 'ok_for_chitchat',
+                    'state': 'ok_to_chitchat',
                     'partner_id': None,
                     'newbie': False,
                 },
                 {
                     'user_id': 'available_newbie_id3',
-                    'state': 'ok_for_chitchat',
+                    'state': 'ok_to_chitchat',
                     'partner_id': None,
                     'newbie': True,
                 },
                 {
                     'user_id': 'available_veteran_id3',
-                    'state': 'ok_for_chitchat',
+                    'state': 'ok_to_chitchat',
                     'partner_id': None,
                     'newbie': False,
                 },

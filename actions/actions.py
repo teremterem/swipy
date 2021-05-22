@@ -164,7 +164,7 @@ class ActionFindPartner(BaseSwiperAction):
             )
 
         if partner:
-            if partner.state != UserState.OK_FOR_CHITCHAT:
+            if partner.state != UserState.OK_TO_CHITCHAT:
                 # noinspection PyUnresolvedReferences
                 current_user.fail_to_find_partner()
                 user_vault.save(current_user)
@@ -209,12 +209,12 @@ class ActionAskToJoin(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        if current_user.state != UserState.OK_FOR_CHITCHAT:
+        if current_user.state != UserState.OK_TO_CHITCHAT:
             # not throwing an exception here because the person we were supposed to ask doesn't need to be notified
             logger.error(
                 'current user %r is not in state %r, hence cannot be asked (actual state is %r)',
                 current_user.user_id,
-                UserState.OK_FOR_CHITCHAT,
+                UserState.OK_TO_CHITCHAT,
                 current_user.state,
             )
             # TODO oleksandr: let the requester know somehow ?
@@ -245,12 +245,12 @@ class ActionCreateRoom(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        if current_user.state != UserState.OK_FOR_CHITCHAT:
+        if current_user.state != UserState.OK_TO_CHITCHAT:
             # not throwing an exception here because the person we were supposed to ask doesn't need to be notified
             logger.error(
                 'current user %r is not in state %r, hence cannot be asked (actual state is %r)',
                 current_user.user_id,
-                UserState.OK_FOR_CHITCHAT,
+                UserState.OK_TO_CHITCHAT,
                 current_user.state,
             )
             # TODO oleksandr: let the requester know somehow ?
