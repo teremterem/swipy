@@ -184,6 +184,10 @@ class ActionFindPartner(BaseSwiperAction):
                     key=SWIPER_ACTION_RESULT_SLOT,
                     value=SwiperActionResult.PARTNER_HAS_BEEN_ASKED,
                 ),
+                SlotSet(
+                    key=rasa_callbacks.PARTNER_ID_SLOT,
+                    value=partner.user_id,
+                ),
             ]
 
         # noinspection PyUnresolvedReferences

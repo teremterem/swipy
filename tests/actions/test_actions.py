@@ -186,6 +186,7 @@ async def test_action_find_partner_newbie(
     actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'partner_has_been_asked'),
+        SlotSet('partner_id', 'available_newbie_id1'),
         SlotSet('swiper_error', None),
         SlotSet('swiper_error_trace', None),
         SlotSet('swiper_state', 'waiting_partner_answer'),
@@ -221,6 +222,7 @@ async def test_action_find_partner_veteran(
     actual_events = await actions.ActionFindPartner().run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'partner_has_been_asked'),
+        SlotSet('partner_id', 'available_veteran_id1'),
         SlotSet('swiper_error', None),
         SlotSet('swiper_error_trace', None),
         SlotSet('swiper_state', 'waiting_partner_answer'),
