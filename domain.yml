@@ -36,7 +36,7 @@ intents:
 entities:
 - dietcls_time
 - partner_id
-- room_link
+- room_url
 slots:
   swiper_state:
     type: rasa.shared.core.slots.TextSlot
@@ -63,7 +63,7 @@ slots:
     initial_value: null
     auto_fill: true
     influence_conversation: false
-  room_link:
+  room_url:
     type: rasa.shared.core.slots.TextSlot
     initial_value: null
     auto_fill: true
@@ -106,8 +106,6 @@ responses:
       - I find someone who also wants to chitchat.
       - I confirm with you and them that you are both ready.
       - I send both of you a video chat link.
-       
-      {room_link}
   utter_found_someone:
   - text: |-
       Hooray! I found someone who wants to have a video chat!
@@ -122,7 +120,7 @@ responses:
   - text: |-
       Awesome! Here is the link to the video chat:
        
-      {room_link}
+      {room_url}
   utter_let_them_go_stop_bothering:
   - text: |-
       Ok, I will let that person go then😞

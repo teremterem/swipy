@@ -42,7 +42,7 @@ async def test_invite_chitchat_partner(
         assert json == {
             'name': 'EXTERNAL_invite_chitchat_partner',
             'entities': {
-                'room_link': 'https://room-unittest/url',
+                'room_url': 'https://room-unittest/url',
             },
         }
         return CallbackResult(payload=external_intent_response)

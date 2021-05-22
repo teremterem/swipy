@@ -117,7 +117,7 @@ async def test_action_session_start_without_slots(
             [
                 SessionStarted(),
                 SlotSet('session_started_metadata', None),  # comes from tests/actions/data/initial_tracker.json
-                SlotSet('room_link', None),  # comes from tests/actions/data/initial_tracker.json
+                SlotSet('room_url', None),  # comes from tests/actions/data/initial_tracker.json
                 SlotSet('my_slot', 'value'),
                 SlotSet('another-slot', 'value2'),
                 # two more events (swiper_state slot and action_listen) are appended inside the test itself
@@ -390,46 +390,6 @@ async def test_action_ask_to_join(
             UserStateMachine(
                 user_id='an_asker',
                 state='waiting_partner_answer',
-                partner_id='completely_different_user',
-                newbie=True,
-            ),
-            UserStateMachine(
-                user_id='unit_test_user',
-                state='ok_for_chitchat',
-                partner_id=None,
-                newbie=True,
-            ),
-            [
-                'partner_id for user %r was expected to be %r (current user), but was %r instead',
-                'an_asker',
-                'unit_test_user',
-                'completely_different_user',
-            ],
-    ),
-    (
-            UserStateMachine(
-                user_id='an_asker',
-                state='asked_to_join',
-                partner_id='unit_test_user',
-                newbie=True,
-            ),
-            UserStateMachine(
-                user_id='unit_test_user',
-                state='ok_for_chitchat',
-                partner_id=None,
-                newbie=True,
-            ),
-            [
-                'user %r was expected to be in state %r, but was in state %r instead',
-                'an_asker',
-                'waiting_partner_answer',
-                'asked_to_join',
-            ],
-    ),
-    (
-            UserStateMachine(
-                user_id='an_asker',
-                state='waiting_partner_answer',
                 partner_id='unit_test_user',
                 newbie=True,
             ),
@@ -504,7 +464,7 @@ async def test_action_create_room_experimental(
 
     actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == [
-        SlotSet('room_link', 'https://swipy.daily.co/pytestroom'),
+        SlotSet('room_url', 'https://swipy.daily.co/pytestroom'),
         SlotSet('swiper_error', None),
         SlotSet('swiper_error_trace', None),
         SlotSet('swiper_state', 'new'),
@@ -517,7 +477,7 @@ async def test_action_create_room_experimental(
         'elements': [],
         'image': None,
         'response': 'utter_video_link',
-        'room_link': 'https://swipy.daily.co/pytestroom',
+        'room_url': 'https://swipy.daily.co/pytestroom',
         'template': 'utter_video_link',
         'text': None,
     }]

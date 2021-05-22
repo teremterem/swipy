@@ -1,7 +1,7 @@
 import logging
 import os
 from pprint import pformat
-from typing import Text
+from typing import Text, Dict
 
 import aiohttp
 
@@ -13,29 +13,35 @@ RASA_CORE_PATH = os.getenv('RASA_CORE_PATH', 'core/')
 
 OUTPUT_CHANNEL = 'telegram'  # seems to be more robust than 'latest'
 
-PARTNER_ID_ENTITY = 'partner_id'
+PARTNER_ID_SLOT = 'partner_id'
+ROOM_URL_SLOT = 'room_url'
 
 
 async def ask_to_join(receiver_id: Text, asker_id: Text) -> None:
     return await _trigger_external_rasa_intent(
         receiver_id,
         'EXTERNAL_ask_to_join',
-        partner_id=asker_id,
+        {
+            PARTNER_ID_SLOT: asker_id,
+        },
     )
 
 
 async def invite_chitchat_partner(user_id: Text, room_url: Text) -> None:
+    # TODO oleksandr: get rid of this function
     return await _trigger_external_rasa_intent(
         user_id,
         'EXTERNAL_invite_chitchat_partner',
-        room_link=room_url,
+        {
+            ROOM_URL_SLOT: room_url,
+        },
     )
 
 
 async def _trigger_external_rasa_intent(
         receiver_user_id: Text,
         intent_name: Text,
-        **entities: Text,
+        entities: Dict[Text, Text],
 ):
     async with aiohttp.ClientSession() as session:  # TODO oleksandr: do I need to cache/reuse these sessions ?
         params = {
