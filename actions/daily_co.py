@@ -1,6 +1,7 @@
 import logging
 import os
 from pprint import pformat
+from typing import Dict, Text, Any
 
 import aiohttp
 
@@ -10,8 +11,9 @@ DAILY_CO_BASE_URL = 'https://api.daily.co/v1'
 DAILY_CO_API_TOKEN = os.environ['DAILY_CO_API_TOKEN']
 
 
-async def create_room() -> dict:
-    async with aiohttp.ClientSession() as session:  # TODO oleksandr: do I need to cache/reuse these sessions ?
+async def create_room() -> Dict[Text, Any]:
+    # TODO oleksandr: do I need to reuse ClientSession instance ? what should be its lifetime ?
+    async with aiohttp.ClientSession() as session:
         room_data = {
             'privacy': 'public',
             'properties': {

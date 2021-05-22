@@ -445,13 +445,13 @@ async def test_action_ask_to_join_invalid(
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('ddb_unit_test_user')
-@patch('actions.rasa_callbacks.invite_chitchat_partner')
+@patch('actions.rasa_callbacks.share_room_url')
 @patch('actions.daily_co.create_room')
 @patch.object(UserVault, 'get_random_available_user')
 async def test_action_create_room_experimental(
         mock_get_random_available_user: MagicMock,
         mock_daily_co_create_room: AsyncMock,
-        mock_rasa_callback_invite_chitchat_partner: AsyncMock,
+        mock_rasa_callback_share_room_url: AsyncMock,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
@@ -484,7 +484,8 @@ async def test_action_create_room_experimental(
         'text': None,
     }]
     mock_get_random_available_user.assert_called_once_with('unit_test_user')
-    mock_rasa_callback_invite_chitchat_partner.assert_called_once_with(
+    mock_rasa_callback_share_room_url.assert_called_once_with(
         'existing_user_id3',
+        'unit_test_user',
         'https://swipy.daily.co/pytestroom',
     )

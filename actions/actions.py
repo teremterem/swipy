@@ -300,7 +300,7 @@ class ActionCreateRoomExperimental(BaseSwiperAction):
             },
         )
 
-        await rasa_callbacks.invite_chitchat_partner(chitchat_partner.user_id, room_url)
+        await rasa_callbacks.share_room_url(chitchat_partner.user_id, current_user.user_id, room_url)
 
         current_user.newbie = False
         user_vault.save(current_user)

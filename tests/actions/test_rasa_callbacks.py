@@ -40,8 +40,9 @@ async def test_invite_chitchat_partner(
 ) -> None:
     def rasa_core_callback(url, json=None, **kwargs):
         assert json == {
-            'name': 'EXTERNAL_invite_chitchat_partner',
+            'name': 'EXTERNAL_share_room_url',
             'entities': {
+                'partner_id': 'a_sending_user',
                 'room_url': 'https://room-unittest/url',
             },
         }
@@ -50,10 +51,10 @@ async def test_invite_chitchat_partner(
     rasa_core_callback_mock = MagicMock(side_effect=rasa_core_callback)
     # noinspection HttpUrlsUsage
     mock_aioresponses.post(
-        'http://rasa-unittest:5005/unittest-core/conversations/a_partner_id/trigger_intent'
+        'http://rasa-unittest:5005/unittest-core/conversations/a_receiving_user/trigger_intent'
         '?output_channel=telegram&token=rasaunittesttoken',
         callback=rasa_core_callback_mock,
     )
 
-    await rasa_callbacks.invite_chitchat_partner('a_partner_id', 'https://room-unittest/url')
+    await rasa_callbacks.share_room_url('a_receiving_user', 'a_sending_user', 'https://room-unittest/url')
     rasa_core_callback_mock.assert_called_once()

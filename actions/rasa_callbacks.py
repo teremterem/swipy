@@ -1,7 +1,7 @@
 import logging
 import os
 from pprint import pformat
-from typing import Text, Dict
+from typing import Text, Dict, Any
 
 import aiohttp
 
@@ -17,22 +17,22 @@ PARTNER_ID_SLOT = 'partner_id'
 ROOM_URL_SLOT = 'room_url'
 
 
-async def ask_to_join(receiver_id: Text, asker_id: Text) -> None:
+async def ask_to_join(receiver_user_id: Text, sender_user_id: Text) -> Dict[Text, Any]:
     return await _trigger_external_rasa_intent(
-        receiver_id,
+        receiver_user_id,
         'EXTERNAL_ask_to_join',
         {
-            PARTNER_ID_SLOT: asker_id,
+            PARTNER_ID_SLOT: sender_user_id,
         },
     )
 
 
-async def invite_chitchat_partner(user_id: Text, room_url: Text) -> None:
-    # TODO oleksandr: get rid of this function
+async def share_room_url(receiver_user_id: Text, sender_user_id: Text, room_url: Text) -> Dict[Text, Any]:
     return await _trigger_external_rasa_intent(
-        user_id,
-        'EXTERNAL_invite_chitchat_partner',
+        receiver_user_id,
+        'EXTERNAL_share_room_url',
         {
+            PARTNER_ID_SLOT: sender_user_id,
             ROOM_URL_SLOT: room_url,
         },
     )
@@ -42,8 +42,9 @@ async def _trigger_external_rasa_intent(
         receiver_user_id: Text,
         intent_name: Text,
         entities: Dict[Text, Text],
-):
-    async with aiohttp.ClientSession() as session:  # TODO oleksandr: do I need to cache/reuse these sessions ?
+) -> Dict[Text, Any]:
+    # TODO oleksandr: do I need to reuse ClientSession instance ? what should be its lifetime ?
+    async with aiohttp.ClientSession() as session:
         params = {
             'output_channel': OUTPUT_CHANNEL,
         }
