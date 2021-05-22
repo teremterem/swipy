@@ -142,6 +142,7 @@ actions:
 - action_session_start
 - action_find_partner
 - action_ask_to_join
+- action_create_room
 - action_create_room_experimental
 forms: {}
 e2e_actions: []
