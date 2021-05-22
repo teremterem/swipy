@@ -222,8 +222,9 @@ class ActionAskToJoin(BaseSwiperAction):
 
         dispatcher.utter_message(response='utter_someone_wants_to_chat')
 
+        partner_id = tracker.get_slot(rasa_callbacks.PARTNER_ID_SLOT)
         # noinspection PyUnresolvedReferences
-        current_user.become_asked_to_join(tracker.get_slot('partner_id'))
+        current_user.become_asked_to_join(partner_id)
         user_vault.save(current_user)
 
         return [
@@ -245,6 +246,8 @@ class ActionCreateRoom(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
+        # TODO TODO TODO oleksandr
+
         if current_user.state != UserState.OK_TO_CHITCHAT:
             # not throwing an exception here because the person we were supposed to ask doesn't need to be notified
             logger.error(
@@ -256,31 +259,11 @@ class ActionCreateRoom(BaseSwiperAction):
             # TODO oleksandr: let the requester know somehow ?
             return []
 
-        partner = user_vault.get_user(tracker.get_slot('partner_id'))
-        if partner.state != UserState.WAITING_PARTNER_ANSWER:
-            # not throwing an exception here because the person we were supposed to ask doesn't need to be notified
-            logger.error(
-                'user %r was expected to be in state %r, but was in state %r instead',
-                partner.user_id,
-                UserState.WAITING_PARTNER_ANSWER,
-                partner.state,
-            )
-            return []
-
-        if partner.partner_id != current_user.user_id:
-            # not throwing an exception here because the person we were supposed to ask doesn't need to be notified
-            logger.error(
-                'partner_id for user %r was expected to be %r (current user), but was %r instead',
-                partner.user_id,
-                current_user.user_id,
-                partner.partner_id,
-            )
-            return []
-
         dispatcher.utter_message(response='utter_someone_wants_to_chat')
 
+        partner_id = tracker.get_slot(rasa_callbacks.PARTNER_ID_SLOT)
         # noinspection PyUnresolvedReferences
-        current_user.become_asked_to_join(partner.user_id)
+        current_user.become_asked_to_join(partner_id)
         user_vault.save(current_user)
 
         return [
@@ -306,7 +289,12 @@ class ActionCreateRoomExperimental(BaseSwiperAction):
 
         created_room = await daily_co.create_room()
         room_url = created_room['url']
-        dispatcher.utter_message(response='utter_video_link', room_url=room_url)
+        dispatcher.utter_message(
+            response='utter_video_link',
+            **{
+                rasa_callbacks.ROOM_URL_SLOT: room_url,
+            },
+        )
 
         await rasa_callbacks.invite_chitchat_partner(chitchat_partner.user_id, room_url)
 
@@ -314,5 +302,5 @@ class ActionCreateRoomExperimental(BaseSwiperAction):
         user_vault.save(current_user)
 
         return [
-            SlotSet(key='room_url', value=room_url),
+            SlotSet(key=rasa_callbacks.ROOM_URL_SLOT, value=room_url),
         ]
