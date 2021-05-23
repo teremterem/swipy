@@ -175,7 +175,6 @@ async def test_action_find_partner_newbie(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
-        user_vault: UserVault,
         available_newbie1: UserStateMachine,
 ) -> None:
     mock_get_random_available_user.return_value = available_newbie1
@@ -196,6 +195,7 @@ async def test_action_find_partner_newbie(
     mock_get_random_available_user.assert_called_once_with(exclude_user_id='unit_test_user', newbie=True)
     mock_rasa_callback_ask_to_join.assert_called_once_with('available_newbie_id1', 'unit_test_user')
 
+    user_vault = UserVault()
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
         user_id='unit_test_user',
         state='waiting_partner_answer',
@@ -214,7 +214,6 @@ async def test_action_find_partner_veteran(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
-        user_vault: UserVault,
         available_veteran1: UserStateMachine,
 ) -> None:
     mock_get_random_available_user.side_effect = [None, available_veteran1]
@@ -235,6 +234,7 @@ async def test_action_find_partner_veteran(
     ]
     mock_rasa_callback_ask_to_join.assert_called_once_with('available_veteran_id1', 'unit_test_user')
 
+    user_vault = UserVault()
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
         user_id='unit_test_user',
         state='waiting_partner_answer',
@@ -253,7 +253,6 @@ async def test_action_find_partner_no_one(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
-        user_vault: UserVault,
 ) -> None:
     mock_get_random_available_user.side_effect = [None, None]
 
@@ -272,6 +271,7 @@ async def test_action_find_partner_no_one(
     ]
     mock_rasa_callback_ask_to_join.assert_not_called()
 
+    user_vault = UserVault()
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
         user_id='unit_test_user',
         state='ok_to_chitchat',
@@ -291,7 +291,6 @@ async def test_action_find_partner_invalid_partner_state(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
-        user_vault: UserVault,
 ) -> None:
     mock_get_random_available_user.side_effect = [None, UserStateMachine(
         user_id='unavailable_user_id',
@@ -317,6 +316,7 @@ async def test_action_find_partner_invalid_partner_state(
     ]
     mock_rasa_callback_ask_to_join.assert_not_called()
 
+    user_vault = UserVault()
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
         user_id='unit_test_user',
         state='ok_to_chitchat',
