@@ -529,7 +529,6 @@ async def test_action_create_room_partner_not_waiting(
     ),
 ])
 @pytest.mark.usefixtures('create_user_state_machine_table')
-@patch('actions.actions.stack_trace_to_str', Mock(return_value='stack trace goes here'))
 @patch('actions.rasa_callbacks.join_room')
 @patch('actions.daily_co.create_room')
 async def test_action_create_room_invalid_state(
@@ -556,11 +555,12 @@ async def test_action_create_room_invalid_state(
     ))
     user_vault.save(current_user)
 
+    actions.SEND_ERROR_STACK_TRACE_TO_SLOT = False
+
     actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'error'),
         SlotSet('swiper_error', expected_swiper_error),
-        SlotSet('swiper_error_trace', 'stack trace goes here'),
         SlotSet('swiper_state', current_user.state),
     ]
     assert dispatcher.messages == []
