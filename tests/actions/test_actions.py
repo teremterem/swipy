@@ -445,6 +445,14 @@ async def test_action_create_room(
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('create_user_state_machine_table')
+@pytest.mark.parametrize('partner', [
+    UserStateMachine(
+        user_id='an_asker',
+        state='waiting_partner_answer',
+        partner_id='a_completely_different_user',
+        newbie=True,
+    ),
+])
 @patch('actions.rasa_callbacks.join_room')
 @patch('actions.daily_co.create_room')
 async def test_action_create_room_partner_not_waiting(
@@ -454,6 +462,7 @@ async def test_action_create_room_partner_not_waiting(
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
         new_room1: Dict[Text, Any],
+        partner: UserStateMachine,
 ) -> None:
     mock_daily_co_create_room.return_value = new_room1
 
@@ -461,12 +470,7 @@ async def test_action_create_room_partner_not_waiting(
     assert action.name() == 'action_create_room'
 
     user_vault = UserVault()
-    user_vault.save(UserStateMachine(
-        user_id='an_asker',
-        state='waiting_partner_answer',
-        partner_id='a_completely_different_user',
-        newbie=True,
-    ))
+    user_vault.save(partner)
     user_vault.save(UserStateMachine(
         user_id='unit_test_user',  # receiver of the ask
         state='asked_to_join',
