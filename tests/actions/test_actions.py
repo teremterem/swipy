@@ -387,48 +387,57 @@ async def test_action_ask_to_join(
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('ddb_unit_test_user')
+@pytest.mark.usefixtures('create_user_state_machine_table')
 @patch('actions.rasa_callbacks.join_room')
 @patch('actions.daily_co.create_room')
-@patch.object(UserVault, 'get_random_available_user')
 async def test_action_create_room(
-        mock_get_random_available_user: MagicMock,
         mock_daily_co_create_room: AsyncMock,
         mock_rasa_callback_join_room: AsyncMock,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
-        user3: UserStateMachine,
         new_room1: Dict[Text, Any],
 ) -> None:
-    mock_get_random_available_user.return_value = user3
     mock_daily_co_create_room.return_value = new_room1
 
     action = actions.ActionCreateRoom()
     assert action.name() == 'action_create_room'
 
+    user_vault = UserVault()
+    user_vault.save(UserStateMachine(
+        user_id='an_asker',
+        state='waiting_partner_answer',
+        partner_id='unit_test_user',
+        newbie=True,
+    ))
+    user_vault.save(UserStateMachine(
+        user_id='unit_test_user',  # receiver of the ask
+        state='asked_to_join',
+        partner_id='an_asker',
+        newbie=True,
+    ))
+
     actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == [
+        SlotSet('swiper_action_result', 'room_url_ready'),
         SlotSet('room_url', 'https://swipy.daily.co/pytestroom'),
         SlotSet('swiper_error', None),
         SlotSet('swiper_error_trace', None),
-        SlotSet('swiper_state', 'new'),
+        SlotSet('swiper_state', 'ok_to_chitchat'),
     ]
+    assert dispatcher.messages == []
 
-    assert dispatcher.messages == [{
-        'attachment': None,
-        'buttons': [],
-        'custom': {},
-        'elements': [],
-        'image': None,
-        'response': 'utter_video_link',
-        'room_url': 'https://swipy.daily.co/pytestroom',
-        'template': 'utter_video_link',
-        'text': None,
-    }]
-    mock_get_random_available_user.assert_called_once_with('unit_test_user')
+    mock_daily_co_create_room.assert_called_once_with()
     mock_rasa_callback_join_room.assert_called_once_with(
-        'existing_user_id3',
+        'an_asker',
         'unit_test_user',
         'https://swipy.daily.co/pytestroom',
     )
+
+    user_vault = UserVault()  # create new instance to avoid hitting cache
+    user_vault.save(UserStateMachine(
+        user_id='unit_test_user',  # receiver of the ask
+        state='ok_to_chitchat',  # user joined the chat and ok_to_chitchat merely allows them to be invited again later
+        partner_id='an_asker',
+        newbie=True,
+    ))
