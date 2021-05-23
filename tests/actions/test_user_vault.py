@@ -19,12 +19,12 @@ def test_get_new_user() -> None:
     assert not user_state_machine_table.scan()['Items']
 
     user_vault = UserVault()
-    user_state_machine = user_vault.get_user('new_user_id')
+    new_user = user_vault.get_user('new_user_id')
 
-    assert user_state_machine.user_id == 'new_user_id'
-    assert user_state_machine.state == 'new'
-    assert user_state_machine.partner_id is None
-    assert user_state_machine.newbie is True
+    assert new_user.user_id == 'new_user_id'
+    assert new_user.state == 'new'
+    assert new_user.partner_id is None
+    assert new_user.newbie is True
 
     assert user_state_machine_table.scan()['Items'] == [{
         'user_id': 'new_user_id',
@@ -32,6 +32,7 @@ def test_get_new_user() -> None:
         'partner_id': None,
         'newbie': True,
     }]
+    assert user_vault.get_user('new_user_id') is new_user  # make sure the user was cached
 
 
 def test_get_existing_user(ddb_user1: UserStateMachine) -> None:
@@ -39,8 +40,10 @@ def test_get_existing_user(ddb_user1: UserStateMachine) -> None:
 
     assert len(user_state_machine_table.scan()['Items']) == 1
     user_vault = UserVault()
-    assert user_vault.get_user('existing_user_id1') == ddb_user1
+    fetched_user = user_vault.get_user('existing_user_id1')
+    assert fetched_user == ddb_user1
     assert len(user_state_machine_table.scan()['Items']) == 1
+    assert user_vault.get_user('existing_user_id1') is fetched_user  # make sure the user was cached
 
 
 @patch.object(UserVault, '_get_user')
