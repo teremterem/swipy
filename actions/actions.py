@@ -301,6 +301,7 @@ class ActionJoinRoom(BaseSwiperAction):
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
         # TODO oleksandr: use swiper_action_result to choose what to say using a rule or story instead ?
+        # 'room_url' slot is expected to be set by the external caller
         dispatcher.utter_message(response='utter_found_partner_room_url')
 
         # noinspection PyUnresolvedReferences
