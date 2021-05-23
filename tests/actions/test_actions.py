@@ -441,3 +441,55 @@ async def test_action_create_room(
         partner_id='an_asker',
         newbie=True,
     ))
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures('create_user_state_machine_table')
+@patch('actions.rasa_callbacks.join_room')
+@patch('actions.daily_co.create_room')
+async def test_action_create_room_partner_not_waiting(
+        mock_daily_co_create_room: AsyncMock,
+        mock_rasa_callback_join_room: AsyncMock,
+        tracker: Tracker,
+        dispatcher: CollectingDispatcher,
+        domain: Dict[Text, Any],
+        new_room1: Dict[Text, Any],
+) -> None:
+    mock_daily_co_create_room.return_value = new_room1
+
+    action = actions.ActionCreateRoom()
+    assert action.name() == 'action_create_room'
+
+    user_vault = UserVault()
+    user_vault.save(UserStateMachine(
+        user_id='an_asker',
+        state='waiting_partner_answer',
+        partner_id='a_completely_different_user',
+        newbie=True,
+    ))
+    user_vault.save(UserStateMachine(
+        user_id='unit_test_user',  # receiver of the ask
+        state='asked_to_join',
+        partner_id='an_asker',
+        newbie=True,
+    ))
+
+    actual_events = await action.run(dispatcher, tracker, domain)
+    assert actual_events == [
+        SlotSet('swiper_action_result', 'partner_not_waiting_anymore'),
+        SlotSet('swiper_error', None),
+        SlotSet('swiper_error_trace', None),
+        SlotSet('swiper_state', 'ok_to_chitchat'),
+    ]
+    assert dispatcher.messages == []
+
+    mock_daily_co_create_room.assert_not_called()
+    mock_rasa_callback_join_room.assert_not_called()
+
+    user_vault = UserVault()  # create new instance to avoid hitting cache
+    user_vault.save(UserStateMachine(
+        user_id='unit_test_user',  # receiver of the ask
+        state='ok_to_chitchat',
+        partner_id=None,
+        newbie=True,
+    ))
