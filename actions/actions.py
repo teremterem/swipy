@@ -249,8 +249,8 @@ class ActionCreateRoom(BaseSwiperAction):
 
         if current_user.partner_id is None:
             raise InvalidSwiperStateError(
-                'current user %r cannot join the room because current_user.partner_id is None',
-                current_user.user_id,
+                f"current user {repr(current_user.user_id)} cannot join the room "
+                f"because current_user.partner_id is None",
             )
 
         partner = user_vault.get_user(current_user.partner_id)

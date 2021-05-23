@@ -285,7 +285,7 @@ async def test_action_find_partner_no_one(
 @patch('actions.actions.stack_trace_to_str', Mock(return_value='stack trace goes here'))
 @patch('actions.rasa_callbacks.ask_to_join')
 @patch.object(UserVault, 'get_random_available_user')
-async def test_action_find_partner_invalid_state(
+async def test_action_find_partner_invalid_partner_state(
         mock_get_random_available_user: MagicMock,
         mock_rasa_callback_ask_to_join: AsyncMock,
         tracker: Tracker,
@@ -435,12 +435,12 @@ async def test_action_create_room(
     )
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
-    user_vault.save(UserStateMachine(
+    assert user_vault.get_user('unit_test_user') == UserStateMachine(
         user_id='unit_test_user',  # receiver of the ask
         state='ok_to_chitchat',  # user joined the chat and ok_to_chitchat merely allows them to be invited again later
         partner_id='an_asker',
-        newbie=True,
-    ))
+        newbie=False,  # successfully accepting the very first video chitchat graduates the user from newbie
+    )
 
 
 @pytest.mark.asyncio
@@ -497,9 +497,76 @@ async def test_action_create_room_partner_not_waiting(
     mock_rasa_callback_join_room.assert_not_called()
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
-    user_vault.save(UserStateMachine(
+    assert user_vault.get_user('unit_test_user') == UserStateMachine(
         user_id='unit_test_user',  # receiver of the ask
         state='ok_to_chitchat',
         partner_id=None,
         newbie=True,
+    )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('current_user, expected_swiper_error', [
+    (
+            UserStateMachine(
+                user_id='unit_test_user',
+                state='asked_to_join',
+                partner_id=None,
+                newbie=True,
+            ),
+            'InvalidSwiperStateError("current user \'unit_test_user\' cannot join the room '
+            'because current_user.partner_id is None")',
+    ),
+    (
+            UserStateMachine(
+                user_id='unit_test_user',
+                state='ok_to_chitchat',
+                partner_id='an_asker',
+                newbie=True,
+            ),
+            'InvalidSwiperStateError("current user \'unit_test_user\' is not in state \'asked_to_join\', '
+            'hence cannot join the room (actual state is \'ok_to_chitchat\')")',
+    ),
+])
+@pytest.mark.usefixtures('create_user_state_machine_table')
+@patch('actions.actions.stack_trace_to_str', Mock(return_value='stack trace goes here'))
+@patch('actions.rasa_callbacks.join_room')
+@patch('actions.daily_co.create_room')
+async def test_action_create_room_invalid_state(
+        mock_daily_co_create_room: AsyncMock,
+        mock_rasa_callback_join_room: AsyncMock,
+        tracker: Tracker,
+        dispatcher: CollectingDispatcher,
+        domain: Dict[Text, Any],
+        new_room1: Dict[Text, Any],
+        current_user: UserStateMachine,
+        expected_swiper_error: Text,
+) -> None:
+    mock_daily_co_create_room.return_value = new_room1
+
+    action = actions.ActionCreateRoom()
+    assert action.name() == 'action_create_room'
+
+    user_vault = UserVault()
+    user_vault.save(UserStateMachine(
+        user_id='an_asker',
+        state='waiting_partner_answer',
+        partner_id='unit_test_user',
+        newbie=True,
     ))
+    user_vault.save(current_user)
+
+    actual_events = await action.run(dispatcher, tracker, domain)
+    assert actual_events == [
+        SlotSet('swiper_action_result', 'error'),
+        SlotSet('swiper_error', expected_swiper_error),
+        SlotSet('swiper_error_trace', 'stack trace goes here'),
+        SlotSet('swiper_state', current_user.state),
+    ]
+    assert dispatcher.messages == []
+
+    mock_daily_co_create_room.assert_not_called()
+    mock_rasa_callback_join_room.assert_not_called()
+
+    user_vault = UserVault()  # create new instance to avoid hitting cache
+    assert user_vault.get_user('unit_test_user') == current_user  # current user should not be changed
