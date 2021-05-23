@@ -14,7 +14,7 @@ stories:
   - action: utter_hope_to_see_you_later
 - story: bot found someone and user aggreed to join chitchat
   steps:
-  - action: utter_found_someone
+  - action: utter_someone_wants_to_chat
   - or:
     - intent: affirm
     - intent: want_chitchat
