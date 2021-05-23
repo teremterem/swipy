@@ -444,7 +444,6 @@ async def test_action_create_room(
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('create_user_state_machine_table')
 @pytest.mark.parametrize('partner', [
     UserStateMachine(
         user_id='an_asker',
@@ -452,7 +451,14 @@ async def test_action_create_room(
         partner_id='a_completely_different_user',
         newbie=True,
     ),
+    UserStateMachine(
+        user_id='an_asker',
+        state='ok_to_chitchat',
+        partner_id='unit_test_user',
+        newbie=True,
+    ),
 ])
+@pytest.mark.usefixtures('create_user_state_machine_table')
 @patch('actions.rasa_callbacks.join_room')
 @patch('actions.daily_co.create_room')
 async def test_action_create_room_partner_not_waiting(
