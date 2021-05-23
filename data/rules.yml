@@ -18,7 +18,7 @@ rules:
   - or:
     - intent: affirm
     - intent: want_chitchat
-  - action: action_create_room_experimental
+  - action: action_create_room
 - rule: user sent /start in Telegram
   steps:
   - intent: start
@@ -27,7 +27,7 @@ rules:
   steps:
   - intent: EXTERNAL_ask_to_join
   - action: action_ask_to_join
-- rule: EXTERNAL_invite_chitchat_partner
+- rule: EXTERNAL_join_room
   steps:
-  - intent: EXTERNAL_invite_chitchat_partner
-  - action: utter_room_url
+  - intent: EXTERNAL_join_room
+  - action: action_join_room
