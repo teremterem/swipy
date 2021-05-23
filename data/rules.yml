@@ -30,4 +30,4 @@ rules:
 - rule: EXTERNAL_invite_chitchat_partner
   steps:
   - intent: EXTERNAL_invite_chitchat_partner
-  - action: utter_video_link
+  - action: utter_room_url

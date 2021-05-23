@@ -60,7 +60,10 @@ class UserStateMachine(UserModel):
         # noinspection PyTypeChecker
         self.machine.add_transition(
             trigger='accept_invitation',
-            source=UserState.ASKED_TO_JOIN,
+            source=[
+                UserState.ASKED_TO_JOIN,
+                UserState.WAITING_PARTNER_ANSWER,
+            ],
             dest=UserState.OK_TO_CHITCHAT,
             before=[self.graduate_from_newbie],  # TODO oleksandr: should partner_id be dropped ? I would say, yes.
         )

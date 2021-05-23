@@ -116,9 +116,16 @@ responses:
       Hey, someone wants to chitchat with you!
        
       Are you ready to join a video call?
-  utter_video_link:
+  utter_room_url:
   - text: |-
       Awesome! Here is the link to the video chat:
+       
+      {room_url}
+  utter_found_partner_room_url:
+  - text: |-
+      Hooray! I have found someone who wants to have a chitchat.
+       
+      Here is the link to the video chat:
        
       {room_url}
   utter_let_them_go_stop_bothering:

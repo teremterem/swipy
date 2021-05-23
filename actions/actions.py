@@ -215,6 +215,7 @@ class ActionAskToJoin(BaseSwiperAction):  # TODO oleksandr: turn it into ActionB
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
+        # TODO oleksandr: use swiper_action_result to choose what to say using a rule or story instead ?
         dispatcher.utter_message(response='utter_someone_wants_to_chat')
 
         partner_id = tracker.get_slot(rasa_callbacks.PARTNER_ID_SLOT)
@@ -284,5 +285,31 @@ class ActionCreateRoom(BaseSwiperAction):
             SlotSet(
                 key=rasa_callbacks.ROOM_URL_SLOT,
                 value=room_url,
+            ),
+        ]
+
+
+class ActionJoinRoom(BaseSwiperAction):
+    def name(self) -> Text:
+        return 'action_join_room'
+
+    async def swipy_run(
+            self, dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
+            current_user: UserStateMachine,
+            user_vault: IUserVault,
+    ) -> List[Dict[Text, Any]]:
+        # TODO oleksandr: use swiper_action_result to choose what to say using a rule or story instead ?
+        dispatcher.utter_message(response='utter_found_partner_room_url')
+
+        # noinspection PyUnresolvedReferences
+        current_user.accept_invitation()
+        user_vault.save(current_user)
+
+        return [
+            SlotSet(
+                key=SWIPER_ACTION_RESULT_SLOT,
+                value=SwiperActionResult.SUCCESS,
             ),
         ]
