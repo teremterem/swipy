@@ -19,6 +19,7 @@ rules:
     - intent: affirm
     - intent: want_chitchat
   - action: action_create_room
+  - action: utter_room_url
 - rule: user sent /start in Telegram
   steps:
   - intent: start
