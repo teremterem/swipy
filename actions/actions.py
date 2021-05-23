@@ -204,7 +204,7 @@ class ActionFindPartner(BaseSwiperAction):
         ]
 
 
-class ActionAskToJoin(BaseSwiperAction):
+class ActionAskToJoin(BaseSwiperAction):  # TODO oleksandr: turn it into ActionBecomeAskedToJoin ?
     def name(self) -> Text:
         return 'action_ask_to_join'
 
