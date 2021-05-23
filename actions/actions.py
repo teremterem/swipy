@@ -269,7 +269,8 @@ class ActionCreateRoom(BaseSwiperAction):
         created_room = await daily_co.create_room()
         room_url = created_room['url']
 
-        await rasa_callbacks.share_room_url(current_user.partner_id, current_user.user_id, room_url)
+        # put partner into the room as well
+        await rasa_callbacks.join_room(current_user.partner_id, current_user.user_id, room_url)
 
         # noinspection PyUnresolvedReferences
         current_user.accept_invitation()
@@ -284,36 +285,4 @@ class ActionCreateRoom(BaseSwiperAction):
                 key=rasa_callbacks.ROOM_URL_SLOT,
                 value=room_url,
             ),
-        ]
-
-
-class ActionCreateRoomExperimental(BaseSwiperAction):
-    def name(self) -> Text:
-        return 'action_create_room_experimental'
-
-    async def swipy_run(
-            self, dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any],
-            current_user: UserStateMachine,
-            user_vault: IUserVault,
-    ) -> List[Dict[Text, Any]]:
-        chitchat_partner = user_vault.get_random_available_user(tracker.sender_id)
-
-        created_room = await daily_co.create_room()
-        room_url = created_room['url']
-        dispatcher.utter_message(
-            response='utter_video_link',
-            **{
-                rasa_callbacks.ROOM_URL_SLOT: room_url,
-            },
-        )
-
-        await rasa_callbacks.share_room_url(chitchat_partner.user_id, current_user.user_id, room_url)
-
-        current_user.newbie = False
-        user_vault.save(current_user)
-
-        return [
-            SlotSet(key=rasa_callbacks.ROOM_URL_SLOT, value=room_url),
         ]

@@ -388,13 +388,13 @@ async def test_action_ask_to_join(
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('ddb_unit_test_user')
-@patch('actions.rasa_callbacks.share_room_url')
+@patch('actions.rasa_callbacks.join_room')
 @patch('actions.daily_co.create_room')
 @patch.object(UserVault, 'get_random_available_user')
-async def test_action_create_room_experimental(
+async def test_action_create_room(
         mock_get_random_available_user: MagicMock,
         mock_daily_co_create_room: AsyncMock,
-        mock_rasa_callback_share_room_url: AsyncMock,
+        mock_rasa_callback_join_room: AsyncMock,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
@@ -404,8 +404,8 @@ async def test_action_create_room_experimental(
     mock_get_random_available_user.return_value = user3
     mock_daily_co_create_room.return_value = new_room1
 
-    action = actions.ActionCreateRoomExperimental()
-    assert action.name() == 'action_create_room_experimental'
+    action = actions.ActionCreateRoom()
+    assert action.name() == 'action_create_room'
 
     actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == [
@@ -427,7 +427,7 @@ async def test_action_create_room_experimental(
         'text': None,
     }]
     mock_get_random_available_user.assert_called_once_with('unit_test_user')
-    mock_rasa_callback_share_room_url.assert_called_once_with(
+    mock_rasa_callback_join_room.assert_called_once_with(
         'existing_user_id3',
         'unit_test_user',
         'https://swipy.daily.co/pytestroom',

@@ -27,10 +27,10 @@ async def ask_to_join(receiver_user_id: Text, sender_user_id: Text) -> Dict[Text
     )
 
 
-async def share_room_url(receiver_user_id: Text, sender_user_id: Text, room_url: Text) -> Dict[Text, Any]:
+async def join_room(receiver_user_id: Text, sender_user_id: Text, room_url: Text) -> Dict[Text, Any]:
     return await _trigger_external_rasa_intent(
         receiver_user_id,
-        'EXTERNAL_share_room_url',
+        'EXTERNAL_join_room',
         {
             PARTNER_ID_SLOT: sender_user_id,
             ROOM_URL_SLOT: room_url,

@@ -34,13 +34,13 @@ async def test_ask_to_join(
 
 
 @pytest.mark.asyncio
-async def test_invite_chitchat_partner(
+async def test_join_room(
         mock_aioresponses: aioresponses,
         external_intent_response: Dict[Text, Any],
 ) -> None:
     def rasa_core_callback(url, json=None, **kwargs):
         assert json == {
-            'name': 'EXTERNAL_share_room_url',
+            'name': 'EXTERNAL_join_room',
             'entities': {
                 'partner_id': 'a_sending_user',
                 'room_url': 'https://room-unittest/url',
@@ -56,5 +56,5 @@ async def test_invite_chitchat_partner(
         callback=rasa_core_callback_mock,
     )
 
-    await rasa_callbacks.share_room_url('a_receiving_user', 'a_sending_user', 'https://room-unittest/url')
+    await rasa_callbacks.join_room('a_receiving_user', 'a_sending_user', 'https://room-unittest/url')
     rasa_core_callback_mock.assert_called_once()
