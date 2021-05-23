@@ -45,13 +45,6 @@ class UserStateMachine(UserModel):
         )
         # noinspection PyTypeChecker
         self.machine.add_transition(
-            trigger='fail_to_find_partner',
-            source='*',
-            dest=UserState.OK_TO_CHITCHAT,
-            before=[self.drop_partner_id],
-        )
-        # noinspection PyTypeChecker
-        self.machine.add_transition(
             trigger='become_ok_to_chitchat',
             source='*',
             dest=UserState.OK_TO_CHITCHAT,
@@ -69,7 +62,7 @@ class UserStateMachine(UserModel):
             trigger='accept_invitation',
             source=UserState.ASKED_TO_JOIN,
             dest=UserState.OK_TO_CHITCHAT,
-            before=[self.graduate_from_newbie],
+            before=[self.graduate_from_newbie],  # TODO oleksandr: should partner_id be dropped ?
         )
         # noinspection PyTypeChecker
         self.machine.add_transition(

@@ -387,63 +387,6 @@ async def test_action_ask_to_join(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize('asker, receiver, error_log_params', [
-    (
-            UserStateMachine(
-                user_id='an_asker',
-                state='waiting_partner_answer',
-                partner_id='unit_test_user',
-                newbie=True,
-            ),
-            UserStateMachine(
-                user_id='unit_test_user',
-                state='do_not_disturb',
-                partner_id=None,
-                newbie=True,
-            ),
-            [
-                'current user %r is not in state %r, hence cannot be asked (actual state is %r)',
-                'unit_test_user',
-                'ok_to_chitchat',
-                'do_not_disturb',
-            ],
-    ),
-])
-@pytest.mark.usefixtures('create_user_state_machine_table')
-@patch.object(actions.logger, 'error')
-async def test_action_ask_to_join_invalid(
-        logger_error_mock: MagicMock,
-        tracker: Tracker,
-        dispatcher: CollectingDispatcher,
-        domain: Dict[Text, Any],
-        asker: UserStateMachine,
-        receiver: UserStateMachine,
-        error_log_params: List[Text],
-) -> None:
-    user_vault = UserVault()
-    user_vault.save(asker)
-    user_vault.save(receiver)
-
-    tracker.add_slots([
-        SlotSet('partner_id', 'an_asker'),
-    ])
-
-    actual_events = await actions.ActionAskToJoin().run(dispatcher, tracker, domain)
-    assert actual_events == [
-        SlotSet('swiper_error', None),
-        SlotSet('swiper_error_trace', None),
-        SlotSet('swiper_state', receiver.state),
-    ]
-    assert dispatcher.messages == []  # receiver should not be notified about these failures
-
-    logger_error_mock.assert_called_once_with(*error_log_params)
-
-    user_vault = UserVault()  # create new instance to avoid hitting cache
-    assert user_vault.get_user('an_asker') == asker  # no changes expected
-    assert user_vault.get_user('unit_test_user') == receiver  # no changes expected
-
-
-@pytest.mark.asyncio
 @pytest.mark.usefixtures('ddb_unit_test_user')
 @patch('actions.rasa_callbacks.share_room_url')
 @patch('actions.daily_co.create_room')

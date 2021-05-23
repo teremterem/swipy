@@ -28,6 +28,8 @@ SWIPER_ERROR_TRACE_SLOT = 'swiper_error_trace'
 class SwiperActionResult:
     PARTNER_HAS_BEEN_ASKED = 'partner_has_been_asked'
     PARTNER_WAS_NOT_FOUND = 'partner_was_not_found'
+    PARTNER_NOT_WAITING_ANYMORE = 'partner_not_waiting_anymore'
+    ROOM_URL_READY = 'room_url_ready'
 
     SUCCESS = 'success'
     ERROR = 'error'
@@ -166,7 +168,7 @@ class ActionFindPartner(BaseSwiperAction):
         if partner:
             if partner.state != UserState.OK_TO_CHITCHAT:
                 # noinspection PyUnresolvedReferences
-                current_user.fail_to_find_partner()
+                current_user.become_ok_to_chitchat()
                 user_vault.save(current_user)
 
                 raise InvalidSwiperStateError(
@@ -191,7 +193,7 @@ class ActionFindPartner(BaseSwiperAction):
             ]
 
         # noinspection PyUnresolvedReferences
-        current_user.fail_to_find_partner()
+        current_user.become_ok_to_chitchat()
         user_vault.save(current_user)
 
         return [
@@ -213,17 +215,6 @@ class ActionAskToJoin(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        if current_user.state != UserState.OK_TO_CHITCHAT:
-            # not throwing an exception here because the person we were supposed to ask doesn't need to be notified
-            logger.error(
-                'current user %r is not in state %r, hence cannot be asked (actual state is %r)',
-                current_user.user_id,
-                UserState.OK_TO_CHITCHAT,
-                current_user.state,
-            )
-            # TODO oleksandr: let the requester know somehow ?
-            return []
-
         dispatcher.utter_message(response='utter_someone_wants_to_chat')
 
         partner_id = tracker.get_slot(rasa_callbacks.PARTNER_ID_SLOT)
@@ -250,30 +241,48 @@ class ActionCreateRoom(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        # TODO TODO TODO oleksandr
-
-        if current_user.state != UserState.OK_TO_CHITCHAT:
-            # not throwing an exception here because the person we were supposed to ask doesn't need to be notified
-            logger.error(
-                'current user %r is not in state %r, hence cannot be asked (actual state is %r)',
-                current_user.user_id,
-                UserState.OK_TO_CHITCHAT,
-                current_user.state,
+        if current_user.state != UserState.ASKED_TO_JOIN:
+            raise InvalidSwiperStateError(
+                f"current user {repr(current_user.user_id)} is not in state {repr(UserState.ASKED_TO_JOIN)}, "
+                f"hence cannot join the room (actual state is {repr(current_user.state)})"
             )
-            # TODO oleksandr: let the requester know somehow ?
-            return []
 
-        dispatcher.utter_message(response='utter_someone_wants_to_chat')
+        if current_user.partner_id is None:
+            raise InvalidSwiperStateError(
+                'current user %r cannot join the room because current_user.partner_id is None',
+                current_user.user_id,
+            )
 
-        partner_id = tracker.get_slot(rasa_callbacks.PARTNER_ID_SLOT)
+        partner = user_vault.get_user(current_user.partner_id)
+        if partner.state != UserState.WAITING_PARTNER_ANSWER or partner.partner_id != current_user.user_id:
+            # noinspection PyUnresolvedReferences
+            current_user.become_ok_to_chitchat()
+            user_vault.save(current_user)
+
+            return [
+                SlotSet(
+                    key=SWIPER_ACTION_RESULT_SLOT,
+                    value=SwiperActionResult.PARTNER_NOT_WAITING_ANYMORE,
+                ),
+            ]
+
+        created_room = await daily_co.create_room()
+        room_url = created_room['url']
+
+        await rasa_callbacks.share_room_url(current_user.partner_id, current_user.user_id, room_url)
+
         # noinspection PyUnresolvedReferences
-        current_user.become_asked_to_join(partner_id)
+        current_user.accept_invitation()
         user_vault.save(current_user)
 
         return [
             SlotSet(
                 key=SWIPER_ACTION_RESULT_SLOT,
-                value=SwiperActionResult.SUCCESS,
+                value=SwiperActionResult.ROOM_URL_READY,
+            ),
+            SlotSet(
+                key=rasa_callbacks.ROOM_URL_SLOT,
+                value=room_url,
             ),
         ]
 

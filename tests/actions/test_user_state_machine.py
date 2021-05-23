@@ -74,24 +74,6 @@ def test_become_asked_to_join_wrong_state(wrong_state: Text) -> None:
 
 
 @pytest.mark.parametrize('source_state', all_expected_states)
-def test_fail_to_find_partner(source_state: Text) -> None:
-    user = UserStateMachine(
-        user_id='some_user_id',
-        state=source_state,
-        partner_id='previous_partner_id',
-    )
-
-    assert user.state == source_state
-    assert user.partner_id == 'previous_partner_id'
-
-    # noinspection PyUnresolvedReferences
-    user.fail_to_find_partner()
-
-    assert user.state == 'ok_to_chitchat'
-    assert user.partner_id is None
-
-
-@pytest.mark.parametrize('source_state', all_expected_states)
 def test_become_ok_to_chitchat(source_state: Text) -> None:
     user = UserStateMachine(
         user_id='some_user_id',
