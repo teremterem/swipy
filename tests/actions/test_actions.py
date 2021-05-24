@@ -195,10 +195,10 @@ async def test_action_find_partner_newbie(
     actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'partner_has_been_asked'),
-        SlotSet('partner_id', 'available_newbie_id1'),
         SlotSet('swiper_error', None),
         SlotSet('swiper_error_trace', None),
         SlotSet('swiper_state', 'waiting_partner_answer'),
+        SlotSet('partner_id', 'available_newbie_id1'),
     ]
     assert dispatcher.messages == []
 
@@ -231,10 +231,10 @@ async def test_action_find_partner_veteran(
     actual_events = await actions.ActionFindPartner().run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'partner_has_been_asked'),
-        SlotSet('partner_id', 'available_veteran_id1'),
         SlotSet('swiper_error', None),
         SlotSet('swiper_error_trace', None),
         SlotSet('swiper_state', 'waiting_partner_answer'),
+        SlotSet('partner_id', 'available_veteran_id1'),
     ]
     assert dispatcher.messages == []
 
@@ -272,6 +272,7 @@ async def test_action_find_partner_no_one(
         SlotSet('swiper_error', None),
         SlotSet('swiper_error_trace', None),
         SlotSet('swiper_state', 'ok_to_chitchat'),
+        SlotSet('partner_id', None),
     ]
     assert dispatcher.messages == []
 
@@ -317,6 +318,7 @@ async def test_action_find_partner_invalid_partner_state(
         ),
         SlotSet('swiper_error_trace', 'stack trace goes here'),
         SlotSet('swiper_state', 'ok_to_chitchat'),
+        SlotSet('partner_id', None),
     ]
     assert dispatcher.messages == []
 
@@ -363,6 +365,7 @@ async def test_action_ask_to_join(
         SlotSet('swiper_error', None),
         SlotSet('swiper_error_trace', None),
         SlotSet('swiper_state', 'asked_to_join'),
+        SlotSet('partner_id', 'an_asker'),
     ]
     assert dispatcher.messages == [{
         'attachment': None,
@@ -422,6 +425,7 @@ async def test_action_create_room(
         SlotSet('swiper_error', None),
         SlotSet('swiper_error_trace', None),
         SlotSet('swiper_state', 'ok_to_chitchat'),
+        SlotSet('partner_id', 'an_asker'),
     ]
     assert dispatcher.messages == []
 
