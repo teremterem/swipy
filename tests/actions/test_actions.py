@@ -670,3 +670,40 @@ async def test_action_become_ok_to_chitchat(
         partner_id=None,
         newbie=True,
     )
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures('create_user_state_machine_table')
+async def test_action_do_not_disturb(
+        tracker: Tracker,
+        dispatcher: CollectingDispatcher,
+        domain: Dict[Text, Any],
+) -> None:
+    action = actions.ActionDoNotDisturb()
+    assert action.name() == 'action_do_not_disturb'
+
+    user_vault = UserVault()
+    user_vault.save(UserStateMachine(
+        user_id='unit_test_user',
+        state='asked_to_join',
+        partner_id='the_asker',
+        newbie=True,
+    ))
+
+    actual_events = await action.run(dispatcher, tracker, domain)
+    assert actual_events == [
+        SlotSet('swiper_action_result', 'success'),
+        SlotSet('swiper_error', None),
+        SlotSet('swiper_error_trace', None),
+        SlotSet('swiper_state', 'do_not_disturb'),
+        SlotSet('partner_id', None),
+    ]
+    assert dispatcher.messages == []
+
+    user_vault = UserVault()  # create new instance to avoid hitting cache
+    assert user_vault.get_user('unit_test_user') == UserStateMachine(
+        user_id='unit_test_user',
+        state='do_not_disturb',
+        partner_id=None,
+        newbie=True,
+    )
