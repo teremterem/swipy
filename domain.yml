@@ -122,6 +122,11 @@ responses:
       Hooray! I found someone who wants to have a video chat! ☎️🎥
        
       Are you ready?
+  utter_no_one_was_found:
+  - text: |-
+      I am sorry, I couldn't find anyone😞
+       
+      I will try to get back to you when someone shows up.
   utter_someone_wants_to_chat:
   - text: |-
       Hey, someone is asking me to arrange a chitchat.

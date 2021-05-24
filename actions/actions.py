@@ -198,6 +198,8 @@ class ActionFindPartner(BaseSwiperAction):
                 ),
             ]
 
+        dispatcher.utter_message(response='utter_no_one_was_found')
+
         # noinspection PyUnresolvedReferences
         current_user.become_ok_to_chitchat()
         user_vault.save(current_user)
@@ -221,12 +223,12 @@ class ActionAskToJoin(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        dispatcher.utter_message(response='utter_someone_wants_to_chat')
-
         partner_id = tracker.get_slot(rasa_callbacks.PARTNER_ID_SLOT)
         # noinspection PyUnresolvedReferences
         current_user.become_asked_to_join(partner_id)
         user_vault.save(current_user)
+
+        dispatcher.utter_message(response='utter_someone_wants_to_chat')
 
         return [
             SlotSet(
