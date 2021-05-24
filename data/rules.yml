@@ -47,6 +47,26 @@ rules:
   - intent: want_chitchat
   - action: utter_ok_arranging_chitchat
   - action: action_find_partner
+- rule: the bot greets the user, offers chitchat but the user denies
+  steps:
+  - action: utter_greet_offer_chitchat
+  - intent: deny
+  - action: utter_help_lonely_person
+- rule: the bot explains how it works but the user denies
+  steps:
+  - action: utter_how_it_works
+  - intent: deny
+  - action: utter_help_lonely_person
+- rule: the bot responds to a sad user, offers chitchat but the user denies
+  steps:
+  - action: utter_sad_offer_chitchat
+  - intent: deny
+  - action: utter_help_lonely_person
+- rule: the bot responds to an out-of-scope intent, offers chitchat instead but the user denies
+  steps:
+  - action: utter_out_of_scope_offer_chitchat
+  - intent: deny
+  - action: utter_help_lonely_person
 - rule: someone else asks the user to join a video chat
   steps:
   - intent: EXTERNAL_ask_to_join
