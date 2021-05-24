@@ -204,7 +204,7 @@ class ActionFindPartner(BaseSwiperAction):
         ]
 
 
-class ActionAskToJoin(BaseSwiperAction):  # TODO oleksandr: turn it into ActionBecomeAskedToJoin ?
+class ActionAskToJoin(BaseSwiperAction):
     def name(self) -> Text:
         return 'action_ask_to_join'
 
@@ -215,7 +215,6 @@ class ActionAskToJoin(BaseSwiperAction):  # TODO oleksandr: turn it into ActionB
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        # TODO oleksandr: use swiper_action_result to choose what to say using a rule or story instead ?
         dispatcher.utter_message(response='utter_someone_wants_to_chat')
 
         partner_id = tracker.get_slot(rasa_callbacks.PARTNER_ID_SLOT)
@@ -300,7 +299,6 @@ class ActionJoinRoom(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        # TODO oleksandr: use swiper_action_result to choose what to say using a rule or story instead ?
         # 'room_url' slot is expected to be set by the external caller
         dispatcher.utter_message(response='utter_found_partner_room_url')
 
