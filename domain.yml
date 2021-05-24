@@ -98,7 +98,7 @@ responses:
   - text: |-
       Great! Let me find someone for you to chitchat with.
        
-      I will get back to you soon.
+      I will get back to you soon...
   utter_help_lonely_person:
   - text: |-
       Got it!
@@ -121,19 +121,19 @@ responses:
       - I send both of you a video chat link.
   utter_found_someone:
   - text: |-
-      Hooray! I found someone who wants to have a video chat! ☎️🎥
+      Hooray! I found someone who wants to have a video chat! ☎️ 🎥
        
       Are you ready?
   utter_no_one_was_found:
   - text: |-
       I am sorry, but I couldn't find anyone😞
        
-      I will try to get back to you when someone shows up.
+      I will try to get back to you when someone shows up...
   utter_someone_wants_to_chat:
   - text: |-
       Hey! Someone is asking me to arrange a chitchat.
        
-      Would you be willing to jump into a video call right now? ☎️🎥
+      Would you be willing to jump into a video call right now? ☎️ 🎥
   utter_room_url:
   - text: |-
       Awesome! Here is the link to the video chat:
