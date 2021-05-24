@@ -96,6 +96,10 @@ rules:
   - intent: deny
   - action: action_do_not_disturb
   - action: utter_let_them_go_stop_bothering
+- rule: a partner rejected chitchat - we need to find someone else for the user
+  steps:
+  - intent: EXTERNAL_find_partner
+  - action: action_find_partner
 - rule: the bot lets a partner go, asks if the user doesn't want to be bothered and the user confirms
   steps:
   - action: utter_let_them_go_stop_bothering

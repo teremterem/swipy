@@ -362,6 +362,13 @@ class ActionDoNotDisturb(BaseSwiperAction):
         current_user.become_do_not_disturb()
         user_vault.save(current_user)
 
+        if current_user.state == UserState.ASKED_TO_JOIN:
+            partner = user_vault.get_user(current_user.partner_id)
+            # TODO oleksandr: reuse this condition ? (it is also present in ActionCreateRoom)
+            if partner.state == UserState.WAITING_PARTNER_ANSWER and partner.partner_id == current_user.user_id:
+                # force the original sender of the declined invitation to "move along" in their partner search
+                await rasa_callbacks.find_partner(partner.user_id)
+
         return [
             SlotSet(
                 key=SWIPER_ACTION_RESULT_SLOT,

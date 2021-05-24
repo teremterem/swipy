@@ -38,6 +38,14 @@ async def join_room(receiver_user_id: Text, sender_user_id: Text, room_url: Text
     )
 
 
+async def find_partner(receiver_user_id: Text) -> Dict[Text, Any]:
+    return await _trigger_external_rasa_intent(
+        receiver_user_id,
+        'EXTERNAL_find_partner',
+        {},
+    )
+
+
 async def _trigger_external_rasa_intent(
         receiver_user_id: Text,
         intent_name: Text,

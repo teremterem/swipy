@@ -49,6 +49,9 @@ class NaiveUserVault(IUserVault, ABC):
         Unlike `_get_user`, this method creates the user if the user does not exist yet
         (as well as relies on a so called first level cache when the same user is requested multiple times).
         """
+        if not user_id:
+            raise ValueError('user_id cannot be empty')
+
         user = self._user_cache.get(user_id)
         # we are relying on None instead of a sentinel object to test if it is a miss
         # because get_user is never expected to return None anyways
