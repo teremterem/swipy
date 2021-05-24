@@ -31,6 +31,8 @@ intents:
     use_entities: true
 - EXTERNAL_join_room:
     use_entities: true
+- EXTERNAL_find_partner:
+    use_entities: true
 entities:
 - dietcls_time
 - partner_id
