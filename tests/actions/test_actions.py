@@ -46,8 +46,10 @@ async def test_user_vault_cache_not_reused_between_action_runs(
     mock_ddb_get_user.assert_called_once_with('unit_test_user')
 
     await action.run(dispatcher, tracker, domain)
-    assert mock_ddb_get_user.call_count == 2  # new run should use new cache
-    mock_ddb_get_user.assert_called_with('unit_test_user')
+    assert mock_ddb_get_user.mock_calls == [
+        call('unit_test_user'),
+        call('unit_test_user'),  # new run should use new cache
+    ]
 
 
 @pytest.mark.asyncio

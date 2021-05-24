@@ -95,10 +95,17 @@ class BaseSwiperAction(Action, ABC):
                     value=stack_trace_to_str(e),
                 ))
 
-        events.append(SlotSet(
-            key=SWIPER_STATE_SLOT,
-            value=user_vault.get_user(tracker.sender_id).state,  # invoke get_user once again (just in case)
-        ))
+        current_user = user_vault.get_user(tracker.sender_id)  # invoke get_user once again (just in case)
+        events.extend([
+            SlotSet(
+                key=SWIPER_STATE_SLOT,
+                value=current_user.state,
+            ),
+            SlotSet(
+                key=rasa_callbacks.PARTNER_ID_SLOT,
+                value=current_user.partner_id,
+            ),
+        ])
         return events
 
 
@@ -185,10 +192,6 @@ class ActionFindPartner(BaseSwiperAction):
                 SlotSet(
                     key=SWIPER_ACTION_RESULT_SLOT,
                     value=SwiperActionResult.PARTNER_HAS_BEEN_ASKED,
-                ),
-                SlotSet(
-                    key=rasa_callbacks.PARTNER_ID_SLOT,
-                    value=partner.user_id,
                 ),
             ]
 
