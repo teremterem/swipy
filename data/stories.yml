@@ -1,24 +1,11 @@
 version: "2.0"
 stories:
-- story: user greeted and then aggreed for chitchat
-  steps:
-  - intent: greet
-  - action: utter_greet_offer_chitchat
-  - intent: affirm
-  - action: utter_ok_arranging_chitchat
-  - action: action_find_partner
 - story: user greeted but refused to chitchat
   steps:
   - intent: greet
   - action: utter_greet_offer_chitchat
   - intent: deny
   - action: utter_help_lonely_person
-- story: bot explained how it worked and user agreed to try it out
-  steps:
-  - action: utter_how_it_works
-  - intent: affirm
-  - action: utter_ok_arranging_chitchat
-  - action: action_find_partner
 - story: bot explained how it worked but user denied to try it out
   steps:
   - action: utter_how_it_works
@@ -38,12 +25,6 @@ stories:
   steps:
   - intent: mood_unhappy
   - action: utter_sad_offer_chitchat
-- story: bot was answering to a sad user and user agreed to try it out
-  steps:
-  - action: utter_sad_offer_chitchat
-  - intent: affirm
-  - action: utter_ok_arranging_chitchat
-  - action: action_find_partner
 - story: bot was answering to a sad user but user denied to try it out
   steps:
   - action: utter_sad_offer_chitchat
