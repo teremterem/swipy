@@ -78,14 +78,17 @@ responses:
       I can arrange a video chitchat with another human for you 😉
   utter_sad_offer_chitchat:
   - text: |-
-      Do you want to have a video chitchat with another human?
-      If you're feeling down that may or may not cheer you up. It is still worth a try, though.
-      Do you want me to arrange it for you?
+      I am sorry that you're feeling down😞
+       
+      Do you want me to put you on a video call with someone?
+       
+      This may or may not help but is still worth a try. This is what I am here for.
   utter_out_of_scope_offer_chitchat:
   - text: |-
       I'm sorry, I cannot help you with that.
        
       I can arrange a video chitchat with another human for you, however.
+       
       Do you want me to do that?
   utter_out_of_scope:
   - text: I'm sorry, I cannot help you with that.
@@ -95,9 +98,17 @@ responses:
        
       I will get back to you soon.
   utter_help_lonely_person:
-  - text: Ok, and if someone else felt lonely and wanted a video chitchat, would it be ok if I pinged you then?
+  - text: |-
+    Got it!
+     
+    And what if someone else felt lonely / wanted a video chitchat?
+     
+    Would you be willing to consider joining then?
   utter_thanks_for_being_ok_to_chitchat:
-  - text: Thank you, I appreciate this a lot! I will get back to you when someone else asks me for a chitchat.
+  - text: |-
+      Thank you, I appreciate this!
+       
+      I will get back to you when someone else asks me for a chitchat.
   utter_how_it_works:
   - text: |-
       I can arrange a video chitchat with another human for you.
@@ -113,7 +124,7 @@ responses:
       Are you ready?
   utter_someone_wants_to_chat:
   - text: |-
-      Hey, someone is asking me to arrange a chitchat for them.
+      Hey, someone is asking me to arrange a chitchat.
        
       Would you be willing to jump into a video call right now? ☎️🎥
   utter_room_url:
@@ -143,8 +154,9 @@ responses:
   - text: |-
       Ok, I will not bother you.
        
-      If you change your mind, however, and decide that you want to have a chitchat with someone just let me know. I'll be here.
-      Hope to see soon, bye!
+      But if you change your mind and decide that you want to have a chitchat with someone just let me know - I'll be here.
+       
+      Hope to see soon!
   utter_iamabot:
   - text: I am a bot, powered by Rasa.
 actions:
