@@ -43,7 +43,9 @@ async def test_user_vault_cache_not_reused_between_action_runs(
     action = SomeSwiperAction()
 
     await action.run(dispatcher, tracker, domain)
-    mock_ddb_get_user.assert_called_once_with('unit_test_user')
+    assert mock_ddb_get_user.mock_calls == [
+        call('unit_test_user'),
+    ]
 
     await action.run(dispatcher, tracker, domain)
     assert mock_ddb_get_user.mock_calls == [
@@ -54,7 +56,7 @@ async def test_user_vault_cache_not_reused_between_action_runs(
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('ddb_unit_test_user')
-async def test_swiper_state_slot_is_set_after_action_run(
+async def test_swiper_state_and_partner_id_slots_are_set_after_action_run(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
@@ -72,10 +74,12 @@ async def test_swiper_state_slot_is_set_after_action_run(
         ) -> List[Dict[Text, Any]]:
             assert _current_user.user_id == 'unit_test_user'
             assert _current_user.state == 'new'
+            assert _current_user.partner_id is None
 
             _user_vault.save(UserStateMachine(
                 user_id=_current_user.user_id,
                 state=UserState.OK_TO_CHITCHAT,
+                partner_id='some_partner_id',
             ))  # save a completely different instance of the current user
             return []
 
@@ -86,6 +90,7 @@ async def test_swiper_state_slot_is_set_after_action_run(
         SlotSet('swiper_error', None),
         SlotSet('swiper_error_trace', None),
         SlotSet('swiper_state', 'ok_to_chitchat'),  # the action is expected to use the most recent value of state
+        SlotSet('partner_id', 'some_partner_id'),  # the action is expected to use the most recent value of partner_id
     ]
     assert dispatcher.messages == []
 
@@ -107,6 +112,7 @@ async def test_action_session_start_without_slots(
         SlotSet('swiper_error', None),
         SlotSet('swiper_error_trace', None),
         SlotSet('swiper_state', 'new'),  # state taken from UserVault
+        SlotSet('partner_id', None),  # partner_id taken from UserVault
         ActionExecuted('action_listen'),
     ]
     assert dispatcher.messages == []
@@ -152,6 +158,7 @@ async def test_action_session_start_with_slots(
     tracker.add_slots([
         SlotSet('my_slot', 'value'),
         SlotSet('swiper_state', 'do_not_disturb'),  # expected to be replaced rather than carried over
+        SlotSet('partner_id', 'some_old_partner'),  # expected to be replaced rather than carried over
         SlotSet('another-slot', 'value2'),
     ])
 
@@ -160,6 +167,7 @@ async def test_action_session_start_with_slots(
         SlotSet('swiper_error', None),
         SlotSet('swiper_error_trace', None),
         SlotSet('swiper_state', 'ok_to_chitchat'),  # state taken from UserVault rather than carried over
+        SlotSet('partner_id', None),  # partner_id taken from UserVault rather than carried over
         ActionExecuted(action_name='action_listen'),
     ]
 

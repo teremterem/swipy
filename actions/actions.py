@@ -122,7 +122,10 @@ class ActionSessionStart(BaseSwiperAction):
         return [
             SlotSet(key=slot_key, value=slot_value)
             for slot_key, slot_value in tracker.slots.items()
-            if slot_key != SWIPER_STATE_SLOT
+            if slot_key not in [
+                SWIPER_STATE_SLOT,
+                rasa_callbacks.PARTNER_ID_SLOT,
+            ]
         ]
 
     async def swipy_run(
