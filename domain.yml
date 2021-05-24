@@ -27,8 +27,6 @@ intents:
     use_entities: true
 - want_chitchat:
     use_entities: true
-- agree:
-    use_entities: true
 - EXTERNAL_ask_to_join:
     use_entities: true
 - EXTERNAL_join_room:

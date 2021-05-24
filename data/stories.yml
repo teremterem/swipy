@@ -22,16 +22,11 @@ stories:
   - action: utter_room_url
 - story: bot found someone but user refused to join chitchat
   steps:
-  - action: utter_found_someone
+  - action: utter_someone_wants_to_chat
   - intent: deny
   - action: utter_let_them_go_stop_bothering
   - intent: affirm
   - action: utter_hope_to_see_you_later
-- story: bot asked to help lonely person and user agreed
-  steps:
-  - action: utter_help_lonely_person
-  - intent: affirm
-  - action: utter_found_someone
 - story: bot asked to help lonely person but user denied
   steps:
   - action: utter_help_lonely_person
@@ -58,7 +53,7 @@ stories:
 - story: bot explained how it worked and user agreed to try it out
   steps:
   - action: utter_how_it_works
-  - intent: agree
+  - intent: affirm
   - action: utter_ok_arranging_chitchat
   - action: action_find_partner
 - story: bot explained how it worked but user denied to try it out
@@ -69,7 +64,7 @@ stories:
 - story: bot was answering to a sad user and user agreed to try it out
   steps:
   - action: utter_sad_offer_chitchat
-  - intent: agree
+  - intent: affirm
   - action: utter_ok_arranging_chitchat
   - action: action_find_partner
 - story: bot was answering to a sad user but user denied to try it out
