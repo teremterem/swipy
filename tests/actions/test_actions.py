@@ -588,7 +588,7 @@ async def test_action_join_room(
 
     user_vault = UserVault()
     user_vault.save(UserStateMachine(
-        user_id='unit_test_user',  # receiver of the ask
+        user_id='unit_test_user',  # the asker
         state='waiting_partner_answer',
         partner_id='partner_that_accepted',
         newbie=True,
@@ -619,8 +619,54 @@ async def test_action_join_room(
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
-        user_id='unit_test_user',  # receiver of the ask
+        user_id='unit_test_user',  # the asker
         state='ok_to_chitchat',  # user joined the chat and ok_to_chitchat merely allows them to be invited again later
         partner_id='partner_that_accepted',
         newbie=False,  # accepting the very first video chitchat graduates the user from newbie
+    )
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures('create_user_state_machine_table')
+async def test_action_become_ok_to_chitchat(
+        tracker: Tracker,
+        dispatcher: CollectingDispatcher,
+        domain: Dict[Text, Any],
+) -> None:
+    action = actions.ActionBecomeOkToChitchat()
+    assert action.name() == 'action_become_ok_to_chitchat'
+
+    user_vault = UserVault()
+    user_vault.save(UserStateMachine(
+        user_id='unit_test_user',
+        state='do_not_disturb',
+        partner_id='the_asker',
+        newbie=True,
+    ))
+
+    actual_events = await action.run(dispatcher, tracker, domain)
+    assert actual_events == [
+        SlotSet('swiper_action_result', 'success'),
+        SlotSet('swiper_error', None),
+        SlotSet('swiper_error_trace', None),
+        SlotSet('swiper_state', 'ok_to_chitchat'),
+        SlotSet('partner_id', None),
+    ]
+    assert dispatcher.messages == [{
+        'attachment': None,
+        'buttons': [],
+        'custom': {},
+        'elements': [],
+        'image': None,
+        'response': 'utter_thanks_for_being_ok_to_chitchat',
+        'template': 'utter_thanks_for_being_ok_to_chitchat',
+        'text': None,
+    }]
+
+    user_vault = UserVault()  # create new instance to avoid hitting cache
+    assert user_vault.get_user('unit_test_user') == UserStateMachine(
+        user_id='unit_test_user',
+        state='ok_to_chitchat',
+        partner_id=None,
+        newbie=True,
     )

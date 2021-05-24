@@ -318,3 +318,28 @@ class ActionJoinRoom(BaseSwiperAction):
                 value=SwiperActionResult.SUCCESS,
             ),
         ]
+
+
+class ActionBecomeOkToChitchat(BaseSwiperAction):
+    def name(self) -> Text:
+        return 'action_become_ok_to_chitchat'
+
+    async def swipy_run(
+            self, dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
+            current_user: UserStateMachine,
+            user_vault: IUserVault,
+    ) -> List[Dict[Text, Any]]:
+        dispatcher.utter_message(response='utter_thanks_for_being_ok_to_chitchat')
+
+        # noinspection PyUnresolvedReferences
+        current_user.become_ok_to_chitchat()
+        user_vault.save(current_user)
+
+        return [
+            SlotSet(
+                key=SWIPER_ACTION_RESULT_SLOT,
+                value=SwiperActionResult.SUCCESS,
+            ),
+        ]
