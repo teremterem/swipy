@@ -59,7 +59,7 @@ class UserStateMachine(UserModel):
         )
         # noinspection PyTypeChecker
         self.machine.add_transition(
-            trigger='accept_invitation',
+            trigger='join_room',
             source=[
                 UserState.ASKED_TO_JOIN,
                 UserState.WAITING_PARTNER_ANSWER,
@@ -69,8 +69,8 @@ class UserStateMachine(UserModel):
         )
         # noinspection PyTypeChecker
         self.machine.add_transition(
-            trigger='reject_invitation',
-            source=UserState.ASKED_TO_JOIN,
+            trigger='become_do_not_disturb',
+            source='*',
             dest=UserState.DO_NOT_DISTURB,
             before=[self.drop_partner_id],
         )

@@ -279,7 +279,7 @@ class ActionCreateRoom(BaseSwiperAction):
         await rasa_callbacks.join_room(current_user.partner_id, current_user.user_id, room_url)
 
         # noinspection PyUnresolvedReferences
-        current_user.accept_invitation()
+        current_user.join_room()
         user_vault.save(current_user)
 
         return [
@@ -309,7 +309,7 @@ class ActionJoinRoom(BaseSwiperAction):
         dispatcher.utter_message(response='utter_found_partner_room_url')
 
         # noinspection PyUnresolvedReferences
-        current_user.accept_invitation()
+        current_user.join_room()
         user_vault.save(current_user)
 
         return [
@@ -335,6 +335,29 @@ class ActionBecomeOkToChitchat(BaseSwiperAction):
 
         # noinspection PyUnresolvedReferences
         current_user.become_ok_to_chitchat()
+        user_vault.save(current_user)
+
+        return [
+            SlotSet(
+                key=SWIPER_ACTION_RESULT_SLOT,
+                value=SwiperActionResult.SUCCESS,
+            ),
+        ]
+
+
+class ActionDoNotDisturb(BaseSwiperAction):
+    def name(self) -> Text:
+        return 'action_do_not_disturb'
+
+    async def swipy_run(
+            self, dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
+            current_user: UserStateMachine,
+            user_vault: IUserVault,
+    ) -> List[Dict[Text, Any]]:
+        # noinspection PyUnresolvedReferences
+        current_user.become_do_not_disturb()
         user_vault.save(current_user)
 
         return [
