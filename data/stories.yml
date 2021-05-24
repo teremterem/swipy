@@ -1,32 +1,5 @@
 version: "2.0"
 stories:
-- story: user asked the bot if the bot is a bot
-  steps:
-  - intent: bot_challenge
-  - action: utter_iamabot
-- story: user asked how the bot works
-  steps:
-  - intent: how_it_works
-  - action: utter_how_it_works
-- story: user asked not to bother them
-  steps:
-  - intent: dont_bother_me
-  - action: utter_hope_to_see_you_later
-- story: bot found someone and user aggreed to join chitchat
-  steps:
-  - action: utter_someone_wants_to_chat
-  - or:
-    - intent: affirm
-    - intent: want_chitchat
-  - action: action_create_room
-  - action: utter_room_url
-- story: bot found someone but user refused to join chitchat
-  steps:
-  - action: utter_someone_wants_to_chat
-  - intent: deny
-  - action: utter_let_them_go_stop_bothering
-  - intent: affirm
-  - action: utter_hope_to_see_you_later
 - story: bot asked to help lonely person but user denied
   steps:
   - action: utter_help_lonely_person
