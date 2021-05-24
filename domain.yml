@@ -80,7 +80,7 @@ responses:
       I can arrange a video chitchat with another human for you 😉
   utter_sad_offer_chitchat:
   - text: |-
-      I am sorry that you're feeling down😞
+      I am sorry that you're feeling down 😞
        
       Do you want me to put you on a video call with someone?
        
@@ -126,7 +126,7 @@ responses:
       Are you ready?
   utter_no_one_was_found:
   - text: |-
-      I am sorry, but I couldn't find anyone😞
+      I am sorry, but I couldn't find anyone 😞
        
       I will try to get back to you when someone shows up...
   utter_someone_wants_to_chat:
@@ -152,7 +152,7 @@ responses:
       P. S. Let me know how did it go when you're done 😉
   utter_let_them_go_stop_bothering:
   - text: |-
-      Ok, I will let that person go then😞
+      Ok, I will let that person go then 😞
        
       Do you want me to stop bothering you for awhile?
   utter_stop_bothering:
