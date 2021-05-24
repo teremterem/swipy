@@ -425,7 +425,7 @@ async def test_action_create_room(
         SlotSet('swiper_error', None),
         SlotSet('swiper_error_trace', None),
         SlotSet('swiper_state', 'ok_to_chitchat'),
-        SlotSet('partner_id', 'an_asker'),
+        SlotSet('partner_id', None),
     ]
     assert dispatcher.messages == []
 
@@ -440,7 +440,7 @@ async def test_action_create_room(
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
         user_id='unit_test_user',  # receiver of the ask
         state='ok_to_chitchat',  # user joined the chat and ok_to_chitchat merely allows them to be invited again later
-        partner_id='an_asker',
+        partner_id=None,
         newbie=False,  # accepting the very first video chitchat graduates the user from newbie
     )
 
@@ -604,7 +604,7 @@ async def test_action_join_room(
         SlotSet('swiper_error', None),
         SlotSet('swiper_error_trace', None),
         SlotSet('swiper_state', 'ok_to_chitchat'),
-        SlotSet('partner_id', 'partner_that_accepted'),
+        SlotSet('partner_id', None),
     ]
     assert dispatcher.messages == [{
         'attachment': None,
@@ -621,7 +621,7 @@ async def test_action_join_room(
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
         user_id='unit_test_user',  # the asker
         state='ok_to_chitchat',  # user joined the chat and ok_to_chitchat merely allows them to be invited again later
-        partner_id='partner_that_accepted',
+        partner_id=None,
         newbie=False,  # accepting the very first video chitchat graduates the user from newbie
     )
 

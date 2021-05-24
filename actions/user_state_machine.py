@@ -65,7 +65,10 @@ class UserStateMachine(UserModel):
                 UserState.WAITING_PARTNER_ANSWER,
             ],
             dest=UserState.OK_TO_CHITCHAT,
-            before=[self.graduate_from_newbie],  # TODO oleksandr: should partner_id be dropped ? I would say, yes.
+            before=[
+                self.graduate_from_newbie,
+                self.drop_partner_id,
+            ],
         )
         # noinspection PyTypeChecker
         self.machine.add_transition(

@@ -112,7 +112,7 @@ def test_join_room(source_state: Text, newbie_status: bool) -> None:
     user.join_room()
 
     assert user.state == 'ok_to_chitchat'
-    assert user.partner_id == 'asker_id'
+    assert user.partner_id is None
     assert user.newbie is False  # users stop being newbies as soon as they accept their first video chitchat
 
 
