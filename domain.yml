@@ -108,19 +108,21 @@ responses:
       - I send both of you a video chat link.
   utter_found_someone:
   - text: |-
-      Hooray! I found someone who wants to have a video chat!
+      Hooray! I found someone who wants to have a video chat! ☎️🎥
        
       Are you ready?
   utter_someone_wants_to_chat:
   - text: |-
       Hey, someone is asking me to arrange a chitchat for them.
        
-      Would you be willing to jump into a video call right now?
+      Would you be willing to jump into a video call right now? ☎️🎥
   utter_room_url:
   - text: |-
       Awesome! Here is the link to the video chat:
        
       {room_url}
+       
+      P. S. Let me know how did the call go after you're done.
   utter_found_partner_room_url:
   - text: |-
       Hooray! I have found someone who wants to have a chitchat.
@@ -128,6 +130,8 @@ responses:
       Here is the link to the video chat:
        
       {room_url}
+       
+      P. S. Let me know how did the call go after you're done.
   utter_let_them_go_stop_bothering:
   - text: |-
       Ok, I will let that person go then😞
