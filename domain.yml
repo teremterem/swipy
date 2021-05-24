@@ -99,11 +99,11 @@ responses:
       I will get back to you soon.
   utter_help_lonely_person:
   - text: |-
-    Got it!
-     
-    And what if someone else felt lonely / wanted a video chitchat?
-     
-    Would you be willing to consider joining then?
+      Got it!
+       
+      And what if someone else felt lonely / wanted a video chitchat?
+       
+      Would you be willing to consider joining then?
   utter_thanks_for_being_ok_to_chitchat:
   - text: |-
       Thank you, I appreciate this!
