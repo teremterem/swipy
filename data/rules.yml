@@ -10,6 +10,14 @@ rules:
   steps:
   - intent: how_it_works
   - action: utter_how_it_works
+- rule: user says that they are sad
+  steps:
+  - intent: mood_unhappy
+  - action: utter_sad_offer_chitchat
+- rule: user asks for something that is out of scope
+  steps:
+  - intent: out_of_scope
+  - action: utter_out_of_scope_offer_chitchat
 - rule: the bot greets the user, offers chitchat and the user agrees
   steps:
   - action: utter_greet_offer_chitchat
@@ -32,6 +40,11 @@ rules:
   steps:
   - action: utter_out_of_scope_offer_chitchat
   - intent: affirm
+  - action: utter_ok_arranging_chitchat
+  - action: action_find_partner
+- rule: user asks for chitchat directly
+  steps:
+  - intent: want_chitchat
   - action: utter_ok_arranging_chitchat
   - action: action_find_partner
 - rule: someone else asks the user to join a video chat
