@@ -140,7 +140,7 @@ responses:
        
       {room_url}
        
-      P. S. Let me know how did the call go after you're done.
+      P. S. Let me know how did it go when you're done 😉
   utter_found_partner_room_url:
   - text: |-
       Hooray! I have found someone who wants to have a chitchat.
@@ -149,7 +149,7 @@ responses:
        
       {room_url}
        
-      P. S. Let me know how did the call go after you're done.
+      P. S. Let me know how did it go when you're done 😉
   utter_let_them_go_stop_bothering:
   - text: |-
       Ok, I will let that person go then😞
