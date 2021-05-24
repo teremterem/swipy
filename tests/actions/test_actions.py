@@ -274,7 +274,16 @@ async def test_action_find_partner_no_one(
         SlotSet('swiper_state', 'ok_to_chitchat'),
         SlotSet('partner_id', None),
     ]
-    assert dispatcher.messages == []
+    assert dispatcher.messages == [{
+        'attachment': None,
+        'buttons': [],
+        'custom': {},
+        'elements': [],
+        'image': None,
+        'response': 'utter_no_one_was_found',
+        'template': 'utter_no_one_was_found',
+        'text': None,
+    }]
 
     assert mock_get_random_available_user.mock_calls == [
         call(exclude_user_id='unit_test_user', newbie=True),
