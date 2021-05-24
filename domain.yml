@@ -129,7 +129,7 @@ responses:
       I will try to get back to you when someone shows up.
   utter_someone_wants_to_chat:
   - text: |-
-      Hey, someone is asking me to arrange a chitchat.
+      Hey! Someone is asking me to arrange a chitchat...
        
       Would you be willing to jump into a video call right now? ☎️🎥
   utter_room_url:
