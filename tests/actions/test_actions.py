@@ -492,6 +492,7 @@ async def test_action_create_room_partner_not_waiting(
         SlotSet('swiper_error', None),
         SlotSet('swiper_error_trace', None),
         SlotSet('swiper_state', 'ok_to_chitchat'),
+        SlotSet('partner_id', None),
     ]
     assert dispatcher.messages == []
 
@@ -564,6 +565,7 @@ async def test_action_create_room_invalid_state(
         SlotSet('swiper_action_result', 'error'),
         SlotSet('swiper_error', expected_swiper_error),
         SlotSet('swiper_state', current_user.state),
+        SlotSet('partner_id', current_user.partner_id),
     ]
     assert dispatcher.messages == []
 
@@ -602,6 +604,7 @@ async def test_action_join_room(
         SlotSet('swiper_error', None),
         SlotSet('swiper_error_trace', None),
         SlotSet('swiper_state', 'ok_to_chitchat'),
+        SlotSet('partner_id', 'partner_that_accepted'),
     ]
     assert dispatcher.messages == [{
         'attachment': None,
