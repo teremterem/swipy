@@ -126,7 +126,7 @@ responses:
       Are you ready?
   utter_no_one_was_found:
   - text: |-
-      I am sorry but I couldn't find anyone😞
+      I am sorry, but I couldn't find anyone😞
        
       I will try to get back to you when someone shows up.
   utter_someone_wants_to_chat:
