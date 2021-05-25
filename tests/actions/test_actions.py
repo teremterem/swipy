@@ -697,7 +697,7 @@ async def test_action_become_ok_to_chitchat(
                 partner_id=None,
                 newbie=True,
             ),
-            False,
+            False,  # find_partner should not be called for "the asker"
     ),
     (
             UserStateMachine(
@@ -712,12 +712,12 @@ async def test_action_become_ok_to_chitchat(
                 partner_id='someone_else',  # the asker is already waiting for someone else at this point
                 newbie=True,
             ),
-            False,
+            False,  # find_partner should not be called for "the asker"
     ),
     (
             UserStateMachine(
                 user_id='unit_test_user',
-                state='waiting_partner_answer',
+                state='waiting_partner_answer',  # current user is not even asked
                 partner_id='the_asker',  # TODO oleksandr: this use case is weird - think it through and comment
                 newbie=True,
             ),
@@ -727,7 +727,7 @@ async def test_action_become_ok_to_chitchat(
                 partner_id='unit_test_user',
                 newbie=True,
             ),
-            False,
+            False,  # find_partner should not be called for "the asker"
     ),
     (
             UserStateMachine(
@@ -742,7 +742,7 @@ async def test_action_become_ok_to_chitchat(
                 partner_id='unit_test_user',
                 newbie=True,
             ),
-            True,  # the asker is actually waiting for the current user to answer
+            True,  # the asker is actually waiting for the current user to answer - find_partner should be called
     ),
 ])
 @patch('actions.rasa_callbacks.find_partner')
