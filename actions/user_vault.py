@@ -21,7 +21,7 @@ class IUserVault(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def save_user(self, user: UserStateMachine) -> None:
+    def save(self, user: UserStateMachine) -> None:
         raise NotImplementedError()
 
 
@@ -49,6 +49,9 @@ class NaiveUserVault(IUserVault, ABC):
         Unlike `_get_user`, this method creates the user if the user does not exist yet
         (as well as relies on a so called first level cache when the same user is requested multiple times).
         """
+        if not user_id:
+            raise ValueError('user_id cannot be empty')
+
         user = self._user_cache.get(user_id)
         # we are relying on None instead of a sentinel object to test if it is a miss
         # because get_user is never expected to return None anyways
@@ -59,7 +62,7 @@ class NaiveUserVault(IUserVault, ABC):
 
         if user is None:
             user = UserStateMachine(user_id)
-            self.save_user(user)
+            self._save_user(user)
 
         self._user_cache[user_id] = user
         return user
@@ -78,12 +81,12 @@ class NaiveUserVault(IUserVault, ABC):
         self._user_cache[user.user_id] = user
         return user
 
-    def save_user(self, user: UserStateMachine) -> None:
+    def save(self, user: UserStateMachine) -> None:
         self._save_user(user)
         self._user_cache[user.user_id] = user
 
 
-class DdbUserVault(NaiveUserVault):
+class NaiveDdbUserVault(NaiveUserVault):
     def _get_user(self, user_id: Text) -> Optional[UserStateMachine]:
         # TODO oleksandr: is there a better way to ensure that the tests have a chance to mock boto3 ?
         from actions.aws_resources import user_state_machine_table
@@ -102,7 +105,7 @@ class DdbUserVault(NaiveUserVault):
 
         ddb_resp = user_state_machine_table.query(
             IndexName='by_state',
-            KeyConditionExpression=Key('state').eq(UserState.OK_FOR_CHITCHAT),
+            KeyConditionExpression=Key('state').eq(UserState.OK_TO_CHITCHAT),
             FilterExpression=filter_expression,
         )
         return ddb_resp.get('Items', [])
@@ -117,4 +120,4 @@ class DdbUserVault(NaiveUserVault):
         user_state_machine_table.put_item(Item=user_dict)
 
 
-UserVault: Type[IUserVault] = DdbUserVault
+UserVault: Type[IUserVault] = NaiveDdbUserVault

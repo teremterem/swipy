@@ -20,7 +20,7 @@ async def test_create_room(
             'privacy': 'public',
             'properties': {
                 'enable_network_ui': False,
-                'enable_prejoin_ui': True,
+                'enable_prejoin_ui': False,
                 'enable_new_call_ui': True,
                 'enable_screenshare': True,
                 'enable_chat': True,

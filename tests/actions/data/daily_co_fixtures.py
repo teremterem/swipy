@@ -11,7 +11,7 @@ def new_room1() -> Dict[Text, Any]:
             'enable_chat': True,
             'enable_network_ui': False,
             'enable_new_call_ui': True,
-            'enable_prejoin_ui': True,
+            'enable_prejoin_ui': False,
             'lang': 'en',
         },
         'created_at': '2021-05-09T16:41:17.424Z',

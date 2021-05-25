@@ -27,20 +27,43 @@ intents:
     use_entities: true
 - want_chitchat:
     use_entities: true
-- agree:
+- EXTERNAL_ask_to_join:
     use_entities: true
-- EXTERNAL_invite_chitchat_partner:
+- EXTERNAL_join_room:
+    use_entities: true
+- EXTERNAL_find_partner:
     use_entities: true
 entities:
 - dietcls_time
-- room_link
+- partner_id
+- room_url
 slots:
   swiper_state:
     type: rasa.shared.core.slots.TextSlot
     initial_value: null
     auto_fill: false
     influence_conversation: true
-  room_link:
+  swiper_action_result:
+    type: rasa.shared.core.slots.TextSlot
+    initial_value: null
+    auto_fill: false
+    influence_conversation: true
+  swiper_error:
+    type: rasa.shared.core.slots.TextSlot
+    initial_value: null
+    auto_fill: false
+    influence_conversation: false
+  swiper_error_trace:
+    type: rasa.shared.core.slots.TextSlot
+    initial_value: null
+    auto_fill: false
+    influence_conversation: false
+  partner_id:
+    type: rasa.shared.core.slots.TextSlot
+    initial_value: null
+    auto_fill: true
+    influence_conversation: false
+  room_url:
     type: rasa.shared.core.slots.TextSlot
     initial_value: null
     auto_fill: true
@@ -57,14 +80,17 @@ responses:
       I can arrange a video chitchat with another human for you 😉
   utter_sad_offer_chitchat:
   - text: |-
-      Do you want to have a video chitchat with another human?
-      If you're feeling down that may or may not cheer you up. It is still worth a try, though.
-      Do you want me to arrange it for you?
+      I am sorry that you're feeling down 😞
+       
+      Do you want me to put you on a video call with someone?
+       
+      This may or may not help but is still worth a try. This is what I am here for.
   utter_out_of_scope_offer_chitchat:
   - text: |-
       I'm sorry, I cannot help you with that.
        
       I can arrange a video chitchat with another human for you, however.
+       
       Do you want me to do that?
   utter_out_of_scope:
   - text: I'm sorry, I cannot help you with that.
@@ -72,9 +98,19 @@ responses:
   - text: |-
       Great! Let me find someone for you to chitchat with.
        
-      I will get back to you soon.
+      I will get back to you soon...
   utter_help_lonely_person:
-  - text: Ok, and if someone else felt lonely and wanted a video chitchat, would it be ok if I pinged you then?
+  - text: |-
+      Got it!
+       
+      And what if someone else felt lonely / wanted a video chitchat?
+       
+      Would you be willing to consider joining then?
+  utter_thanks_for_being_ok_to_chitchat:
+  - text: |-
+      Thank you, I appreciate this!
+       
+      I will get back to you when someone else asks me for a chitchat.
   utter_how_it_works:
   - text: |-
       I can arrange a video chitchat with another human for you.
@@ -85,17 +121,38 @@ responses:
       - I send both of you a video chat link.
   utter_found_someone:
   - text: |-
-      Hooray! I found someone who wants to have a video chat!
+      Hooray! I found someone who wants to have a video chat! ☎️ 🎥
        
       Are you ready?
-  utter_video_link:
+  utter_no_one_was_found:
+  - text: |-
+      I am sorry, but I couldn't find anyone 😞
+       
+      I will try to get back to you when someone shows up...
+  utter_someone_wants_to_chat:
+  - text: |-
+      Hey! Someone is asking me to arrange a chitchat.
+       
+      Would you be willing to jump into a video call right now? ☎️ 🎥
+  utter_room_url:
   - text: |-
       Awesome! Here is the link to the video chat:
        
-      {room_link}
+      {room_url}
+       
+      P. S. Let me know how did it go when you're done 😉
+  utter_found_partner_room_url:
+  - text: |-
+      Hooray! I have found someone who wants to have a chitchat.
+       
+      Here is the link to the video chat:
+       
+      {room_url}
+       
+      P. S. Let me know how did it go when you're done 😉
   utter_let_them_go_stop_bothering:
   - text: |-
-      Ok, I will let that person go then😞
+      Ok, I will let that person go then 😞
        
       Do you want me to stop bothering you for awhile?
   utter_stop_bothering:
@@ -104,12 +161,18 @@ responses:
   - text: |-
       Ok, I will not bother you.
        
-      If you change your mind, however, and decide that you want to have a chitchat with someone just let me know. I'll be here.
-      Hope to see soon, bye!
+      But if you change your mind and decide that you want to have a chitchat with someone just let me know - I'll be here.
+       
+      Hope to see soon!
   utter_iamabot:
   - text: I am a bot, powered by Rasa.
 actions:
 - action_session_start
-- action_find_someone
+- action_find_partner
+- action_ask_to_join
+- action_create_room
+- action_join_room
+- action_become_ok_to_chitchat
+- action_do_not_disturb
 forms: {}
 e2e_actions: []

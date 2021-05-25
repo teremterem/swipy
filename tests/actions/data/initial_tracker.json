@@ -2,7 +2,7 @@
   "sender_id": "unit_test_user",
   "slots": {
     "session_started_metadata": null,
-    "room_link": null
+    "room_url": null
   },
   "latest_message": {
     "intent": {},

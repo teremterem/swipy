@@ -46,7 +46,7 @@ def user4() -> UserStateMachine:
 def available_newbie1() -> UserStateMachine:
     return UserStateMachine(
         user_id='available_newbie_id1',
-        state=UserState.OK_FOR_CHITCHAT,
+        state=UserState.OK_TO_CHITCHAT,
         newbie=True,
     )
 
@@ -55,7 +55,7 @@ def available_newbie1() -> UserStateMachine:
 def available_newbie2() -> UserStateMachine:
     return UserStateMachine(
         user_id='available_newbie_id2',
-        state=UserState.OK_FOR_CHITCHAT,
+        state=UserState.OK_TO_CHITCHAT,
         newbie=True,
     )
 
@@ -64,7 +64,7 @@ def available_newbie2() -> UserStateMachine:
 def available_newbie3() -> UserStateMachine:
     return UserStateMachine(
         user_id='available_newbie_id3',
-        state=UserState.OK_FOR_CHITCHAT,
+        state=UserState.OK_TO_CHITCHAT,
         newbie=True,
     )
 
@@ -73,7 +73,7 @@ def available_newbie3() -> UserStateMachine:
 def available_veteran1() -> UserStateMachine:
     return UserStateMachine(
         user_id='available_veteran_id1',
-        state=UserState.OK_FOR_CHITCHAT,
+        state=UserState.OK_TO_CHITCHAT,
         newbie=False,
     )
 
@@ -82,7 +82,7 @@ def available_veteran1() -> UserStateMachine:
 def available_veteran2() -> UserStateMachine:
     return UserStateMachine(
         user_id='available_veteran_id2',
-        state=UserState.OK_FOR_CHITCHAT,
+        state=UserState.OK_TO_CHITCHAT,
         newbie=False,
     )
 
@@ -91,6 +91,6 @@ def available_veteran2() -> UserStateMachine:
 def available_veteran3() -> UserStateMachine:
     return UserStateMachine(
         user_id='available_veteran_id3',
-        state=UserState.OK_FOR_CHITCHAT,
+        state=UserState.OK_TO_CHITCHAT,
         newbie=False,
     )

@@ -7,14 +7,14 @@ from transitions import Machine
 class UserState:
     NEW = 'new'
     WAITING_PARTNER_ANSWER = 'waiting_partner_answer'
-    OK_FOR_CHITCHAT = 'ok_for_chitchat'
+    OK_TO_CHITCHAT = 'ok_to_chitchat'
     ASKED_TO_JOIN = 'asked_to_join'
     DO_NOT_DISTURB = 'do_not_disturb'
 
     all = [
         NEW,
         WAITING_PARTNER_ANSWER,
-        OK_FOR_CHITCHAT,
+        OK_TO_CHITCHAT,
         ASKED_TO_JOIN,
         DO_NOT_DISTURB,
     ]
@@ -45,36 +45,35 @@ class UserStateMachine(UserModel):
         )
         # noinspection PyTypeChecker
         self.machine.add_transition(
-            trigger='fail_to_find_partner',
+            trigger='become_ok_to_chitchat',
             source='*',
-            dest=UserState.OK_FOR_CHITCHAT,
-            before=[self.drop_partner_id],
-        )
-        # noinspection PyTypeChecker
-        self.machine.add_transition(
-            trigger='become_ok_for_chitchat',
-            source='*',
-            dest=UserState.OK_FOR_CHITCHAT,
+            dest=UserState.OK_TO_CHITCHAT,
             before=[self.drop_partner_id],
         )
         # noinspection PyTypeChecker
         self.machine.add_transition(
             trigger='become_asked_to_join',
-            source=UserState.OK_FOR_CHITCHAT,
+            source=UserState.OK_TO_CHITCHAT,
             dest=UserState.ASKED_TO_JOIN,
             before=[self.set_partner_id],
         )
         # noinspection PyTypeChecker
         self.machine.add_transition(
-            trigger='accept_invitation',
-            source=UserState.ASKED_TO_JOIN,
-            dest=UserState.OK_FOR_CHITCHAT,
-            before=[self.graduate_from_newbie],
+            trigger='join_room',
+            source=[
+                UserState.ASKED_TO_JOIN,
+                UserState.WAITING_PARTNER_ANSWER,
+            ],
+            dest=UserState.OK_TO_CHITCHAT,
+            before=[
+                self.graduate_from_newbie,
+                self.drop_partner_id,
+            ],
         )
         # noinspection PyTypeChecker
         self.machine.add_transition(
-            trigger='reject_invitation',
-            source=UserState.ASKED_TO_JOIN,
+            trigger='become_do_not_disturb',
+            source='*',
             dest=UserState.DO_NOT_DISTURB,
             before=[self.drop_partner_id],
         )

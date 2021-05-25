@@ -5,25 +5,26 @@ from unittest.mock import patch, MagicMock
 import pytest
 
 from actions.user_state_machine import UserStateMachine, UserState
-from actions.user_vault import UserVault, DdbUserVault
+from actions.user_vault import UserVault, NaiveDdbUserVault
 
 
 def test_user_vault_implementation_class() -> None:
-    assert UserVault == DdbUserVault
+    assert UserVault == NaiveDdbUserVault
 
 
 @pytest.mark.usefixtures('create_user_state_machine_table')
-def test_get_new_user(user_vault: UserVault) -> None:
+def test_get_new_user() -> None:
     from actions.aws_resources import user_state_machine_table
 
     assert not user_state_machine_table.scan()['Items']
 
-    user_state_machine = user_vault.get_user('new_user_id')
+    user_vault = UserVault()
+    new_user = user_vault.get_user('new_user_id')
 
-    assert user_state_machine.user_id == 'new_user_id'
-    assert user_state_machine.state == 'new'
-    assert user_state_machine.partner_id is None
-    assert user_state_machine.newbie is True
+    assert new_user.user_id == 'new_user_id'
+    assert new_user.state == 'new'
+    assert new_user.partner_id is None
+    assert new_user.newbie is True
 
     assert user_state_machine_table.scan()['Items'] == [{
         'user_id': 'new_user_id',
@@ -31,27 +32,34 @@ def test_get_new_user(user_vault: UserVault) -> None:
         'partner_id': None,
         'newbie': True,
     }]
+    assert user_vault.get_user('new_user_id') is new_user  # make sure the user was cached
 
 
-def test_get_existing_user(
-        user_vault: UserVault,
-        ddb_user1: UserStateMachine,
-) -> None:
+def test_get_existing_user(ddb_user1: UserStateMachine) -> None:
     from actions.aws_resources import user_state_machine_table
 
     assert len(user_state_machine_table.scan()['Items']) == 1
-    assert user_vault.get_user('existing_user_id1') == ddb_user1
+    user_vault = UserVault()
+    fetched_user = user_vault.get_user('existing_user_id1')
+    assert fetched_user == ddb_user1
     assert len(user_state_machine_table.scan()['Items']) == 1
+    assert user_vault.get_user('existing_user_id1') is fetched_user  # make sure the user was cached
+
+
+def test_get_user_empty_id() -> None:
+    user_vault = UserVault()
+    with pytest.raises(ValueError):
+        user_vault.get_user('')
 
 
 @patch.object(UserVault, '_get_user')
 def test_get_user_from_cache(
         mock_ddb_get_user: MagicMock,
-        user_vault: UserVault,
         user1: UserStateMachine,
 ) -> None:
     mock_ddb_get_user.return_value = user1
 
+    user_vault = UserVault()
     assert user_vault.get_user('existing_user_id1') is user1
     mock_ddb_get_user.assert_called_once_with('existing_user_id1')
     assert user_vault.get_user('existing_user_id1') is user1
@@ -86,7 +94,6 @@ def test_user_vault_cache_not_reused_between_instances(
 def test_get_random_available_user(
         choice_mock: MagicMock,
         list_available_user_dicts_mock: MagicMock,
-        user_vault: UserVault,
         ddb_user1: UserStateMachine,
         ddb_user2: UserStateMachine,
         ddb_user3: UserStateMachine,
@@ -98,6 +105,7 @@ def test_get_random_available_user(
     list_available_user_dicts_mock.return_value = list_of_dicts
     choice_mock.return_value = list_of_dicts[1]
 
+    user_vault = UserVault()
     actual_random_user = user_vault.get_random_available_user(
         exclude_user_id='existing_user_id1',
         newbie=newbie_filter,
@@ -117,13 +125,13 @@ def test_get_random_available_user(
 def test_no_available_user(
         choice_mock: MagicMock,
         list_available_user_dicts_mock: MagicMock,
-        user_vault: UserVault,
         newbie_filter: Optional[bool],
         empty_list_variant: Optional[list],
 ) -> None:
     list_available_user_dicts_mock.return_value = empty_list_variant
     choice_mock.side_effect = ValueError("secrets.choice shouldn't have been called with None or empty list")
 
+    user_vault = UserVault()
     assert user_vault.get_random_available_user('existing_user_id1', newbie=newbie_filter) is None
 
     list_available_user_dicts_mock.assert_called_once_with('existing_user_id1', newbie=newbie_filter)
@@ -131,16 +139,14 @@ def test_no_available_user(
 
 
 @pytest.mark.usefixtures('ddb_user1', 'ddb_user2', 'ddb_user3')
-def test_save_new_user(
-        user_vault: UserVault,
-        ddb_scan_of_three_users: List[Dict[Text, Any]],
-) -> None:
+def test_save_new_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> None:
     from actions.aws_resources import user_state_machine_table
 
     user_to_save = UserStateMachine('new_ddb_user_was_put')
 
     assert user_state_machine_table.scan()['Items'] == ddb_scan_of_three_users
-    user_vault.save_user(user_to_save)
+    user_vault = UserVault()
+    user_vault.save(user_to_save)
     assert user_state_machine_table.scan()['Items'] == [
         {
             'user_id': 'existing_user_id1',
@@ -171,10 +177,7 @@ def test_save_new_user(
 
 
 @pytest.mark.usefixtures('ddb_user1', 'ddb_user2', 'ddb_user3')
-def test_save_existing_user(
-        user_vault: UserVault,
-        ddb_scan_of_three_users: List[Dict[Text, Any]],
-) -> None:
+def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> None:
     from actions.aws_resources import user_state_machine_table
 
     user_to_save = UserStateMachine(
@@ -183,7 +186,8 @@ def test_save_existing_user(
     )
 
     assert user_state_machine_table.scan()['Items'] == ddb_scan_of_three_users
-    user_vault.save_user(user_to_save)
+    user_vault = UserVault()
+    user_vault.save(user_to_save)
     assert user_state_machine_table.scan()['Items'] == [
         {
             'user_id': 'existing_user_id1',
@@ -226,13 +230,13 @@ def test_save_existing_user(
             [
                 {
                     'user_id': 'available_newbie_id1',
-                    'state': 'ok_for_chitchat',
+                    'state': 'ok_to_chitchat',
                     'partner_id': None,
                     'newbie': True,
                 },
                 {
                     'user_id': 'available_newbie_id3',
-                    'state': 'ok_for_chitchat',
+                    'state': 'ok_to_chitchat',
                     'partner_id': None,
                     'newbie': True,
                 },
@@ -244,13 +248,13 @@ def test_save_existing_user(
             [
                 {
                     'user_id': 'available_veteran_id1',
-                    'state': 'ok_for_chitchat',
+                    'state': 'ok_to_chitchat',
                     'partner_id': None,
                     'newbie': False,
                 },
                 {
                     'user_id': 'available_veteran_id3',
-                    'state': 'ok_for_chitchat',
+                    'state': 'ok_to_chitchat',
                     'partner_id': None,
                     'newbie': False,
                 },
@@ -262,37 +266,37 @@ def test_save_existing_user(
             [
                 {
                     'user_id': 'available_newbie_id1',
-                    'state': 'ok_for_chitchat',
+                    'state': 'ok_to_chitchat',
                     'partner_id': None,
                     'newbie': True,
                 },
                 {
                     'user_id': 'available_veteran_id1',
-                    'state': 'ok_for_chitchat',
+                    'state': 'ok_to_chitchat',
                     'partner_id': None,
                     'newbie': False,
                 },
                 {
                     'user_id': 'available_newbie_id2',
-                    'state': 'ok_for_chitchat',
+                    'state': 'ok_to_chitchat',
                     'partner_id': None,
                     'newbie': True,
                 },
                 {
                     'user_id': 'available_veteran_id2',
-                    'state': 'ok_for_chitchat',
+                    'state': 'ok_to_chitchat',
                     'partner_id': None,
                     'newbie': False,
                 },
                 {
                     'user_id': 'available_newbie_id3',
-                    'state': 'ok_for_chitchat',
+                    'state': 'ok_to_chitchat',
                     'partner_id': None,
                     'newbie': True,
                 },
                 {
                     'user_id': 'available_veteran_id3',
-                    'state': 'ok_for_chitchat',
+                    'state': 'ok_to_chitchat',
                     'partner_id': None,
                     'newbie': False,
                 },
@@ -300,7 +304,6 @@ def test_save_existing_user(
     ),
 ])
 def test_ddb_user_vault_list_available_user_dicts(
-        user_vault: UserVault,
         ddb_scan_of_ten_users: List[Dict[Text, Any]],
         newbie_filter: bool,
         exclude_user_id: Text,
@@ -309,6 +312,7 @@ def test_ddb_user_vault_list_available_user_dicts(
     from actions.aws_resources import user_state_machine_table
 
     assert user_state_machine_table.scan()['Items'] == ddb_scan_of_ten_users
+    user_vault = UserVault()
     assert user_vault._list_available_user_dicts(exclude_user_id, newbie=newbie_filter) == expected_ddb_scan
 
 
@@ -320,31 +324,30 @@ def test_ddb_user_vault_list_available_user_dicts(
 )
 def test_ddb_user_vault_list_no_available_users_dicts(
         newbie_filter: Optional[bool],
-        user_vault: UserVault,
         ddb_scan_of_three_users: List[Dict[Text, Any]],
 ) -> None:
     from actions.aws_resources import user_state_machine_table
 
     assert user_state_machine_table.scan()['Items'] == ddb_scan_of_three_users
+    user_vault = UserVault()
     assert user_vault._list_available_user_dicts('existing_user_id1', newbie=newbie_filter) == []
 
 
 @pytest.mark.usefixtures('ddb_user1', 'ddb_user3')
-def test_ddb_user_vault_get_existing_user(
-        user_vault: UserVault,
-        ddb_user2: UserStateMachine,
-) -> None:
+def test_ddb_user_vault_get_existing_user(ddb_user2: UserStateMachine) -> None:
     from actions.aws_resources import user_state_machine_table
 
     assert len(user_state_machine_table.scan()['Items']) == 3
+    user_vault = UserVault()
     assert user_vault._get_user('existing_user_id2') == ddb_user2
     assert len(user_state_machine_table.scan()['Items']) == 3
 
 
 @pytest.mark.usefixtures('ddb_user1', 'ddb_user2', 'ddb_user3')
-def test_ddb_user_vault_get_nonexistent_user(user_vault: UserVault) -> None:
+def test_ddb_user_vault_get_nonexistent_user() -> None:
     from actions.aws_resources import user_state_machine_table
 
     assert len(user_state_machine_table.scan()['Items']) == 3
+    user_vault = UserVault()
     assert user_vault._get_user('there_is_no_such_user') is None
     assert len(user_state_machine_table.scan()['Items']) == 3

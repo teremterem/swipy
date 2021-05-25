@@ -34,6 +34,7 @@ pytest-env = "*"
 ipython = "*"
 ipdb = "*"
 moto = "*"
+coverage = "*"
 
 [requires]
 python_version = "3.8"
