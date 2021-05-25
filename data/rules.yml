@@ -95,6 +95,25 @@ rules:
   - intent: deny
   - action: action_do_not_disturb
   - action: utter_let_them_go_stop_bothering
+- rule: the bot offers to find a replacement for a partner that wasn't waiting anymore and the user agrees
+  condition:
+  - slot_was_set:
+    - swiper_action_result: partner_not_waiting_anymore
+  steps:
+  - action: action_create_room
+  - or:
+    - intent: affirm
+    - intent: want_chitchat
+  - action: utter_ok_arranging_chitchat
+  - action: action_find_partner
+- rule: the bot offers to find a replacement for a partner that wasn't waiting anymore but the user denies
+  condition:
+  - slot_was_set:
+    - swiper_action_result: partner_not_waiting_anymore
+  steps:
+  - action: action_create_room
+  - intent: deny
+  - action: action_become_ok_to_chitchat
 - rule: a partner rejected chitchat - we need to find someone else for the user
   steps:
   - intent: EXTERNAL_find_partner
