@@ -1,5 +1,6 @@
 .idea/
 .virtual_documents/
+.DS_Store
 
 models/
 credentials.yml
