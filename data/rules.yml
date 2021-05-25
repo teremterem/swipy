@@ -89,7 +89,6 @@ rules:
     - intent: affirm
     - intent: want_chitchat
   - action: action_create_room
-  - action: utter_room_url
 - rule: someone else wants to chat but the user refuses to join
   steps:
   - action: action_ask_to_join

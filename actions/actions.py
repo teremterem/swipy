@@ -267,6 +267,8 @@ class ActionCreateRoom(BaseSwiperAction):
             current_user.become_ok_to_chitchat()
             user_vault.save(current_user)
 
+            dispatcher.utter_message(response='utter_partner_already_gone')
+
             return [
                 SlotSet(
                     key=SWIPER_ACTION_RESULT_SLOT,
@@ -279,6 +281,13 @@ class ActionCreateRoom(BaseSwiperAction):
 
         # put partner into the room as well
         await rasa_callbacks.join_room(current_user.partner_id, current_user.user_id, room_url)
+
+        dispatcher.utter_message(
+            response='utter_room_url',
+            **{
+                rasa_callbacks.ROOM_URL_SLOT: room_url,
+            },
+        )
 
         # noinspection PyUnresolvedReferences
         current_user.join_room()
