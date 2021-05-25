@@ -51,31 +51,31 @@ rules:
   steps:
   - action: utter_greet_offer_chitchat
   - intent: deny
-  - action: utter_help_lonely_person
+  - action: utter_mind_helping_lonely_person
 - rule: the bot explains how it works but the user denies
   steps:
   - action: utter_how_it_works
   - intent: deny
-  - action: utter_help_lonely_person
+  - action: utter_mind_helping_lonely_person
 - rule: the bot responds to a sad user, offers chitchat but the user denies
   steps:
   - action: utter_sad_offer_chitchat
   - intent: deny
-  - action: utter_help_lonely_person
+  - action: utter_mind_helping_lonely_person
 - rule: the bot responds to an out-of-scope intent, offers chitchat instead but the user denies
   steps:
   - action: utter_out_of_scope_offer_chitchat
   - intent: deny
-  - action: utter_help_lonely_person
-- rule: the bot asks the user to stick around for the sake of other people and the user agrees
+  - action: utter_mind_helping_lonely_person
+- rule: the bot asks the user to stick around for the sake of other people and the user says they WOULD NOT mind
   steps:
-  - action: utter_help_lonely_person
-  - intent: affirm
-  - action: action_become_ok_to_chitchat
-- rule: the bot asks the user to stick around for the sake of other people but the user denies
-  steps:
-  - action: utter_help_lonely_person
+  - action: utter_mind_helping_lonely_person
   - intent: deny
+  - action: action_become_ok_to_chitchat
+- rule: the bot asks the user to stick around for the sake of other people but the user says they WOULD mind
+  steps:
+  - action: utter_mind_helping_lonely_person
+  - intent: affirm
   - action: action_do_not_disturb
   - action: utter_hope_to_see_you_later
 - rule: someone else asks the user to join a video chat
