@@ -683,23 +683,69 @@ async def test_action_become_ok_to_chitchat(
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('create_user_state_machine_table')
+@pytest.mark.parametrize('current_user, asker, find_partner_call_expected', [
+    (
+            UserStateMachine(
+                user_id='unit_test_user',
+                state='asked_to_join',
+                partner_id='the_asker',
+                newbie=True,
+            ),
+            UserStateMachine(
+                user_id='the_asker',
+                state='ok_to_chitchat',  # the asker isn't waiting for the current user anymore
+                partner_id=None,
+                newbie=True,
+            ),
+            False,
+    ),
+    (
+            UserStateMachine(
+                user_id='unit_test_user',
+                state='asked_to_join',
+                partner_id='the_asker',
+                newbie=True,
+            ),
+            UserStateMachine(
+                user_id='the_asker',
+                state='waiting_partner_answer',
+                partner_id='someone_else',  # the asker is already waiting for someone else at this point
+                newbie=True,
+            ),
+            False,
+    ),
+    (
+            UserStateMachine(
+                user_id='unit_test_user',
+                state='waiting_partner_answer',
+                partner_id='the_asker',  # TODO oleksandr: this use case is weird - think it through and comment
+                newbie=True,
+            ),
+            UserStateMachine(
+                user_id='the_asker',
+                state='waiting_partner_answer',
+                partner_id='unit_test_user',
+                newbie=True,
+            ),
+            False,
+    ),
+])
 @patch('actions.rasa_callbacks.find_partner')
 async def test_action_do_not_disturb(
         rasa_callbacks_find_partner_mock: AsyncMock,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
+        current_user: UserStateMachine,
+        asker: UserStateMachine,
+        find_partner_call_expected: bool,
 ) -> None:
     action = actions.ActionDoNotDisturb()
     assert action.name() == 'action_do_not_disturb'
 
     user_vault = UserVault()
-    user_vault.save(UserStateMachine(
-        user_id='unit_test_user',
-        state='asked_to_join',
-        partner_id='the_asker',
-        newbie=True,
-    ))
+    user_vault.save(current_user)
+    user_vault.save(asker)
 
     actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == [
@@ -711,7 +757,10 @@ async def test_action_do_not_disturb(
     ]
     assert dispatcher.messages == []
 
-    rasa_callbacks_find_partner_mock.assert_not_called()
+    if find_partner_call_expected:
+        rasa_callbacks_find_partner_mock.assert_called_once_with('the_asker')
+    else:
+        rasa_callbacks_find_partner_mock.assert_not_called()
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
@@ -720,3 +769,4 @@ async def test_action_do_not_disturb(
         partner_id=None,
         newbie=True,
     )
+    assert user_vault.get_user('the_asker') == asker  # ActionDoNotDisturb should not change the asker state directly
