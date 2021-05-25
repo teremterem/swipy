@@ -46,6 +46,12 @@ def test_get_existing_user(ddb_user1: UserStateMachine) -> None:
     assert user_vault.get_user('existing_user_id1') is fetched_user  # make sure the user was cached
 
 
+def test_get_user_empty_id() -> None:
+    user_vault = UserVault()
+    with pytest.raises(ValueError):
+        user_vault.get_user('')
+
+
 @patch.object(UserVault, '_get_user')
 def test_get_user_from_cache(
         mock_ddb_get_user: MagicMock,
