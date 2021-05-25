@@ -137,21 +137,11 @@ responses:
   utter_room_url:
   - custom:
       parse_mode: html
-      text: |-
-        Awesome!
-         
-        <b>Please follow this link to join the video call:</b>
-         
-        {room_url}
+      text: "Awesome!\n \n<b>Please follow this link to join the video call:</b>\n \n{room_url}"
   utter_found_partner_room_url:
   - custom:
       parse_mode: html
-      text: |-
-        Hooray! I have found someone who wants to chitchat!
-         
-        <b>Please follow this link to join the video call:</b>
-         
-        {room_url}
+      text: "Hooray! I have found someone who wants to chitchat!\n \n<b>Please follow this link to join the video call:</b>\n \n{room_url}"
   utter_let_them_go_stop_bothering:
   - text: |-
       Ok, I will let that person go then 😞
