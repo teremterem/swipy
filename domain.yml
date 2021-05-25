@@ -77,7 +77,7 @@ responses:
        
       Or maybe you just want to talk to a new person?👩‍💼
        
-      I can arrange a video chitchat with another human for you 😉
+      I can arrange video chitchat with another human for you 😉
   utter_sad_offer_chitchat:
   - text: |-
       I am sorry that you're feeling down 😞
@@ -89,7 +89,7 @@ responses:
   - text: |-
       I'm sorry, I cannot help you with that.
        
-      I can arrange a video chitchat with another human for you, however.
+      I can arrange video chitchat with another human for you, however.
        
       Do you want me to do that?
   utter_out_of_scope:
@@ -99,21 +99,21 @@ responses:
       Great! Let me find someone for you to chitchat with.
        
       I will get back to you soon...
-  utter_help_lonely_person:
+  utter_mind_helping_lonely_person:
   - text: |-
       Got it!
        
-      And what if someone else felt lonely / wanted a video chitchat?
-       
-      Would you be willing to consider joining then?
+      Would you mind if I get back to you when someone else feels lonely / wants to chitchat?
   utter_thanks_for_being_ok_to_chitchat:
   - text: |-
       Thank you, I appreciate this!
        
-      I will get back to you when someone else asks me for a chitchat.
+      I will get back to you when someone else asks for chitchat.
+  utter_bye_till_next_time:
+  - text: Ok, I will get back to you another time then 😉
   utter_how_it_works:
   - text: |-
-      I can arrange a video chitchat with another human for you.
+      I can arrange video chitchat with another human for you.
       Here is how it works:
        
       - I find someone who also wants to chitchat.
@@ -131,25 +131,24 @@ responses:
       I will try to get back to you when someone shows up...
   utter_someone_wants_to_chat:
   - text: |-
-      Hey! Someone is asking me to arrange a chitchat!
+      Hey! Someone is asking me to arrange chitchat.
        
-      Would you be willing to jump into a video call right now? ☎️ 🎥
+      Would you be willing to jump into a video call? ☎️ 🎥
+  utter_partner_already_gone:
+  - text: |-
+      Unfortunately, this person wasn't waiting anymore 😞
+       
+      Not all is lost, however!
+       
+      Do you want me to look for someone else? 🙂
   utter_room_url:
-  - text: |-
-      Awesome! Here is the link to the video chat:
-       
-      {room_url}
-       
-      P. S. Let me know how the call went - your feedback helps me improve 😉
+  - custom:
+      parse_mode: html
+      text: "Awesome!\n \n<b>Please follow this link to join the video call:</b>\n \n{room_url}"
   utter_found_partner_room_url:
-  - text: |-
-      Hooray! I have found someone who wants to have a chitchat!
-       
-      Here is the link to the video call:
-       
-      {room_url}
-       
-      P. S. Let me know how the call went - your feedback helps me improve 😉
+  - custom:
+      parse_mode: html
+      text: "Hooray! I have found someone who wants to chitchat!\n \n<b>Please follow this link to join the video call:</b>\n \n{room_url}"
   utter_let_them_go_stop_bothering:
   - text: |-
       Ok, I will let that person go then 😞
@@ -161,7 +160,7 @@ responses:
   - text: |-
       Ok, I will not bother you.
        
-      But if you change your mind and decide that you want to have a chitchat with someone just let me know - I'll be here.
+      Should you decide that you want to chitchat with someone, just let me know - I'll be here to arrange a video call.
        
       Hope to see soon!
   utter_iamabot:
