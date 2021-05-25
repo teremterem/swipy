@@ -54,6 +54,7 @@ nlu:
     - please do
     - yes i am
     - yes, until the [evening](dietcls_time)
+    - +
 - intent: deny
   examples: |
     - no, I'm ok
@@ -73,6 +74,7 @@ nlu:
     - not really
     - I don't feel lonely
     - no thanks
+    - -
 - intent: how_it_works
   examples: |
     - how does it work?
