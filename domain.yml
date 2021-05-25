@@ -103,7 +103,7 @@ responses:
   - text: |-
       Got it!
        
-      Would you mind if I get back to you when someone else feels lonely / wants to chitchat?
+      And would it be ok if I got back to you when someone else wanted to chitchat?
   utter_thanks_for_being_ok_to_chitchat:
   - text: |-
       Thank you, I appreciate this!
