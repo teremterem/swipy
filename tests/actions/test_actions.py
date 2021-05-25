@@ -683,7 +683,9 @@ async def test_action_become_ok_to_chitchat(
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('create_user_state_machine_table')
+@patch('actions.rasa_callbacks.find_partner')
 async def test_action_do_not_disturb(
+        rasa_callbacks_find_partner_mock: AsyncMock,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
@@ -708,6 +710,8 @@ async def test_action_do_not_disturb(
         SlotSet('partner_id', None),
     ]
     assert dispatcher.messages == []
+
+    rasa_callbacks_find_partner_mock.assert_not_called()
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
