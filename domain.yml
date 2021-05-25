@@ -133,7 +133,7 @@ responses:
   - text: |-
       Hey! Someone is asking me to arrange chitchat.
        
-      Would you be willing to jump into a video call right now? ☎️ 🎥
+      Would you be willing to jump into a video call? ☎️ 🎥
   utter_partner_already_gone:
   - text: |-
       Unfortunately, this person wasn't waiting anymore 😞
