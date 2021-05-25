@@ -110,7 +110,7 @@ responses:
        
       I will get back to you when someone else asks for chitchat.
   utter_bye_till_next_time:
-  - text: Ok, I will get back to you next time then 😉
+  - text: Ok, I will get back to you another time then 😉
   utter_how_it_works:
   - text: |-
       I can arrange video chitchat with another human for you.
