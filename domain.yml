@@ -84,7 +84,7 @@ responses:
        
       Do you want me to put you on a video call with someone?
        
-      This may or may not help but is still worth a try. This is what I am here for.
+      This may or may not help but is still worth a try.
   utter_out_of_scope_offer_chitchat:
   - text: |-
       I'm sorry, I cannot help you with that.
@@ -131,7 +131,7 @@ responses:
       I will try to get back to you when someone shows up...
   utter_someone_wants_to_chat:
   - text: |-
-      Hey! Someone is asking me to arrange a chitchat.
+      Hey! Someone is asking me to arrange a chitchat!
        
       Would you be willing to jump into a video call right now? ☎️ 🎥
   utter_room_url:
@@ -140,16 +140,16 @@ responses:
        
       {room_url}
        
-      P. S. Let me know how did it go when you're done 😉
+      P. S. Let me know how the call went - your feedback helps me improve 😉
   utter_found_partner_room_url:
   - text: |-
-      Hooray! I have found someone who wants to have a chitchat.
+      Hooray! I have found someone who wants to have a chitchat!
        
-      Here is the link to the video chat:
+      Here is the link to the video call:
        
       {room_url}
        
-      P. S. Let me know how did it go when you're done 😉
+      P. S. Let me know how the call went - your feedback helps me improve 😉
   utter_let_them_go_stop_bothering:
   - text: |-
       Ok, I will let that person go then 😞
