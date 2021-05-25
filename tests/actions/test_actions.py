@@ -729,6 +729,21 @@ async def test_action_become_ok_to_chitchat(
             ),
             False,
     ),
+    (
+            UserStateMachine(
+                user_id='unit_test_user',
+                state='asked_to_join',
+                partner_id='the_asker',
+                newbie=True,
+            ),
+            UserStateMachine(
+                user_id='the_asker',
+                state='waiting_partner_answer',
+                partner_id='unit_test_user',
+                newbie=True,
+            ),
+            True,  # the asker is actually waiting for the current user to answer
+    ),
 ])
 @patch('actions.rasa_callbacks.find_partner')
 async def test_action_do_not_disturb(
