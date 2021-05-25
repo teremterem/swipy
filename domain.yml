@@ -138,7 +138,9 @@ responses:
   - text: |-
       Unfortunately, this person wasn't waiting anymore 😞
        
-      Not all is lost, however! Do you want me to look for someone else? 🙂
+      Not all is lost, however!
+       
+      Do you want me to look for someone else? 🙂
   utter_room_url:
   - custom:
       parse_mode: html
