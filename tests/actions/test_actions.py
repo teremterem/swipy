@@ -436,7 +436,17 @@ async def test_action_create_room(
         SlotSet('swiper_state', 'ok_to_chitchat'),
         SlotSet('partner_id', None),
     ]
-    assert dispatcher.messages == []
+    assert dispatcher.messages == [{
+        'attachment': None,
+        'buttons': [],
+        'custom': {},
+        'elements': [],
+        'image': None,
+        'response': 'utter_room_url',
+        'template': 'utter_room_url',
+        'text': None,
+        'room_url': 'https://swipy.daily.co/pytestroom',
+    }]
 
     mock_daily_co_create_room.assert_called_once_with()
     mock_rasa_callback_join_room.assert_called_once_with(
@@ -503,7 +513,16 @@ async def test_action_create_room_partner_not_waiting(
         SlotSet('swiper_state', 'ok_to_chitchat'),
         SlotSet('partner_id', None),
     ]
-    assert dispatcher.messages == []
+    assert dispatcher.messages == [{
+        'attachment': None,
+        'buttons': [],
+        'custom': {},
+        'elements': [],
+        'image': None,
+        'response': 'utter_partner_already_gone',
+        'template': 'utter_partner_already_gone',
+        'text': None,
+    }]
 
     mock_daily_co_create_room.assert_not_called()
     mock_rasa_callback_join_room.assert_not_called()
