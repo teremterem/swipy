@@ -1,6 +1,9 @@
-from typing import Dict, Text, Any
+from typing import Dict, Text, Any, Callable
+from unittest.mock import AsyncMock
 
 import pytest
+from aioresponses import aioresponses, CallbackResult
+from yarl import URL
 
 
 @pytest.fixture
@@ -108,3 +111,34 @@ def external_intent_response() -> Dict[Text, Any]:
             "latest_action_name": "action_listen"
         }
     }
+
+
+@pytest.fixture
+def patch_rasa_callbacks(
+        mock_aioresponses: aioresponses,
+        external_intent_response: Dict[Text, Any],
+) -> Callable[[Text, Text, Dict[Text, Any]], AsyncMock]:
+    def _patch(expected_receiver_id: Text, expected_intent: Text, expected_entities: Dict[Text, Any]) -> AsyncMock:
+        # noinspection HttpUrlsUsage
+        expected_url = (
+            f"http://rasa-unittest:5005/unittest-core/conversations/{expected_receiver_id}/trigger_intent"
+            f"?output_channel=telegram&token=rasaunittesttoken"
+        )
+
+        def _rasa_callback(url: URL, json: Dict[Text, Any] = None, **_) -> CallbackResult:
+            assert url == URL(expected_url)
+            assert json == {
+                'name': expected_intent,
+                'entities': expected_entities,
+            }
+            return CallbackResult(payload=external_intent_response)
+
+        _mock_rasa_callbacks = AsyncMock(side_effect=_rasa_callback)
+        mock_aioresponses.post(
+            expected_url,
+            callback=_mock_rasa_callbacks,
+        )
+
+        return _mock_rasa_callbacks
+
+    return _patch

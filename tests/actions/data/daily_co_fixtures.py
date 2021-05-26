@@ -3,6 +3,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 from aioresponses import aioresponses, CallbackResult
+from yarl import URL
 
 
 @pytest.fixture
@@ -29,7 +30,15 @@ def mock_daily_co_create_room_aioresponses(
         mock_aioresponses: aioresponses,
         new_room1: Dict[Text, Any],
 ) -> AsyncMock:
-    async def _daily_co_callback(url, headers=None, json=None, **kwargs):
+    expected_url = 'https://api.daily.co/v1/rooms'
+
+    async def _daily_co_callback(
+            url: URL,
+            headers: Dict[Text, Text] = None,
+            json: Dict[Text, Any] = None,
+            **_,
+    ) -> CallbackResult:
+        assert url == URL(expected_url)
         assert headers == {
             'Authorization': 'Bearer test-daily-co-api-token',
         }
@@ -51,7 +60,7 @@ def mock_daily_co_create_room_aioresponses(
 
     _mock_daily_co_create_room_aioresponses = AsyncMock(side_effect=_daily_co_callback)
     mock_aioresponses.post(
-        'https://api.daily.co/v1/rooms',
+        expected_url,
         callback=_mock_daily_co_create_room_aioresponses,
     )
 
