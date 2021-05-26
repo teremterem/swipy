@@ -11,7 +11,7 @@ DAILY_CO_BASE_URL = 'https://api.daily.co/v1'
 DAILY_CO_API_TOKEN = os.environ['DAILY_CO_API_TOKEN']
 
 
-async def create_room() -> Dict[Text, Any]:
+async def create_room(sender_id: Text) -> Dict[Text, Any]:
     # TODO oleksandr: do I need to reuse ClientSession instance ? what should be its lifetime ?
     async with aiohttp.ClientSession() as session:
         room_data = {
@@ -39,6 +39,6 @@ async def create_room() -> Dict[Text, Any]:
 
             # TODO oleksandr: change log level back to DEBUG when you decide how to identify and react to failures
             if logger.isEnabledFor(logging.INFO):
-                logger.info('NEW DAILY CO ROOM:\n%s', pformat(created_room))
+                logger.info('NEW DAILY CO ROOM (sender_id=%r):\n%s', sender_id, pformat(created_room))
 
     return created_room

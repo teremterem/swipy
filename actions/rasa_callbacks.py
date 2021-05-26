@@ -17,37 +17,41 @@ PARTNER_ID_SLOT = 'partner_id'
 ROOM_URL_SLOT = 'room_url'
 
 
-async def ask_to_join(receiver_user_id: Text, sender_user_id: Text) -> Dict[Text, Any]:
+async def ask_to_join(sender_id: Text, receiver_id: Text) -> Dict[Text, Any]:
     return await _trigger_external_rasa_intent(
-        receiver_user_id,
+        sender_id,
+        receiver_id,
         'EXTERNAL_ask_to_join',
         {
-            PARTNER_ID_SLOT: sender_user_id,
+            PARTNER_ID_SLOT: sender_id,
         },
     )
 
 
-async def join_room(receiver_user_id: Text, sender_user_id: Text, room_url: Text) -> Dict[Text, Any]:
+async def join_room(sender_id: Text, receiver_id: Text, room_url: Text) -> Dict[Text, Any]:
     return await _trigger_external_rasa_intent(
-        receiver_user_id,
+        sender_id,
+        receiver_id,
         'EXTERNAL_join_room',
         {
-            PARTNER_ID_SLOT: sender_user_id,
+            PARTNER_ID_SLOT: sender_id,
             ROOM_URL_SLOT: room_url,
         },
     )
 
 
-async def find_partner(receiver_user_id: Text) -> Dict[Text, Any]:
+async def find_partner(sender_id: Text, receiver_id: Text) -> Dict[Text, Any]:
     return await _trigger_external_rasa_intent(
-        receiver_user_id,
+        sender_id,
+        receiver_id,
         'EXTERNAL_find_partner',
         {},
     )
 
 
 async def _trigger_external_rasa_intent(
-        receiver_user_id: Text,
+        sender_id: Text,
+        receiver_id: Text,
         intent_name: Text,
         entities: Dict[Text, Text],
 ) -> Dict[Text, Any]:
@@ -60,7 +64,7 @@ async def _trigger_external_rasa_intent(
             params['token'] = RASA_TOKEN
 
         async with session.post(
-                f"{RASA_PRODUCTION_HOST}/{RASA_CORE_PATH}conversations/{receiver_user_id}/trigger_intent",
+                f"{RASA_PRODUCTION_HOST}/{RASA_CORE_PATH}conversations/{receiver_id}/trigger_intent",
                 params=params,
                 json={
                     'name': intent_name,
@@ -72,9 +76,10 @@ async def _trigger_external_rasa_intent(
             # TODO oleksandr: change log level back to DEBUG when you decide how to identify and react to failures
             if logger.isEnabledFor(logging.INFO):
                 logger.info(
-                    'TRIGGER_INTENT: %s\n\nRECEIVER_USER_ID: %r\n\nENTITIES:\n%s\n\nRESPONSE:\n%s',
+                    'TRIGGER_INTENT: %s\n\nSENDER_ID: %r\n\nRECEIVER_ID: %r\n\nENTITIES:\n%s\n\nRESPONSE:\n%s',
                     intent_name,
-                    receiver_user_id,
+                    sender_id,
+                    receiver_id,
                     pformat(entities),
                     pformat(resp_json),
                 )

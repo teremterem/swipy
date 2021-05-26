@@ -1,42 +1,15 @@
 from typing import Dict, Text, Any
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock
 
 import pytest
-from aioresponses import CallbackResult, aioresponses
 
 from actions.daily_co import create_room
 
 
 @pytest.mark.asyncio
 async def test_create_room(
-        mock_aioresponses: aioresponses,
+        mock_daily_co_aioresponses: AsyncMock,
         new_room1: Dict[Text, Any],
 ) -> None:
-    def daily_co_callback(url, headers=None, json=None, **kwargs):
-        assert headers == {
-            'Authorization': 'Bearer test-daily-co-api-token',
-        }
-        assert json == {
-            'privacy': 'public',
-            'properties': {
-                'enable_network_ui': False,
-                'enable_prejoin_ui': False,
-                'enable_new_call_ui': True,
-                'enable_screenshare': True,
-                'enable_chat': True,
-                'start_video_off': False,
-                'start_audio_off': False,
-                'owner_only_broadcast': False,
-                'lang': 'en',
-            },
-        }
-        return CallbackResult(payload=new_room1)
-
-    daily_co_callback_mock = MagicMock(side_effect=daily_co_callback)
-    mock_aioresponses.post(
-        'https://api.daily.co/v1/rooms',
-        callback=daily_co_callback_mock,
-    )
-
-    assert await create_room() == new_room1
-    daily_co_callback_mock.assert_called_once()
+    assert await create_room('some_sender_id') == new_room1
+    mock_daily_co_aioresponses.assert_called_once()

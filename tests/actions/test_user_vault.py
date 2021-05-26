@@ -92,8 +92,8 @@ def test_user_vault_cache_not_reused_between_instances(
 @patch.object(UserVault, '_list_available_user_dicts')
 @patch('actions.user_vault.secrets.choice')
 def test_get_random_available_user(
-        choice_mock: MagicMock,
-        list_available_user_dicts_mock: MagicMock,
+        mock_choice: MagicMock,
+        mock_list_available_user_dicts: MagicMock,
         ddb_user1: UserStateMachine,
         ddb_user2: UserStateMachine,
         ddb_user3: UserStateMachine,
@@ -102,8 +102,8 @@ def test_get_random_available_user(
     # noinspection PyDataclass
     list_of_dicts = [asdict(ddb_user1), asdict(ddb_user2), asdict(ddb_user3)]
 
-    list_available_user_dicts_mock.return_value = list_of_dicts
-    choice_mock.return_value = list_of_dicts[1]
+    mock_list_available_user_dicts.return_value = list_of_dicts
+    mock_choice.return_value = list_of_dicts[1]
 
     user_vault = UserVault()
     actual_random_user = user_vault.get_random_available_user(
@@ -112,8 +112,8 @@ def test_get_random_available_user(
     )
     assert actual_random_user == ddb_user2
 
-    list_available_user_dicts_mock.assert_called_once_with('existing_user_id1', newbie=newbie_filter)
-    choice_mock.assert_called_once_with(list_of_dicts)
+    mock_list_available_user_dicts.assert_called_once_with('existing_user_id1', newbie=newbie_filter)
+    mock_choice.assert_called_once_with(list_of_dicts)
 
     assert user_vault.get_user(actual_random_user.user_id) is actual_random_user  # make sure the user was cached
 
@@ -123,19 +123,19 @@ def test_get_random_available_user(
 @patch.object(UserVault, '_list_available_user_dicts')
 @patch('actions.user_vault.secrets.choice')
 def test_no_available_user(
-        choice_mock: MagicMock,
-        list_available_user_dicts_mock: MagicMock,
+        mock_choice: MagicMock,
+        mock_list_available_user_dicts: MagicMock,
         newbie_filter: Optional[bool],
         empty_list_variant: Optional[list],
 ) -> None:
-    list_available_user_dicts_mock.return_value = empty_list_variant
-    choice_mock.side_effect = ValueError("secrets.choice shouldn't have been called with None or empty list")
+    mock_list_available_user_dicts.return_value = empty_list_variant
+    mock_choice.side_effect = ValueError("secrets.choice shouldn't have been called with None or empty list")
 
     user_vault = UserVault()
     assert user_vault.get_random_available_user('existing_user_id1', newbie=newbie_filter) is None
 
-    list_available_user_dicts_mock.assert_called_once_with('existing_user_id1', newbie=newbie_filter)
-    choice_mock.assert_not_called()
+    mock_list_available_user_dicts.assert_called_once_with('existing_user_id1', newbie=newbie_filter)
+    mock_choice.assert_not_called()
 
 
 @pytest.mark.usefixtures('ddb_user1', 'ddb_user2', 'ddb_user3')

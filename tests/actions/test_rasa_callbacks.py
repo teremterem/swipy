@@ -21,16 +21,16 @@ async def test_ask_to_join(
         }
         return CallbackResult(payload=external_intent_response)
 
-    rasa_core_callback_mock = MagicMock(side_effect=rasa_core_callback)
+    mock_rasa_core_callback = MagicMock(side_effect=rasa_core_callback)
     # noinspection HttpUrlsUsage
     mock_aioresponses.post(
         'http://rasa-unittest:5005/unittest-core/conversations/partner_id_to_ask/trigger_intent'
         '?output_channel=telegram&token=rasaunittesttoken',
-        callback=rasa_core_callback_mock,
+        callback=mock_rasa_core_callback,
     )
 
     await rasa_callbacks.ask_to_join('partner_id_to_ask', 'id_of_asker')
-    rasa_core_callback_mock.assert_called_once()
+    mock_rasa_core_callback.assert_called_once()
 
 
 @pytest.mark.asyncio
@@ -48,16 +48,16 @@ async def test_join_room(
         }
         return CallbackResult(payload=external_intent_response)
 
-    rasa_core_callback_mock = MagicMock(side_effect=rasa_core_callback)
+    mock_rasa_core_callback = MagicMock(side_effect=rasa_core_callback)
     # noinspection HttpUrlsUsage
     mock_aioresponses.post(
         'http://rasa-unittest:5005/unittest-core/conversations/a_receiving_user/trigger_intent'
         '?output_channel=telegram&token=rasaunittesttoken',
-        callback=rasa_core_callback_mock,
+        callback=mock_rasa_core_callback,
     )
 
     await rasa_callbacks.join_room('a_receiving_user', 'a_sending_user', 'https://room-unittest/url')
-    rasa_core_callback_mock.assert_called_once()
+    mock_rasa_core_callback.assert_called_once()
 
 
 @pytest.mark.asyncio
@@ -72,13 +72,13 @@ async def test_find_partner(
         }
         return CallbackResult(payload=external_intent_response)
 
-    rasa_core_callback_mock = MagicMock(side_effect=rasa_core_callback)
+    mock_rasa_core_callback = MagicMock(side_effect=rasa_core_callback)
     # noinspection HttpUrlsUsage
     mock_aioresponses.post(
         'http://rasa-unittest:5005/unittest-core/conversations/a_receiving_user/trigger_intent'
         '?output_channel=telegram&token=rasaunittesttoken',
-        callback=rasa_core_callback_mock,
+        callback=mock_rasa_core_callback,
     )
 
     await rasa_callbacks.find_partner('a_receiving_user')
-    rasa_core_callback_mock.assert_called_once()
+    mock_rasa_core_callback.assert_called_once()

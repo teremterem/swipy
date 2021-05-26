@@ -766,7 +766,7 @@ async def test_action_become_ok_to_chitchat(
 ])
 @patch('actions.rasa_callbacks.find_partner')
 async def test_action_do_not_disturb(
-        rasa_callbacks_find_partner_mock: AsyncMock,
+        mock_rasa_callbacks_find_partner: AsyncMock,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
@@ -792,9 +792,9 @@ async def test_action_do_not_disturb(
     assert dispatcher.messages == []
 
     if find_partner_call_expected:
-        rasa_callbacks_find_partner_mock.assert_called_once_with('the_asker')
+        mock_rasa_callbacks_find_partner.assert_called_once_with('the_asker')
     else:
-        rasa_callbacks_find_partner_mock.assert_not_called()
+        mock_rasa_callbacks_find_partner.assert_not_called()
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
