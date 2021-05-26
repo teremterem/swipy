@@ -36,7 +36,9 @@ async def create_room() -> Dict[Text, Any]:
                 json=room_data,
         ) as resp:
             created_room = await resp.json()
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('NEW DAILY CO ROOM:\n%s', pformat(created_room))
+
+            # TODO oleksandr: change log level back to DEBUG when you decide how to identify and react to failures
+            if logger.isEnabledFor(logging.INFO):
+                logger.info('NEW DAILY CO ROOM:\n%s', pformat(created_room))
 
     return created_room
