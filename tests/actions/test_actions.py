@@ -7,7 +7,7 @@ from rasa_sdk import Tracker
 from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType
 from rasa_sdk.executor import CollectingDispatcher
 
-from actions import actions
+from actions import actions, daily_co
 from actions.user_state_machine import UserStateMachine, UserState
 from actions.user_vault import UserVault, IUserVault
 
@@ -399,17 +399,15 @@ async def test_action_ask_to_join(
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('create_user_state_machine_table')
 @patch('actions.rasa_callbacks.join_room')
-@patch('actions.daily_co.create_room')
+@patch('actions.daily_co.create_room', wraps=daily_co.create_room)
 async def test_action_create_room(
-        mock_daily_co_create_room: AsyncMock,
+        wrap_daily_co_create_room: AsyncMock,
         mock_rasa_callback_join_room: AsyncMock,
+        mock_daily_co_create_room_aioresponses: AsyncMock,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
-        new_room1: Dict[Text, Any],
 ) -> None:
-    mock_daily_co_create_room.return_value = new_room1
-
     action = actions.ActionCreateRoom()
     assert action.name() == 'action_create_room'
 
@@ -448,7 +446,9 @@ async def test_action_create_room(
         'room_url': 'https://swipy.daily.co/pytestroom',
     }]
 
-    mock_daily_co_create_room.assert_called_once_with()
+    wrap_daily_co_create_room.assert_called_once_with('unit_test_user')
+    mock_daily_co_create_room_aioresponses.assert_called_once()
+
     mock_rasa_callback_join_room.assert_called_once_with(
         'an_asker',
         'unit_test_user',

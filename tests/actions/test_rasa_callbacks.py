@@ -29,7 +29,7 @@ async def test_ask_to_join(
         callback=mock_rasa_core_callback,
     )
 
-    await rasa_callbacks.ask_to_join('partner_id_to_ask', 'id_of_asker')
+    await rasa_callbacks.ask_to_join('id_of_asker', 'partner_id_to_ask')
     mock_rasa_core_callback.assert_called_once()
 
 
@@ -56,7 +56,7 @@ async def test_join_room(
         callback=mock_rasa_core_callback,
     )
 
-    await rasa_callbacks.join_room('a_receiving_user', 'a_sending_user', 'https://room-unittest/url')
+    await rasa_callbacks.join_room('a_sending_user', 'a_receiving_user', 'https://room-unittest/url')
     mock_rasa_core_callback.assert_called_once()
 
 
@@ -80,5 +80,5 @@ async def test_find_partner(
         callback=mock_rasa_core_callback,
     )
 
-    await rasa_callbacks.find_partner('a_receiving_user')
+    await rasa_callbacks.find_partner('some_sender_id', 'a_receiving_user')
     mock_rasa_core_callback.assert_called_once()

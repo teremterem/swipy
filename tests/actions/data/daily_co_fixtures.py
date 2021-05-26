@@ -25,7 +25,7 @@ def new_room1() -> Dict[Text, Any]:
 
 
 @pytest.fixture
-def mock_daily_co_aioresponses(
+def mock_daily_co_create_room_aioresponses(
         mock_aioresponses: aioresponses,
         new_room1: Dict[Text, Any],
 ) -> AsyncMock:
@@ -49,10 +49,10 @@ def mock_daily_co_aioresponses(
         }
         return CallbackResult(payload=new_room1)
 
-    _mock_daily_co_aioresponses = AsyncMock(side_effect=_daily_co_callback)
+    _mock_daily_co_create_room_aioresponses = AsyncMock(side_effect=_daily_co_callback)
     mock_aioresponses.post(
         'https://api.daily.co/v1/rooms',
-        callback=_mock_daily_co_aioresponses,
+        callback=_mock_daily_co_create_room_aioresponses,
     )
 
-    return _mock_daily_co_aioresponses
+    return _mock_daily_co_create_room_aioresponses

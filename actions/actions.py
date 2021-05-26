@@ -276,7 +276,7 @@ class ActionCreateRoom(BaseSwiperAction):
                 ),
             ]
 
-        created_room = await daily_co.create_room()
+        created_room = await daily_co.create_room(current_user.user_id)
         room_url = created_room['url']
 
         # put partner into the room as well
