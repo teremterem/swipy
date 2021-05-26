@@ -178,16 +178,20 @@ async def test_action_session_start_with_slots(
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('ddb_unit_test_user')
 @patch('actions.rasa_callbacks.ask_to_join')
-@patch.object(UserVault, 'get_random_available_user')
+@patch.object(UserVault, 'get_random_available_user', wraps=UserVault().get_random_available_user)
+@patch('actions.user_vault.secrets.choice')
 async def test_action_find_partner_newbie(
-        mock_get_random_available_user: MagicMock,
+        mock_choice: MagicMock,
+        wrap_get_random_available_user: MagicMock,
         mock_rasa_callback_ask_to_join: AsyncMock,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
-        available_newbie1: UserStateMachine,
+        ddb_available_newbie1: UserStateMachine,
 ) -> None:
-    mock_get_random_available_user.return_value = available_newbie1
+    # noinspection PyDataclass
+    expected_choice_list = [asdict(ddb_available_newbie1)]
+    mock_choice.return_value = expected_choice_list[0]
 
     action = actions.ActionFindPartner()
     assert action.name() == 'action_find_partner'
@@ -202,7 +206,8 @@ async def test_action_find_partner_newbie(
     ]
     assert dispatcher.messages == []
 
-    mock_get_random_available_user.assert_called_once_with(exclude_user_id='unit_test_user', newbie=True)
+    wrap_get_random_available_user.assert_called_once_with(exclude_user_id='unit_test_user', newbie=True)
+    mock_choice.assert_called_once_with(expected_choice_list)
     mock_rasa_callback_ask_to_join.assert_called_once_with('available_newbie_id1', 'unit_test_user')
 
     user_vault = UserVault()
