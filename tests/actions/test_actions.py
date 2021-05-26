@@ -403,10 +403,10 @@ async def test_action_ask_to_join(
 async def test_action_create_room(
         wrap_daily_co_create_room: AsyncMock,
         mock_rasa_callback_join_room: AsyncMock,
-        mock_daily_co_create_room_aioresponses: AsyncMock,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
+        mock_daily_co_create_room_aioresponses: AsyncMock,
 ) -> None:
     action = actions.ActionCreateRoom()
     assert action.name() == 'action_create_room'
@@ -447,7 +447,7 @@ async def test_action_create_room(
     }]
 
     wrap_daily_co_create_room.assert_called_once_with('unit_test_user')
-    mock_daily_co_create_room_aioresponses.assert_called_once()
+    mock_daily_co_create_room_aioresponses.assert_called_once()  # more detailed assertions are done by the fixture
 
     mock_rasa_callback_join_room.assert_called_once_with(
         'an_asker',
@@ -481,18 +481,16 @@ async def test_action_create_room(
 ])
 @pytest.mark.usefixtures('create_user_state_machine_table')
 @patch('actions.rasa_callbacks.join_room')
-@patch('actions.daily_co.create_room')
+@patch('actions.daily_co.create_room', wraps=daily_co.create_room)
 async def test_action_create_room_partner_not_waiting(
-        mock_daily_co_create_room: AsyncMock,
+        wrap_daily_co_create_room: AsyncMock,
         mock_rasa_callback_join_room: AsyncMock,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
-        new_room1: Dict[Text, Any],
+        mock_daily_co_create_room_aioresponses: AsyncMock,
         partner: UserStateMachine,
 ) -> None:
-    mock_daily_co_create_room.return_value = new_room1
-
     action = actions.ActionCreateRoom()
     assert action.name() == 'action_create_room'
 
@@ -524,7 +522,9 @@ async def test_action_create_room_partner_not_waiting(
         'text': None,
     }]
 
-    mock_daily_co_create_room.assert_not_called()
+    wrap_daily_co_create_room.assert_not_called()
+    mock_daily_co_create_room_aioresponses.assert_not_called()
+
     mock_rasa_callback_join_room.assert_not_called()
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
@@ -561,19 +561,17 @@ async def test_action_create_room_partner_not_waiting(
 ])
 @pytest.mark.usefixtures('create_user_state_machine_table')
 @patch('actions.rasa_callbacks.join_room')
-@patch('actions.daily_co.create_room')
+@patch('actions.daily_co.create_room', wraps=daily_co.create_room)
 async def test_action_create_room_invalid_state(
-        mock_daily_co_create_room: AsyncMock,
+        wrap_daily_co_create_room: AsyncMock,
         mock_rasa_callback_join_room: AsyncMock,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
-        new_room1: Dict[Text, Any],
+        mock_daily_co_create_room_aioresponses: AsyncMock,
         current_user: UserStateMachine,
         expected_swiper_error: Text,
 ) -> None:
-    mock_daily_co_create_room.return_value = new_room1
-
     action = actions.ActionCreateRoom()
     assert action.name() == 'action_create_room'
 
@@ -597,7 +595,9 @@ async def test_action_create_room_invalid_state(
     ]
     assert dispatcher.messages == []
 
-    mock_daily_co_create_room.assert_not_called()
+    wrap_daily_co_create_room.assert_not_called()
+    mock_daily_co_create_room_aioresponses.assert_not_called()
+
     mock_rasa_callback_join_room.assert_not_called()
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
