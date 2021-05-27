@@ -1,5 +1,5 @@
-from typing import Dict, Text, Any, Callable
-from unittest.mock import AsyncMock
+from typing import Dict, Text, Any, Callable, Tuple
+from unittest.mock import AsyncMock, call
 
 import pytest
 from aioresponses import aioresponses, CallbackResult
@@ -111,6 +111,37 @@ def external_intent_response() -> Dict[Text, Any]:
             "latest_action_name": "action_listen"
         }
     }
+
+
+@pytest.fixture
+def rasa_callbacks_expected_call_builder() -> Callable[[Text, Text, Dict[Text, Any]], Tuple[Text, call]]:
+    def _call_builder(
+            expected_receiver_id: Text,
+            expected_intent: Text,
+            expected_entities: Dict[Text, Any],
+    ) -> Tuple[Text, call]:
+        # noinspection HttpUrlsUsage
+        expected_url = (
+            f"http://rasa-unittest:5005/unittest-core/conversations/{expected_receiver_id}/trigger_intent"
+            f"?output_channel=telegram&token=rasaunittesttoken"
+        )
+        expected_call = call(
+            URL(expected_url),
+            allow_redirects=True,
+            data=None,
+            params={
+                'output_channel': 'telegram',
+                'token': 'rasaunittesttoken',
+            },
+            json={
+                'name': expected_intent,
+                'entities': expected_entities,
+            },
+        )
+
+        return expected_url, expected_call
+
+    return _call_builder
 
 
 @pytest.fixture

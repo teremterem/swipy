@@ -1,8 +1,9 @@
 from dataclasses import asdict
-from typing import Dict, Text, Any, List
+from typing import Dict, Text, Any, List, Callable, Tuple
 from unittest.mock import patch, AsyncMock, MagicMock, call, Mock
 
 import pytest
+from aioresponses import aioresponses, CallbackResult
 from rasa_sdk import Tracker
 from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType
 from rasa_sdk.executor import CollectingDispatcher
@@ -177,18 +178,32 @@ async def test_action_session_start_with_slots(
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('ddb_unit_test_user')
-@patch('actions.rasa_callbacks.ask_to_join')
 @patch.object(UserVault, '_list_available_user_dicts')
 async def test_action_find_partner_newbie(
         mock_list_available_user_dicts: MagicMock,
-        mock_rasa_callback_ask_to_join: AsyncMock,
+        mock_aioresponses: aioresponses,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
         available_newbie1: UserStateMachine,
+        rasa_callbacks_expected_call_builder: Callable[[Text, Text, Dict[Text, Any]], Tuple[Text, call]],
+        external_intent_response: Dict[Text, Any],
 ) -> None:
     # noinspection PyDataclass
     mock_list_available_user_dicts.return_value = [asdict(available_newbie1)]
+
+    expected_rasa_url, expected_rasa_call = rasa_callbacks_expected_call_builder(
+        'available_newbie_id1',
+        'EXTERNAL_ask_to_join',
+        {
+            'partner_id': 'unit_test_user',
+        },
+    )
+    mock_rasa_callbacks = AsyncMock(return_value=CallbackResult(payload=external_intent_response))
+    mock_aioresponses.post(
+        expected_rasa_url,
+        callback=mock_rasa_callbacks,
+    )
 
     action = actions.ActionFindPartner()
     assert action.name() == 'action_find_partner'
@@ -204,7 +219,7 @@ async def test_action_find_partner_newbie(
     assert dispatcher.messages == []
 
     mock_list_available_user_dicts.assert_called_once_with('unit_test_user', newbie=True)
-    mock_rasa_callback_ask_to_join.assert_called_once_with('available_newbie_id1', 'unit_test_user')
+    assert mock_rasa_callbacks.mock_calls == [expected_rasa_call]
 
     user_vault = UserVault()
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
