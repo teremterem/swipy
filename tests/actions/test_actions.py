@@ -200,10 +200,7 @@ async def test_action_find_partner_newbie(
         },
     )
     mock_rasa_callbacks = AsyncMock(return_value=CallbackResult(payload=external_intent_response))
-    mock_aioresponses.post(
-        expected_rasa_url,
-        callback=mock_rasa_callbacks,
-    )
+    mock_aioresponses.post(expected_rasa_url, callback=mock_rasa_callbacks)
 
     action = actions.ActionFindPartner()
     assert action.name() == 'action_find_partner'
@@ -218,7 +215,7 @@ async def test_action_find_partner_newbie(
     ]
     assert dispatcher.messages == []
 
-    mock_list_available_user_dicts.assert_called_once_with('unit_test_user', newbie=True)
+    mock_list_available_user_dicts.assert_called_once_with(exclude_user_id='unit_test_user', newbie=True)
     assert mock_rasa_callbacks.mock_calls == [expected_rasa_call]
 
     user_vault = UserVault()
@@ -232,17 +229,32 @@ async def test_action_find_partner_newbie(
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('ddb_unit_test_user')
-@patch('actions.rasa_callbacks.ask_to_join')
-@patch.object(UserVault, 'get_random_available_user')
+@patch.object(UserVault, '_list_available_user_dicts')
 async def test_action_find_partner_veteran(
-        mock_get_random_available_user: MagicMock,
-        mock_rasa_callback_ask_to_join: AsyncMock,
+        mock_list_available_user_dicts: MagicMock,
+        mock_aioresponses: aioresponses,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
         available_veteran1: UserStateMachine,
+        rasa_callbacks_expected_call_builder: Callable[[Text, Text, Dict[Text, Any]], Tuple[Text, call]],
+        external_intent_response: Dict[Text, Any],
 ) -> None:
-    mock_get_random_available_user.side_effect = [None, available_veteran1]
+    # noinspection PyDataclass
+    mock_list_available_user_dicts.side_effect = [
+        [],  # first call - no newbies
+        [asdict(available_veteran1)],  # second call - one veteran
+    ]
+
+    expected_rasa_url, expected_rasa_call = rasa_callbacks_expected_call_builder(
+        'available_veteran_id1',
+        'EXTERNAL_ask_to_join',
+        {
+            'partner_id': 'unit_test_user',
+        },
+    )
+    mock_rasa_callbacks = AsyncMock(return_value=CallbackResult(payload=external_intent_response))
+    mock_aioresponses.post(expected_rasa_url, callback=mock_rasa_callbacks)
 
     actual_events = await actions.ActionFindPartner().run(dispatcher, tracker, domain)
     assert actual_events == [
@@ -254,11 +266,11 @@ async def test_action_find_partner_veteran(
     ]
     assert dispatcher.messages == []
 
-    assert mock_get_random_available_user.mock_calls == [
+    assert mock_list_available_user_dicts.mock_calls == [
         call(exclude_user_id='unit_test_user', newbie=True),
         call(exclude_user_id='unit_test_user', newbie=False),
     ]
-    mock_rasa_callback_ask_to_join.assert_called_once_with('available_veteran_id1', 'unit_test_user')
+    assert mock_rasa_callbacks.mock_calls == [expected_rasa_call]
 
     user_vault = UserVault()
     assert user_vault.get_user('unit_test_user') == UserStateMachine(

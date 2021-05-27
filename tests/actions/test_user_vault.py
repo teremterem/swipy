@@ -112,7 +112,10 @@ def test_get_random_available_user(
     )
     assert actual_random_user == ddb_user2
 
-    mock_list_available_user_dicts.assert_called_once_with('existing_user_id1', newbie=newbie_filter)
+    mock_list_available_user_dicts.assert_called_once_with(
+        exclude_user_id='existing_user_id1',
+        newbie=newbie_filter,
+    )
     mock_choice.assert_called_once_with(list_of_dicts)
 
     assert user_vault.get_user(actual_random_user.user_id) is actual_random_user  # make sure the user was cached
@@ -132,9 +135,15 @@ def test_no_available_user(
     mock_choice.side_effect = ValueError("secrets.choice shouldn't have been called with None or empty list")
 
     user_vault = UserVault()
-    assert user_vault.get_random_available_user('existing_user_id1', newbie=newbie_filter) is None
+    assert user_vault.get_random_available_user(
+        'existing_user_id1',
+        newbie=newbie_filter,
+    ) is None
 
-    mock_list_available_user_dicts.assert_called_once_with('existing_user_id1', newbie=newbie_filter)
+    mock_list_available_user_dicts.assert_called_once_with(
+        exclude_user_id='existing_user_id1',
+        newbie=newbie_filter,
+    )
     mock_choice.assert_not_called()
 
 
