@@ -280,7 +280,7 @@ class ActionCreateRoom(BaseSwiperAction):
         room_url = created_room['url']
 
         # put partner into the room as well
-        await rasa_callbacks.join_room(current_user.partner_id, current_user.user_id, room_url)
+        await rasa_callbacks.join_room(current_user.user_id, current_user.partner_id, room_url)
 
         dispatcher.utter_message(
             response='utter_room_url',
@@ -379,7 +379,7 @@ class ActionDoNotDisturb(BaseSwiperAction):
             # TODO oleksandr: reuse this condition (it is also present in ActionCreateRoom)
             if partner.state == UserState.WAITING_PARTNER_ANSWER and partner.partner_id == current_user.user_id:
                 # force the original sender of the declined invitation to "move along" in their partner search
-                await rasa_callbacks.find_partner(partner.user_id)
+                await rasa_callbacks.find_partner(current_user.user_id, partner.user_id)
 
         return [
             SlotSet(

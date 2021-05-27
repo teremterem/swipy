@@ -342,7 +342,7 @@ async def test_action_find_partner_invalid_partner_state(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
-) -> None:
+) -> None:  # TODO oleksandr: are you sure you need this test and correspondent logic at all ?
     # noinspection PyDataclass
     mock_list_available_user_dicts.side_effect = [
         [],  # first call - no newbies
@@ -495,8 +495,8 @@ async def test_action_create_room(
     wrap_daily_co_create_room.assert_called_once_with('unit_test_user')
 
     mock_rasa_callback_join_room.assert_called_once_with(
-        'an_asker',
         'unit_test_user',
+        'an_asker',
         'https://swipy.daily.co/pytestroom',
     )
 
@@ -828,7 +828,7 @@ async def test_action_do_not_disturb(
     assert dispatcher.messages == []
 
     if find_partner_call_expected:
-        mock_rasa_callbacks_find_partner.assert_called_once_with('the_asker')
+        mock_rasa_callbacks_find_partner.assert_called_once_with('unit_test_user', 'the_asker')
     else:
         mock_rasa_callbacks_find_partner.assert_not_called()
 
