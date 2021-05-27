@@ -518,19 +518,15 @@ async def test_action_create_room(
 ])
 @pytest.mark.usefixtures('create_user_state_machine_table')
 @patch('actions.rasa_callbacks.join_room')
-@patch('actions.daily_co.create_room', wraps=daily_co.create_room)
+@patch('actions.daily_co.create_room')
 async def test_action_create_room_partner_not_waiting(
-        wrap_daily_co_create_room: AsyncMock,
+        mock_daily_co_create_room: AsyncMock,
         mock_rasa_callback_join_room: AsyncMock,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
-        mock_daily_co_create_room_aioresponses: AsyncMock,
         partner: UserStateMachine,
 ) -> None:
-    action = actions.ActionCreateRoom()
-    assert action.name() == 'action_create_room'
-
     user_vault = UserVault()
     user_vault.save(partner)
     user_vault.save(UserStateMachine(
@@ -540,7 +536,7 @@ async def test_action_create_room_partner_not_waiting(
         newbie=True,
     ))
 
-    actual_events = await action.run(dispatcher, tracker, domain)
+    actual_events = await actions.ActionCreateRoom().run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'partner_not_waiting_anymore'),
         SlotSet('swiper_error', None),
@@ -559,9 +555,7 @@ async def test_action_create_room_partner_not_waiting(
         'text': None,
     }]
 
-    wrap_daily_co_create_room.assert_not_called()
-    mock_daily_co_create_room_aioresponses.assert_not_called()
-
+    mock_daily_co_create_room.assert_not_called()
     mock_rasa_callback_join_room.assert_not_called()
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
@@ -598,14 +592,13 @@ async def test_action_create_room_partner_not_waiting(
 ])
 @pytest.mark.usefixtures('create_user_state_machine_table')
 @patch('actions.rasa_callbacks.join_room')
-@patch('actions.daily_co.create_room', wraps=daily_co.create_room)
+@patch('actions.daily_co.create_room')
 async def test_action_create_room_invalid_state(
-        wrap_daily_co_create_room: AsyncMock,
+        mock_daily_co_create_room: AsyncMock,
         mock_rasa_callback_join_room: AsyncMock,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
-        mock_daily_co_create_room_aioresponses: AsyncMock,
         current_user: UserStateMachine,
         expected_swiper_error: Text,
 ) -> None:
@@ -632,9 +625,7 @@ async def test_action_create_room_invalid_state(
     ]
     assert dispatcher.messages == []
 
-    wrap_daily_co_create_room.assert_not_called()
-    mock_daily_co_create_room_aioresponses.assert_not_called()
-
+    mock_daily_co_create_room.assert_not_called()
     mock_rasa_callback_join_room.assert_not_called()
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
