@@ -1,8 +1,7 @@
-from typing import Dict, Text, Any
-from unittest.mock import AsyncMock
+from typing import Dict, Text, Any, Tuple
+from unittest.mock import call
 
 import pytest
-from aioresponses import aioresponses, CallbackResult
 from yarl import URL
 
 
@@ -26,23 +25,16 @@ def new_room1() -> Dict[Text, Any]:
 
 
 @pytest.fixture
-def mock_daily_co_create_room_aioresponses(
-        mock_aioresponses: aioresponses,
-        new_room1: Dict[Text, Any],
-) -> AsyncMock:
+def daily_co_create_room_expected_call() -> Tuple[Text, call]:
     expected_url = 'https://api.daily.co/v1/rooms'
-
-    async def _daily_co_callback(
-            url: URL,
-            headers: Dict[Text, Text] = None,
-            json: Dict[Text, Any] = None,
-            **_,
-    ) -> CallbackResult:
-        assert url == URL(expected_url)
-        assert headers == {
+    expected_call = call(
+        URL(expected_url),
+        allow_redirects=True,
+        data=None,
+        headers={
             'Authorization': 'Bearer test-daily-co-api-token',
-        }
-        assert json == {
+        },
+        json={
             'privacy': 'public',
             'properties': {
                 'enable_network_ui': False,
@@ -55,13 +47,7 @@ def mock_daily_co_create_room_aioresponses(
                 'owner_only_broadcast': False,
                 'lang': 'en',
             },
-        }
-        return CallbackResult(payload=new_room1)
-
-    _mock_daily_co_create_room_aioresponses = AsyncMock(side_effect=_daily_co_callback)
-    mock_aioresponses.post(
-        expected_url,
-        callback=_mock_daily_co_create_room_aioresponses,
+        },
     )
 
-    return _mock_daily_co_create_room_aioresponses
+    return expected_url, expected_call
