@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import os
 from abc import ABC, abstractmethod
@@ -165,6 +166,8 @@ class ActionFindPartner(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
+        await asyncio.sleep(1.1)  # TODO oleksandr: move 1.1 to a constant (that reads from env var?)
+
         partner = user_vault.get_random_available_user(
             exclude_user_id=current_user.user_id,
             newbie=True,
