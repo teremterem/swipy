@@ -142,34 +142,3 @@ def rasa_callbacks_expected_call_builder() -> Callable[[Text, Text, Dict[Text, A
         return expected_url, expected_call
 
     return _call_builder
-
-
-@pytest.fixture
-def patch_rasa_callbacks(
-        mock_aioresponses: aioresponses,
-        external_intent_response: Dict[Text, Any],
-) -> Callable[[Text, Text, Dict[Text, Any]], AsyncMock]:
-    def _patch(expected_receiver_id: Text, expected_intent: Text, expected_entities: Dict[Text, Any]) -> AsyncMock:
-        # noinspection HttpUrlsUsage
-        expected_url = (
-            f"http://rasa-unittest:5005/unittest-core/conversations/{expected_receiver_id}/trigger_intent"
-            f"?output_channel=telegram&token=rasaunittesttoken"
-        )
-
-        def _rasa_callback(url: URL, json: Dict[Text, Any] = None, **_) -> CallbackResult:
-            assert url == URL(expected_url)
-            assert json == {
-                'name': expected_intent,
-                'entities': expected_entities,
-            }
-            return CallbackResult(payload=external_intent_response)
-
-        _mock_rasa_callbacks = AsyncMock(side_effect=_rasa_callback)
-        mock_aioresponses.post(
-            expected_url,
-            callback=_mock_rasa_callbacks,
-        )
-
-        return _mock_rasa_callbacks
-
-    return _patch
