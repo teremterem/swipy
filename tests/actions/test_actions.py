@@ -335,18 +335,23 @@ async def test_action_find_partner_no_one(
 @pytest.mark.usefixtures('ddb_unit_test_user')
 @patch('actions.actions.stack_trace_to_str', Mock(return_value='stack trace goes here'))
 @patch('actions.rasa_callbacks.ask_to_join')
-@patch.object(UserVault, 'get_random_available_user')
+@patch.object(UserVault, '_list_available_user_dicts')
 async def test_action_find_partner_invalid_partner_state(
-        mock_get_random_available_user: MagicMock,
+        mock_list_available_user_dicts: MagicMock,
         mock_rasa_callback_ask_to_join: AsyncMock,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
 ) -> None:
-    mock_get_random_available_user.side_effect = [None, UserStateMachine(
-        user_id='unavailable_user_id',
-        state=UserState.DO_NOT_DISTURB,
-    )]
+    # noinspection PyDataclass
+    mock_list_available_user_dicts.side_effect = [
+        [],  # first call - no newbies
+        [asdict(UserStateMachine(
+            user_id='unavailable_user_id',
+            state=UserState.DO_NOT_DISTURB,
+            newbie=False,
+        ))],  # second call - some veteran in not a valid state (dynamodb query malfunction?)
+    ]
 
     actual_events = await actions.ActionFindPartner().run(dispatcher, tracker, domain)
     assert actual_events == [
@@ -362,7 +367,7 @@ async def test_action_find_partner_invalid_partner_state(
     ]
     assert dispatcher.messages == []
 
-    assert mock_get_random_available_user.mock_calls == [
+    assert mock_list_available_user_dicts.mock_calls == [
         call(exclude_user_id='unit_test_user', newbie=True),
         call(exclude_user_id='unit_test_user', newbie=False),
     ]
