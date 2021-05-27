@@ -166,8 +166,6 @@ class ActionFindPartner(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        await asyncio.sleep(1.1)  # TODO oleksandr: move 1.1 to a constant (that reads from env var?)
-
         partner = user_vault.get_random_available_user(
             exclude_user_id=current_user.user_id,
             newbie=True,
@@ -381,6 +379,8 @@ class ActionDoNotDisturb(BaseSwiperAction):
             partner = user_vault.get_user(initial_partner_id)
             # TODO oleksandr: reuse this condition (it is also present in ActionCreateRoom)
             if partner.state == UserState.WAITING_PARTNER_ANSWER and partner.partner_id == current_user.user_id:
+                # wait for a second to avoid hitting a weird telegram message limit
+                await asyncio.sleep(1.1)  # TODO oleksandr: move 1.1 to a constant (that reads from env var?)
                 # force the original sender of the declined invitation to "move along" in their partner search
                 await rasa_callbacks.find_partner(current_user.user_id, partner.user_id)
 
