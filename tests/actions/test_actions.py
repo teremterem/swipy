@@ -284,15 +284,18 @@ async def test_action_find_partner_veteran(
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('ddb_unit_test_user')
 @patch('actions.rasa_callbacks.ask_to_join')
-@patch.object(UserVault, 'get_random_available_user')
+@patch.object(UserVault, '_list_available_user_dicts')
 async def test_action_find_partner_no_one(
-        mock_get_random_available_user: MagicMock,
+        mock_list_available_user_dicts: MagicMock,
         mock_rasa_callback_ask_to_join: AsyncMock,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
 ) -> None:
-    mock_get_random_available_user.side_effect = [None, None]
+    mock_list_available_user_dicts.side_effect = [
+        [],  # first call - no newbies
+        [],  # second call - no veterans
+    ]
 
     actual_events = await actions.ActionFindPartner().run(dispatcher, tracker, domain)
     assert actual_events == [
@@ -313,7 +316,7 @@ async def test_action_find_partner_no_one(
         'text': None,
     }]
 
-    assert mock_get_random_available_user.mock_calls == [
+    assert mock_list_available_user_dicts.mock_calls == [
         call(exclude_user_id='unit_test_user', newbie=True),
         call(exclude_user_id='unit_test_user', newbie=False),
     ]
