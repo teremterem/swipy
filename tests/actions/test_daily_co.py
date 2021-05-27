@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, call
 import pytest
 from aioresponses import aioresponses, CallbackResult
 
-from actions.daily_co import create_room
+from actions import daily_co
 
 
 @pytest.mark.asyncio
@@ -19,5 +19,5 @@ async def test_create_room(
         callback=mock_rasa_callbacks,
     )
 
-    assert await create_room('some_sender_id') == new_room1
+    assert await daily_co.create_room('some_sender_id') == new_room1
     assert mock_rasa_callbacks.mock_calls == [daily_co_create_room_expected_call[1]]

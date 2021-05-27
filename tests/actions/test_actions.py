@@ -434,8 +434,16 @@ async def test_action_create_room(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
-        mock_daily_co_create_room_aioresponses: AsyncMock,
+        daily_co_create_room_expected_call: Tuple[Text, call],
+        mock_aioresponses: aioresponses,
+        new_room1: Dict[Text, Any],
 ) -> None:
+    mock_rasa_callbacks = AsyncMock(return_value=CallbackResult(payload=new_room1))
+    mock_aioresponses.post(
+        daily_co_create_room_expected_call[0],
+        callback=mock_rasa_callbacks,
+    )
+
     action = actions.ActionCreateRoom()
     assert action.name() == 'action_create_room'
 
@@ -474,8 +482,9 @@ async def test_action_create_room(
         'room_url': 'https://swipy.daily.co/pytestroom',
     }]
 
+    assert mock_rasa_callbacks.mock_calls == [daily_co_create_room_expected_call[1]]
+    # make sure correct sender_id was passed for logging purposes
     wrap_daily_co_create_room.assert_called_once_with('unit_test_user')
-    mock_daily_co_create_room_aioresponses.assert_called_once()  # more detailed assertions are done by the fixture
 
     mock_rasa_callback_join_room.assert_called_once_with(
         'an_asker',
