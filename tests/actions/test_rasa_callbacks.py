@@ -5,6 +5,7 @@ import pytest
 from aioresponses import CallbackResult, aioresponses
 
 from actions import rasa_callbacks
+from actions.utils import SwiperRasaCallbackError
 
 
 @pytest.mark.asyncio
@@ -85,4 +86,41 @@ async def test_find_partner(
         'a_receiving_user',
     ) == external_intent_response
 
+    assert mock_rasa_callbacks.mock_calls == [expected_rasa_call]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('unsuccessful_response', [
+    {'no_tracker': 'here'},
+    {'tracker': None},
+    {'tracker': {}},
+    {
+        'tracker': {'is': 'here, but'},
+        'status': 'failure',
+    },
+    {
+        'tracker': {'here': {}},
+    },
+])
+async def test_find_partner_unsuccessful(
+        rasa_callbacks_expected_call_builder: Callable[[Text, Text, Dict[Text, Any]], Tuple[Text, call]],
+        mock_aioresponses: aioresponses,
+        unsuccessful_response: Dict[Text, Any],
+) -> None:
+    expected_rasa_url, expected_rasa_call = rasa_callbacks_expected_call_builder(
+        'a_receiving_user',
+        'EXTERNAL_find_partner',
+        {},
+    )
+    mock_rasa_callbacks = AsyncMock(return_value=CallbackResult(payload=unsuccessful_response))
+    mock_aioresponses.post(
+        expected_rasa_url,
+        callback=mock_rasa_callbacks,
+    )
+
+    with pytest.raises(SwiperRasaCallbackError):
+        await rasa_callbacks.find_partner(
+            'some_sender_id',
+            'a_receiving_user',
+        )
     assert mock_rasa_callbacks.mock_calls == [expected_rasa_call]

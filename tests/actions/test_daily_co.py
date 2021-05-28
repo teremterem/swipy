@@ -25,7 +25,7 @@ async def test_create_room(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize('url_missing', ['', None, 'del'])
+@pytest.mark.parametrize('url_missing', ['', None, 'del', 'faiiiil'])
 async def test_create_room_url_not_returned(
         mock_aioresponses: aioresponses,
         url_missing: Optional[Text],
@@ -44,5 +44,5 @@ async def test_create_room_url_not_returned(
     )
 
     with pytest.raises(SwiperDailyCoError):
-        assert await daily_co.create_room('some_sender_id') == new_room1
+        await daily_co.create_room('some_sender_id')
     assert mock_rasa_callbacks.mock_calls == [daily_co_create_room_expected_call[1]]

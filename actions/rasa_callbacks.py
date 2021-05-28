@@ -5,6 +5,8 @@ from typing import Text, Dict, Any
 
 import aiohttp
 
+from actions.utils import SwiperRasaCallbackError
+
 logger = logging.getLogger(__name__)
 
 RASA_PRODUCTION_HOST = os.environ['RASA_PRODUCTION_HOST']
@@ -73,15 +75,18 @@ async def _trigger_external_rasa_intent(
         ) as resp:
             resp_json = await resp.json()
 
-            # TODO oleksandr: change log level back to DEBUG when you decide how to identify and react to failures
-            if logger.isEnabledFor(logging.INFO):
-                logger.info(
-                    'TRIGGER_INTENT %r RESULT:\n\nSENDER_ID: %r\n\nRECEIVER_ID: %r\n\nENTITIES:\n%s\n\nRESPONSE:\n%s',
-                    intent_name,
-                    sender_id,
-                    receiver_id,
-                    pformat(entities),
-                    pformat(resp_json),
-                )
+    # TODO oleksandr: change log level back to DEBUG when you decide how to identify and react to failures
+    if logger.isEnabledFor(logging.INFO):
+        logger.info(
+            'TRIGGER_INTENT %r RESULT:\n\nSENDER_ID: %r\n\nRECEIVER_ID: %r\n\nENTITIES:\n%s\n\nRESPONSE:\n%s',
+            intent_name,
+            sender_id,
+            receiver_id,
+            pformat(entities),
+            pformat(resp_json),
+        )
+
+    if not resp_json.get('tracker') or resp_json.get('status') == 'failure':
+        raise SwiperRasaCallbackError(f"response doesn't seem to indicate success: {repr(resp_json)}")
 
     return resp_json

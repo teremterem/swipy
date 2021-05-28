@@ -37,13 +37,13 @@ async def create_room(sender_id: Text) -> Dict[Text, Any]:
                 },
                 json=room_data,
         ) as resp:
-            created_room = await resp.json()
+            resp_json = await resp.json()
 
-            # TODO oleksandr: change log level back to DEBUG when you decide how to identify and react to failures
-            if logger.isEnabledFor(logging.INFO):
-                logger.info('NEW DAILY CO ROOM (sender_id=%r):\n%s', sender_id, pformat(created_room))
+    # TODO oleksandr: change log level back to DEBUG when you decide how to identify and react to failures
+    if logger.isEnabledFor(logging.INFO):
+        logger.info('NEW DAILY CO ROOM (sender_id=%r):\n%s', sender_id, pformat(resp_json))
 
-            if not created_room.get('url'):
-                raise SwiperDailyCoError(f"the url of new room is missing: {repr(created_room)}")
+    if not resp_json.get('url'):
+        raise SwiperDailyCoError(f"the url of new room is missing: {repr(resp_json)}")
 
-    return created_room
+    return resp_json
