@@ -18,6 +18,7 @@ from actions.utils import InvalidSwiperStateError, stack_trace_to_str
 logger = logging.getLogger(__name__)
 
 SEND_ERROR_STACK_TRACE_TO_SLOT = strtobool(os.getenv('SEND_ERROR_STACK_TRACE_TO_SLOT', 'yes'))
+TELEGRAM_MSG_LIMIT_SLEEP_SEC = float(os.getenv('TELEGRAM_MSG_LIMIT_SLEEP_SEC', '1.1'))
 
 SWIPER_STATE_SLOT = 'swiper_state'
 SWIPER_ACTION_RESULT_SLOT = 'swiper_action_result'
@@ -170,6 +171,10 @@ class ActionFindPartner(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
+        # sleep for a second to avoid hitting a weird telegram message limit that (I still don't know why,
+        # but it happens when this action is invoked externally by someone who rejected invitation)
+        await asyncio.sleep(TELEGRAM_MSG_LIMIT_SLEEP_SEC)
+
         partner = user_vault.get_random_available_user(
             exclude_user_id=current_user.user_id,
             newbie=True,
@@ -383,8 +388,6 @@ class ActionDoNotDisturb(BaseSwiperAction):
             partner = user_vault.get_user(initial_partner_id)
             # TODO oleksandr: reuse this condition (it is also present in ActionCreateRoom)
             if partner.state == UserState.WAITING_PARTNER_ANSWER and partner.partner_id == current_user.user_id:
-                # wait for a second to avoid hitting a weird telegram message limit
-                await asyncio.sleep(1.1)  # TODO oleksandr: move 1.1 to a constant (that reads from env var?)
                 # force the original sender of the declined invitation to "move along" in their partner search
                 await rasa_callbacks.find_partner(current_user.user_id, partner.user_id)
 
