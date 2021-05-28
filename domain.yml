@@ -165,6 +165,8 @@ responses:
       Hope to see soon!
   utter_iamabot:
   - text: I am a bot, powered by Rasa.
+  utter_error:
+  - text: Ouch! Something went wrong 🤖
 actions:
 - action_session_start
 - action_find_partner

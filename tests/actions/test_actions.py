@@ -385,7 +385,16 @@ async def test_action_find_partner_swiper_error_trace(
         SlotSet('swiper_state', 'ok_to_chitchat'),
         SlotSet('partner_id', None),
     ]
-    assert dispatcher.messages == []
+    assert dispatcher.messages == [{
+        'attachment': None,
+        'buttons': [],
+        'custom': {},
+        'elements': [],
+        'image': None,
+        'response': 'utter_error',
+        'template': 'utter_error',
+        'text': None,
+    }]
 
     mock_asyncio_sleep.assert_called_once_with(1.1)
     assert mock_list_available_user_dicts.mock_calls == [
@@ -656,7 +665,16 @@ async def test_action_create_room_invalid_state(
         SlotSet('swiper_state', current_user.state),
         SlotSet('partner_id', current_user.partner_id),
     ]
-    assert dispatcher.messages == []
+    assert dispatcher.messages == [{
+        'attachment': None,
+        'buttons': [],
+        'custom': {},
+        'elements': [],
+        'image': None,
+        'response': 'utter_error',
+        'template': 'utter_error',
+        'text': None,
+    }]
 
     mock_daily_co_create_room.assert_not_called()
     mock_rasa_callback_join_room.assert_not_called()

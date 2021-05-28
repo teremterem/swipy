@@ -98,6 +98,11 @@ class BaseSwiperAction(Action, ABC):
                     key=SWIPER_ERROR_TRACE_SLOT,
                     value=stack_trace_to_str(e),
                 ))
+            # noinspection PyBroadException
+            try:
+                dispatcher.utter_message(response='utter_error')
+            except Exception:
+                pass
 
         current_user = user_vault.get_user(tracker.sender_id)  # invoke get_user once again (just in case)
         events.extend([
