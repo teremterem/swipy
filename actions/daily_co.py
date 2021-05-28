@@ -44,6 +44,6 @@ async def create_room(sender_id: Text) -> Dict[Text, Any]:
         logger.info('NEW DAILY CO ROOM (sender_id=%r):\n%s', sender_id, pformat(resp_json))
 
     if not resp_json.get('url'):
-        raise SwiperDailyCoError(f"the url of new room is missing: {repr(resp_json)}")
+        raise SwiperDailyCoError(repr(resp_json))
 
     return resp_json

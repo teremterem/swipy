@@ -87,6 +87,6 @@ async def _trigger_external_rasa_intent(
         )
 
     if not resp_json.get('tracker') or resp_json.get('status') == 'failure':
-        raise SwiperRasaCallbackError(f"response doesn't seem to indicate success: {repr(resp_json)}")
+        raise SwiperRasaCallbackError(repr(resp_json))
 
     return resp_json
