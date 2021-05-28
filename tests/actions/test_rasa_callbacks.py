@@ -98,9 +98,6 @@ async def test_find_partner(
         'tracker': {'is': 'here, but'},
         'status': 'failure',
     },
-    {
-        'tracker': {'here': {}},
-    },
 ])
 async def test_find_partner_unsuccessful(
         rasa_callbacks_expected_call_builder: Callable[[Text, Text, Dict[Text, Any]], Tuple[Text, call]],

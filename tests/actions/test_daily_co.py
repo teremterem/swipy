@@ -25,7 +25,7 @@ async def test_create_room(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize('url_missing', ['', None, 'del', 'faiiiil'])
+@pytest.mark.parametrize('url_missing', ['', None, 'del'])
 async def test_create_room_url_not_returned(
         mock_aioresponses: aioresponses,
         url_missing: Optional[Text],
