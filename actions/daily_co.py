@@ -5,6 +5,8 @@ from typing import Dict, Text, Any
 
 import aiohttp
 
+from actions.utils import SwiperDailyCoError
+
 logger = logging.getLogger(__name__)
 
 DAILY_CO_BASE_URL = 'https://api.daily.co/v1'
@@ -40,5 +42,8 @@ async def create_room(sender_id: Text) -> Dict[Text, Any]:
             # TODO oleksandr: change log level back to DEBUG when you decide how to identify and react to failures
             if logger.isEnabledFor(logging.INFO):
                 logger.info('NEW DAILY CO ROOM (sender_id=%r):\n%s', sender_id, pformat(created_room))
+
+            if not created_room.get('url'):
+                raise SwiperDailyCoError(f"the url of new room is missing: {repr(created_room)}")
 
     return created_room
