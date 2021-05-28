@@ -102,7 +102,7 @@ class BaseSwiperAction(Action, ABC):
             try:
                 dispatcher.utter_message(response='utter_error')
             except Exception:
-                pass
+                logger.exception('%s (less important error)', self.name())
 
         current_user = user_vault.get_user(tracker.sender_id)  # invoke get_user once again (just in case)
         events.extend([
