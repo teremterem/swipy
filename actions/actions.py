@@ -56,6 +56,8 @@ class BaseSwiperAction(Action, ABC):
             tracker: Tracker,
             domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
+        logger.info('BEGIN ACTION RUN: %s', self.name())  # TODO oleksandr: debug instead of info ?
+
         user_vault = UserVault()
 
         # noinspection PyBroadException
@@ -107,6 +109,8 @@ class BaseSwiperAction(Action, ABC):
                 value=current_user.partner_id,
             ),
         ])
+
+        logger.info('END ACTION RUN: %s', self.name())  # TODO oleksandr: debug instead of info ?
         return events
 
 
