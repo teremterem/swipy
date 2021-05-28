@@ -2,7 +2,7 @@ version: '2.0'
 config:
   store_entities_as_slots: true
 session_config:
-  session_expiration_time: 60
+  session_expiration_time: 0
   carry_over_slots_to_new_session: true
 intents:
 - start:
@@ -165,6 +165,8 @@ responses:
       Hope to see soon!
   utter_iamabot:
   - text: I am a bot, powered by Rasa.
+  utter_error:
+  - text: Ouch! Something went wrong 🤖
 actions:
 - action_session_start
 - action_find_partner

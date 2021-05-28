@@ -5,13 +5,15 @@ from typing import Dict, Text, Any
 
 import aiohttp
 
+from actions.utils import SwiperDailyCoError
+
 logger = logging.getLogger(__name__)
 
 DAILY_CO_BASE_URL = 'https://api.daily.co/v1'
 DAILY_CO_API_TOKEN = os.environ['DAILY_CO_API_TOKEN']
 
 
-async def create_room() -> Dict[Text, Any]:
+async def create_room(sender_id: Text) -> Dict[Text, Any]:
     # TODO oleksandr: do I need to reuse ClientSession instance ? what should be its lifetime ?
     async with aiohttp.ClientSession() as session:
         room_data = {
@@ -35,10 +37,13 @@ async def create_room() -> Dict[Text, Any]:
                 },
                 json=room_data,
         ) as resp:
-            created_room = await resp.json()
+            resp_json = await resp.json()
 
-            # TODO oleksandr: change log level back to DEBUG when you decide how to identify and react to failures
-            if logger.isEnabledFor(logging.INFO):
-                logger.info('NEW DAILY CO ROOM:\n%s', pformat(created_room))
+    # TODO oleksandr: change log level back to DEBUG when you decide how to identify and react to failures
+    if logger.isEnabledFor(logging.INFO):
+        logger.info('NEW DAILY CO ROOM (sender_id=%r):\n%s', sender_id, pformat(resp_json))
 
-    return created_room
+    if not resp_json.get('url'):
+        raise SwiperDailyCoError(repr(resp_json))
+
+    return resp_json

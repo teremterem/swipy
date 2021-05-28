@@ -14,7 +14,7 @@ pytest_plugins = [
 ]
 
 
-@pytest.fixture  # TODO oleksandr: (autouse=True) ?
+@pytest.fixture
 def mock_aioresponses() -> aioresponses:
     with aioresponses() as m:
         yield m

@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import os
 from abc import ABC, abstractmethod
@@ -17,6 +18,8 @@ from actions.utils import InvalidSwiperStateError, stack_trace_to_str
 logger = logging.getLogger(__name__)
 
 SEND_ERROR_STACK_TRACE_TO_SLOT = strtobool(os.getenv('SEND_ERROR_STACK_TRACE_TO_SLOT', 'yes'))
+TELEGRAM_MSG_LIMIT_SLEEP_SEC = float(os.getenv('TELEGRAM_MSG_LIMIT_SLEEP_SEC', '1.1'))
+TELL_USER_ABOUT_ERRORS = strtobool(os.getenv('TELL_USER_ABOUT_ERRORS', 'yes'))
 
 SWIPER_STATE_SLOT = 'swiper_state'
 SWIPER_ACTION_RESULT_SLOT = 'swiper_action_result'
@@ -55,6 +58,8 @@ class BaseSwiperAction(Action, ABC):
             tracker: Tracker,
             domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
+        logger.info('BEGIN ACTION RUN: %s (CURRENT USER ID = %r)', self.name(), tracker.sender_id)
+
         user_vault = UserVault()
 
         # noinspection PyBroadException
@@ -94,6 +99,12 @@ class BaseSwiperAction(Action, ABC):
                     key=SWIPER_ERROR_TRACE_SLOT,
                     value=stack_trace_to_str(e),
                 ))
+            # noinspection PyBroadException
+            try:
+                if TELL_USER_ABOUT_ERRORS:
+                    dispatcher.utter_message(response='utter_error')
+            except Exception:
+                logger.exception('%s (less important error)', self.name())
 
         current_user = user_vault.get_user(tracker.sender_id)  # invoke get_user once again (just in case)
         events.extend([
@@ -106,6 +117,8 @@ class BaseSwiperAction(Action, ABC):
                 value=current_user.partner_id,
             ),
         ])
+
+        logger.info('END ACTION RUN: %s (CURRENT USER ID = %r)', self.name(), tracker.sender_id)
         return events
 
 
@@ -165,6 +178,10 @@ class ActionFindPartner(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
+        # sleep for a second to avoid hitting a weird telegram message limit that (I still don't know why,
+        # but it happens when this action is invoked externally by someone who rejected invitation)
+        await asyncio.sleep(TELEGRAM_MSG_LIMIT_SLEEP_SEC)
+
         partner = user_vault.get_random_available_user(
             exclude_user_id=current_user.user_id,
             newbie=True,
@@ -185,7 +202,7 @@ class ActionFindPartner(BaseSwiperAction):
                     f"randomly chosen partner {repr(partner.user_id)} is in a wrong state: {repr(partner.state)}"
                 )
 
-            await rasa_callbacks.ask_to_join(partner.user_id, current_user.user_id)
+            await rasa_callbacks.ask_to_join(current_user.user_id, partner.user_id)
 
             # noinspection PyUnresolvedReferences
             current_user.ask_partner(partner.user_id)
@@ -276,11 +293,11 @@ class ActionCreateRoom(BaseSwiperAction):
                 ),
             ]
 
-        created_room = await daily_co.create_room()
+        created_room = await daily_co.create_room(current_user.user_id)
         room_url = created_room['url']
 
         # put partner into the room as well
-        await rasa_callbacks.join_room(current_user.partner_id, current_user.user_id, room_url)
+        await rasa_callbacks.join_room(current_user.user_id, current_user.partner_id, room_url)
 
         dispatcher.utter_message(
             response='utter_room_url',
@@ -379,7 +396,7 @@ class ActionDoNotDisturb(BaseSwiperAction):
             # TODO oleksandr: reuse this condition (it is also present in ActionCreateRoom)
             if partner.state == UserState.WAITING_PARTNER_ANSWER and partner.partner_id == current_user.user_id:
                 # force the original sender of the declined invitation to "move along" in their partner search
-                await rasa_callbacks.find_partner(partner.user_id)
+                await rasa_callbacks.find_partner(current_user.user_id, partner.user_id)
 
         return [
             SlotSet(

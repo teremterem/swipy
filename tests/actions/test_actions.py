@@ -1,13 +1,15 @@
+import traceback
 from dataclasses import asdict
-from typing import Dict, Text, Any, List
-from unittest.mock import patch, AsyncMock, MagicMock, call, Mock
+from typing import Dict, Text, Any, List, Callable, Tuple
+from unittest.mock import patch, AsyncMock, MagicMock, call
 
 import pytest
+from aioresponses import aioresponses, CallbackResult
 from rasa_sdk import Tracker
 from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType
 from rasa_sdk.executor import CollectingDispatcher
 
-from actions import actions
+from actions import actions, daily_co
 from actions.user_state_machine import UserStateMachine, UserState
 from actions.user_vault import UserVault, IUserVault
 
@@ -177,17 +179,31 @@ async def test_action_session_start_with_slots(
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('ddb_unit_test_user')
-@patch('actions.rasa_callbacks.ask_to_join')
-@patch.object(UserVault, 'get_random_available_user')
+@patch.object(UserVault, '_list_available_user_dicts')
+@patch('asyncio.sleep')
 async def test_action_find_partner_newbie(
-        mock_get_random_available_user: MagicMock,
-        mock_rasa_callback_ask_to_join: AsyncMock,
+        mock_asyncio_sleep: AsyncMock,
+        mock_list_available_user_dicts: MagicMock,
+        mock_aioresponses: aioresponses,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
         available_newbie1: UserStateMachine,
+        rasa_callbacks_expected_call_builder: Callable[[Text, Text, Dict[Text, Any]], Tuple[Text, call]],
+        external_intent_response: Dict[Text, Any],
 ) -> None:
-    mock_get_random_available_user.return_value = available_newbie1
+    # noinspection PyDataclass
+    mock_list_available_user_dicts.return_value = [asdict(available_newbie1)]
+
+    expected_rasa_url, expected_rasa_call = rasa_callbacks_expected_call_builder(
+        'available_newbie_id1',
+        'EXTERNAL_ask_to_join',
+        {
+            'partner_id': 'unit_test_user',
+        },
+    )
+    mock_rasa_callbacks = AsyncMock(return_value=CallbackResult(payload=external_intent_response))
+    mock_aioresponses.post(expected_rasa_url, callback=mock_rasa_callbacks)
 
     action = actions.ActionFindPartner()
     assert action.name() == 'action_find_partner'
@@ -202,8 +218,9 @@ async def test_action_find_partner_newbie(
     ]
     assert dispatcher.messages == []
 
-    mock_get_random_available_user.assert_called_once_with(exclude_user_id='unit_test_user', newbie=True)
-    mock_rasa_callback_ask_to_join.assert_called_once_with('available_newbie_id1', 'unit_test_user')
+    mock_asyncio_sleep.assert_called_once_with(1.1)
+    mock_list_available_user_dicts.assert_called_once_with(exclude_user_id='unit_test_user', newbie=True)
+    assert mock_rasa_callbacks.mock_calls == [expected_rasa_call]
 
     user_vault = UserVault()
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
@@ -216,17 +233,34 @@ async def test_action_find_partner_newbie(
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('ddb_unit_test_user')
-@patch('actions.rasa_callbacks.ask_to_join')
-@patch.object(UserVault, 'get_random_available_user')
+@patch.object(UserVault, '_list_available_user_dicts')
+@patch('asyncio.sleep')
 async def test_action_find_partner_veteran(
-        mock_get_random_available_user: MagicMock,
-        mock_rasa_callback_ask_to_join: AsyncMock,
+        mock_asyncio_sleep: AsyncMock,
+        mock_list_available_user_dicts: MagicMock,
+        mock_aioresponses: aioresponses,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
         available_veteran1: UserStateMachine,
+        rasa_callbacks_expected_call_builder: Callable[[Text, Text, Dict[Text, Any]], Tuple[Text, call]],
+        external_intent_response: Dict[Text, Any],
 ) -> None:
-    mock_get_random_available_user.side_effect = [None, available_veteran1]
+    # noinspection PyDataclass
+    mock_list_available_user_dicts.side_effect = [
+        [],  # first call - no newbies
+        [asdict(available_veteran1)],  # second call - one veteran
+    ]
+
+    expected_rasa_url, expected_rasa_call = rasa_callbacks_expected_call_builder(
+        'available_veteran_id1',
+        'EXTERNAL_ask_to_join',
+        {
+            'partner_id': 'unit_test_user',
+        },
+    )
+    mock_rasa_callbacks = AsyncMock(return_value=CallbackResult(payload=external_intent_response))
+    mock_aioresponses.post(expected_rasa_url, callback=mock_rasa_callbacks)
 
     actual_events = await actions.ActionFindPartner().run(dispatcher, tracker, domain)
     assert actual_events == [
@@ -238,11 +272,12 @@ async def test_action_find_partner_veteran(
     ]
     assert dispatcher.messages == []
 
-    assert mock_get_random_available_user.mock_calls == [
+    mock_asyncio_sleep.assert_called_once_with(1.1)
+    assert mock_list_available_user_dicts.mock_calls == [
         call(exclude_user_id='unit_test_user', newbie=True),
         call(exclude_user_id='unit_test_user', newbie=False),
     ]
-    mock_rasa_callback_ask_to_join.assert_called_once_with('available_veteran_id1', 'unit_test_user')
+    assert mock_rasa_callbacks.mock_calls == [expected_rasa_call]
 
     user_vault = UserVault()
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
@@ -256,15 +291,20 @@ async def test_action_find_partner_veteran(
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('ddb_unit_test_user')
 @patch('actions.rasa_callbacks.ask_to_join')
-@patch.object(UserVault, 'get_random_available_user')
+@patch.object(UserVault, '_list_available_user_dicts')
+@patch('asyncio.sleep')
 async def test_action_find_partner_no_one(
-        mock_get_random_available_user: MagicMock,
+        mock_asyncio_sleep: AsyncMock,
+        mock_list_available_user_dicts: MagicMock,
         mock_rasa_callback_ask_to_join: AsyncMock,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
 ) -> None:
-    mock_get_random_available_user.side_effect = [None, None]
+    mock_list_available_user_dicts.side_effect = [
+        [],  # first call - no newbies
+        [],  # second call - no veterans
+    ]
 
     actual_events = await actions.ActionFindPartner().run(dispatcher, tracker, domain)
     assert actual_events == [
@@ -285,7 +325,8 @@ async def test_action_find_partner_no_one(
         'text': None,
     }]
 
-    assert mock_get_random_available_user.mock_calls == [
+    mock_asyncio_sleep.assert_called_once_with(1.1)
+    assert mock_list_available_user_dicts.mock_calls == [
         call(exclude_user_id='unit_test_user', newbie=True),
         call(exclude_user_id='unit_test_user', newbie=False),
     ]
@@ -302,22 +343,37 @@ async def test_action_find_partner_no_one(
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('ddb_unit_test_user')
-@patch('actions.actions.stack_trace_to_str', Mock(return_value='stack trace goes here'))
 @patch('actions.rasa_callbacks.ask_to_join')
-@patch.object(UserVault, 'get_random_available_user')
-async def test_action_find_partner_invalid_partner_state(
-        mock_get_random_available_user: MagicMock,
+@patch.object(UserVault, '_list_available_user_dicts')
+@patch('asyncio.sleep')
+async def test_action_find_partner_swiper_error_trace(
+        mock_asyncio_sleep: AsyncMock,
+        mock_list_available_user_dicts: MagicMock,
         mock_rasa_callback_ask_to_join: AsyncMock,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
 ) -> None:
-    mock_get_random_available_user.side_effect = [None, UserStateMachine(
-        user_id='unavailable_user_id',
-        state=UserState.DO_NOT_DISTURB,
-    )]
+    # noinspection PyDataclass
+    mock_list_available_user_dicts.side_effect = [
+        [],  # first call - no newbies
+        [asdict(UserStateMachine(
+            user_id='unavailable_user_id',
+            state=UserState.DO_NOT_DISTURB,
+            newbie=False,
+        ))],  # second call - some veteran in not a valid state (dynamodb query malfunction?)
+    ]
 
-    actual_events = await actions.ActionFindPartner().run(dispatcher, tracker, domain)
+    _original_format_exception = traceback.format_exception
+
+    def _wrap_format_exception(*args, **kwargs) -> List[Text]:
+        _original_format_exception(*args, **kwargs)  # make sure parameters don't cause the original function to crash
+        return ['stack', 'trace', 'goes', 'here']
+
+    with patch('traceback.format_exception') as mock_traceback_format_exception:
+        mock_traceback_format_exception.side_effect = _wrap_format_exception
+
+        actual_events = await actions.ActionFindPartner().run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'error'),
         SlotSet(
@@ -325,13 +381,23 @@ async def test_action_find_partner_invalid_partner_state(
             'InvalidSwiperStateError("randomly chosen partner \'unavailable_user_id\' '
             'is in a wrong state: \'do_not_disturb\'")',
         ),
-        SlotSet('swiper_error_trace', 'stack trace goes here'),
+        SlotSet('swiper_error_trace', 'stacktracegoeshere'),
         SlotSet('swiper_state', 'ok_to_chitchat'),
         SlotSet('partner_id', None),
     ]
-    assert dispatcher.messages == []
+    assert dispatcher.messages == [{
+        'attachment': None,
+        'buttons': [],
+        'custom': {},
+        'elements': [],
+        'image': None,
+        'response': 'utter_error',
+        'template': 'utter_error',
+        'text': None,
+    }]
 
-    assert mock_get_random_available_user.mock_calls == [
+    mock_asyncio_sleep.assert_called_once_with(1.1)
+    assert mock_list_available_user_dicts.mock_calls == [
         call(exclude_user_id='unit_test_user', newbie=True),
         call(exclude_user_id='unit_test_user', newbie=False),
     ]
@@ -398,17 +464,34 @@ async def test_action_ask_to_join(
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('create_user_state_machine_table')
-@patch('actions.rasa_callbacks.join_room')
-@patch('actions.daily_co.create_room')
+@patch('actions.daily_co.create_room', wraps=daily_co.create_room)
 async def test_action_create_room(
-        mock_daily_co_create_room: AsyncMock,
-        mock_rasa_callback_join_room: AsyncMock,
+        wrap_daily_co_create_room: AsyncMock,
+        mock_aioresponses: aioresponses,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
+        daily_co_create_room_expected_call: Tuple[Text, call],
         new_room1: Dict[Text, Any],
+        rasa_callbacks_expected_call_builder: Callable[[Text, Text, Dict[Text, Any]], Tuple[Text, call]],
+        external_intent_response: Dict[Text, Any],
 ) -> None:
-    mock_daily_co_create_room.return_value = new_room1
+    mock_daily_co = AsyncMock(return_value=CallbackResult(payload=new_room1))
+    mock_aioresponses.post(
+        daily_co_create_room_expected_call[0],
+        callback=mock_daily_co,
+    )
+
+    expected_rasa_url, expected_rasa_call = rasa_callbacks_expected_call_builder(
+        'an_asker',
+        'EXTERNAL_join_room',
+        {
+            'partner_id': 'unit_test_user',
+            'room_url': 'https://swipy.daily.co/pytestroom',
+        },
+    )
+    mock_rasa_callbacks = AsyncMock(return_value=CallbackResult(payload=external_intent_response))
+    mock_aioresponses.post(expected_rasa_url, callback=mock_rasa_callbacks)
 
     action = actions.ActionCreateRoom()
     assert action.name() == 'action_create_room'
@@ -448,12 +531,11 @@ async def test_action_create_room(
         'room_url': 'https://swipy.daily.co/pytestroom',
     }]
 
-    mock_daily_co_create_room.assert_called_once_with()
-    mock_rasa_callback_join_room.assert_called_once_with(
-        'an_asker',
-        'unit_test_user',
-        'https://swipy.daily.co/pytestroom',
-    )
+    assert mock_daily_co.mock_calls == [daily_co_create_room_expected_call[1]]
+    # make sure correct sender_id was passed (for logging purposes)
+    wrap_daily_co_create_room.assert_called_once_with('unit_test_user')
+
+    assert mock_rasa_callbacks.mock_calls == [expected_rasa_call]
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
@@ -488,14 +570,8 @@ async def test_action_create_room_partner_not_waiting(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
-        new_room1: Dict[Text, Any],
         partner: UserStateMachine,
 ) -> None:
-    mock_daily_co_create_room.return_value = new_room1
-
-    action = actions.ActionCreateRoom()
-    assert action.name() == 'action_create_room'
-
     user_vault = UserVault()
     user_vault.save(partner)
     user_vault.save(UserStateMachine(
@@ -505,7 +581,7 @@ async def test_action_create_room_partner_not_waiting(
         newbie=True,
     ))
 
-    actual_events = await action.run(dispatcher, tracker, domain)
+    actual_events = await actions.ActionCreateRoom().run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'partner_not_waiting_anymore'),
         SlotSet('swiper_error', None),
@@ -568,15 +644,9 @@ async def test_action_create_room_invalid_state(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
-        new_room1: Dict[Text, Any],
         current_user: UserStateMachine,
         expected_swiper_error: Text,
 ) -> None:
-    mock_daily_co_create_room.return_value = new_room1
-
-    action = actions.ActionCreateRoom()
-    assert action.name() == 'action_create_room'
-
     user_vault = UserVault()
     user_vault.save(UserStateMachine(
         user_id='an_asker',
@@ -588,14 +658,23 @@ async def test_action_create_room_invalid_state(
 
     actions.SEND_ERROR_STACK_TRACE_TO_SLOT = False
 
-    actual_events = await action.run(dispatcher, tracker, domain)
+    actual_events = await actions.ActionCreateRoom().run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'error'),
         SlotSet('swiper_error', expected_swiper_error),
         SlotSet('swiper_state', current_user.state),
         SlotSet('partner_id', current_user.partner_id),
     ]
-    assert dispatcher.messages == []
+    assert dispatcher.messages == [{
+        'attachment': None,
+        'buttons': [],
+        'custom': {},
+        'elements': [],
+        'image': None,
+        'response': 'utter_error',
+        'template': 'utter_error',
+        'text': None,
+    }]
 
     mock_daily_co_create_room.assert_not_called()
     mock_rasa_callback_join_room.assert_not_called()
@@ -764,16 +843,25 @@ async def test_action_become_ok_to_chitchat(
             True,  # the asker is actually waiting for the current user to answer - find_partner should be called
     ),
 ])
-@patch('actions.rasa_callbacks.find_partner')
 async def test_action_do_not_disturb(
-        rasa_callbacks_find_partner_mock: AsyncMock,
+        mock_aioresponses: aioresponses,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
+        rasa_callbacks_expected_call_builder: Callable[[Text, Text, Dict[Text, Any]], Tuple[Text, call]],
+        external_intent_response: Dict[Text, Any],
         current_user: UserStateMachine,
         asker: UserStateMachine,
         find_partner_call_expected: bool,
 ) -> None:
+    expected_rasa_url, expected_rasa_call = rasa_callbacks_expected_call_builder(
+        'the_asker',
+        'EXTERNAL_find_partner',
+        {},
+    )
+    mock_rasa_callbacks = AsyncMock(return_value=CallbackResult(payload=external_intent_response))
+    mock_aioresponses.post(expected_rasa_url, callback=mock_rasa_callbacks)
+
     action = actions.ActionDoNotDisturb()
     assert action.name() == 'action_do_not_disturb'
 
@@ -792,9 +880,9 @@ async def test_action_do_not_disturb(
     assert dispatcher.messages == []
 
     if find_partner_call_expected:
-        rasa_callbacks_find_partner_mock.assert_called_once_with('the_asker')
+        assert mock_rasa_callbacks.mock_calls == [expected_rasa_call]
     else:
-        rasa_callbacks_find_partner_mock.assert_not_called()
+        mock_rasa_callbacks.assert_not_called()
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(

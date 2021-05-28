@@ -1,84 +1,123 @@
-from typing import Dict, Text, Any
-from unittest.mock import MagicMock
+from typing import Dict, Text, Any, Callable, Tuple
+from unittest.mock import AsyncMock, call
 
 import pytest
-from aioresponses import aioresponses, CallbackResult
+from aioresponses import CallbackResult, aioresponses
 
 from actions import rasa_callbacks
+from actions.utils import SwiperRasaCallbackError
 
 
 @pytest.mark.asyncio
 async def test_ask_to_join(
+        rasa_callbacks_expected_call_builder: Callable[[Text, Text, Dict[Text, Any]], Tuple[Text, call]],
         mock_aioresponses: aioresponses,
         external_intent_response: Dict[Text, Any],
 ) -> None:
-    def rasa_core_callback(url, json=None, **kwargs):
-        assert json == {
-            'name': 'EXTERNAL_ask_to_join',
-            'entities': {
-                'partner_id': 'id_of_asker',
-            },
-        }
-        return CallbackResult(payload=external_intent_response)
-
-    rasa_core_callback_mock = MagicMock(side_effect=rasa_core_callback)
-    # noinspection HttpUrlsUsage
+    expected_rasa_url, expected_rasa_call = rasa_callbacks_expected_call_builder(
+        'partner_id_to_ask',
+        'EXTERNAL_ask_to_join',
+        {
+            'partner_id': 'id_of_asker',
+        },
+    )
+    mock_rasa_callbacks = AsyncMock(return_value=CallbackResult(payload=external_intent_response))
     mock_aioresponses.post(
-        'http://rasa-unittest:5005/unittest-core/conversations/partner_id_to_ask/trigger_intent'
-        '?output_channel=telegram&token=rasaunittesttoken',
-        callback=rasa_core_callback_mock,
+        expected_rasa_url,
+        callback=mock_rasa_callbacks,
     )
 
-    await rasa_callbacks.ask_to_join('partner_id_to_ask', 'id_of_asker')
-    rasa_core_callback_mock.assert_called_once()
+    assert await rasa_callbacks.ask_to_join(
+        'id_of_asker',
+        'partner_id_to_ask',
+    ) == external_intent_response
+
+    assert mock_rasa_callbacks.mock_calls == [expected_rasa_call]
 
 
 @pytest.mark.asyncio
 async def test_join_room(
+        rasa_callbacks_expected_call_builder: Callable[[Text, Text, Dict[Text, Any]], Tuple[Text, call]],
         mock_aioresponses: aioresponses,
         external_intent_response: Dict[Text, Any],
 ) -> None:
-    def rasa_core_callback(url, json=None, **kwargs):
-        assert json == {
-            'name': 'EXTERNAL_join_room',
-            'entities': {
-                'partner_id': 'a_sending_user',
-                'room_url': 'https://room-unittest/url',
-            },
-        }
-        return CallbackResult(payload=external_intent_response)
-
-    rasa_core_callback_mock = MagicMock(side_effect=rasa_core_callback)
-    # noinspection HttpUrlsUsage
+    expected_rasa_url, expected_rasa_call = rasa_callbacks_expected_call_builder(
+        'a_receiving_user',
+        'EXTERNAL_join_room',
+        {
+            'partner_id': 'a_sending_user',
+            'room_url': 'https://room-unittest/url',
+        },
+    )
+    mock_rasa_callbacks = AsyncMock(return_value=CallbackResult(payload=external_intent_response))
     mock_aioresponses.post(
-        'http://rasa-unittest:5005/unittest-core/conversations/a_receiving_user/trigger_intent'
-        '?output_channel=telegram&token=rasaunittesttoken',
-        callback=rasa_core_callback_mock,
+        expected_rasa_url,
+        callback=mock_rasa_callbacks,
     )
 
-    await rasa_callbacks.join_room('a_receiving_user', 'a_sending_user', 'https://room-unittest/url')
-    rasa_core_callback_mock.assert_called_once()
+    assert await rasa_callbacks.join_room(
+        'a_sending_user',
+        'a_receiving_user',
+        'https://room-unittest/url',
+    ) == external_intent_response
+
+    assert mock_rasa_callbacks.mock_calls == [expected_rasa_call]
 
 
 @pytest.mark.asyncio
 async def test_find_partner(
+        rasa_callbacks_expected_call_builder: Callable[[Text, Text, Dict[Text, Any]], Tuple[Text, call]],
         mock_aioresponses: aioresponses,
         external_intent_response: Dict[Text, Any],
 ) -> None:
-    def rasa_core_callback(url, json=None, **kwargs):
-        assert json == {
-            'name': 'EXTERNAL_find_partner',
-            'entities': {},
-        }
-        return CallbackResult(payload=external_intent_response)
-
-    rasa_core_callback_mock = MagicMock(side_effect=rasa_core_callback)
-    # noinspection HttpUrlsUsage
+    expected_rasa_url, expected_rasa_call = rasa_callbacks_expected_call_builder(
+        'a_receiving_user',
+        'EXTERNAL_find_partner',
+        {},
+    )
+    mock_rasa_callbacks = AsyncMock(return_value=CallbackResult(payload=external_intent_response))
     mock_aioresponses.post(
-        'http://rasa-unittest:5005/unittest-core/conversations/a_receiving_user/trigger_intent'
-        '?output_channel=telegram&token=rasaunittesttoken',
-        callback=rasa_core_callback_mock,
+        expected_rasa_url,
+        callback=mock_rasa_callbacks,
     )
 
-    await rasa_callbacks.find_partner('a_receiving_user')
-    rasa_core_callback_mock.assert_called_once()
+    assert await rasa_callbacks.find_partner(
+        'some_sender_id',
+        'a_receiving_user',
+    ) == external_intent_response
+
+    assert mock_rasa_callbacks.mock_calls == [expected_rasa_call]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('unsuccessful_response', [
+    {'no_tracker': 'here'},
+    {'tracker': None},
+    {'tracker': {}},
+    {
+        'tracker': {'is': 'here, but'},
+        'status': 'failure',
+    },
+])
+async def test_find_partner_unsuccessful(
+        rasa_callbacks_expected_call_builder: Callable[[Text, Text, Dict[Text, Any]], Tuple[Text, call]],
+        mock_aioresponses: aioresponses,
+        unsuccessful_response: Dict[Text, Any],
+) -> None:
+    expected_rasa_url, expected_rasa_call = rasa_callbacks_expected_call_builder(
+        'a_receiving_user',
+        'EXTERNAL_find_partner',
+        {},
+    )
+    mock_rasa_callbacks = AsyncMock(return_value=CallbackResult(payload=unsuccessful_response))
+    mock_aioresponses.post(
+        expected_rasa_url,
+        callback=mock_rasa_callbacks,
+    )
+
+    with pytest.raises(SwiperRasaCallbackError):
+        await rasa_callbacks.find_partner(
+            'some_sender_id',
+            'a_receiving_user',
+        )
+    assert mock_rasa_callbacks.mock_calls == [expected_rasa_call]

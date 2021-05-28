@@ -1,42 +1,48 @@
-from typing import Dict, Text, Any
-from unittest.mock import MagicMock
+from typing import Dict, Text, Any, Tuple, Optional
+from unittest.mock import AsyncMock, call
 
 import pytest
-from aioresponses import CallbackResult, aioresponses
+from aioresponses import aioresponses, CallbackResult
 
-from actions.daily_co import create_room
+from actions import daily_co
+from actions.utils import SwiperDailyCoError
 
 
 @pytest.mark.asyncio
 async def test_create_room(
         mock_aioresponses: aioresponses,
+        daily_co_create_room_expected_call: Tuple[Text, call],
         new_room1: Dict[Text, Any],
 ) -> None:
-    def daily_co_callback(url, headers=None, json=None, **kwargs):
-        assert headers == {
-            'Authorization': 'Bearer test-daily-co-api-token',
-        }
-        assert json == {
-            'privacy': 'public',
-            'properties': {
-                'enable_network_ui': False,
-                'enable_prejoin_ui': False,
-                'enable_new_call_ui': True,
-                'enable_screenshare': True,
-                'enable_chat': True,
-                'start_video_off': False,
-                'start_audio_off': False,
-                'owner_only_broadcast': False,
-                'lang': 'en',
-            },
-        }
-        return CallbackResult(payload=new_room1)
-
-    daily_co_callback_mock = MagicMock(side_effect=daily_co_callback)
+    mock_rasa_callbacks = AsyncMock(return_value=CallbackResult(payload=new_room1))
     mock_aioresponses.post(
-        'https://api.daily.co/v1/rooms',
-        callback=daily_co_callback_mock,
+        daily_co_create_room_expected_call[0],
+        callback=mock_rasa_callbacks,
     )
 
-    assert await create_room() == new_room1
-    daily_co_callback_mock.assert_called_once()
+    assert await daily_co.create_room('some_sender_id') == new_room1
+    assert mock_rasa_callbacks.mock_calls == [daily_co_create_room_expected_call[1]]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('url_missing', ['', None, 'del'])
+async def test_create_room_url_not_returned(
+        mock_aioresponses: aioresponses,
+        url_missing: Optional[Text],
+        daily_co_create_room_expected_call: Tuple[Text, call],
+        new_room1: Dict[Text, Any],
+) -> None:
+    if url_missing == 'del':
+        del new_room1['url']
+    else:
+        new_room1['url'] = url_missing
+
+    mock_rasa_callbacks = AsyncMock(return_value=CallbackResult(payload=new_room1))
+    mock_aioresponses.post(
+        daily_co_create_room_expected_call[0],
+        callback=mock_rasa_callbacks,
+    )
+
+    with pytest.raises(SwiperDailyCoError):
+        await daily_co.create_room('some_sender_id')
+    assert mock_rasa_callbacks.mock_calls == [daily_co_create_room_expected_call[1]]
