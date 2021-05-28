@@ -511,7 +511,7 @@ async def test_action_create_room(
     }]
 
     assert mock_daily_co.mock_calls == [daily_co_create_room_expected_call[1]]
-    # make sure correct sender_id was passed for logging purposes
+    # make sure correct sender_id was passed (for logging purposes)
     wrap_daily_co_create_room.assert_called_once_with('unit_test_user')
 
     assert mock_rasa_callbacks.mock_calls == [expected_rasa_call]
@@ -626,9 +626,6 @@ async def test_action_create_room_invalid_state(
         current_user: UserStateMachine,
         expected_swiper_error: Text,
 ) -> None:
-    action = actions.ActionCreateRoom()
-    assert action.name() == 'action_create_room'
-
     user_vault = UserVault()
     user_vault.save(UserStateMachine(
         user_id='an_asker',
@@ -640,7 +637,7 @@ async def test_action_create_room_invalid_state(
 
     actions.SEND_ERROR_STACK_TRACE_TO_SLOT = False
 
-    actual_events = await action.run(dispatcher, tracker, domain)
+    actual_events = await actions.ActionCreateRoom().run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'error'),
         SlotSet('swiper_error', expected_swiper_error),
@@ -816,16 +813,25 @@ async def test_action_become_ok_to_chitchat(
             True,  # the asker is actually waiting for the current user to answer - find_partner should be called
     ),
 ])
-@patch('actions.rasa_callbacks.find_partner')
 async def test_action_do_not_disturb(
-        mock_rasa_callbacks_find_partner: AsyncMock,
+        mock_aioresponses: aioresponses,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
+        rasa_callbacks_expected_call_builder: Callable[[Text, Text, Dict[Text, Any]], Tuple[Text, call]],
+        external_intent_response: Dict[Text, Any],
         current_user: UserStateMachine,
         asker: UserStateMachine,
         find_partner_call_expected: bool,
 ) -> None:
+    expected_rasa_url, expected_rasa_call = rasa_callbacks_expected_call_builder(
+        'the_asker',
+        'EXTERNAL_find_partner',
+        {},
+    )
+    mock_rasa_callbacks = AsyncMock(return_value=CallbackResult(payload=external_intent_response))
+    mock_aioresponses.post(expected_rasa_url, callback=mock_rasa_callbacks)
+
     action = actions.ActionDoNotDisturb()
     assert action.name() == 'action_do_not_disturb'
 
@@ -844,9 +850,9 @@ async def test_action_do_not_disturb(
     assert dispatcher.messages == []
 
     if find_partner_call_expected:
-        mock_rasa_callbacks_find_partner.assert_called_once_with('unit_test_user', 'the_asker')
+        assert mock_rasa_callbacks.mock_calls == [expected_rasa_call]
     else:
-        mock_rasa_callbacks_find_partner.assert_not_called()
+        mock_rasa_callbacks.assert_not_called()
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
