@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 SEND_ERROR_STACK_TRACE_TO_SLOT = strtobool(os.getenv('SEND_ERROR_STACK_TRACE_TO_SLOT', 'yes'))
 TELEGRAM_MSG_LIMIT_SLEEP_SEC = float(os.getenv('TELEGRAM_MSG_LIMIT_SLEEP_SEC', '1.1'))
+TELL_USER_ABOUT_ERRORS = strtobool(os.getenv('TELL_USER_ABOUT_ERRORS', 'yes'))
 
 SWIPER_STATE_SLOT = 'swiper_state'
 SWIPER_ACTION_RESULT_SLOT = 'swiper_action_result'
@@ -100,7 +101,8 @@ class BaseSwiperAction(Action, ABC):
                 ))
             # noinspection PyBroadException
             try:
-                dispatcher.utter_message(response='utter_error')
+                if TELL_USER_ABOUT_ERRORS:
+                    dispatcher.utter_message(response='utter_error')
             except Exception:
                 logger.exception('%s (less important error)', self.name())
 
