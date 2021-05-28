@@ -12,3 +12,15 @@ class SwiperError(Exception):
 
 class InvalidSwiperStateError(SwiperError):
     ...
+
+
+class SwiperExternalCallError(SwiperError):
+    ...
+
+
+class SwiperRasaCallbackError(SwiperExternalCallError):
+    ...
+
+
+class SwiperDailyCoError(SwiperExternalCallError):
+    ...

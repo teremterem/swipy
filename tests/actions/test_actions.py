@@ -180,7 +180,9 @@ async def test_action_session_start_with_slots(
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('ddb_unit_test_user')
 @patch.object(UserVault, '_list_available_user_dicts')
+@patch('asyncio.sleep')
 async def test_action_find_partner_newbie(
+        mock_asyncio_sleep: AsyncMock,
         mock_list_available_user_dicts: MagicMock,
         mock_aioresponses: aioresponses,
         tracker: Tracker,
@@ -216,6 +218,7 @@ async def test_action_find_partner_newbie(
     ]
     assert dispatcher.messages == []
 
+    mock_asyncio_sleep.assert_called_once_with(1.1)
     mock_list_available_user_dicts.assert_called_once_with(exclude_user_id='unit_test_user', newbie=True)
     assert mock_rasa_callbacks.mock_calls == [expected_rasa_call]
 
@@ -231,7 +234,9 @@ async def test_action_find_partner_newbie(
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('ddb_unit_test_user')
 @patch.object(UserVault, '_list_available_user_dicts')
+@patch('asyncio.sleep')
 async def test_action_find_partner_veteran(
+        mock_asyncio_sleep: AsyncMock,
         mock_list_available_user_dicts: MagicMock,
         mock_aioresponses: aioresponses,
         tracker: Tracker,
@@ -267,6 +272,7 @@ async def test_action_find_partner_veteran(
     ]
     assert dispatcher.messages == []
 
+    mock_asyncio_sleep.assert_called_once_with(1.1)
     assert mock_list_available_user_dicts.mock_calls == [
         call(exclude_user_id='unit_test_user', newbie=True),
         call(exclude_user_id='unit_test_user', newbie=False),
@@ -286,7 +292,9 @@ async def test_action_find_partner_veteran(
 @pytest.mark.usefixtures('ddb_unit_test_user')
 @patch('actions.rasa_callbacks.ask_to_join')
 @patch.object(UserVault, '_list_available_user_dicts')
+@patch('asyncio.sleep')
 async def test_action_find_partner_no_one(
+        mock_asyncio_sleep: AsyncMock,
         mock_list_available_user_dicts: MagicMock,
         mock_rasa_callback_ask_to_join: AsyncMock,
         tracker: Tracker,
@@ -317,6 +325,7 @@ async def test_action_find_partner_no_one(
         'text': None,
     }]
 
+    mock_asyncio_sleep.assert_called_once_with(1.1)
     assert mock_list_available_user_dicts.mock_calls == [
         call(exclude_user_id='unit_test_user', newbie=True),
         call(exclude_user_id='unit_test_user', newbie=False),
@@ -336,7 +345,9 @@ async def test_action_find_partner_no_one(
 @pytest.mark.usefixtures('ddb_unit_test_user')
 @patch('actions.rasa_callbacks.ask_to_join')
 @patch.object(UserVault, '_list_available_user_dicts')
+@patch('asyncio.sleep')
 async def test_action_find_partner_swiper_error_trace(
+        mock_asyncio_sleep: AsyncMock,
         mock_list_available_user_dicts: MagicMock,
         mock_rasa_callback_ask_to_join: AsyncMock,
         tracker: Tracker,
@@ -376,6 +387,7 @@ async def test_action_find_partner_swiper_error_trace(
     ]
     assert dispatcher.messages == []
 
+    mock_asyncio_sleep.assert_called_once_with(1.1)
     assert mock_list_available_user_dicts.mock_calls == [
         call(exclude_user_id='unit_test_user', newbie=True),
         call(exclude_user_id='unit_test_user', newbie=False),
