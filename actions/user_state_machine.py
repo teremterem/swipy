@@ -1,4 +1,6 @@
+import time
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Text, Optional
 
 from transitions import Machine
@@ -26,6 +28,8 @@ class UserModel:
     state: Text = None  # the state machine will set it to UserState.NEW if not provided explicitly
     partner_id: Optional[Text] = None
     newbie: bool = True
+    state_timestamp: Optional[int] = None
+    state_timestamp_str: Optional[Text] = None
 
 
 class UserStateMachine(UserModel):
@@ -41,21 +45,30 @@ class UserStateMachine(UserModel):
             trigger='ask_partner',
             source='*',
             dest=UserState.WAITING_PARTNER_ANSWER,
-            before=[self.set_partner_id],
+            after=[
+                self.update_state_timestamp,
+                self.set_partner_id,
+            ],
         )
         # noinspection PyTypeChecker
         self.machine.add_transition(
             trigger='become_ok_to_chitchat',
             source='*',
             dest=UserState.OK_TO_CHITCHAT,
-            before=[self.drop_partner_id],
+            after=[
+                self.update_state_timestamp,
+                self.drop_partner_id,
+            ],
         )
         # noinspection PyTypeChecker
         self.machine.add_transition(
             trigger='become_asked_to_join',
             source=UserState.OK_TO_CHITCHAT,
             dest=UserState.ASKED_TO_JOIN,
-            before=[self.set_partner_id],
+            after=[
+                self.update_state_timestamp,
+                self.set_partner_id,
+            ],
         )
         # noinspection PyTypeChecker
         self.machine.add_transition(
@@ -65,7 +78,8 @@ class UserStateMachine(UserModel):
                 UserState.WAITING_PARTNER_ANSWER,
             ],
             dest=UserState.OK_TO_CHITCHAT,
-            before=[
+            after=[
+                self.update_state_timestamp,
                 self.graduate_from_newbie,
                 self.drop_partner_id,
             ],
@@ -75,14 +89,21 @@ class UserStateMachine(UserModel):
             trigger='become_do_not_disturb',
             source='*',
             dest=UserState.DO_NOT_DISTURB,
-            before=[self.drop_partner_id],
+            after=[
+                self.update_state_timestamp,
+                self.drop_partner_id,
+            ],
         )
 
-    def set_partner_id(self, partner_id: Text) -> None:
+    def set_partner_id(self, partner_id: Text, *args, **kwargs) -> None:
         self.partner_id = partner_id
 
-    def drop_partner_id(self) -> None:
+    def drop_partner_id(self, *args, **kwargs) -> None:
         self.partner_id = None
 
-    def graduate_from_newbie(self) -> None:
+    def graduate_from_newbie(self, *args, **kwargs) -> None:
         self.newbie = False
+
+    def update_state_timestamp(self, *args, **kwargs) -> None:
+        self.state_timestamp = int(time.time())  # TODO oleksandr: use int(time.time_ns()) instead ?
+        self.state_timestamp_str = datetime.utcfromtimestamp(self.state_timestamp).strftime('%Y-%m-%d %H:%M:%S')
