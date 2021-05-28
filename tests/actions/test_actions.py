@@ -443,23 +443,34 @@ async def test_action_ask_to_join(
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('create_user_state_machine_table')
-@patch('actions.rasa_callbacks.join_room')
 @patch('actions.daily_co.create_room', wraps=daily_co.create_room)
 async def test_action_create_room(
         wrap_daily_co_create_room: AsyncMock,
-        mock_rasa_callback_join_room: AsyncMock,
+        mock_aioresponses: aioresponses,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
         daily_co_create_room_expected_call: Tuple[Text, call],
-        mock_aioresponses: aioresponses,
         new_room1: Dict[Text, Any],
+        rasa_callbacks_expected_call_builder: Callable[[Text, Text, Dict[Text, Any]], Tuple[Text, call]],
+        external_intent_response: Dict[Text, Any],
 ) -> None:
-    mock_rasa_callbacks = AsyncMock(return_value=CallbackResult(payload=new_room1))
+    mock_daily_co = AsyncMock(return_value=CallbackResult(payload=new_room1))
     mock_aioresponses.post(
         daily_co_create_room_expected_call[0],
-        callback=mock_rasa_callbacks,
+        callback=mock_daily_co,
     )
+
+    expected_rasa_url, expected_rasa_call = rasa_callbacks_expected_call_builder(
+        'an_asker',
+        'EXTERNAL_join_room',
+        {
+            'partner_id': 'unit_test_user',
+            'room_url': 'https://swipy.daily.co/pytestroom',
+        },
+    )
+    mock_rasa_callbacks = AsyncMock(return_value=CallbackResult(payload=external_intent_response))
+    mock_aioresponses.post(expected_rasa_url, callback=mock_rasa_callbacks)
 
     action = actions.ActionCreateRoom()
     assert action.name() == 'action_create_room'
@@ -499,15 +510,11 @@ async def test_action_create_room(
         'room_url': 'https://swipy.daily.co/pytestroom',
     }]
 
-    assert mock_rasa_callbacks.mock_calls == [daily_co_create_room_expected_call[1]]
+    assert mock_daily_co.mock_calls == [daily_co_create_room_expected_call[1]]
     # make sure correct sender_id was passed for logging purposes
     wrap_daily_co_create_room.assert_called_once_with('unit_test_user')
 
-    mock_rasa_callback_join_room.assert_called_once_with(
-        'unit_test_user',
-        'an_asker',
-        'https://swipy.daily.co/pytestroom',
-    )
+    assert mock_rasa_callbacks.mock_calls == [expected_rasa_call]
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
