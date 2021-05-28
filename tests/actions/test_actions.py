@@ -1,6 +1,7 @@
+import traceback
 from dataclasses import asdict
 from typing import Dict, Text, Any, List, Callable, Tuple
-from unittest.mock import patch, AsyncMock, MagicMock, call, Mock
+from unittest.mock import patch, AsyncMock, MagicMock, call
 
 import pytest
 from aioresponses import aioresponses, CallbackResult
@@ -333,16 +334,15 @@ async def test_action_find_partner_no_one(
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('ddb_unit_test_user')
-@patch('actions.actions.stack_trace_to_str', Mock(return_value='stack trace goes here'))
 @patch('actions.rasa_callbacks.ask_to_join')
 @patch.object(UserVault, '_list_available_user_dicts')
-async def test_action_find_partner_invalid_partner_state(
+async def test_action_find_partner_swiper_error_trace(
         mock_list_available_user_dicts: MagicMock,
         mock_rasa_callback_ask_to_join: AsyncMock,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
-) -> None:  # TODO oleksandr: are you sure you need this test and correspondent logic at all ?
+) -> None:
     # noinspection PyDataclass
     mock_list_available_user_dicts.side_effect = [
         [],  # first call - no newbies
@@ -353,7 +353,16 @@ async def test_action_find_partner_invalid_partner_state(
         ))],  # second call - some veteran in not a valid state (dynamodb query malfunction?)
     ]
 
-    actual_events = await actions.ActionFindPartner().run(dispatcher, tracker, domain)
+    _original_format_exception = traceback.format_exception
+
+    def _wrap_format_exception(*args, **kwargs) -> List[Text]:
+        _original_format_exception(*args, **kwargs)  # make sure parameters don't cause the original function to crash
+        return ['stack', 'trace', 'goes', 'here']
+
+    with patch('traceback.format_exception') as mock_traceback_format_exception:
+        mock_traceback_format_exception.side_effect = _wrap_format_exception
+
+        actual_events = await actions.ActionFindPartner().run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'error'),
         SlotSet(
@@ -361,7 +370,7 @@ async def test_action_find_partner_invalid_partner_state(
             'InvalidSwiperStateError("randomly chosen partner \'unavailable_user_id\' '
             'is in a wrong state: \'do_not_disturb\'")',
         ),
-        SlotSet('swiper_error_trace', 'stack trace goes here'),
+        SlotSet('swiper_error_trace', 'stacktracegoeshere'),
         SlotSet('swiper_state', 'ok_to_chitchat'),
         SlotSet('partner_id', None),
     ]
