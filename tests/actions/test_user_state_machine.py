@@ -1,4 +1,6 @@
+from datetime import datetime
 from typing import Text
+from unittest.mock import Mock, patch
 
 import pytest
 from transitions import MachineError
@@ -13,9 +15,21 @@ all_expected_states = [
     'do_not_disturb',
 ]
 
+all_expected_triggers = [
+    'ask_partner',
+    'become_ok_to_chitchat',
+    'become_asked_to_join',
+    'join_room',
+    'become_do_not_disturb',
+]
+
 
 def test_all_expected_states() -> None:
-    assert UserState.all == all_expected_states
+    assert list(UserStateMachine('some_user_id').machine.states.keys()) == all_expected_states
+
+
+def test_all_expected_triggers() -> None:
+    assert list(UserStateMachine('some_user_id').machine.get_triggers(*all_expected_states)) == all_expected_triggers
 
 
 @pytest.mark.parametrize('source_state', all_expected_states)
@@ -162,3 +176,38 @@ def test_become_do_not_disturb(source_state: Text, newbie_status: bool) -> None:
     assert user.state == 'do_not_disturb'
     assert user.partner_id is None
     assert user.newbie == newbie_status
+
+
+@patch('time.time', Mock(return_value=1619945501))
+@pytest.mark.parametrize('source_state', all_expected_states)
+@pytest.mark.parametrize('trigger_name', all_expected_triggers)
+def test_state_timestamp(source_state: Text, trigger_name: Text) -> None:
+    source_state_timestamp = 1619697022
+    source_state_timestamp_str = datetime.utcfromtimestamp(source_state_timestamp).strftime('%Y-%m-%d %H:%M:%S Z')
+
+    user = UserStateMachine(
+        user_id='some_user_id',
+        state=source_state,
+        partner_id='asker_id',
+        newbie=False,
+        state_timestamp=source_state_timestamp,
+        state_timestamp_str=source_state_timestamp_str,
+    )
+    expect_timestamp_to_change = trigger_name in user.machine.get_triggers(source_state)
+
+    assert user.state_timestamp == 1619697022
+    assert user.state_timestamp_str == '2021-04-29 11:50:22 Z'
+
+    trigger = getattr(user, trigger_name)
+
+    if expect_timestamp_to_change:
+        trigger(partner_id='some_partner_id')  # run trigger and pass partner_id just in case (some triggers need it)
+
+        assert user.state_timestamp == 1619945501
+        assert user.state_timestamp_str == '2021-05-02 08:51:41 Z'
+    else:
+        with pytest.raises(MachineError):
+            trigger(partner_id='some_partner_id')
+
+        assert user.state_timestamp == 1619697022  # same timestamp as before
+        assert user.state_timestamp_str == '2021-04-29 11:50:22 Z'  # same timestamp as before

@@ -36,7 +36,7 @@ class UserStateMachine(UserModel):
     def __init__(self, *args, state: Text = None, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
-        self.machine = Machine(model=self, states=UserState.all, initial=UserState.NEW)
+        self.machine = Machine(model=self, states=UserState.all, initial=UserState.NEW, auto_transitions=False)
         if state is not None:
             self.machine.set_state(state)
 
