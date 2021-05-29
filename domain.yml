@@ -121,7 +121,7 @@ responses:
       - I send both of you a video chat link.
   utter_found_someone:
   - text: |-
-      Hooray! I found someone who wants to have a video chat! ☎️ 🎥
+      Hooray! I found someone who wants to have a video chat! 🎥 ☎️
        
       Are you ready?
   utter_no_one_was_found:
@@ -133,12 +133,14 @@ responses:
   - text: |-
       Hey! Someone is asking me to arrange chitchat.
        
-      Would you be willing to jump into a video call? ☎️ 🎥
+      Would you be willing to jump into a video call? 🎥 ☎️
   utter_checking_if_partner_ready_too:
   - text: |-
       Just a moment, I'm checking if that person is ready too...
        
       Please don't go anywhere - this may take up to two minutes ⏳
+  utter_check_if_ready:
+  - text: Are you ready for the call? 🎥 ☎️
   utter_partner_already_gone:
   - text: |-
       That person has become unavailable 😞
