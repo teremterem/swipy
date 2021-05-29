@@ -106,4 +106,4 @@ class UserStateMachine(UserModel):
 
     def update_state_timestamp(self, *args, **kwargs) -> None:
         self.state_timestamp = int(time.time())  # TODO oleksandr: use int(time.time_ns()) instead ?
-        self.state_timestamp_str = datetime.utcfromtimestamp(self.state_timestamp).strftime('%Y-%m-%d %H:%M:%S')
+        self.state_timestamp_str = datetime.utcfromtimestamp(self.state_timestamp).strftime('%Y-%m-%d %H:%M:%S Z')
