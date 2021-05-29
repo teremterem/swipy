@@ -249,10 +249,11 @@ class ActionAskToJoin(BaseSwiperAction):
 
         date = datetime.datetime.now() + datetime.timedelta(seconds=QUESTION_TIMEOUT_SEC)
 
+        # TODO TODO TODO oleksandr: send partner_id as an entity !
         reminder = ReminderScheduled(
             "EXTERNAL_do_not_disturb",
             trigger_date_time=date,
-            name="my_reminder",
+            name="my_reminder",  # TODO TODO TODO oleksandr: use guid as a name !
             kill_on_user_message=False,
         )
         return [
