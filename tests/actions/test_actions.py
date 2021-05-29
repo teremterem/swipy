@@ -179,7 +179,7 @@ async def test_action_session_start_with_slots(
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('ddb_unit_test_user')
-@patch('time.time', Mock(return_value='1619945501'))
+@patch('time.time', Mock(return_value=1619945501))
 @patch.object(UserVault, '_list_available_user_dicts')
 @patch('asyncio.sleep')
 async def test_action_find_partner_newbie(
@@ -236,7 +236,7 @@ async def test_action_find_partner_newbie(
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('ddb_unit_test_user')
-@patch('time.time', Mock(return_value='1619945501'))
+@patch('time.time', Mock(return_value=1619945501))
 @patch.object(UserVault, '_list_available_user_dicts')
 @patch('asyncio.sleep')
 async def test_action_find_partner_veteran(
@@ -296,6 +296,7 @@ async def test_action_find_partner_veteran(
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('ddb_unit_test_user')
+@patch('time.time', Mock(return_value=1619945501))
 @patch('actions.rasa_callbacks.ask_to_join')
 @patch.object(UserVault, '_list_available_user_dicts')
 @patch('asyncio.sleep')
@@ -344,11 +345,14 @@ async def test_action_find_partner_no_one(
         state='ok_to_chitchat',
         partner_id=None,
         newbie=True,
+        state_timestamp=1619945501,
+        state_timestamp_str='2021-05-02 08:51:41 Z',
     )
 
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('ddb_unit_test_user')
+@patch('time.time', Mock(return_value=1619945501))
 @patch('actions.rasa_callbacks.ask_to_join')
 @patch.object(UserVault, '_list_available_user_dicts')
 @patch('asyncio.sleep')
@@ -415,11 +419,14 @@ async def test_action_find_partner_swiper_error_trace(
         state='ok_to_chitchat',
         partner_id=None,
         newbie=True,
+        state_timestamp=1619945501,
+        state_timestamp_str='2021-05-02 08:51:41 Z',
     )
 
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('create_user_state_machine_table')
+@patch('time.time', Mock(return_value=1619945501))
 async def test_action_ask_to_join(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
@@ -465,11 +472,14 @@ async def test_action_ask_to_join(
         state='asked_to_join',
         partner_id='an_asker',
         newbie=True,
+        state_timestamp=1619945501,
+        state_timestamp_str='2021-05-02 08:51:41 Z',
     )
 
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('create_user_state_machine_table')
+@patch('time.time', Mock(return_value=1619945501))
 @patch('actions.daily_co.create_room', wraps=daily_co.create_room)
 async def test_action_create_room(
         wrap_daily_co_create_room: AsyncMock,
@@ -549,6 +559,8 @@ async def test_action_create_room(
         state='ok_to_chitchat',  # user joined the chat and ok_to_chitchat merely allows them to be invited again later
         partner_id=None,
         newbie=False,  # accepting the very first video chitchat graduates the user from newbie
+        state_timestamp=1619945501,
+        state_timestamp_str='2021-05-02 08:51:41 Z',
     )
 
 
@@ -568,6 +580,7 @@ async def test_action_create_room(
     ),
 ])
 @pytest.mark.usefixtures('create_user_state_machine_table')
+@patch('time.time', Mock(return_value=1619945501))
 @patch('actions.rasa_callbacks.join_room')
 @patch('actions.daily_co.create_room')
 async def test_action_create_room_partner_not_waiting(
@@ -615,6 +628,8 @@ async def test_action_create_room_partner_not_waiting(
         state='ok_to_chitchat',
         partner_id=None,
         newbie=True,
+        state_timestamp=1619945501,
+        state_timestamp_str='2021-05-02 08:51:41 Z',
     )
 
 
@@ -691,6 +706,7 @@ async def test_action_create_room_invalid_state(
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('create_user_state_machine_table')
+@patch('time.time', Mock(return_value=1619945501))
 async def test_action_join_room(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
@@ -736,6 +752,8 @@ async def test_action_join_room(
         state='ok_to_chitchat',  # user joined the chat and ok_to_chitchat merely allows them to be invited again later
         partner_id=None,
         newbie=False,  # accepting the very first video chitchat graduates the user from newbie
+        state_timestamp=1619945501,
+        state_timestamp_str='2021-05-02 08:51:41 Z',
     )
 
 
