@@ -479,7 +479,7 @@ async def test_action_ask_to_join(
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('create_user_state_machine_table')
-@patch('time.time', Mock(return_value=1619945501))
+@patch('time.time', Mock(return_value=1619945501))  # "now"
 @patch('actions.daily_co.create_room', wraps=daily_co.create_room)
 async def test_action_create_room(
         wrap_daily_co_create_room: AsyncMock,
@@ -518,6 +518,7 @@ async def test_action_create_room(
         state='waiting_partner_answer',
         partner_id='unit_test_user',
         newbie=True,
+        state_timestamp=1619945501 - 118,  # 1m 58s before "now"
     ))
     user_vault.save(UserStateMachine(
         user_id='unit_test_user',  # receiver of the ask

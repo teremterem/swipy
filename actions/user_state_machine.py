@@ -1,9 +1,10 @@
-import time
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Text, Optional
 
 from transitions import Machine
+
+from actions.utils import current_timestamp_int
 
 
 class UserState:
@@ -105,5 +106,5 @@ class UserStateMachine(UserModel):
         self.newbie = False
 
     def update_state_timestamp(self, *args, **kwargs) -> None:
-        self.state_timestamp = int(time.time())  # TODO oleksandr: use int(time.time_ns()) instead ?
+        self.state_timestamp = current_timestamp_int()
         self.state_timestamp_str = datetime.utcfromtimestamp(self.state_timestamp).strftime('%Y-%m-%d %H:%M:%S Z')

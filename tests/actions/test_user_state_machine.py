@@ -29,7 +29,7 @@ def test_all_expected_states() -> None:
 
 
 def test_all_expected_triggers() -> None:
-    assert list(UserStateMachine('some_user_id').machine.get_triggers(*all_expected_states)) == all_expected_triggers
+    assert UserStateMachine('some_user_id').machine.get_triggers(*all_expected_states) == all_expected_triggers
 
 
 @pytest.mark.parametrize('source_state', all_expected_states)
