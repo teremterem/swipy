@@ -437,7 +437,7 @@ async def test_action_ask_to_join(
 
     user_vault = UserVault()
     user_vault.save(UserStateMachine(
-        user_id='unit_test_user',  # receiver of the ask
+        user_id='unit_test_user',
         state='ok_to_chitchat',
         partner_id=None,
         newbie=True,
@@ -468,7 +468,7 @@ async def test_action_ask_to_join(
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
-        user_id='unit_test_user',  # receiver of the ask
+        user_id='unit_test_user',
         state='asked_to_join',
         partner_id='an_asker',
         newbie=True,
@@ -489,7 +489,7 @@ async def test_action_create_room(
         domain: Dict[Text, Any],
         daily_co_create_room_expected_call: Tuple[Text, call],
         new_room1: Dict[Text, Any],
-        rasa_callbacks_expected_call_builder: Callable[[Text, Text, Dict[Text, Any]], Tuple[Text, call]],
+        rasa_callbacks_create_room_expected_call: Tuple[Text, call],
         external_intent_response: Dict[Text, Any],
 ) -> None:
     mock_daily_co = AsyncMock(return_value=CallbackResult(payload=new_room1))
@@ -498,16 +498,8 @@ async def test_action_create_room(
         callback=mock_daily_co,
     )
 
-    expected_rasa_url, expected_rasa_call = rasa_callbacks_expected_call_builder(
-        'an_asker',
-        'EXTERNAL_join_room',
-        {
-            'partner_id': 'unit_test_user',
-            'room_url': 'https://swipy.daily.co/pytestroom',
-        },
-    )
     mock_rasa_callbacks = AsyncMock(return_value=CallbackResult(payload=external_intent_response))
-    mock_aioresponses.post(expected_rasa_url, callback=mock_rasa_callbacks)
+    mock_aioresponses.post(rasa_callbacks_create_room_expected_call[0], callback=mock_rasa_callbacks)
 
     action = actions.ActionCreateRoom()
     assert action.name() == 'action_create_room'
@@ -521,7 +513,7 @@ async def test_action_create_room(
         state_timestamp=1619945501 - 118,  # 1m 58s before "now"
     ))
     user_vault.save(UserStateMachine(
-        user_id='unit_test_user',  # receiver of the ask
+        user_id='unit_test_user',
         state='asked_to_join',
         partner_id='an_asker',
         newbie=True,
@@ -552,16 +544,75 @@ async def test_action_create_room(
     # make sure correct sender_id was passed (for logging purposes)
     wrap_daily_co_create_room.assert_called_once_with('unit_test_user')
 
-    assert mock_rasa_callbacks.mock_calls == [expected_rasa_call]
+    assert mock_rasa_callbacks.mock_calls == [rasa_callbacks_create_room_expected_call[1]]
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
-        user_id='unit_test_user',  # receiver of the ask
+        user_id='unit_test_user',
         state='ok_to_chitchat',  # user joined the chat and ok_to_chitchat merely allows them to be invited again later
         partner_id=None,
         newbie=False,  # accepting the very first video chitchat graduates the user from newbie
         state_timestamp=1619945501,
         state_timestamp_str='2021-05-02 08:51:41 Z',
+    )
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures('create_user_state_machine_table')
+@patch('time.time', Mock(return_value=1619945501))  # "now"
+async def test_action_create_room_question_too_old(
+        mock_aioresponses: aioresponses,
+        tracker: Tracker,
+        dispatcher: CollectingDispatcher,
+        domain: Dict[Text, Any],
+        daily_co_create_room_expected_call: Tuple[Text, call],
+        new_room1: Dict[Text, Any],
+        rasa_callbacks_create_room_expected_call: Tuple[Text, call],
+        external_intent_response: Dict[Text, Any],
+) -> None:
+    mock_daily_co = AsyncMock(return_value=CallbackResult(payload=new_room1))
+    mock_aioresponses.post(
+        daily_co_create_room_expected_call[0],
+        callback=mock_daily_co,
+    )
+
+    mock_rasa_callbacks = AsyncMock(return_value=CallbackResult(payload=external_intent_response))
+    mock_aioresponses.post(rasa_callbacks_create_room_expected_call[0], callback=mock_rasa_callbacks)
+
+    user_vault = UserVault()
+    user_vault.save(UserStateMachine(
+        user_id='an_asker',
+        state='waiting_partner_answer',
+        partner_id='unit_test_user',
+        newbie=True,
+        state_timestamp=1619945501 - 122,  # 2m 2s before "now"
+    ))
+    user_vault.save(UserStateMachine(
+        user_id='unit_test_user',
+        state='asked_to_join',
+        partner_id='an_asker',
+        newbie=True,
+    ))
+
+    actual_events = await actions.ActionCreateRoom().run(dispatcher, tracker, domain)
+    assert actual_events == [
+        SlotSet('swiper_action_result', 'partner_has_been_asked'),
+        SlotSet('swiper_error', None),
+        SlotSet('swiper_error_trace', None),
+        SlotSet('swiper_state', 'asked_to_join'),
+        SlotSet('partner_id', 'an_asker'),
+    ]
+    assert dispatcher.messages == []
+
+    mock_daily_co.assert_not_called()
+    mock_rasa_callbacks.assert_not_called()
+
+    user_vault = UserVault()  # create new instance to avoid hitting cache
+    assert user_vault.get_user('unit_test_user') == UserStateMachine(
+        user_id='unit_test_user',
+        state='asked_to_join',
+        partner_id='an_asker',
+        newbie=True,
     )
 
 
@@ -595,7 +646,7 @@ async def test_action_create_room_partner_not_waiting(
     user_vault = UserVault()
     user_vault.save(partner)
     user_vault.save(UserStateMachine(
-        user_id='unit_test_user',  # receiver of the ask
+        user_id='unit_test_user',
         state='asked_to_join',
         partner_id='an_asker',
         newbie=True,
@@ -625,7 +676,7 @@ async def test_action_create_room_partner_not_waiting(
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
-        user_id='unit_test_user',  # receiver of the ask
+        user_id='unit_test_user',
         state='ok_to_chitchat',
         partner_id=None,
         newbie=True,
