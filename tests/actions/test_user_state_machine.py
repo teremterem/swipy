@@ -203,8 +203,8 @@ def test_state_timestamp(source_state: Text, trigger_name: Text) -> None:
     if transition_is_valid:
         trigger(partner_id='some_partner_id')  # run trigger and pass partner_id just in case (some triggers need it)
 
-        assert user.state_timestamp == 1619945501
-        assert user.state_timestamp_str == '2021-05-02 08:51:41 Z'
+        assert user.state_timestamp == 1619945501  # new timestamp
+        assert user.state_timestamp_str == '2021-05-02 08:51:41 Z'  # new timestamp
     else:
         # invalid transition is expected to not go through
         with pytest.raises(MachineError):
