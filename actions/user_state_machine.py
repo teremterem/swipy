@@ -64,7 +64,10 @@ class UserStateMachine(UserModel):
         # noinspection PyTypeChecker
         self.machine.add_transition(
             trigger='become_asked_to_join',
-            source=UserState.OK_TO_CHITCHAT,
+            source=[
+                UserState.OK_TO_CHITCHAT,
+                UserState.WAITING_PARTNER_ANSWER,
+            ],
             dest=UserState.ASKED_TO_JOIN,
             after=[
                 self.update_state_timestamp,

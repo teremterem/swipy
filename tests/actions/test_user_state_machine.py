@@ -5,7 +5,7 @@ from unittest.mock import Mock, patch
 import pytest
 from transitions import MachineError
 
-from actions.user_state_machine import UserStateMachine, UserState
+from actions.user_state_machine import UserStateMachine
 
 all_expected_states = [
     'new',
@@ -48,12 +48,16 @@ def test_ask_partner(source_state: Text) -> None:
     assert user.partner_id == 'some_partner_id'
 
 
-def test_become_asked_to_join() -> None:
+@pytest.mark.parametrize('source_state', [
+    'ok_to_chitchat',
+    'waiting_partner_answer',
+])
+def test_become_asked_to_join(source_state: Text) -> None:
     user = UserStateMachine(
         user_id='some_user_id',
-        state=UserState.OK_TO_CHITCHAT,
+        state=source_state,
     )
-    assert user.state == 'ok_to_chitchat'
+    assert user.state == source_state
     assert user.partner_id is None
 
     # noinspection PyUnresolvedReferences
@@ -65,7 +69,6 @@ def test_become_asked_to_join() -> None:
 
 @pytest.mark.parametrize('wrong_state', [
     'new',
-    'waiting_partner_answer',
     'asked_to_join',
     'do_not_disturb',
 ])
