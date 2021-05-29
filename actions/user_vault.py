@@ -1,6 +1,7 @@
 import secrets
 from abc import ABC, abstractmethod
 from dataclasses import asdict
+from decimal import Decimal
 from typing import Text, Optional, List, Type, Dict, Any
 
 from boto3.dynamodb.conditions import Key, Attr
@@ -25,7 +26,7 @@ class IUserVault(ABC):
         raise NotImplementedError()
 
 
-class NaiveUserVault(IUserVault, ABC):
+class BaseUserVault(IUserVault, ABC):
     def __init__(self) -> None:
         self._user_cache = {}
 
@@ -34,10 +35,10 @@ class NaiveUserVault(IUserVault, ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def _list_available_user_dicts(
+    def _get_random_available_user(
             self, exclude_user_id: Text,
             newbie: Optional[bool] = None,
-    ) -> List[Dict[Text, Any]]:
+    ) -> UserStateMachine:
         raise NotImplementedError()
 
     @abstractmethod
@@ -71,15 +72,12 @@ class NaiveUserVault(IUserVault, ABC):
             self, exclude_user_id: Text,
             newbie: Optional[bool] = None,
     ) -> Optional[UserStateMachine]:
-        list_of_dicts = self._list_available_user_dicts(
+        user = self._get_random_available_user(
             exclude_user_id=exclude_user_id,
             newbie=newbie,
         )
-        if not list_of_dicts:
+        if not user:
             return None
-
-        user_dict = secrets.choice(list_of_dicts)
-        user = UserStateMachine(**user_dict)
 
         self._user_cache[user.user_id] = user
         return user
@@ -89,16 +87,50 @@ class NaiveUserVault(IUserVault, ABC):
         self._user_cache[user.user_id] = user
 
 
-class NaiveDdbUserVault(NaiveUserVault):
+class NaiveDdbUserVault(BaseUserVault):
     def _get_user(self, user_id: Text) -> Optional[UserStateMachine]:
         # TODO oleksandr: is there a better way to ensure that the tests have a chance to mock boto3 ?
         from actions.aws_resources import user_state_machine_table
 
         ddb_resp = user_state_machine_table.get_item(Key={'user_id': user_id})
         item = ddb_resp.get('Item')
-        return None if item is None else UserStateMachine(**item)
+        return None if item is None else self._user_from_dict(item)
 
-    def _list_available_user_dicts(self, exclude_user_id: Text, newbie: Optional[bool] = None) -> List[Dict[Text, Any]]:
+    def _get_random_available_user(
+            self, exclude_user_id: Text,
+            newbie: Optional[bool] = None,
+    ) -> Optional[UserStateMachine]:
+        list_of_dicts = self._list_available_user_dicts(
+            exclude_user_id=exclude_user_id,
+            newbie=newbie,
+        )
+        if not list_of_dicts:
+            return None
+
+        user_dict = secrets.choice(list_of_dicts)
+        user = self._user_from_dict(user_dict)
+        return user
+
+    def _save_user(self, user: UserStateMachine) -> None:
+        # TODO oleksandr: is there a better way to ensure that the tests have a chance to mock boto3 ?
+        from actions.aws_resources import user_state_machine_table
+
+        # noinspection PyDataclass
+        user_dict = asdict(user)
+        # https://stackoverflow.com/a/43672209/2040370
+        user_state_machine_table.put_item(Item=user_dict)
+
+    @staticmethod
+    def _user_from_dict(user_dict):
+        user = UserStateMachine(**user_dict)
+
+        if isinstance(user.state_timestamp, Decimal):
+            user.state_timestamp = int(user.state_timestamp)
+
+        return user
+
+    @staticmethod
+    def _list_available_user_dicts(exclude_user_id: Text, newbie: Optional[bool] = None) -> List[Dict[Text, Any]]:
         # TODO oleksandr: is there a better way to ensure that the tests have a chance to mock boto3 ?
         from actions.aws_resources import user_state_machine_table
 
@@ -112,15 +144,6 @@ class NaiveDdbUserVault(NaiveUserVault):
             FilterExpression=filter_expression,
         )
         return ddb_resp.get('Items') or []
-
-    def _save_user(self, user: UserStateMachine) -> None:
-        # TODO oleksandr: is there a better way to ensure that the tests have a chance to mock boto3 ?
-        from actions.aws_resources import user_state_machine_table
-
-        # noinspection PyDataclass
-        user_dict = asdict(user)
-        # https://stackoverflow.com/a/43672209/2040370
-        user_state_machine_table.put_item(Item=user_dict)
 
 
 UserVault: Type[IUserVault] = NaiveDdbUserVault

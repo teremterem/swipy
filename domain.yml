@@ -29,6 +29,8 @@ intents:
     use_entities: true
 - EXTERNAL_ask_to_join:
     use_entities: true
+- EXTERNAL_ask_if_ready:
+    use_entities: true
 - EXTERNAL_join_room:
     use_entities: true
 - EXTERNAL_find_partner:
@@ -98,7 +100,7 @@ responses:
   - text: |-
       Great! Let me find someone for you to chitchat with.
        
-      I will get back to you soon...
+      I will get back to you soon... ⏳
   utter_mind_helping_lonely_person:
   - text: |-
       Got it!
@@ -121,22 +123,29 @@ responses:
       - I send both of you a video chat link.
   utter_found_someone:
   - text: |-
-      Hooray! I found someone who wants to have a video chat! ☎️ 🎥
+      Hooray! I found someone who wants to have a video chat! 🎥 ☎️
        
       Are you ready?
   utter_no_one_was_found:
   - text: |-
-      I am sorry, but I couldn't find anyone 😞
+      Unfortunately, I couldn't find anyone 😞
        
       I will try to get back to you when someone shows up...
   utter_someone_wants_to_chat:
   - text: |-
       Hey! Someone is asking me to arrange chitchat.
        
-      Would you be willing to jump into a video call? ☎️ 🎥
+      Would you be willing to jump into a video call? 🎥 ☎️
+  utter_checking_if_partner_ready_too:
+  - text: |-
+      Just a moment, I'm checking if that person is ready too...
+       
+      Please don't go anywhere - this may take up to two minutes ⏳
+  utter_check_if_ready:
+  - text: Are you ready for the call? 🎥 ☎️
   utter_partner_already_gone:
   - text: |-
-      Unfortunately, this person wasn't waiting anymore 😞
+      That person has become unavailable 😞
        
       Not all is lost, however!
        

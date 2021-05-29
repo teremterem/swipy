@@ -13,13 +13,14 @@ from actions import daily_co
 from actions import rasa_callbacks
 from actions.user_state_machine import UserStateMachine, UserState
 from actions.user_vault import UserVault, IUserVault
-from actions.utils import InvalidSwiperStateError, stack_trace_to_str
+from actions.utils import InvalidSwiperStateError, stack_trace_to_str, current_timestamp_int
 
 logger = logging.getLogger(__name__)
 
+TELL_USER_ABOUT_ERRORS = strtobool(os.getenv('TELL_USER_ABOUT_ERRORS', 'yes'))
 SEND_ERROR_STACK_TRACE_TO_SLOT = strtobool(os.getenv('SEND_ERROR_STACK_TRACE_TO_SLOT', 'yes'))
 TELEGRAM_MSG_LIMIT_SLEEP_SEC = float(os.getenv('TELEGRAM_MSG_LIMIT_SLEEP_SEC', '1.1'))
-TELL_USER_ABOUT_ERRORS = strtobool(os.getenv('TELL_USER_ABOUT_ERRORS', 'yes'))
+QUESTION_TIMEOUT_SEC = float(os.getenv('QUESTION_TIMEOUT_SEC', '120'))
 
 SWIPER_STATE_SLOT = 'swiper_state'
 SWIPER_ACTION_RESULT_SLOT = 'swiper_action_result'
@@ -245,8 +246,6 @@ class ActionAskToJoin(BaseSwiperAction):
         current_user.become_asked_to_join(partner_id)
         user_vault.save(current_user)
 
-        dispatcher.utter_message(response='utter_someone_wants_to_chat')
-
         return [
             SlotSet(
                 key=SWIPER_ACTION_RESULT_SLOT,
@@ -290,6 +289,22 @@ class ActionCreateRoom(BaseSwiperAction):
                 SlotSet(
                     key=SWIPER_ACTION_RESULT_SLOT,
                     value=SwiperActionResult.PARTNER_NOT_WAITING_ANYMORE,
+                ),
+            ]
+
+        if current_timestamp_int() - partner.state_timestamp > QUESTION_TIMEOUT_SEC:
+            dispatcher.utter_message(response='utter_checking_if_partner_ready_too')
+
+            await rasa_callbacks.ask_if_ready(current_user.user_id, partner.user_id)
+
+            # noinspection PyUnresolvedReferences
+            current_user.ask_partner(partner.user_id)
+            user_vault.save(current_user)
+
+            return [
+                SlotSet(
+                    key=SWIPER_ACTION_RESULT_SLOT,
+                    value=SwiperActionResult.PARTNER_HAS_BEEN_ASKED,
                 ),
             ]
 

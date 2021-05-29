@@ -36,6 +36,33 @@ async def test_ask_to_join(
 
 
 @pytest.mark.asyncio
+async def test_ask_if_ready(
+        rasa_callbacks_expected_call_builder: Callable[[Text, Text, Dict[Text, Any]], Tuple[Text, call]],
+        mock_aioresponses: aioresponses,
+        external_intent_response: Dict[Text, Any],
+) -> None:
+    expected_rasa_url, expected_rasa_call = rasa_callbacks_expected_call_builder(
+        'partner_id_to_ask',
+        'EXTERNAL_ask_if_ready',
+        {
+            'partner_id': 'id_of_asker',
+        },
+    )
+    mock_rasa_callbacks = AsyncMock(return_value=CallbackResult(payload=external_intent_response))
+    mock_aioresponses.post(
+        expected_rasa_url,
+        callback=mock_rasa_callbacks,
+    )
+
+    assert await rasa_callbacks.ask_if_ready(
+        'id_of_asker',
+        'partner_id_to_ask',
+    ) == external_intent_response
+
+    assert mock_rasa_callbacks.mock_calls == [expected_rasa_call]
+
+
+@pytest.mark.asyncio
 async def test_join_room(
         rasa_callbacks_expected_call_builder: Callable[[Text, Text, Dict[Text, Any]], Tuple[Text, call]],
         mock_aioresponses: aioresponses,
