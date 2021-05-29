@@ -293,7 +293,13 @@ class ActionCreateRoom(BaseSwiperAction):
             ]
 
         if current_timestamp_int() - partner.state_timestamp > QUESTION_TIMEOUT_SEC:
-            # TODO TODO TODO
+            dispatcher.utter_message(response='utter_checking_if_partner_ready_too')
+
+            await rasa_callbacks.ask_if_ready(current_user.user_id, partner.user_id)
+
+            # noinspection PyUnresolvedReferences
+            current_user.ask_partner(partner.user_id)
+            user_vault.save(current_user)
 
             return [
                 SlotSet(

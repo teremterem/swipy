@@ -99,15 +99,19 @@ class UserStateMachine(UserModel):
             ],
         )
 
+    # noinspection PyUnusedLocal
     def set_partner_id(self, partner_id: Text, *args, **kwargs) -> None:
         self.partner_id = partner_id
 
+    # noinspection PyUnusedLocal
     def drop_partner_id(self, *args, **kwargs) -> None:
         self.partner_id = None
 
+    # noinspection PyUnusedLocal
     def graduate_from_newbie(self, *args, **kwargs) -> None:
         self.newbie = False
 
+    # noinspection PyUnusedLocal
     def update_state_timestamp(self, *args, **kwargs) -> None:
         self.state_timestamp = current_timestamp_int()
         self.state_timestamp_str = datetime.utcfromtimestamp(self.state_timestamp).strftime('%Y-%m-%d %H:%M:%S Z')

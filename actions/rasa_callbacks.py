@@ -30,6 +30,17 @@ async def ask_to_join(sender_id: Text, receiver_id: Text) -> Dict[Text, Any]:
     )
 
 
+async def ask_if_ready(sender_id: Text, receiver_id: Text) -> Dict[Text, Any]:
+    return await _trigger_external_rasa_intent(
+        sender_id,
+        receiver_id,
+        'EXTERNAL_ask_if_ready',
+        {
+            PARTNER_ID_SLOT: sender_id,
+        },
+    )
+
+
 async def join_room(sender_id: Text, receiver_id: Text, room_url: Text) -> Dict[Text, Any]:
     return await _trigger_external_rasa_intent(
         sender_id,

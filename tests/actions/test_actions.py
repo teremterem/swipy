@@ -480,7 +480,7 @@ async def test_action_create_room(
         domain: Dict[Text, Any],
         daily_co_create_room_expected_call: Tuple[Text, call],
         new_room1: Dict[Text, Any],
-        rasa_callbacks_create_room_expected_call: Tuple[Text, call],
+        rasa_callbacks_join_room_expected_call: Tuple[Text, call],
         external_intent_response: Dict[Text, Any],
 ) -> None:
     mock_daily_co = AsyncMock(return_value=CallbackResult(payload=new_room1))
@@ -490,7 +490,7 @@ async def test_action_create_room(
     )
 
     mock_rasa_callbacks = AsyncMock(return_value=CallbackResult(payload=external_intent_response))
-    mock_aioresponses.post(rasa_callbacks_create_room_expected_call[0], callback=mock_rasa_callbacks)
+    mock_aioresponses.post(rasa_callbacks_join_room_expected_call[0], callback=mock_rasa_callbacks)
 
     action = actions.ActionCreateRoom()
     assert action.name() == 'action_create_room'
@@ -535,7 +535,7 @@ async def test_action_create_room(
     # make sure correct sender_id was passed (for logging purposes)
     wrap_daily_co_create_room.assert_called_once_with('unit_test_user')
 
-    assert mock_rasa_callbacks.mock_calls == [rasa_callbacks_create_room_expected_call[1]]
+    assert mock_rasa_callbacks.mock_calls == [rasa_callbacks_join_room_expected_call[1]]
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
@@ -558,7 +558,8 @@ async def test_action_create_room_question_too_old(
         domain: Dict[Text, Any],
         daily_co_create_room_expected_call: Tuple[Text, call],
         new_room1: Dict[Text, Any],
-        rasa_callbacks_create_room_expected_call: Tuple[Text, call],
+        rasa_callbacks_join_room_expected_call: Tuple[Text, call],
+        rasa_callbacks_ask_if_ready_expected_call: Tuple[Text, call],
         external_intent_response: Dict[Text, Any],
 ) -> None:
     mock_daily_co = AsyncMock(return_value=CallbackResult(payload=new_room1))
@@ -568,7 +569,7 @@ async def test_action_create_room_question_too_old(
     )
 
     mock_rasa_callbacks = AsyncMock(return_value=CallbackResult(payload=external_intent_response))
-    mock_aioresponses.post(rasa_callbacks_create_room_expected_call[0], callback=mock_rasa_callbacks)
+    mock_aioresponses.post(rasa_callbacks_join_room_expected_call[0], callback=mock_rasa_callbacks)
 
     user_vault = UserVault()
     user_vault.save(UserStateMachine(
@@ -590,20 +591,31 @@ async def test_action_create_room_question_too_old(
         SlotSet('swiper_action_result', 'partner_has_been_asked'),
         SlotSet('swiper_error', None),
         SlotSet('swiper_error_trace', None),
-        SlotSet('swiper_state', 'asked_to_join'),
+        SlotSet('swiper_state', 'waiting_partner_answer'),
         SlotSet('partner_id', 'an_asker'),
     ]
-    assert dispatcher.messages == []
+    assert dispatcher.messages == [{
+        'attachment': None,
+        'buttons': [],
+        'custom': {},
+        'elements': [],
+        'image': None,
+        'response': 'utter_checking_if_partner_ready_too',
+        'template': 'utter_checking_if_partner_ready_too',
+        'text': None,
+    }]
 
     mock_daily_co.assert_not_called()
-    mock_rasa_callbacks.assert_not_called()
+    assert mock_rasa_callbacks.mock_calls == [rasa_callbacks_ask_if_ready_expected_call[1]]
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
         user_id='unit_test_user',
-        state='asked_to_join',
+        state='waiting_partner_answer',
         partner_id='an_asker',
         newbie=True,
+        state_timestamp=1619945501,
+        state_timestamp_str='2021-05-02 08:51:41 Z',
     )
 
 
