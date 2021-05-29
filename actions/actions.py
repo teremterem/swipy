@@ -246,8 +246,6 @@ class ActionAskToJoin(BaseSwiperAction):
         current_user.become_asked_to_join(partner_id)
         user_vault.save(current_user)
 
-        dispatcher.utter_message(response='utter_someone_wants_to_chat')
-
         return [
             SlotSet(
                 key=SWIPER_ACTION_RESULT_SLOT,

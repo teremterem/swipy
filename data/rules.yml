@@ -81,6 +81,7 @@ rules:
 - rule: someone else asks the user to join a video chat
   steps:
   - intent: EXTERNAL_ask_to_join
+  - action: utter_someone_wants_to_chat
   - action: action_ask_to_join
 - rule: someone else wants to chat and the user aggrees to join
   steps:

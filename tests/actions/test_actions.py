@@ -455,16 +455,7 @@ async def test_action_ask_to_join(
         SlotSet('swiper_state', 'asked_to_join'),
         SlotSet('partner_id', 'an_asker'),
     ]
-    assert dispatcher.messages == [{
-        'attachment': None,
-        'buttons': [],
-        'custom': {},
-        'elements': [],
-        'image': None,
-        'response': 'utter_someone_wants_to_chat',
-        'template': 'utter_someone_wants_to_chat',
-        'text': None,
-    }]
+    assert dispatcher.messages == []
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
