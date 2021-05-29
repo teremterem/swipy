@@ -179,7 +179,7 @@ async def test_action_session_start_with_slots(
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('ddb_unit_test_user')
-@patch('time.time', Mock(return_value='1619945511'))
+@patch('time.time', Mock(return_value='1619945501'))
 @patch.object(UserVault, '_list_available_user_dicts')
 @patch('asyncio.sleep')
 async def test_action_find_partner_newbie(
@@ -229,13 +229,14 @@ async def test_action_find_partner_newbie(
         state='waiting_partner_answer',
         partner_id='available_newbie_id1',
         newbie=True,
-        state_timestamp=1619945511,
-        state_timestamp_str='2021-05-02 08:51:51 Z',
+        state_timestamp=1619945501,
+        state_timestamp_str='2021-05-02 08:51:41 Z',
     )
 
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('ddb_unit_test_user')
+@patch('time.time', Mock(return_value='1619945501'))
 @patch.object(UserVault, '_list_available_user_dicts')
 @patch('asyncio.sleep')
 async def test_action_find_partner_veteran(
@@ -288,6 +289,8 @@ async def test_action_find_partner_veteran(
         state='waiting_partner_answer',
         partner_id='available_veteran_id1',
         newbie=True,
+        state_timestamp=1619945501,
+        state_timestamp_str='2021-05-02 08:51:41 Z',
     )
 
 
