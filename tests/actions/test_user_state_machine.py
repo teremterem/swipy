@@ -193,21 +193,22 @@ def test_state_timestamp(source_state: Text, trigger_name: Text) -> None:
         state_timestamp=source_state_timestamp,
         state_timestamp_str=source_state_timestamp_str,
     )
-    expect_timestamp_to_change = trigger_name in user.machine.get_triggers(source_state)
+    transition_is_valid = trigger_name in user.machine.get_triggers(source_state)
 
     assert user.state_timestamp == 1619697022
     assert user.state_timestamp_str == '2021-04-29 11:50:22 Z'
 
     trigger = getattr(user, trigger_name)
 
-    if expect_timestamp_to_change:
+    if transition_is_valid:
         trigger(partner_id='some_partner_id')  # run trigger and pass partner_id just in case (some triggers need it)
 
         assert user.state_timestamp == 1619945501
         assert user.state_timestamp_str == '2021-05-02 08:51:41 Z'
     else:
+        # invalid transition is expected to not go through
         with pytest.raises(MachineError):
             trigger(partner_id='some_partner_id')
 
-        assert user.state_timestamp == 1619697022  # same timestamp as before
-        assert user.state_timestamp_str == '2021-04-29 11:50:22 Z'  # same timestamp as before
+        assert user.state_timestamp == 1619697022  # timestamp is expected to remain unchanged
+        assert user.state_timestamp_str == '2021-04-29 11:50:22 Z'  # timestamp is expected to remain unchanged
