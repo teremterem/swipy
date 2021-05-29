@@ -413,6 +413,7 @@ class ActionDoNotDisturb(BaseSwiperAction):
         current_user.become_do_not_disturb()
         user_vault.save(current_user)
 
+        # TODO TODO TODO oleksandr: partner id was null once !!!
         partner = user_vault.get_user(initial_partner_id)
         # TODO oleksandr: reuse this condition (it is also present in ActionCreateRoom)
         if partner.state == UserState.WAITING_PARTNER_ANSWER and partner.partner_id == current_user.user_id:
