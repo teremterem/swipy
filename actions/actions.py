@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 import logging
 import os
 from abc import ABC, abstractmethod
@@ -6,7 +7,7 @@ from distutils.util import strtobool
 from typing import Any, Text, Dict, List
 
 from rasa_sdk import Action, Tracker
-from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType
+from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType, ReminderScheduled, UserUtteranceReverted
 from rasa_sdk.executor import CollectingDispatcher
 
 from actions import daily_co
@@ -246,11 +247,20 @@ class ActionAskToJoin(BaseSwiperAction):
         current_user.become_asked_to_join(partner_id)
         user_vault.save(current_user)
 
+        date = datetime.datetime.now() + datetime.timedelta(seconds=QUESTION_TIMEOUT_SEC)
+
+        reminder = ReminderScheduled(
+            "EXTERNAL_do_not_disturb",
+            trigger_date_time=date,
+            name="my_reminder",
+            kill_on_user_message=False,
+        )
         return [
             SlotSet(
                 key=SWIPER_ACTION_RESULT_SLOT,
                 value=SwiperActionResult.SUCCESS,
             ),
+            reminder,
         ]
 
 
@@ -265,11 +275,7 @@ class ActionCreateRoom(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        if current_user.state != UserState.ASKED_TO_JOIN:
-            raise InvalidSwiperStateError(
-                f"current user {repr(current_user.user_id)} is not in state {repr(UserState.ASKED_TO_JOIN)}, "
-                f"hence cannot join the room (actual state is {repr(current_user.state)})"
-            )
+        # TODO TODO TODO oleksandr: cancel reminder !!!
 
         if current_user.partner_id is None:
             raise InvalidSwiperStateError(
@@ -399,23 +405,24 @@ class ActionDoNotDisturb(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        initial_state = current_user.state
+        # TODO TODO TODO oleksandr: cancel reminder !!!
+
         initial_partner_id = current_user.partner_id
 
         # noinspection PyUnresolvedReferences
         current_user.become_do_not_disturb()
         user_vault.save(current_user)
 
-        if initial_state == UserState.ASKED_TO_JOIN:
-            partner = user_vault.get_user(initial_partner_id)
-            # TODO oleksandr: reuse this condition (it is also present in ActionCreateRoom)
-            if partner.state == UserState.WAITING_PARTNER_ANSWER and partner.partner_id == current_user.user_id:
-                # force the original sender of the declined invitation to "move along" in their partner search
-                await rasa_callbacks.find_partner(current_user.user_id, partner.user_id)
+        partner = user_vault.get_user(initial_partner_id)
+        # TODO oleksandr: reuse this condition (it is also present in ActionCreateRoom)
+        if partner.state == UserState.WAITING_PARTNER_ANSWER and partner.partner_id == current_user.user_id:
+            # force the original sender of the declined invitation to "move along" in their partner search
+            await rasa_callbacks.find_partner(current_user.user_id, partner.user_id)
 
         return [
             SlotSet(
                 key=SWIPER_ACTION_RESULT_SLOT,
                 value=SwiperActionResult.SUCCESS,
             ),
+            UserUtteranceReverted(),
         ]

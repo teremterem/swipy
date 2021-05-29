@@ -140,6 +140,10 @@ rules:
   steps:
   - intent: EXTERNAL_join_room
   - action: action_join_room
+- rule: EXTERNAL_do_not_disturb
+  steps:
+  - intent: EXTERNAL_do_not_disturb
+  - action: action_do_not_disturb
 - rule: user asks not to bother them
   steps:
   - intent: dont_bother_me
