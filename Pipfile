@@ -23,18 +23,19 @@ scikit-learn = "<0.24.0"
 #rasa = { extras = ["spacy"], version = "~=2.5.0" }
 rasa = "~=2.5.0"
 rasa-sdk = "~=2.5.0"
+rasa-x = "~=0.39.0"
 #
-rasa-x = "*"
 jupyterlab = "*"
 jupyterlab-kite = ">=2.0.2"
 pytest = "*"
 pytest-asyncio = "*"
-aioresponses = "*"
+pytest-xdist = "*"
+pytest-cov = "*"
 pytest-env = "*"
+aioresponses = "*"
 ipython = "*"
 ipdb = "*"
 moto = "*"
-coverage = "*"
 
 [requires]
 python_version = "3.8"
