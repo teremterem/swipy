@@ -5,4 +5,5 @@ stories:
   - or:
     - intent: start
     - intent: greet
+  - action: action_register_user
   - action: utter_greet_offer_chitchat
