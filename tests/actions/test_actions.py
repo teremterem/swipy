@@ -628,7 +628,7 @@ async def test_action_create_room_ready(
         domain: Dict[Text, Any],
         daily_co_create_room_expected_call: Tuple[Text, call],
         new_room1: Dict[Text, Any],
-        rasa_callbacks_join_room_expected_call: Tuple[Text, call],
+        rasa_callbacks_join_room_ready_expected_call: Tuple[Text, call],
         external_intent_response: Dict[Text, Any],
 ) -> None:
     mock_daily_co = AsyncMock(return_value=CallbackResult(payload=new_room1))
@@ -638,7 +638,7 @@ async def test_action_create_room_ready(
     )
 
     mock_rasa_callbacks = AsyncMock(return_value=CallbackResult(payload=external_intent_response))
-    mock_aioresponses.post(rasa_callbacks_join_room_expected_call[0], callback=mock_rasa_callbacks)
+    mock_aioresponses.post(rasa_callbacks_join_room_ready_expected_call[0], callback=mock_rasa_callbacks)
 
     action = actions.ActionCreateRoomReady()
     assert action.name() == 'action_create_room_ready'
@@ -673,8 +673,8 @@ async def test_action_create_room_ready(
         'custom': {},
         'elements': [],
         'image': None,
-        'response': 'utter_partner_ready_room_url',
-        'template': 'utter_partner_ready_room_url',
+        'response': 'utter_room_url',
+        'template': 'utter_room_url',
         'text': None,
         'room_url': 'https://swipy.daily.co/pytestroom',
     }]
@@ -683,7 +683,7 @@ async def test_action_create_room_ready(
     # make sure correct sender_id was passed (for logging purposes)
     wrap_daily_co_create_room.assert_called_once_with('unit_test_user')
 
-    assert mock_rasa_callbacks.mock_calls == [rasa_callbacks_join_room_expected_call[1]]
+    assert mock_rasa_callbacks.mock_calls == [rasa_callbacks_join_room_ready_expected_call[1]]
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
