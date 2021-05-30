@@ -479,13 +479,17 @@ class ActionDoNotDisturbNotReady(ActionDoNotDisturb):
 
     @staticmethod
     async def ping_partner(current_user: UserStateMachine, partner: UserStateMachine) -> None:
-        # force the original sender of the declined invitation to "move along" in their partner search
         await rasa_callbacks.report_unavailable(current_user.user_id, partner.user_id)
 
 
 class ActionLetPartnerGo(BaseSwiperAction):
     def name(self) -> Text:
         return 'action_let_partner_go'
+
+    @staticmethod
+    async def ping_partner(current_user: UserStateMachine, partner: UserStateMachine) -> None:
+        # force the original sender of the timed out invitation to "move along" in their partner search
+        await rasa_callbacks.find_partner(current_user.user_id, partner.user_id)
 
     async def swipy_run(
             self, dispatcher: CollectingDispatcher,
@@ -501,8 +505,7 @@ class ActionLetPartnerGo(BaseSwiperAction):
         if partner_id_to_let_go:
             partner_to_let_go = user_vault.get_user(partner_id_to_let_go)
             if partner_to_let_go.is_waiting_for(current_user.user_id):
-                # force the original sender of the timed out invitation to "move along" in their partner search
-                await rasa_callbacks.find_partner(current_user.user_id, partner_to_let_go.user_id)
+                await self.ping_partner(current_user, partner_to_let_go)
 
         return [
             UserUtteranceReverted(),
