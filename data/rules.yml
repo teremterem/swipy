@@ -107,6 +107,19 @@ rules:
   - intent: deny
   - action: utter_let_them_go_stop_bothering
   - action: action_do_not_disturb
+- rule: user is asked if still ready for the call and confirms
+  steps:
+  - action: action_ask_if_ready
+  - or:
+    - intent: affirm
+    - intent: want_chitchat
+  - action: action_create_room
+- rule: user is asked if still ready for the call but rejects
+  steps:
+  - action: action_ask_if_ready
+  - intent: deny
+  - action: utter_let_them_go_stop_bothering
+  - action: action_do_not_disturb
 - rule: the bot offers to find a replacement for a partner that wasn't waiting anymore and the user agrees
   condition:
   - slot_was_set:
