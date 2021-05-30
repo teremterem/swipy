@@ -63,7 +63,7 @@ class BaseSwiperAction(Action, ABC):
             tracker: Tracker,
             domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
-        logger.info('BEGIN ACTION RUN: %s (CURRENT USER ID = %r)', self.name(), tracker.sender_id)
+        logger.info('BEGIN ACTION RUN: %r (CURRENT USER ID = %r)', self.name(), tracker.sender_id)
 
         user_vault = UserVault()
 
@@ -123,7 +123,7 @@ class BaseSwiperAction(Action, ABC):
             ),
         ])
 
-        logger.info('END ACTION RUN: %s (CURRENT USER ID = %r)', self.name(), tracker.sender_id)
+        logger.info('END ACTION RUN: %r (CURRENT USER ID = %r)', self.name(), tracker.sender_id)
         return events
 
 
