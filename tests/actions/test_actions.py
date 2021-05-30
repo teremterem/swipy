@@ -1020,6 +1020,40 @@ async def test_action_register_user(
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('create_user_state_machine_table')
+async def test_action_register_user_not_new(
+        tracker: Tracker,
+        dispatcher: CollectingDispatcher,
+        domain: Dict[Text, Any],
+) -> None:
+    user_vault = UserVault()
+    user_vault.save(UserStateMachine(
+        user_id='unit_test_user',
+        state='waiting_partner_answer',
+        partner_id='the_asker',
+        newbie=True,
+    ))
+
+    actual_events = await actions.ActionRegisterUser().run(dispatcher, tracker, domain)
+    assert actual_events == [
+        SlotSet('swiper_action_result', 'success'),
+        SlotSet('swiper_error', None),
+        SlotSet('swiper_error_trace', None),
+        SlotSet('swiper_state', 'waiting_partner_answer'),
+        SlotSet('partner_id', 'the_asker'),
+    ]
+    assert dispatcher.messages == []
+
+    user_vault = UserVault()  # create new instance to avoid hitting cache
+    assert user_vault.get_user('unit_test_user') == UserStateMachine(
+        user_id='unit_test_user',
+        state='waiting_partner_answer',  # user state not changed (only new users automatically become ok_to_chitchat)
+        partner_id='the_asker',
+        newbie=True,
+    )
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures('create_user_state_machine_table')
 @patch('time.time', Mock(return_value=1619945501))
 @pytest.mark.parametrize('current_user, asker, find_partner_call_expected', [
     (
