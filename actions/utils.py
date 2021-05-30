@@ -1,11 +1,15 @@
+import datetime
 import time
 import traceback
 from typing import Text
 
 
 def current_timestamp_int() -> int:
-    timestamp = int(time.time())  # TODO oleksandr: use int(time.time_ns()) instead ?
-    return timestamp
+    return int(time.time())  # TODO oleksandr: use int(time.time_ns()) instead ?
+
+
+def datetime_now() -> datetime.datetime:
+    return datetime.datetime.now()
 
 
 def stack_trace_to_str(e: BaseException) -> Text:

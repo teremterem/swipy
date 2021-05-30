@@ -1,4 +1,6 @@
+import datetime
 import traceback
+import uuid
 from dataclasses import asdict
 from typing import Dict, Text, Any, List, Callable, Tuple
 from unittest.mock import patch, AsyncMock, MagicMock, call, Mock
@@ -427,6 +429,8 @@ async def test_action_find_partner_swiper_error_trace(
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('create_user_state_machine_table')
 @patch('time.time', Mock(return_value=1619945501))
+@patch('actions.actions.datetime_now', Mock(return_value=datetime.datetime(2021, 5, 25)))
+@patch('uuid.uuid4', Mock(return_value=uuid.UUID('aaaabbbb-cccc-dddd-eeee-ffff11112222')))
 async def test_action_ask_to_join(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
@@ -449,6 +453,15 @@ async def test_action_ask_to_join(
 
     actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == [
+        {
+            'date_time': '2021-05-25T00:02:00',
+            'entities': {'partner_id_to_let_go': 'an_asker'},
+            'event': 'reminder',
+            'intent': 'EXTERNAL_let_partner_go',
+            'kill_on_user_msg': False,
+            'name': 'aaaabbbb-cccc-dddd-eeee-ffff11112222',
+            'timestamp': None,
+        },
         SlotSet('swiper_action_result', 'success'),
         SlotSet('swiper_error', None),
         SlotSet('swiper_error_trace', None),

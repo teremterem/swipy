@@ -1,19 +1,21 @@
 import asyncio
+import datetime
 import logging
 import os
+import uuid
 from abc import ABC, abstractmethod
 from distutils.util import strtobool
 from typing import Any, Text, Dict, List
 
 from rasa_sdk import Action, Tracker
-from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType, UserUtteranceReverted
+from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType, UserUtteranceReverted, ReminderScheduled
 from rasa_sdk.executor import CollectingDispatcher
 
 from actions import daily_co
 from actions import rasa_callbacks
 from actions.user_state_machine import UserStateMachine, UserState
 from actions.user_vault import UserVault, IUserVault
-from actions.utils import InvalidSwiperStateError, stack_trace_to_str, current_timestamp_int
+from actions.utils import InvalidSwiperStateError, stack_trace_to_str, current_timestamp_int, datetime_now
 
 logger = logging.getLogger(__name__)
 
@@ -248,7 +250,19 @@ class ActionAskToJoin(BaseSwiperAction):
         current_user.become_asked_to_join(partner_id)
         user_vault.save(current_user)
 
+        date = datetime_now() + datetime.timedelta(seconds=QUESTION_TIMEOUT_SEC)
+
+        reminder = ReminderScheduled(
+            "EXTERNAL_let_partner_go",
+            trigger_date_time=date,
+            entities={
+                PARTNER_ID_TO_LET_GO_SLOT: partner_id,
+            },
+            name=str(uuid.uuid4()),
+            kill_on_user_message=False,
+        )
         return [
+            reminder,
             SlotSet(
                 key=SWIPER_ACTION_RESULT_SLOT,
                 value=SwiperActionResult.SUCCESS,
