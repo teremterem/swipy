@@ -463,7 +463,7 @@ class ActionLetPartnerGo(BaseSwiperAction):
         if partner_id_to_let_go:
             partner_to_let_go = user_vault.get_user(partner_id_to_let_go)
             if partner_to_let_go.is_waiting_for(current_user.user_id):
-                # force the original sender of the declined invitation to "move along" in their partner search
+                # force the original sender of the timed out invitation to "move along" in their partner search
                 await rasa_callbacks.find_partner(current_user.user_id, partner_to_let_go.user_id)
 
         return [
