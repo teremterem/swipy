@@ -62,6 +62,15 @@ async def find_partner(sender_id: Text, receiver_id: Text) -> Dict[Text, Any]:
     )
 
 
+async def report_unavailable(sender_id: Text, receiver_id: Text) -> Dict[Text, Any]:
+    return await _trigger_external_rasa_intent(
+        sender_id,
+        receiver_id,
+        'EXTERNAL_report_unavailable',
+        {},
+    )
+
+
 async def _trigger_external_rasa_intent(
         sender_id: Text,
         receiver_id: Text,

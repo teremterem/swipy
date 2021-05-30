@@ -166,6 +166,10 @@ responses:
   - custom:
       parse_mode: html
       text: "Hooray! I have found someone who wants to chitchat!\n \n<b>Please follow this link to join the video call:</b>\n \n{room_url}"
+  utter_partner_ready_room_url:
+  - custom:
+      parse_mode: html
+      text: "Done!\n \n<b>Please follow this link to join the video call:</b>\n \n{room_url}"
   utter_let_them_go_stop_bothering:
   - text: |-
       Ok, I will let that person go then 😞
@@ -190,9 +194,11 @@ actions:
 - action_ask_to_join
 - action_ask_if_ready
 - action_create_room
+- action_create_room_ready
 - action_join_room
 - action_become_ok_to_chitchat
 - action_do_not_disturb
+- action_do_not_disturb_not_ready
 - action_let_partner_go
 forms: {}
 e2e_actions: []

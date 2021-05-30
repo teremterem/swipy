@@ -148,3 +148,28 @@ async def test_find_partner_unsuccessful(
             'a_receiving_user',
         )
     assert mock_rasa_callbacks.mock_calls == [expected_rasa_call]
+
+
+@pytest.mark.asyncio
+async def test_report_unavailable(
+        rasa_callbacks_expected_call_builder: Callable[[Text, Text, Dict[Text, Any]], Tuple[Text, call]],
+        mock_aioresponses: aioresponses,
+        external_intent_response: Dict[Text, Any],
+) -> None:
+    expected_rasa_url, expected_rasa_call = rasa_callbacks_expected_call_builder(
+        'a_receiving_user',
+        'EXTERNAL_report_unavailable',
+        {},
+    )
+    mock_rasa_callbacks = AsyncMock(return_value=CallbackResult(payload=external_intent_response))
+    mock_aioresponses.post(
+        expected_rasa_url,
+        callback=mock_rasa_callbacks,
+    )
+
+    assert await rasa_callbacks.report_unavailable(
+        'some_sender_id',
+        'a_receiving_user',
+    ) == external_intent_response
+
+    assert mock_rasa_callbacks.mock_calls == [expected_rasa_call]

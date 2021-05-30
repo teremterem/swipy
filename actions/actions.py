@@ -298,6 +298,15 @@ class ActionCreateRoom(BaseSwiperAction):
     def name(self) -> Text:
         return 'action_create_room'
 
+    @staticmethod
+    def utter_room_url(dispatcher: CollectingDispatcher, room_url: Text) -> None:
+        dispatcher.utter_message(
+            response='utter_room_url',
+            **{
+                rasa_callbacks.ROOM_URL_SLOT: room_url,
+            },
+        )
+
     async def swipy_run(
             self, dispatcher: CollectingDispatcher,
             tracker: Tracker,
@@ -348,12 +357,7 @@ class ActionCreateRoom(BaseSwiperAction):
         # put partner into the room as well
         await rasa_callbacks.join_room(current_user.user_id, current_user.partner_id, room_url)
 
-        dispatcher.utter_message(
-            response='utter_room_url',
-            **{
-                rasa_callbacks.ROOM_URL_SLOT: room_url,
-            },
-        )
+        self.utter_room_url(dispatcher, room_url)
 
         # noinspection PyUnresolvedReferences
         current_user.join_room()
@@ -369,6 +373,20 @@ class ActionCreateRoom(BaseSwiperAction):
                 value=room_url,
             ),
         ]
+
+
+class ActionCreateRoomReady(ActionCreateRoom):
+    def name(self) -> Text:
+        return 'action_create_room_ready'
+
+    @staticmethod
+    def utter_room_url(dispatcher: CollectingDispatcher, room_url: Text) -> None:
+        dispatcher.utter_message(
+            response='utter_partner_ready_room_url',  # override the original utterance
+            **{
+                rasa_callbacks.ROOM_URL_SLOT: room_url,
+            },
+        )
 
 
 class ActionJoinRoom(BaseSwiperAction):
@@ -426,6 +444,11 @@ class ActionDoNotDisturb(BaseSwiperAction):
     def name(self) -> Text:
         return 'action_do_not_disturb'
 
+    @staticmethod
+    async def ping_partner(current_user: UserStateMachine, partner: UserStateMachine) -> None:
+        # force the original sender of the declined invitation to "move along" in their partner search
+        await rasa_callbacks.find_partner(current_user.user_id, partner.user_id)
+
     async def swipy_run(
             self, dispatcher: CollectingDispatcher,
             tracker: Tracker,
@@ -442,8 +465,7 @@ class ActionDoNotDisturb(BaseSwiperAction):
         if initial_partner_id:
             partner = user_vault.get_user(initial_partner_id)
             if partner.is_waiting_for(current_user.user_id):
-                # force the original sender of the declined invitation to "move along" in their partner search
-                await rasa_callbacks.find_partner(current_user.user_id, partner.user_id)
+                await self.ping_partner(current_user, partner)
 
         return [
             SlotSet(
@@ -451,6 +473,16 @@ class ActionDoNotDisturb(BaseSwiperAction):
                 value=SwiperActionResult.SUCCESS,
             ),
         ]
+
+
+class ActionDoNotDisturbNotReady(ActionDoNotDisturb):
+    def name(self) -> Text:
+        return 'action_do_not_disturb_not_ready'
+
+    @staticmethod
+    async def ping_partner(current_user: UserStateMachine, partner: UserStateMachine) -> None:
+        # force the original sender of the declined invitation to "move along" in their partner search
+        await rasa_callbacks.report_unavailable(current_user.user_id, partner.user_id)
 
 
 class ActionLetPartnerGo(BaseSwiperAction):
