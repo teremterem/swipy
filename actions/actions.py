@@ -302,7 +302,7 @@ class ActionCreateRoom(BaseSwiperAction):
             )
 
         partner = user_vault.get_user(current_user.partner_id)
-        if partner.state != UserState.WAITING_PARTNER_ANSWER or partner.partner_id != current_user.user_id:
+        if not partner.is_waiting_for(current_user.user_id):
             # noinspection PyUnresolvedReferences
             current_user.become_ok_to_chitchat()
             user_vault.save(current_user)
@@ -431,8 +431,7 @@ class ActionDoNotDisturb(BaseSwiperAction):
 
         if initial_partner_id:
             partner = user_vault.get_user(initial_partner_id)
-            # TODO oleksandr: reuse this condition (it is also present in ActionCreateRoom)
-            if partner.state == UserState.WAITING_PARTNER_ANSWER and partner.partner_id == current_user.user_id:
+            if partner.is_waiting_for(current_user.user_id):
                 # force the original sender of the declined invitation to "move along" in their partner search
                 await rasa_callbacks.find_partner(current_user.user_id, partner.user_id)
 
