@@ -6,7 +6,7 @@ from unittest.mock import patch, AsyncMock, MagicMock, call, Mock
 import pytest
 from aioresponses import aioresponses, CallbackResult
 from rasa_sdk import Tracker
-from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType
+from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType, UserUtteranceReverted
 from rasa_sdk.executor import CollectingDispatcher
 
 from actions import actions, daily_co
@@ -1021,3 +1021,118 @@ async def test_action_do_not_disturb(
         state_timestamp_str='2021-05-02 08:51:41 Z',
     )
     assert user_vault.get_user('the_asker') == asker  # ActionDoNotDisturb should not change the asker state directly
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures('create_user_state_machine_table')
+@patch('time.time', Mock(return_value=1619945501))
+@pytest.mark.parametrize('current_user, asker, find_partner_call_expected', [
+    (
+            UserStateMachine(
+                user_id='unit_test_user',
+                state='asked_to_join',
+                partner_id='not_the_sker',
+                newbie=True,
+            ),
+            UserStateMachine(
+                user_id='the_asker',
+                state='ok_to_chitchat',  # the asker isn't waiting for the current user anymore
+                partner_id=None,
+                newbie=True,
+            ),
+            False,  # find_partner should not be called for "the asker"
+    ),
+    (
+            UserStateMachine(
+                user_id='unit_test_user',
+                state='asked_to_join',
+                partner_id='not_the_sker',
+                newbie=True,
+            ),
+            UserStateMachine(
+                user_id='the_asker',
+                state='waiting_partner_answer',
+                partner_id='someone_else',  # the asker is already waiting for someone else at this point
+                newbie=True,
+            ),
+            False,  # find_partner should not be called for "the asker"
+    ),
+    (
+            UserStateMachine(
+                user_id='unit_test_user',
+                state='do_not_disturb',
+                partner_id='',  # an invalid state, but we are supposed to use partner_id_to_let_go anyway
+                newbie=True,
+            ),
+            UserStateMachine(
+                user_id='the_asker',
+                state='waiting_partner_answer',
+                partner_id='unit_test_user',
+                newbie=True,
+            ),
+            True,  # find_partner SHOULD be called for "the asker" (we are using partner_id_to_let_go entity)
+    ),
+    (
+            UserStateMachine(
+                user_id='unit_test_user',
+                state='asked_to_join',
+                partner_id='not_the_sker',
+                newbie=True,
+            ),
+            UserStateMachine(
+                user_id='the_asker',
+                state='waiting_partner_answer',
+                partner_id='unit_test_user',
+                newbie=True,
+            ),
+            True,  # the asker is actually waiting for the current user to answer - find_partner should be called
+    ),
+])
+async def test_action_let_partner_go(
+        mock_aioresponses: aioresponses,
+        tracker: Tracker,
+        dispatcher: CollectingDispatcher,
+        domain: Dict[Text, Any],
+        rasa_callbacks_expected_call_builder: Callable[[Text, Text, Dict[Text, Any]], Tuple[Text, call]],
+        external_intent_response: Dict[Text, Any],
+        current_user: UserStateMachine,
+        asker: UserStateMachine,
+        find_partner_call_expected: bool,
+) -> None:
+    expected_rasa_url, expected_rasa_call = rasa_callbacks_expected_call_builder(
+        'the_asker',
+        'EXTERNAL_find_partner',
+        {},
+    )
+    mock_rasa_callbacks = AsyncMock(return_value=CallbackResult(payload=external_intent_response))
+    mock_aioresponses.post(expected_rasa_url, callback=mock_rasa_callbacks)
+
+    action = actions.ActionLetPartnerGo()
+    assert action.name() == 'action_let_partner_go'
+
+    user_vault = UserVault()
+    user_vault.save(current_user)
+    user_vault.save(asker)
+
+    tracker.add_slots([
+        SlotSet('partner_id_to_let_go', 'the_asker'),
+    ])
+
+    actual_events = await action.run(dispatcher, tracker, domain)
+    assert actual_events == [
+        UserUtteranceReverted(),
+        SlotSet('swiper_error', None),
+        SlotSet('swiper_error_trace', None),
+        SlotSet('swiper_state', current_user.state),
+        SlotSet('partner_id', current_user.partner_id),
+    ]
+    assert dispatcher.messages == []
+
+    if find_partner_call_expected:
+        assert mock_rasa_callbacks.mock_calls == [expected_rasa_call]
+    else:
+        mock_rasa_callbacks.assert_not_called()
+
+    user_vault = UserVault()  # create new instance to avoid hitting cache
+    assert user_vault.get_user('unit_test_user') == current_user  # current user should remain unchanged
+    assert user_vault.get_user('the_asker') == asker  # ActionLetPartnerGo should not change the asker state directly
