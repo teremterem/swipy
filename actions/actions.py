@@ -23,6 +23,7 @@ TELL_USER_ABOUT_ERRORS = strtobool(os.getenv('TELL_USER_ABOUT_ERRORS', 'yes'))
 SEND_ERROR_STACK_TRACE_TO_SLOT = strtobool(os.getenv('SEND_ERROR_STACK_TRACE_TO_SLOT', 'yes'))
 TELEGRAM_MSG_LIMIT_SLEEP_SEC = float(os.getenv('TELEGRAM_MSG_LIMIT_SLEEP_SEC', '1.1'))
 QUESTION_TIMEOUT_SEC = float(os.getenv('QUESTION_TIMEOUT_SEC', '120'))
+NEW_USERS_ARE_OK_TO_CHITCHAT = strtobool(os.getenv('NEW_USERS_ARE_OK_TO_CHITCHAT', 'yes'))
 
 SWIPER_STATE_SLOT = 'swiper_state'
 SWIPER_ACTION_RESULT_SLOT = 'swiper_action_result'
@@ -170,6 +171,30 @@ class ActionSessionStart(BaseSwiperAction):
         events.append(ActionExecuted('action_listen'))
 
         return events
+
+
+class ActionRegisterUser(BaseSwiperAction):
+    def name(self) -> Text:
+        return 'action_register_user'
+
+    async def swipy_run(
+            self, dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
+            current_user: UserStateMachine,
+            user_vault: IUserVault,
+    ) -> List[Dict[Text, Any]]:
+        if NEW_USERS_ARE_OK_TO_CHITCHAT:
+            # noinspection PyUnresolvedReferences
+            current_user.become_ok_to_chitchat()
+            user_vault.save(current_user)
+
+        return [
+            SlotSet(
+                key=SWIPER_ACTION_RESULT_SLOT,
+                value=SwiperActionResult.SUCCESS,
+            ),
+        ]
 
 
 class ActionFindPartner(BaseSwiperAction):
