@@ -88,6 +88,12 @@ rules:
   - intent: EXTERNAL_ask_if_ready
   - action: utter_check_if_ready
   - action: action_ask_if_ready
+- rule: current user does not respond to invitation, hence reminder to let partner go is triggered
+  steps:
+  - intent: EXTERNAL_let_partner_go
+    entities:
+      - partner_id_to_let_go
+  - action: action_let_partner_go
 - rule: someone else wants to chat and the user aggrees to join
   steps:
   - action: action_ask_to_join

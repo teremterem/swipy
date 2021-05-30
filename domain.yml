@@ -38,6 +38,7 @@ intents:
 entities:
 - dietcls_time
 - partner_id
+- partner_id_to_let_go
 - room_url
 slots:
   swiper_state:
@@ -61,6 +62,11 @@ slots:
     auto_fill: false
     influence_conversation: false
   partner_id:
+    type: rasa.shared.core.slots.TextSlot
+    initial_value: null
+    auto_fill: true
+    influence_conversation: false
+  partner_id_to_let_go:
     type: rasa.shared.core.slots.TextSlot
     initial_value: null
     auto_fill: true
@@ -185,5 +191,6 @@ actions:
 - action_join_room
 - action_become_ok_to_chitchat
 - action_do_not_disturb
+- action_let_partner_go
 forms: {}
 e2e_actions: []

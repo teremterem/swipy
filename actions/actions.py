@@ -6,7 +6,7 @@ from distutils.util import strtobool
 from typing import Any, Text, Dict, List
 
 from rasa_sdk import Action, Tracker
-from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType
+from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType, UserUtteranceReverted
 from rasa_sdk.executor import CollectingDispatcher
 
 from actions import daily_co
@@ -27,6 +27,8 @@ SWIPER_ACTION_RESULT_SLOT = 'swiper_action_result'
 
 SWIPER_ERROR_SLOT = 'swiper_error'
 SWIPER_ERROR_TRACE_SLOT = 'swiper_error_trace'
+
+PARTNER_ID_TO_LET_GO_SLOT = 'partner_id_to_let_go'
 
 
 class SwiperActionResult:
@@ -440,4 +442,29 @@ class ActionDoNotDisturb(BaseSwiperAction):
                 key=SWIPER_ACTION_RESULT_SLOT,
                 value=SwiperActionResult.SUCCESS,
             ),
+        ]
+
+
+class ActionLetPartnerGo(BaseSwiperAction):
+    def name(self) -> Text:
+        return 'action_let_partner_go'
+
+    async def swipy_run(
+            self, dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
+            current_user: UserStateMachine,
+            user_vault: IUserVault,
+    ) -> List[Dict[Text, Any]]:
+        partner_id_to_let_go = tracker.get_slot(PARTNER_ID_TO_LET_GO_SLOT)
+
+        # TODO oleksandr: safeguard with a try-except block (current user doesn't need to know about problems here)
+        if partner_id_to_let_go:
+            partner_to_let_go = user_vault.get_user(partner_id_to_let_go)
+            if partner_to_let_go.is_waiting_for(current_user.user_id):
+                # force the original sender of the declined invitation to "move along" in their partner search
+                await rasa_callbacks.find_partner(current_user.user_id, partner_to_let_go.user_id)
+
+        return [
+            UserUtteranceReverted(),
         ]
