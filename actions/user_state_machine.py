@@ -37,7 +37,16 @@ class UserStateMachine(UserModel):
     def __init__(self, *args, state: Text = None, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
-        self.machine = Machine(model=self, states=UserState.all, initial=UserState.NEW, auto_transitions=False)
+        self.machine = Machine(
+            model=self,
+            states=UserState.all,
+            initial=UserState.NEW,
+            auto_transitions=False,
+            send_event=True,
+            after_state_change=[
+                self._update_state_timestamp,
+            ],
+        )
         if state is not None:
             self.machine.set_state(state)
 
@@ -47,7 +56,6 @@ class UserStateMachine(UserModel):
             source='*',
             dest=UserState.WAITING_PARTNER_ANSWER,
             after=[
-                self._update_state_timestamp,
                 self._set_partner_id,
             ],
         )
@@ -57,7 +65,6 @@ class UserStateMachine(UserModel):
             source='*',
             dest=UserState.OK_TO_CHITCHAT,
             after=[
-                self._update_state_timestamp,
                 self._drop_partner_id,
             ],
         )
@@ -70,7 +77,6 @@ class UserStateMachine(UserModel):
             ],
             dest=UserState.ASKED_TO_JOIN,
             after=[
-                self._update_state_timestamp,
                 self._set_partner_id,
             ],
         )
@@ -83,7 +89,6 @@ class UserStateMachine(UserModel):
             ],
             dest=UserState.OK_TO_CHITCHAT,
             after=[
-                self._update_state_timestamp,
                 self._graduate_from_newbie,
                 self._drop_partner_id,
             ],
@@ -94,7 +99,6 @@ class UserStateMachine(UserModel):
             source='*',
             dest=UserState.DO_NOT_DISTURB,
             after=[
-                self._update_state_timestamp,
                 self._drop_partner_id,
             ],
         )
@@ -104,19 +108,22 @@ class UserStateMachine(UserModel):
             return False
         return self.state == UserState.WAITING_PARTNER_ANSWER and self.partner_id == partner_id
 
-    # noinspection PyUnusedLocal
-    def _set_partner_id(self, partner_id: Text, *args, **kwargs) -> None:
-        self.partner_id = partner_id
+    def _set_partner_id(self, event) -> None:
+        self.partner_id = event.args[0]
 
     # noinspection PyUnusedLocal
-    def _drop_partner_id(self, *args, **kwargs) -> None:
+    def _drop_partner_id(self, event) -> None:
         self.partner_id = None
 
     # noinspection PyUnusedLocal
-    def _graduate_from_newbie(self, *args, **kwargs) -> None:
+    def _graduate_from_newbie(self, event) -> None:
         self.newbie = False
 
     # noinspection PyUnusedLocal
-    def _update_state_timestamp(self, *args, **kwargs) -> None:
+    def _update_state_timestamp(self, event) -> None:
+        if event.transition.source == event.transition.dest:
+            # state hasn't changed => no need to update timestamp
+            return
+
         self.state_timestamp = current_timestamp_int()
         self.state_timestamp_str = datetime.utcfromtimestamp(self.state_timestamp).strftime('%Y-%m-%d %H:%M:%S Z')
