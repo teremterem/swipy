@@ -1,4 +1,6 @@
+import datetime
 import traceback
+import uuid
 from dataclasses import asdict
 from typing import Dict, Text, Any, List, Callable, Tuple
 from unittest.mock import patch, AsyncMock, MagicMock, call, Mock
@@ -6,7 +8,7 @@ from unittest.mock import patch, AsyncMock, MagicMock, call, Mock
 import pytest
 from aioresponses import aioresponses, CallbackResult
 from rasa_sdk import Tracker
-from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType
+from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType, UserUtteranceReverted
 from rasa_sdk.executor import CollectingDispatcher
 
 from actions import actions, daily_co
@@ -427,6 +429,8 @@ async def test_action_find_partner_swiper_error_trace(
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('create_user_state_machine_table')
 @patch('time.time', Mock(return_value=1619945501))
+@patch('actions.actions.datetime_now', Mock(return_value=datetime.datetime(2021, 5, 25)))
+@patch('uuid.uuid4', Mock(return_value=uuid.UUID('aaaabbbb-cccc-dddd-eeee-ffff11112222')))
 async def test_action_ask_to_join(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
@@ -449,6 +453,70 @@ async def test_action_ask_to_join(
 
     actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == [
+        {
+            'date_time': '2021-05-25T00:02:00',
+            'entities': {'partner_id_to_let_go': 'an_asker'},
+            'event': 'reminder',
+            'intent': 'EXTERNAL_let_partner_go',
+            'kill_on_user_msg': False,
+            'name': 'aaaabbbb-cccc-dddd-eeee-ffff11112222',
+            'timestamp': None,
+        },
+        SlotSet('swiper_action_result', 'success'),
+        SlotSet('swiper_error', None),
+        SlotSet('swiper_error_trace', None),
+        SlotSet('swiper_state', 'asked_to_join'),
+        SlotSet('partner_id', 'an_asker'),
+    ]
+    assert dispatcher.messages == []
+
+    user_vault = UserVault()  # create new instance to avoid hitting cache
+    assert user_vault.get_user('unit_test_user') == UserStateMachine(
+        user_id='unit_test_user',
+        state='asked_to_join',
+        partner_id='an_asker',
+        newbie=True,
+        state_timestamp=1619945501,
+        state_timestamp_str='2021-05-02 08:51:41 Z',
+    )
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures('create_user_state_machine_table')
+@patch('time.time', Mock(return_value=1619945501))
+@patch('actions.actions.datetime_now', Mock(return_value=datetime.datetime(2021, 5, 25)))
+@patch('uuid.uuid4', Mock(return_value=uuid.UUID('aaaabbbb-cccc-dddd-eeee-ffff11112222')))
+async def test_action_ask_if_ready(
+        tracker: Tracker,
+        dispatcher: CollectingDispatcher,
+        domain: Dict[Text, Any],
+) -> None:
+    action = actions.ActionAskIfReady()
+    assert action.name() == 'action_ask_if_ready'
+
+    user_vault = UserVault()
+    user_vault.save(UserStateMachine(
+        user_id='unit_test_user',
+        state='ok_to_chitchat',
+        partner_id=None,
+        newbie=True,
+    ))
+
+    tracker.add_slots([
+        SlotSet('partner_id', 'an_asker'),
+    ])
+
+    actual_events = await action.run(dispatcher, tracker, domain)
+    assert actual_events == [
+        {
+            'date_time': '2021-05-25T00:02:00',
+            'entities': {'partner_id_to_let_go': 'an_asker'},
+            'event': 'reminder',
+            'intent': 'EXTERNAL_let_partner_go_not_ready',
+            'kill_on_user_msg': False,
+            'name': 'aaaabbbb-cccc-dddd-eeee-ffff11112222',
+            'timestamp': None,
+        },
         SlotSet('swiper_action_result', 'success'),
         SlotSet('swiper_error', None),
         SlotSet('swiper_error_trace', None),
@@ -536,6 +604,86 @@ async def test_action_create_room(
     wrap_daily_co_create_room.assert_called_once_with('unit_test_user')
 
     assert mock_rasa_callbacks.mock_calls == [rasa_callbacks_join_room_expected_call[1]]
+
+    user_vault = UserVault()  # create new instance to avoid hitting cache
+    assert user_vault.get_user('unit_test_user') == UserStateMachine(
+        user_id='unit_test_user',
+        state='ok_to_chitchat',  # user joined the chat and ok_to_chitchat merely allows them to be invited again later
+        partner_id=None,
+        newbie=False,  # accepting the very first video chitchat graduates the user from newbie
+        state_timestamp=1619945501,
+        state_timestamp_str='2021-05-02 08:51:41 Z',
+    )
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures('create_user_state_machine_table')
+@patch('time.time', Mock(return_value=1619945501))  # "now"
+@patch('actions.daily_co.create_room', wraps=daily_co.create_room)
+async def test_action_create_room_ready(
+        wrap_daily_co_create_room: AsyncMock,
+        mock_aioresponses: aioresponses,
+        tracker: Tracker,
+        dispatcher: CollectingDispatcher,
+        domain: Dict[Text, Any],
+        daily_co_create_room_expected_call: Tuple[Text, call],
+        new_room1: Dict[Text, Any],
+        rasa_callbacks_join_room_ready_expected_call: Tuple[Text, call],
+        external_intent_response: Dict[Text, Any],
+) -> None:
+    mock_daily_co = AsyncMock(return_value=CallbackResult(payload=new_room1))
+    mock_aioresponses.post(
+        daily_co_create_room_expected_call[0],
+        callback=mock_daily_co,
+    )
+
+    mock_rasa_callbacks = AsyncMock(return_value=CallbackResult(payload=external_intent_response))
+    mock_aioresponses.post(rasa_callbacks_join_room_ready_expected_call[0], callback=mock_rasa_callbacks)
+
+    action = actions.ActionCreateRoomReady()
+    assert action.name() == 'action_create_room_ready'
+
+    user_vault = UserVault()
+    user_vault.save(UserStateMachine(
+        user_id='an_asker',
+        state='waiting_partner_answer',
+        partner_id='unit_test_user',
+        newbie=True,
+        state_timestamp=1619945501 - 118,  # 1m 58s before "now"
+    ))
+    user_vault.save(UserStateMachine(
+        user_id='unit_test_user',
+        state='asked_to_join',
+        partner_id='an_asker',
+        newbie=True,
+    ))
+
+    actual_events = await action.run(dispatcher, tracker, domain)
+    assert actual_events == [
+        SlotSet('swiper_action_result', 'room_url_ready'),
+        SlotSet('room_url', 'https://swipy.daily.co/pytestroom'),
+        SlotSet('swiper_error', None),
+        SlotSet('swiper_error_trace', None),
+        SlotSet('swiper_state', 'ok_to_chitchat'),
+        SlotSet('partner_id', None),
+    ]
+    assert dispatcher.messages == [{
+        'attachment': None,
+        'buttons': [],
+        'custom': {},
+        'elements': [],
+        'image': None,
+        'response': 'utter_room_url',
+        'template': 'utter_room_url',
+        'text': None,
+        'room_url': 'https://swipy.daily.co/pytestroom',
+    }]
+
+    assert mock_daily_co.mock_calls == [daily_co_create_room_expected_call[1]]
+    # make sure correct sender_id was passed (for logging purposes)
+    wrap_daily_co_create_room.assert_called_once_with('unit_test_user')
+
+    assert mock_rasa_callbacks.mock_calls == [rasa_callbacks_join_room_ready_expected_call[1]]
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
@@ -689,39 +837,30 @@ async def test_action_create_room_partner_not_waiting(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize('current_user, expected_swiper_error', [
-    (
-            UserStateMachine(
-                user_id='unit_test_user',
-                state='asked_to_join',
-                partner_id=None,
-                newbie=True,
-            ),
-            'InvalidSwiperStateError("current user \'unit_test_user\' cannot join the room '
-            'because current_user.partner_id is None")',
+@pytest.mark.parametrize('current_user', [
+    UserStateMachine(
+        user_id='unit_test_user',
+        state='asked_to_join',
+        partner_id='',
+        newbie=True,
     ),
-    (
-            UserStateMachine(
-                user_id='unit_test_user',
-                state='ok_to_chitchat',
-                partner_id='an_asker',
-                newbie=True,
-            ),
-            'InvalidSwiperStateError("current user \'unit_test_user\' is not in state \'asked_to_join\', '
-            'hence cannot join the room (actual state is \'ok_to_chitchat\')")',
+    UserStateMachine(
+        user_id='unit_test_user',
+        state='asked_to_join',
+        partner_id=None,
+        newbie=True,
     ),
 ])
 @pytest.mark.usefixtures('create_user_state_machine_table')
 @patch('actions.rasa_callbacks.join_room')
 @patch('actions.daily_co.create_room')
-async def test_action_create_room_invalid_state(
+async def test_action_create_room_no_partner_id(
         mock_daily_co_create_room: AsyncMock,
         mock_rasa_callback_join_room: AsyncMock,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
         current_user: UserStateMachine,
-        expected_swiper_error: Text,
 ) -> None:
     user_vault = UserVault()
     user_vault.save(UserStateMachine(
@@ -737,7 +876,11 @@ async def test_action_create_room_invalid_state(
     actual_events = await actions.ActionCreateRoom().run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'error'),
-        SlotSet('swiper_error', expected_swiper_error),
+        SlotSet(
+            'swiper_error',
+            'InvalidSwiperStateError("current user \'unit_test_user\' cannot join the room '
+            'because current_user.partner_id is empty")',
+        ),
         SlotSet('swiper_state', current_user.state),
         SlotSet('partner_id', current_user.partner_id),
     ]
@@ -790,16 +933,7 @@ async def test_action_join_room(
         SlotSet('swiper_state', 'ok_to_chitchat'),
         SlotSet('partner_id', None),
     ]
-    assert dispatcher.messages == [{
-        'attachment': None,
-        'buttons': [],
-        'custom': {},
-        'elements': [],
-        'image': None,
-        'response': 'utter_found_partner_room_url',
-        'template': 'utter_found_partner_room_url',
-        'text': None,
-    }]
+    assert dispatcher.messages == []
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
@@ -839,16 +973,39 @@ async def test_action_become_ok_to_chitchat(
         SlotSet('swiper_state', 'ok_to_chitchat'),
         SlotSet('partner_id', None),
     ]
-    assert dispatcher.messages == [{
-        'attachment': None,
-        'buttons': [],
-        'custom': {},
-        'elements': [],
-        'image': None,
-        'response': 'utter_thanks_for_being_ok_to_chitchat',
-        'template': 'utter_thanks_for_being_ok_to_chitchat',
-        'text': None,
-    }]
+    assert dispatcher.messages == []
+
+    user_vault = UserVault()  # create new instance to avoid hitting cache
+    assert user_vault.get_user('unit_test_user') == UserStateMachine(
+        user_id='unit_test_user',
+        state='ok_to_chitchat',
+        partner_id=None,
+        newbie=True,
+        state_timestamp=1619945501,
+        state_timestamp_str='2021-05-02 08:51:41 Z',
+    )
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures('create_user_state_machine_table')
+@patch('time.time', Mock(return_value=1619945501))
+async def test_action_register_user(
+        tracker: Tracker,
+        dispatcher: CollectingDispatcher,
+        domain: Dict[Text, Any],
+) -> None:
+    action = actions.ActionRegisterUser()
+    assert action.name() == 'action_register_user'
+
+    actual_events = await action.run(dispatcher, tracker, domain)
+    assert actual_events == [
+        SlotSet('swiper_action_result', 'success'),
+        SlotSet('swiper_error', None),
+        SlotSet('swiper_error_trace', None),
+        SlotSet('swiper_state', 'ok_to_chitchat'),
+        SlotSet('partner_id', None),
+    ]
+    assert dispatcher.messages == []
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
@@ -898,8 +1055,8 @@ async def test_action_become_ok_to_chitchat(
     (
             UserStateMachine(
                 user_id='unit_test_user',
-                state='waiting_partner_answer',  # current user is not even asked
-                partner_id='the_asker',  # TODO oleksandr: this use case is weird - think it through and comment
+                state='asked_to_join',
+                partner_id='',  # an invalid state
                 newbie=True,
             ),
             UserStateMachine(
@@ -977,3 +1134,250 @@ async def test_action_do_not_disturb(
         state_timestamp_str='2021-05-02 08:51:41 Z',
     )
     assert user_vault.get_user('the_asker') == asker  # ActionDoNotDisturb should not change the asker state directly
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures('create_user_state_machine_table')
+@patch('time.time', Mock(return_value=1619945501))
+async def test_action_do_not_disturb_not_ready(
+        mock_aioresponses: aioresponses,
+        tracker: Tracker,
+        dispatcher: CollectingDispatcher,
+        domain: Dict[Text, Any],
+        rasa_callbacks_expected_call_builder: Callable[[Text, Text, Dict[Text, Any]], Tuple[Text, call]],
+        external_intent_response: Dict[Text, Any],
+) -> None:
+    expected_rasa_url, expected_rasa_call = rasa_callbacks_expected_call_builder(
+        'the_asker',
+        'EXTERNAL_report_unavailable',
+        {},
+    )
+    mock_rasa_callbacks = AsyncMock(return_value=CallbackResult(payload=external_intent_response))
+    mock_aioresponses.post(expected_rasa_url, callback=mock_rasa_callbacks)
+
+    action = actions.ActionDoNotDisturbNotReady()
+    assert action.name() == 'action_do_not_disturb_not_ready'
+
+    user_vault = UserVault()
+    user_vault.save(UserStateMachine(
+        user_id='unit_test_user',
+        state='asked_to_join',
+        partner_id='the_asker',
+        newbie=True,
+    ))
+    user_vault.save(UserStateMachine(
+        user_id='the_asker',
+        state='waiting_partner_answer',
+        partner_id='unit_test_user',
+        newbie=True,
+    ))
+
+    actual_events = await action.run(dispatcher, tracker, domain)
+    assert actual_events == [
+        SlotSet('swiper_action_result', 'success'),
+        SlotSet('swiper_error', None),
+        SlotSet('swiper_error_trace', None),
+        SlotSet('swiper_state', 'do_not_disturb'),
+        SlotSet('partner_id', None),
+    ]
+    assert dispatcher.messages == []
+
+    assert mock_rasa_callbacks.mock_calls == [expected_rasa_call]
+
+    user_vault = UserVault()  # create new instance to avoid hitting cache
+    assert user_vault.get_user('unit_test_user') == UserStateMachine(
+        user_id='unit_test_user',
+        state='do_not_disturb',
+        partner_id=None,
+        newbie=True,
+        state_timestamp=1619945501,
+        state_timestamp_str='2021-05-02 08:51:41 Z',
+    )
+    assert user_vault.get_user('the_asker') == UserStateMachine(
+        user_id='the_asker',
+        state='waiting_partner_answer',
+        partner_id='unit_test_user',
+        newbie=True,
+    )  # ActionDoNotDisturbNotReady should not change the asker state
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures('create_user_state_machine_table')
+@patch('time.time', Mock(return_value=1619945501))
+@pytest.mark.parametrize('current_user, asker, find_partner_call_expected', [
+    (
+            UserStateMachine(
+                user_id='unit_test_user',
+                state='asked_to_join',
+                partner_id='not_the_sker',
+                newbie=True,
+            ),
+            UserStateMachine(
+                user_id='the_asker',
+                state='ok_to_chitchat',  # the asker isn't waiting for the current user anymore
+                partner_id=None,
+                newbie=True,
+            ),
+            False,  # find_partner should not be called for "the asker"
+    ),
+    (
+            UserStateMachine(
+                user_id='unit_test_user',
+                state='asked_to_join',
+                partner_id='not_the_sker',
+                newbie=True,
+            ),
+            UserStateMachine(
+                user_id='the_asker',
+                state='waiting_partner_answer',
+                partner_id='someone_else',  # the asker is already waiting for someone else at this point
+                newbie=True,
+            ),
+            False,  # find_partner should not be called for "the asker"
+    ),
+    (
+            UserStateMachine(
+                user_id='unit_test_user',
+                state='do_not_disturb',
+                partner_id='',  # an invalid state, but we are supposed to use partner_id_to_let_go anyway
+                newbie=True,
+            ),
+            UserStateMachine(
+                user_id='the_asker',
+                state='waiting_partner_answer',
+                partner_id='unit_test_user',
+                newbie=True,
+            ),
+            True,  # find_partner SHOULD be called for "the asker" (we are using partner_id_to_let_go entity)
+    ),
+    (
+            UserStateMachine(
+                user_id='unit_test_user',
+                state='asked_to_join',
+                partner_id='not_the_sker',
+                newbie=True,
+            ),
+            UserStateMachine(
+                user_id='the_asker',
+                state='waiting_partner_answer',
+                partner_id='unit_test_user',
+                newbie=True,
+            ),
+            True,  # the asker is actually waiting for the current user to answer - find_partner should be called
+    ),
+])
+async def test_action_let_partner_go(
+        mock_aioresponses: aioresponses,
+        tracker: Tracker,
+        dispatcher: CollectingDispatcher,
+        domain: Dict[Text, Any],
+        rasa_callbacks_expected_call_builder: Callable[[Text, Text, Dict[Text, Any]], Tuple[Text, call]],
+        external_intent_response: Dict[Text, Any],
+        current_user: UserStateMachine,
+        asker: UserStateMachine,
+        find_partner_call_expected: bool,
+) -> None:
+    expected_rasa_url, expected_rasa_call = rasa_callbacks_expected_call_builder(
+        'the_asker',
+        'EXTERNAL_find_partner',
+        {},
+    )
+    mock_rasa_callbacks = AsyncMock(return_value=CallbackResult(payload=external_intent_response))
+    mock_aioresponses.post(expected_rasa_url, callback=mock_rasa_callbacks)
+
+    action = actions.ActionLetPartnerGo()
+    assert action.name() == 'action_let_partner_go'
+
+    user_vault = UserVault()
+    user_vault.save(current_user)
+    user_vault.save(asker)
+
+    tracker.add_slots([
+        SlotSet('partner_id_to_let_go', 'the_asker'),
+    ])
+
+    actual_events = await action.run(dispatcher, tracker, domain)
+    assert actual_events == [
+        UserUtteranceReverted(),
+        SlotSet('swiper_error', None),
+        SlotSet('swiper_error_trace', None),
+        SlotSet('swiper_state', current_user.state),
+        SlotSet('partner_id', current_user.partner_id),
+    ]
+    assert dispatcher.messages == []
+
+    if find_partner_call_expected:
+        assert mock_rasa_callbacks.mock_calls == [expected_rasa_call]
+    else:
+        mock_rasa_callbacks.assert_not_called()
+
+    user_vault = UserVault()  # create new instance to avoid hitting cache
+    assert user_vault.get_user('unit_test_user') == current_user  # current user should remain unchanged
+    assert user_vault.get_user('the_asker') == asker  # ActionLetPartnerGo should not change the asker state directly
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures('create_user_state_machine_table')
+@patch('time.time', Mock(return_value=1619945501))
+async def test_action_let_partner_go_not_ready(
+        mock_aioresponses: aioresponses,
+        tracker: Tracker,
+        dispatcher: CollectingDispatcher,
+        domain: Dict[Text, Any],
+        rasa_callbacks_expected_call_builder: Callable[[Text, Text, Dict[Text, Any]], Tuple[Text, call]],
+        external_intent_response: Dict[Text, Any],
+) -> None:
+    expected_rasa_url, expected_rasa_call = rasa_callbacks_expected_call_builder(
+        'the_asker',
+        'EXTERNAL_report_unavailable',
+        {},
+    )
+    mock_rasa_callbacks = AsyncMock(return_value=CallbackResult(payload=external_intent_response))
+    mock_aioresponses.post(expected_rasa_url, callback=mock_rasa_callbacks)
+
+    action = actions.ActionLetPartnerGoNotReady()
+    assert action.name() == 'action_let_partner_go_not_ready'
+
+    user_vault = UserVault()
+    user_vault.save(UserStateMachine(
+        user_id='unit_test_user',
+        state='asked_to_join',
+        partner_id='',  # an invalid state, but we are supposed to use partner_id_to_let_go anyway
+        newbie=True,
+    ))
+    user_vault.save(UserStateMachine(
+        user_id='the_asker',
+        state='waiting_partner_answer',
+        partner_id='unit_test_user',
+        newbie=True,
+    ))
+
+    tracker.add_slots([
+        SlotSet('partner_id_to_let_go', 'the_asker'),
+    ])
+
+    actual_events = await action.run(dispatcher, tracker, domain)
+    assert actual_events == [
+        UserUtteranceReverted(),
+        SlotSet('swiper_error', None),
+        SlotSet('swiper_error_trace', None),
+        SlotSet('swiper_state', 'asked_to_join'),
+        SlotSet('partner_id', ''),
+    ]
+    assert dispatcher.messages == []
+
+    assert mock_rasa_callbacks.mock_calls == [expected_rasa_call]
+
+    user_vault = UserVault()  # create new instance to avoid hitting cache
+    assert user_vault.get_user('unit_test_user') == UserStateMachine(
+        user_id='unit_test_user',
+        state='asked_to_join',
+        partner_id='',  # an invalid state, but we are supposed to use partner_id_to_let_go anyway
+        newbie=True,
+    )  # current user should remain unchanged
+    assert user_vault.get_user('the_asker') == UserStateMachine(
+        user_id='the_asker',
+        state='waiting_partner_answer',
+        partner_id='unit_test_user',
+        newbie=True,
+    )  # ActionLetPartnerGoNotReady should not change the asker state

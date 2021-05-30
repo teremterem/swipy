@@ -203,11 +203,25 @@ def test_state_timestamp(source_state: Text, trigger_name: Text) -> None:
 
     trigger = getattr(user, trigger_name)
 
-    if transition_is_valid:
-        trigger(partner_id='some_partner_id')  # run trigger and pass partner_id just in case (some triggers need it)
+    transitions_that_dont_change_state = [
+        ('waiting_partner_answer', 'ask_partner'),
+        ('ok_to_chitchat', 'become_ok_to_chitchat'),
+        ('do_not_disturb', 'become_do_not_disturb'),
+    ]
+
+    if (source_state, trigger_name) in transitions_that_dont_change_state:
+        # transition is valid but it leads to the same state as before => timestamp should not be changed
+        trigger('some_partner_id')
+
+        assert user.state_timestamp == 1619697022  # timestamp is expected to remain unchanged
+        assert user.state_timestamp_str == '2021-04-29 11:50:22 Z'  # timestamp is expected to remain unchanged
+
+    elif transition_is_valid:
+        trigger('some_partner_id')  # run trigger and pass partner_id just in case (some triggers need it)
 
         assert user.state_timestamp == 1619945501  # new timestamp
         assert user.state_timestamp_str == '2021-05-02 08:51:41 Z'  # new timestamp
+
     else:
         # invalid transition is expected to not go through
         with pytest.raises(MachineError):

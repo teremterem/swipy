@@ -37,7 +37,16 @@ class UserStateMachine(UserModel):
     def __init__(self, *args, state: Text = None, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
-        self.machine = Machine(model=self, states=UserState.all, initial=UserState.NEW, auto_transitions=False)
+        self.machine = Machine(
+            model=self,
+            states=UserState.all,
+            initial=UserState.NEW,
+            auto_transitions=False,
+            send_event=True,
+            after_state_change=[
+                self._update_state_timestamp,
+            ],
+        )
         if state is not None:
             self.machine.set_state(state)
 
@@ -47,8 +56,7 @@ class UserStateMachine(UserModel):
             source='*',
             dest=UserState.WAITING_PARTNER_ANSWER,
             after=[
-                self.update_state_timestamp,
-                self.set_partner_id,
+                self._set_partner_id,
             ],
         )
         # noinspection PyTypeChecker
@@ -57,8 +65,7 @@ class UserStateMachine(UserModel):
             source='*',
             dest=UserState.OK_TO_CHITCHAT,
             after=[
-                self.update_state_timestamp,
-                self.drop_partner_id,
+                self._drop_partner_id,
             ],
         )
         # noinspection PyTypeChecker
@@ -70,8 +77,7 @@ class UserStateMachine(UserModel):
             ],
             dest=UserState.ASKED_TO_JOIN,
             after=[
-                self.update_state_timestamp,
-                self.set_partner_id,
+                self._set_partner_id,
             ],
         )
         # noinspection PyTypeChecker
@@ -83,9 +89,8 @@ class UserStateMachine(UserModel):
             ],
             dest=UserState.OK_TO_CHITCHAT,
             after=[
-                self.update_state_timestamp,
-                self.graduate_from_newbie,
-                self.drop_partner_id,
+                self._graduate_from_newbie,
+                self._drop_partner_id,
             ],
         )
         # noinspection PyTypeChecker
@@ -94,24 +99,31 @@ class UserStateMachine(UserModel):
             source='*',
             dest=UserState.DO_NOT_DISTURB,
             after=[
-                self.update_state_timestamp,
-                self.drop_partner_id,
+                self._drop_partner_id,
             ],
         )
 
-    # noinspection PyUnusedLocal
-    def set_partner_id(self, partner_id: Text, *args, **kwargs) -> None:
-        self.partner_id = partner_id
+    def is_waiting_for(self, partner_id):
+        if not partner_id:
+            return False
+        return self.state == UserState.WAITING_PARTNER_ANSWER and self.partner_id == partner_id
+
+    def _set_partner_id(self, event) -> None:
+        self.partner_id = event.args[0]
 
     # noinspection PyUnusedLocal
-    def drop_partner_id(self, *args, **kwargs) -> None:
+    def _drop_partner_id(self, event) -> None:
         self.partner_id = None
 
     # noinspection PyUnusedLocal
-    def graduate_from_newbie(self, *args, **kwargs) -> None:
+    def _graduate_from_newbie(self, event) -> None:
         self.newbie = False
 
     # noinspection PyUnusedLocal
-    def update_state_timestamp(self, *args, **kwargs) -> None:
+    def _update_state_timestamp(self, event) -> None:
+        if event.transition.source == event.transition.dest:
+            # state hasn't changed => no need to update timestamp
+            return
+
         self.state_timestamp = current_timestamp_int()
         self.state_timestamp_str = datetime.utcfromtimestamp(self.state_timestamp).strftime('%Y-%m-%d %H:%M:%S Z')

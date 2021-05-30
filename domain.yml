@@ -33,11 +33,20 @@ intents:
     use_entities: true
 - EXTERNAL_join_room:
     use_entities: true
+- EXTERNAL_join_room_ready:
+    use_entities: true
 - EXTERNAL_find_partner:
+    use_entities: true
+- EXTERNAL_let_partner_go:
+    use_entities: true
+- EXTERNAL_let_partner_go_not_ready:
+    use_entities: true
+- EXTERNAL_report_unavailable:
     use_entities: true
 entities:
 - dietcls_time
 - partner_id
+- partner_id_to_let_go
 - room_url
 slots:
   swiper_state:
@@ -61,6 +70,11 @@ slots:
     auto_fill: false
     influence_conversation: false
   partner_id:
+    type: rasa.shared.core.slots.TextSlot
+    initial_value: null
+    auto_fill: true
+    influence_conversation: false
+  partner_id_to_let_go:
     type: rasa.shared.core.slots.TextSlot
     initial_value: null
     auto_fill: true
@@ -145,7 +159,7 @@ responses:
   - text: Are you ready for the call? 🎥 ☎️
   utter_partner_already_gone:
   - text: |-
-      That person has become unavailable 😞
+      Unfortunately, that person has become unavailable 😞
        
       Not all is lost, however!
        
@@ -158,6 +172,10 @@ responses:
   - custom:
       parse_mode: html
       text: "Hooray! I have found someone who wants to chitchat!\n \n<b>Please follow this link to join the video call:</b>\n \n{room_url}"
+  utter_partner_ready_room_url:
+  - custom:
+      parse_mode: html
+      text: "Done!\n \n<b>Please follow this link to join the video call:</b>\n \n{room_url}"
   utter_let_them_go_stop_bothering:
   - text: |-
       Ok, I will let that person go then 😞
@@ -178,11 +196,17 @@ responses:
   - text: Ouch! Something went wrong 🤖
 actions:
 - action_session_start
+- action_register_user
 - action_find_partner
 - action_ask_to_join
+- action_ask_if_ready
 - action_create_room
+- action_create_room_ready
 - action_join_room
 - action_become_ok_to_chitchat
 - action_do_not_disturb
+- action_do_not_disturb_not_ready
+- action_let_partner_go
+- action_let_partner_go_not_ready
 forms: {}
 e2e_actions: []
