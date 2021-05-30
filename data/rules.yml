@@ -180,6 +180,12 @@ rules:
 - rule: a partner agrees to join a video chat and the user receives the room url
   steps:
   - intent: EXTERNAL_join_room
+  - action: utter_found_partner_room_url
+  - action: action_join_room
+- rule: a partner confirms readiness for the video chat and the user receives the room url
+  steps:
+  - intent: EXTERNAL_join_room_ready
+  - action: utter_partner_ready_room_url
   - action: action_join_room
 - rule: user asks not to bother them
   steps:

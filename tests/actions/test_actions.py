@@ -933,16 +933,7 @@ async def test_action_join_room(
         SlotSet('swiper_state', 'ok_to_chitchat'),
         SlotSet('partner_id', None),
     ]
-    assert dispatcher.messages == [{
-        'attachment': None,
-        'buttons': [],
-        'custom': {},
-        'elements': [],
-        'image': None,
-        'response': 'utter_found_partner_room_url',
-        'template': 'utter_found_partner_room_url',
-        'text': None,
-    }]
+    assert dispatcher.messages == []
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(

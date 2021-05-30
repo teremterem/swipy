@@ -288,13 +288,9 @@ class ActionCreateRoom(BaseSwiperAction):
         return 'action_create_room'
 
     @staticmethod
-    def utter_room_url(dispatcher: CollectingDispatcher, room_url: Text) -> None:
-        dispatcher.utter_message(
-            response='utter_room_url',
-            **{
-                rasa_callbacks.ROOM_URL_SLOT: room_url,
-            },
-        )
+    async def connect_partner(current_user_id: Text, partner_id: Text, room_url: Text) -> None:
+        # put partner into the room as well
+        await rasa_callbacks.join_room(current_user_id, partner_id, room_url)
 
     async def swipy_run(
             self, dispatcher: CollectingDispatcher,
@@ -343,10 +339,14 @@ class ActionCreateRoom(BaseSwiperAction):
         created_room = await daily_co.create_room(current_user.user_id)
         room_url = created_room['url']
 
-        # put partner into the room as well
-        await rasa_callbacks.join_room(current_user.user_id, current_user.partner_id, room_url)
+        await self.connect_partner(current_user.user_id, current_user.partner_id, room_url)
 
-        self.utter_room_url(dispatcher, room_url)
+        dispatcher.utter_message(
+            response='utter_room_url',
+            **{
+                rasa_callbacks.ROOM_URL_SLOT: room_url,
+            },
+        )
 
         # noinspection PyUnresolvedReferences
         current_user.join_room()
@@ -369,13 +369,9 @@ class ActionCreateRoomReady(ActionCreateRoom):
         return 'action_create_room_ready'
 
     @staticmethod
-    def utter_room_url(dispatcher: CollectingDispatcher, room_url: Text) -> None:
-        dispatcher.utter_message(
-            response='utter_partner_ready_room_url',  # override the original utterance
-            **{
-                rasa_callbacks.ROOM_URL_SLOT: room_url,
-            },
-        )
+    async def connect_partner(current_user_id: Text, partner_id: Text, room_url: Text) -> None:
+        # put partner into the room as well
+        await rasa_callbacks.join_room_ready(current_user_id, partner_id, room_url)
 
 
 class ActionJoinRoom(BaseSwiperAction):
@@ -389,9 +385,6 @@ class ActionJoinRoom(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        # 'room_url' slot is expected to be set by the external caller
-        dispatcher.utter_message(response='utter_found_partner_room_url')
-
         # noinspection PyUnresolvedReferences
         current_user.join_room()
         user_vault.save(current_user)
