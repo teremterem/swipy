@@ -95,6 +95,12 @@ rules:
     entities:
       - partner_id_to_let_go
   - action: action_let_partner_go
+- rule: current user does not respond to readiness confirmation, hence reminder to let partner go is triggered
+  steps:
+  - intent: EXTERNAL_let_partner_go_not_ready
+    entities:
+      - partner_id_to_let_go
+  - action: action_let_partner_go_not_ready
 - rule: someone else wants to chat and the user aggrees to join
   steps:
   - action: action_ask_to_join

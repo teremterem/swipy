@@ -238,6 +238,10 @@ class ActionAskToJoin(BaseSwiperAction):
     def name(self) -> Text:
         return 'action_ask_to_join'
 
+    @staticmethod
+    def reminder_intent():
+        return 'EXTERNAL_let_partner_go'
+
     async def swipy_run(
             self, dispatcher: CollectingDispatcher,
             tracker: Tracker,
@@ -253,7 +257,7 @@ class ActionAskToJoin(BaseSwiperAction):
         date = datetime_now() + datetime.timedelta(seconds=QUESTION_TIMEOUT_SEC)
 
         reminder = ReminderScheduled(
-            "EXTERNAL_let_partner_go",
+            self.reminder_intent(),
             trigger_date_time=date,
             entities={
                 PARTNER_ID_TO_LET_GO_SLOT: partner_id,
@@ -270,28 +274,13 @@ class ActionAskToJoin(BaseSwiperAction):
         ]
 
 
-class ActionAskIfReady(BaseSwiperAction):
+class ActionAskIfReady(ActionAskToJoin):
     def name(self) -> Text:
         return 'action_ask_if_ready'
 
-    async def swipy_run(
-            self, dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any],
-            current_user: UserStateMachine,
-            user_vault: IUserVault,
-    ) -> List[Dict[Text, Any]]:
-        partner_id = tracker.get_slot(rasa_callbacks.PARTNER_ID_SLOT)
-        # noinspection PyUnresolvedReferences
-        current_user.become_asked_to_join(partner_id)
-        user_vault.save(current_user)
-
-        return [
-            SlotSet(
-                key=SWIPER_ACTION_RESULT_SLOT,
-                value=SwiperActionResult.SUCCESS,
-            ),
-        ]
+    @staticmethod
+    def reminder_intent():
+        return 'EXTERNAL_let_partner_go_not_ready'
 
 
 class ActionCreateRoom(BaseSwiperAction):

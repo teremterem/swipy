@@ -484,6 +484,8 @@ async def test_action_ask_to_join(
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('create_user_state_machine_table')
 @patch('time.time', Mock(return_value=1619945501))
+@patch('actions.actions.datetime_now', Mock(return_value=datetime.datetime(2021, 5, 25)))
+@patch('uuid.uuid4', Mock(return_value=uuid.UUID('aaaabbbb-cccc-dddd-eeee-ffff11112222')))
 async def test_action_ask_if_ready(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
@@ -506,6 +508,15 @@ async def test_action_ask_if_ready(
 
     actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == [
+        {
+            'date_time': '2021-05-25T00:02:00',
+            'entities': {'partner_id_to_let_go': 'an_asker'},
+            'event': 'reminder',
+            'intent': 'EXTERNAL_let_partner_go_not_ready',
+            'kill_on_user_msg': False,
+            'name': 'aaaabbbb-cccc-dddd-eeee-ffff11112222',
+            'timestamp': None,
+        },
         SlotSet('swiper_action_result', 'success'),
         SlotSet('swiper_error', None),
         SlotSet('swiper_error_trace', None),
