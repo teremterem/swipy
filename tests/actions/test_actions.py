@@ -942,8 +942,8 @@ async def test_action_become_ok_to_chitchat(
     (
             UserStateMachine(
                 user_id='unit_test_user',
-                state='waiting_partner_answer',  # current user is not even asked
-                partner_id='the_asker',  # TODO oleksandr: this use case is weird - think it through and comment
+                state='asked_to_join',
+                partner_id='',  # an invalid state
                 newbie=True,
             ),
             UserStateMachine(

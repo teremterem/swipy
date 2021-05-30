@@ -423,14 +423,13 @@ class ActionDoNotDisturb(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        initial_state = current_user.state
         initial_partner_id = current_user.partner_id
 
         # noinspection PyUnresolvedReferences
         current_user.become_do_not_disturb()
         user_vault.save(current_user)
 
-        if initial_state == UserState.ASKED_TO_JOIN:
+        if initial_partner_id:
             partner = user_vault.get_user(initial_partner_id)
             # TODO oleksandr: reuse this condition (it is also present in ActionCreateRoom)
             if partner.state == UserState.WAITING_PARTNER_ANSWER and partner.partner_id == current_user.user_id:
