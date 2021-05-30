@@ -127,9 +127,7 @@ rules:
     - swiper_action_result: partner_not_waiting_anymore
   steps:
   - action: action_create_room
-  - or:
-    - intent: affirm
-    - intent: want_chitchat
+  - intent: affirm
   - action: utter_ok_arranging_chitchat
   - action: action_find_partner
 - rule: the bot offers to find a replacement for a partner that wasn't waiting anymore but the user denies
@@ -138,6 +136,17 @@ rules:
     - swiper_action_result: partner_not_waiting_anymore
   steps:
   - action: action_create_room
+  - intent: deny
+  - action: utter_bye_till_next_time
+- rule: the bot offers to find a replacement for a non-ready partner that wasn't waiting anymore and the user agrees
+  steps:
+  - action: utter_partner_already_gone
+  - intent: affirm
+  - action: utter_ok_arranging_chitchat
+  - action: action_find_partner
+- rule: the bot offers to find a replacement for a non-ready partner that wasn't waiting anymore but the user denies
+  steps:
+  - action: utter_partner_already_gone
   - intent: deny
   - action: utter_bye_till_next_time
 - rule: a partner rejected chitchat - we need to find someone else for the user
