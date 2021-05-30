@@ -254,6 +254,30 @@ class ActionAskToJoin(BaseSwiperAction):
         ]
 
 
+class ActionAskIfReady(BaseSwiperAction):
+    def name(self) -> Text:
+        return 'action_ask_if_ready'
+
+    async def swipy_run(
+            self, dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
+            current_user: UserStateMachine,
+            user_vault: IUserVault,
+    ) -> List[Dict[Text, Any]]:
+        partner_id = tracker.get_slot(rasa_callbacks.PARTNER_ID_SLOT)
+        # noinspection PyUnresolvedReferences
+        current_user.become_asked_to_join(partner_id)
+        user_vault.save(current_user)
+
+        return [
+            SlotSet(
+                key=SWIPER_ACTION_RESULT_SLOT,
+                value=SwiperActionResult.SUCCESS,
+            ),
+        ]
+
+
 class ActionCreateRoom(BaseSwiperAction):
     def name(self) -> Text:
         return 'action_create_room'

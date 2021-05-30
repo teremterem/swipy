@@ -180,6 +180,7 @@ actions:
 - action_session_start
 - action_find_partner
 - action_ask_to_join
+- action_ask_if_ready
 - action_create_room
 - action_join_room
 - action_become_ok_to_chitchat
