@@ -510,3 +510,12 @@ class ActionLetPartnerGo(BaseSwiperAction):
         return [
             UserUtteranceReverted(),
         ]
+
+
+class ActionLetPartnerGoNotReady(ActionLetPartnerGo):
+    def name(self) -> Text:
+        return 'action_let_partner_go_not_ready'
+
+    @staticmethod
+    async def ping_partner(current_user: UserStateMachine, partner: UserStateMachine) -> None:
+        await rasa_callbacks.report_unavailable(current_user.user_id, partner.user_id)
