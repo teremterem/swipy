@@ -204,5 +204,6 @@ actions:
 - action_do_not_disturb
 - action_do_not_disturb_not_ready
 - action_let_partner_go
+- action_let_partner_go_not_ready
 forms: {}
 e2e_actions: []
