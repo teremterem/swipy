@@ -971,16 +971,7 @@ async def test_action_become_ok_to_chitchat(
         SlotSet('swiper_state', 'ok_to_chitchat'),
         SlotSet('partner_id', None),
     ]
-    assert dispatcher.messages == [{
-        'attachment': None,
-        'buttons': [],
-        'custom': {},
-        'elements': [],
-        'image': None,
-        'response': 'utter_thanks_for_being_ok_to_chitchat',
-        'template': 'utter_thanks_for_being_ok_to_chitchat',
-        'text': None,
-    }]
+    assert dispatcher.messages == []
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
@@ -1109,6 +1100,71 @@ async def test_action_do_not_disturb(
         state_timestamp_str='2021-05-02 08:51:41 Z',
     )
     assert user_vault.get_user('the_asker') == asker  # ActionDoNotDisturb should not change the asker state directly
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures('create_user_state_machine_table')
+@patch('time.time', Mock(return_value=1619945501))
+async def test_action_do_not_disturb_not_ready(
+        mock_aioresponses: aioresponses,
+        tracker: Tracker,
+        dispatcher: CollectingDispatcher,
+        domain: Dict[Text, Any],
+        rasa_callbacks_expected_call_builder: Callable[[Text, Text, Dict[Text, Any]], Tuple[Text, call]],
+        external_intent_response: Dict[Text, Any],
+) -> None:
+    expected_rasa_url, expected_rasa_call = rasa_callbacks_expected_call_builder(
+        'the_asker',
+        'EXTERNAL_report_unavailable',
+        {},
+    )
+    mock_rasa_callbacks = AsyncMock(return_value=CallbackResult(payload=external_intent_response))
+    mock_aioresponses.post(expected_rasa_url, callback=mock_rasa_callbacks)
+
+    action = actions.ActionDoNotDisturbNotReady()
+    assert action.name() == 'action_do_not_disturb_not_ready'
+
+    user_vault = UserVault()
+    user_vault.save(UserStateMachine(
+        user_id='unit_test_user',
+        state='asked_to_join',
+        partner_id='the_asker',
+        newbie=True,
+    ))
+    user_vault.save(UserStateMachine(
+        user_id='the_asker',
+        state='waiting_partner_answer',
+        partner_id='unit_test_user',
+        newbie=True,
+    ))
+
+    actual_events = await action.run(dispatcher, tracker, domain)
+    assert actual_events == [
+        SlotSet('swiper_action_result', 'success'),
+        SlotSet('swiper_error', None),
+        SlotSet('swiper_error_trace', None),
+        SlotSet('swiper_state', 'do_not_disturb'),
+        SlotSet('partner_id', None),
+    ]
+    assert dispatcher.messages == []
+
+    assert mock_rasa_callbacks.mock_calls == [expected_rasa_call]
+
+    user_vault = UserVault()  # create new instance to avoid hitting cache
+    assert user_vault.get_user('unit_test_user') == UserStateMachine(
+        user_id='unit_test_user',
+        state='do_not_disturb',
+        partner_id=None,
+        newbie=True,
+        state_timestamp=1619945501,
+        state_timestamp_str='2021-05-02 08:51:41 Z',
+    )
+    assert user_vault.get_user('the_asker') == UserStateMachine(
+        user_id='the_asker',
+        state='waiting_partner_answer',
+        partner_id='unit_test_user',
+        newbie=True,
+    )  # ActionDoNotDisturbNotReady should not change the asker state
 
 
 @pytest.mark.asyncio

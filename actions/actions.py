@@ -426,8 +426,6 @@ class ActionBecomeOkToChitchat(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        dispatcher.utter_message(response='utter_thanks_for_being_ok_to_chitchat')
-
         # noinspection PyUnresolvedReferences
         current_user.become_ok_to_chitchat()
         user_vault.save(current_user)
