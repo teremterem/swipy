@@ -459,7 +459,7 @@ class ActionLetPartnerGo(BaseSwiperAction):
         partner_id_to_let_go = tracker.get_slot(PARTNER_ID_TO_LET_GO_SLOT)
 
         # TODO oleksandr: safeguard with a try-except block (current user doesn't need to know about problems here) ?
-        #  or maybe just don't extend this action from BaseSwiperAction ?
+        #  or maybe just don't extend this action from BaseSwiperAction ? or maybe both
         if partner_id_to_let_go:
             partner_to_let_go = user_vault.get_user(partner_id_to_let_go)
             if partner_to_let_go.is_waiting_for(current_user.user_id):
