@@ -305,16 +305,10 @@ class ActionCreateRoom(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        if current_user.state != UserState.ASKED_TO_JOIN:
-            raise InvalidSwiperStateError(
-                f"current user {repr(current_user.user_id)} is not in state {repr(UserState.ASKED_TO_JOIN)}, "
-                f"hence cannot join the room (actual state is {repr(current_user.state)})"
-            )
-
-        if current_user.partner_id is None:
+        if not current_user.partner_id:
             raise InvalidSwiperStateError(
                 f"current user {repr(current_user.user_id)} cannot join the room "
-                f"because current_user.partner_id is None",
+                f"because current_user.partner_id is empty",
             )
 
         partner = user_vault.get_user(current_user.partner_id)

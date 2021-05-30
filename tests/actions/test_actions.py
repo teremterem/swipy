@@ -746,39 +746,30 @@ async def test_action_create_room_partner_not_waiting(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize('current_user, expected_swiper_error', [
-    (
-            UserStateMachine(
-                user_id='unit_test_user',
-                state='asked_to_join',
-                partner_id=None,
-                newbie=True,
-            ),
-            'InvalidSwiperStateError("current user \'unit_test_user\' cannot join the room '
-            'because current_user.partner_id is None")',
+@pytest.mark.parametrize('current_user', [
+    UserStateMachine(
+        user_id='unit_test_user',
+        state='asked_to_join',
+        partner_id='',
+        newbie=True,
     ),
-    (
-            UserStateMachine(
-                user_id='unit_test_user',
-                state='ok_to_chitchat',
-                partner_id='an_asker',
-                newbie=True,
-            ),
-            'InvalidSwiperStateError("current user \'unit_test_user\' is not in state \'asked_to_join\', '
-            'hence cannot join the room (actual state is \'ok_to_chitchat\')")',
+    UserStateMachine(
+        user_id='unit_test_user',
+        state='asked_to_join',
+        partner_id=None,
+        newbie=True,
     ),
 ])
 @pytest.mark.usefixtures('create_user_state_machine_table')
 @patch('actions.rasa_callbacks.join_room')
 @patch('actions.daily_co.create_room')
-async def test_action_create_room_invalid_state(
+async def test_action_create_room_no_partner_id(
         mock_daily_co_create_room: AsyncMock,
         mock_rasa_callback_join_room: AsyncMock,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
         current_user: UserStateMachine,
-        expected_swiper_error: Text,
 ) -> None:
     user_vault = UserVault()
     user_vault.save(UserStateMachine(
@@ -794,7 +785,11 @@ async def test_action_create_room_invalid_state(
     actual_events = await actions.ActionCreateRoom().run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'error'),
-        SlotSet('swiper_error', expected_swiper_error),
+        SlotSet(
+            'swiper_error',
+            'InvalidSwiperStateError("current user \'unit_test_user\' cannot join the room '
+            'because current_user.partner_id is empty")',
+        ),
         SlotSet('swiper_state', current_user.state),
         SlotSet('partner_id', current_user.partner_id),
     ]
