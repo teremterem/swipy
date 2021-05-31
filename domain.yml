@@ -179,8 +179,6 @@ responses:
       Ok, I will let that person go then 😞
        
       Do you want me to not bother you for awhile?
-  utter_stop_bothering:
-  - text: Do you want me to stop bothering you?
   utter_hope_to_see_you_later:
   - text: |-
       Ok, I will not bother you.
