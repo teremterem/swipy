@@ -142,9 +142,9 @@ responses:
       I will try to get back to you when someone shows up...
   utter_someone_wants_to_chat:
   - text: |-
-      Hey! Someone is asking me to arrange chitchat.
+      Hey! Someone is looking to chitchat 🗣
        
-      Would you be willing to jump into a video call? 🎥 ☎️
+      Would you be willing to jump on a video call with that person? 🎥 ☎️
   utter_checking_if_partner_ready_too:
   - text: |-
       Just a moment, I'm checking if that person is ready too...
