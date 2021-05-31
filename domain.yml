@@ -135,11 +135,6 @@ responses:
       - I find someone who also wants to chitchat.
       - I confirm with you and them that you are both ready.
       - I send both of you a video chat link.
-  utter_found_someone:
-  - text: |-
-      Hooray! I found someone who wants to have a video chat! 🎥 ☎️
-       
-      Are you ready?
   utter_no_one_was_found:
   - text: |-
       Unfortunately, I couldn't find anyone 😞
@@ -155,8 +150,11 @@ responses:
       Just a moment, I'm checking if that person is ready too...
        
       Please don't go anywhere - this may take up to two minutes ⏳
-  utter_check_if_ready:
-  - text: Are you ready for the call? 🎥 ☎️
+  utter_found_someone_check_ready:
+  - text: |-
+      Hooray! I have found someone who wants to chitchat!
+       
+      Are you ready for the video call? 🎥 ☎️
   utter_partner_already_gone:
   - text: |-
       Unfortunately, that person has become unavailable 😞
