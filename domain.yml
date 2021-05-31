@@ -94,6 +94,8 @@ responses:
       Or maybe you just want to talk to a new person?👩‍💼
        
       I can arrange video chitchat with another human for you 😉
+       
+      P. S. You can respond to me in your own words. I am an AI-powered chatbot and I am constantly improving.
   utter_sad_offer_chitchat:
   - text: |-
       I am sorry that you're feeling down 😞
@@ -188,7 +190,7 @@ responses:
        
       See ya! 🙂
   utter_iamabot:
-  - text: I am a bot, powered by Rasa.
+  - text: I am a bot 🤖, powered by Rasa.
   utter_error:
   - text: Ouch! Something went wrong 🤖
 actions:
