@@ -158,7 +158,7 @@ responses:
       Are you ready for the video call? 🎥 ☎️
   utter_partner_already_gone:
   - text: |-
-      Unfortunately, that person has become unavailable 😞
+      Unfortunately, that person has become unavailable 😵
        
       Not all is lost, however!
        
