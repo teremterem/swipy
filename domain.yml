@@ -115,7 +115,7 @@ responses:
       Great! Let me find someone for you to chitchat with.
        
       I will get back to you soon... ⏳
-  utter_mind_helping_lonely_person:
+  utter_help_lonely_person:
   - text: |-
       Ok, I understand.
        
