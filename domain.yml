@@ -129,7 +129,8 @@ responses:
   - text: Ok, I will get back to you another time then 😉
   utter_how_it_works:
   - text: |-
-      I can arrange video chitchat with another human for you.
+      I can arrange video chitchat with another human for you 🎥 🗣 ☎️
+       
       Here is how it works:
        
       - I find someone who also wants to chitchat.
@@ -144,7 +145,7 @@ responses:
   - text: |-
       Hey! Someone is looking to chitchat 🗣
        
-      Would you be willing to jump on a video call with that person? 🎥 ☎️
+      Would you be willing to jump on a video call with another person? 🎥 ☎️
   utter_checking_if_partner_ready_too:
   - text: |-
       Just a moment, I'm checking if that person is ready too...
@@ -183,9 +184,9 @@ responses:
   - text: |-
       Ok, I will not bother you.
        
-      Should you decide that you want to chitchat with someone, just let me know - I'll be here to arrange a video call.
+      Should you decide that you want to chitchat with a random person, just let me know - I will set up a video call.
        
-      Hope to see soon!
+      See ya! 🙂
   utter_iamabot:
   - text: I am a bot, powered by Rasa.
   utter_error:
