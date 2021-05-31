@@ -117,14 +117,14 @@ responses:
       I will get back to you soon... ⏳
   utter_mind_helping_lonely_person:
   - text: |-
-      Got it!
+      Ok, I understand.
        
-      And would it be ok if I got back to you when someone else wanted to chitchat?
+      And would you be willing to respond if someone else wanted to chitchat?
   utter_thanks_for_being_ok_to_chitchat:
   - text: |-
       Thank you, I appreciate this!
        
-      I will get back to you when someone else asks for chitchat.
+      Talk to you later 😉
   utter_bye_till_next_time:
   - text: Ok, I will get back to you another time then 😉
   utter_how_it_works:
