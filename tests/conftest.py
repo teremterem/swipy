@@ -15,14 +15,9 @@ pytest_plugins = [
 ]
 
 
-@pytest.fixture
-def mock_aioresponses() -> aioresponses:
-    with aioresponses() as m:
-        yield m
-
-
-@pytest.fixture(autouse=True, scope='session')
-def unset_aws_profile() -> None:
+# noinspection PyUnusedLocal
+def pytest_configure(*args, **kwargs) -> None:
+    """unset certain env vars before any modules are imported"""
     os.environ.pop('AWS_PROFILE', None)
 
     # delete these env vars to make sure default settings are tested
@@ -33,8 +28,10 @@ def unset_aws_profile() -> None:
     os.environ.pop('NEW_USERS_ARE_OK_TO_CHITCHAT', None)
 
 
-# TODO oleksandr: how to unset env vars before any modules are imported while still using a proper fixture ?
-# unset_env_vars()
+@pytest.fixture
+def mock_aioresponses() -> aioresponses:
+    with aioresponses() as m:
+        yield m
 
 
 @pytest.fixture
