@@ -1,8 +1,7 @@
 from typing import Dict, Text, Any, Callable, Tuple
-from unittest.mock import AsyncMock, call
+from unittest.mock import call
 
 import pytest
-from aioresponses import aioresponses, CallbackResult
 from yarl import URL
 
 
