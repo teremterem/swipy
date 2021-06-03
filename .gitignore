@@ -3,6 +3,8 @@
 .DS_Store
 
 models/
+db/
+.config/
 credentials.yml
 rasa.*
 events.*
