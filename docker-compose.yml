@@ -1,8 +1,8 @@
 version: "3.4"
 
 x-database-credentials: &database-credentials
-  DB_HOST: "db"
-  DB_PORT: "5432"
+  DB_HOST: "${DB_HOST:-db}"
+  DB_PORT: "${DB_PORT:-5432}"
   DB_USER: "${DB_USER:-admin}"
   DB_PASSWORD: "${DB_PASSWORD}"
   DB_LOGIN_DB: "${DB_LOGIN_DB:-rasa}"
@@ -49,6 +49,13 @@ x-rasa-credentials: &rasa-credentials
   RASA_MODEL_PULL_INTERVAL: 10
   RABBITMQ_QUEUE: "rasa_production_events"
   RASA_TELEMETRY_ENABLED: ${RASA_TELEMETRY_ENABLED:-true}
+
+x-swipy-credentials: &swipy-credentials
+  DAILY_CO_API_TOKEN: "${DAILY_CO_API_TOKEN}"
+  AWS_REGION: "${AWS_REGION}"
+  AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID}"
+  AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY}"
+  USER_STATE_MACHINE_DDB_TABLE: "${USER_STATE_MACHINE_DDB_TABLE}"
 
 
 x-rasa-services: &default-rasa-service
@@ -140,9 +147,12 @@ services:
 
   app:
     restart: always
-    image: "rasa/rasa-x-demo:${RASA_X_DEMO_VERSION}"
+    image: "teremterem/swipy-actions:${SWIPY_ACTIONS_VERSION}"
     expose:
       - "5055"
+    environment:
+      <<: *rasa-credentials
+      <<: *swipy-credentials
     depends_on:
       - rasa-production
 

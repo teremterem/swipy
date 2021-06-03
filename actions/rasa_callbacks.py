@@ -11,7 +11,6 @@ logger = logging.getLogger(__name__)
 
 RASA_PRODUCTION_HOST = os.environ['RASA_PRODUCTION_HOST']
 RASA_TOKEN = os.getenv('RASA_TOKEN')
-RASA_CORE_PATH = os.getenv('RASA_CORE_PATH', 'core/')
 
 OUTPUT_CHANNEL = 'telegram'  # seems to be more robust than 'latest'
 
@@ -98,7 +97,7 @@ async def _trigger_external_rasa_intent(
             params['token'] = RASA_TOKEN
 
         async with session.post(
-                f"{RASA_PRODUCTION_HOST}/{RASA_CORE_PATH}conversations/{receiver_id}/trigger_intent",
+                f"{RASA_PRODUCTION_HOST}/conversations/{receiver_id}/trigger_intent",
                 params=params,
                 json={
                     'name': intent_name,
