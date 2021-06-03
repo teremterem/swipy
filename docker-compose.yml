@@ -51,6 +51,9 @@ x-rasa-credentials: &rasa-credentials
   RASA_TELEMETRY_ENABLED: ${RASA_TELEMETRY_ENABLED:-true}
 
 x-swipy-credentials: &swipy-credentials
+  SWIPY_TELEGRAM_TOKEN: "${SWIPY_TELEGRAM_TOKEN}"
+  SWIPY_TELEGRAM_BOT_NAME: "${SWIPY_TELEGRAM_BOT_NAME}"
+  SWIPY_WEBHOOKS_BASE_URL: "${SWIPY_WEBHOOKS_BASE_URL}"
   DAILY_CO_API_TOKEN: "${DAILY_CO_API_TOKEN}"
   AWS_REGION: "${AWS_REGION}"
   AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID}"
@@ -96,6 +99,7 @@ services:
     environment:
       <<: *database-credentials
       <<: *rasa-credentials
+      <<: *swipy-credentials
       SELF_PORT: "5002"
       DB_DATABASE: "${DB_DATABASE:-rasa}"
       RASA_MODEL_DIR: "/app/models"
@@ -131,6 +135,7 @@ services:
     <<: *default-rasa-service
     environment:
       <<: *rasa-credentials
+      <<: *swipy-credentials
       RASA_ENVIRONMENT: "production"
       DB_DATABASE: "tracker"
       MPLCONFIGDIR: "/tmp/.matplotlib"
@@ -140,6 +145,7 @@ services:
     <<: *default-rasa-service
     environment:
       <<: *rasa-credentials
+      <<: *swipy-credentials
       RASA_ENVIRONMENT: "worker"
       DB_DATABASE: "worker_tracker"
       MPLCONFIGDIR: "/tmp/.matplotlib"
