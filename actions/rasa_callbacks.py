@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 RASA_PRODUCTION_HOST = os.environ['RASA_PRODUCTION_HOST']
 RASA_TOKEN = os.getenv('RASA_TOKEN')
-RASA_CORE_PATH = os.getenv('RASA_CORE_PATH', 'core/')
+RASA_CORE_PATH = os.getenv('RASA_CORE_PATH', '')
 
 OUTPUT_CHANNEL = 'telegram'  # seems to be more robust than 'latest'
 
@@ -105,9 +105,7 @@ async def _trigger_external_rasa_intent(
                     'entities': entities,
                 },
         ) as resp:
-            if logger.isEnabledFor(logging.INFO):
-                logger.info(resp.text)
-            resp_json = await resp.json(content_type=None)
+            resp_json = await resp.json()
 
     # TODO oleksandr: change log level back to DEBUG when you decide how to identify and react to failures
     if logger.isEnabledFor(logging.INFO):
