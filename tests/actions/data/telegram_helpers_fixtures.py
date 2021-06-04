@@ -1,6 +1,19 @@
 from typing import Dict, Text, Any
+from unittest.mock import call
 
 import pytest
+
+
+@pytest.fixture
+def telegram_user_profile_photo_make_request_call() -> call:
+    return call(
+        'unittest:telegramtoken',
+        'getUserProfilePhotos',
+        params={
+            'limit': 1,
+            'user_id': 'unit_test_user',
+        },
+    )
 
 
 @pytest.fixture
@@ -37,9 +50,9 @@ def telegram_user_profile_photo() -> Dict[Text, Any]:
 
 @pytest.fixture
 def no_telegram_user_profile_photo() -> Dict[Text, Any]:
-    return {'photos': [], 'total_count': 0}
+    return 
 
 
 @pytest.fixture
 def telegram_user_profile_photo_no_files() -> Dict[Text, Any]:
-    return {'photos': [[]], 'total_count': 4}
+    return 
