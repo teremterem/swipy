@@ -13,6 +13,7 @@ from rasa_sdk.executor import CollectingDispatcher
 
 from actions import daily_co
 from actions import rasa_callbacks
+from actions import telegram_helpers
 from actions.user_state_machine import UserStateMachine, UserState
 from actions.user_vault import UserVault, IUserVault
 from actions.utils import InvalidSwiperStateError, stack_trace_to_str, current_timestamp_int, datetime_now
@@ -233,7 +234,9 @@ class ActionFindPartner(BaseSwiperAction):
                     f"randomly chosen partner {repr(partner.user_id)} is in a wrong state: {repr(partner.state)}"
                 )
 
-            await rasa_callbacks.ask_to_join(current_user.user_id, partner.user_id)
+            user_profile_photo_id = telegram_helpers.get_user_profile_photo_file_id(current_user.user_id)
+
+            await rasa_callbacks.ask_to_join(current_user.user_id, partner.user_id, user_profile_photo_id)
 
             # noinspection PyUnresolvedReferences
             current_user.ask_partner(partner.user_id)

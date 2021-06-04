@@ -14,12 +14,12 @@ name = "rasa"
 aiohttp = "*"
 boto3 = "*"
 transitions = "*"
+pytelegrambotapi = ">=3.7.3,<4.0.0"
 
 [dev-packages]
 rasa = "~=2.6.0"
 rasa-sdk = "~=2.6.0"
 rasa-x = "~=0.40.0"
-
 jupyterlab = "*"
 jupyterlab-kite = ">=2.0.2"
 pytest = "*"

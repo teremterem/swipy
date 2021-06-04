@@ -47,6 +47,7 @@ entities:
 - dietcls_time
 - partner_id
 - partner_id_to_let_go
+- partner_photo_file_id
 - room_url
 slots:
   swiper_state:
@@ -79,6 +80,11 @@ slots:
     initial_value: null
     auto_fill: true
     influence_conversation: false
+  partner_photo_file_id:
+    type: rasa.shared.core.slots.TextSlot
+    initial_value: null
+    auto_fill: true
+    influence_conversation: true
   room_url:
     type: rasa.shared.core.slots.TextSlot
     initial_value: null
@@ -140,7 +146,11 @@ responses:
   - text: |-
       Hey! Someone is looking to chitchat 🗣
        
-      Would you be willing to jump on a video call with another person? 🎥 ☎️
+      Would you be willing to jump on a video call with that person right now? 🎥 ☎️
+  utter_someone_wants_to_chat_photo:
+  - custom:
+      caption: "Hey! This person is looking to chitchat \U0001F5E3\n \nWould you be willing to jump on a video call with them right now? \U0001F3A5 ☎️"
+      photo: '{partner_photo_file_id}'
   utter_checking_if_partner_ready_too:
   - text: |-
       Just a moment, I'm checking if that person is ready too...

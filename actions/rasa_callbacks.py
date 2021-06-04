@@ -15,16 +15,18 @@ RASA_TOKEN = os.getenv('RASA_TOKEN')
 OUTPUT_CHANNEL = 'telegram'  # seems to be more robust than 'latest'
 
 PARTNER_ID_SLOT = 'partner_id'
+PARTNER_PHOTO_FILE_ID_SLOT = 'partner_photo_file_id'
 ROOM_URL_SLOT = 'room_url'
 
 
-async def ask_to_join(sender_id: Text, receiver_id: Text) -> Dict[Text, Any]:
+async def ask_to_join(sender_id: Text, receiver_id: Text, photo_file_id: Text) -> Dict[Text, Any]:
     return await _trigger_external_rasa_intent(
         sender_id,
         receiver_id,
         'EXTERNAL_ask_to_join',
         {
             PARTNER_ID_SLOT: sender_id,
+            PARTNER_PHOTO_FILE_ID_SLOT: photo_file_id,
         },
     )
 
