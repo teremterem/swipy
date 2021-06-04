@@ -10,17 +10,15 @@ from typing import Any, Text, Dict, List
 from rasa_sdk import Action, Tracker
 from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType, UserUtteranceReverted, ReminderScheduled
 from rasa_sdk.executor import CollectingDispatcher
-from telebot import TeleBot
 
 from actions import daily_co
 from actions import rasa_callbacks
+from actions import telegram_helpers
 from actions.user_state_machine import UserStateMachine, UserState
 from actions.user_vault import UserVault, IUserVault
 from actions.utils import InvalidSwiperStateError, stack_trace_to_str, current_timestamp_int, datetime_now
 
 logger = logging.getLogger(__name__)
-
-SWIPY_TELEGRAM_TOKEN = os.environ['SWIPY_TELEGRAM_TOKEN']
 
 TELL_USER_ABOUT_ERRORS = strtobool(os.getenv('TELL_USER_ABOUT_ERRORS', 'yes'))
 SEND_ERROR_STACK_TRACE_TO_SLOT = strtobool(os.getenv('SEND_ERROR_STACK_TRACE_TO_SLOT', 'yes'))
@@ -216,24 +214,8 @@ class ActionFindPartner(BaseSwiperAction):
         # but it happens when this action is invoked externally by someone who rejected invitation)
         await asyncio.sleep(TELEGRAM_MSG_LIMIT_SLEEP_SEC)
 
-        # TODO TODO TODO oleksandr: move this to a dedicated module
-        telebot = TeleBot(SWIPY_TELEGRAM_TOKEN, threaded=False)
-        photos = telebot.get_user_profile_photos(current_user.user_id)
-        for phph in photos.photos:
-            for ph in phph:
-                break
-                telebot.send_photo(
-                    current_user.user_id,
-                    ph.file_id,
-                    caption=f"{ph.file_size} ({ph.width}x{ph.height}) - {ph.file_id}",
-                )
-        print()
-        print()
-        print()
-        print(photos.photos)
-        print()
-        print()
-        print()
+        # TODO TODO TODO oleksandr
+        telegram_helpers.get_user_profile_photo_file_id(current_user.user_id)
 
         partner = user_vault.get_random_available_user(
             exclude_user_id=current_user.user_id,
@@ -303,13 +285,6 @@ class ActionAskToJoin(BaseSwiperAction):
         user_vault.save(current_user)
 
         date = datetime_now() + datetime.timedelta(seconds=QUESTION_TIMEOUT_SEC)
-
-        # TODO TODO TODO oleksandr
-        telebot = TeleBot(SWIPY_TELEGRAM_TOKEN, threaded=False)
-        telebot.send_photo(
-            current_user.user_id,
-            "AgACAgIAAxkDAAIJCWC6QQIIBVicL5c-ZbPEqUNmB43PAALopzEb2WGPDPOzHPy_PR5wkzFLDQAEAQADAgADYwAD5rEAAh8E",
-        )
 
         reminder = ReminderScheduled(
             self.reminder_intent(),
