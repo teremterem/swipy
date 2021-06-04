@@ -10,6 +10,7 @@ pytest_plugins = [
     'tests.actions.data.actions_fixtures',
     'tests.actions.data.daily_co_fixtures',
     'tests.actions.data.rasa_callbacks_fixtures',
+    'tests.actions.data.telegram_helpers_fixtures',
     'tests.actions.data.user_state_machine_fixtures',
     'tests.actions.data.user_vault_fixtures',
 ]
