@@ -195,6 +195,7 @@ async def test_action_find_partner_newbie(
         domain: Dict[Text, Any],
         available_newbie1: UserStateMachine,
         telegram_user_profile_photo: Dict[Text, Any],
+        telegram_user_profile_photo_make_request_call: call,
         rasa_callbacks_expected_call_builder: Callable[[Text, Text, Dict[Text, Any]], Tuple[Text, call]],
         external_intent_response: Dict[Text, Any],
 ) -> None:
@@ -228,7 +229,12 @@ async def test_action_find_partner_newbie(
 
     mock_asyncio_sleep.assert_called_once_with(1.1)
     mock_list_available_user_dicts.assert_called_once_with(exclude_user_id='unit_test_user', newbie=True)
-    assert mock_rasa_callbacks.mock_calls == [expected_rasa_call]
+    assert mock_telebot_make_request.mock_calls == [
+        telegram_user_profile_photo_make_request_call,
+    ]
+    assert mock_rasa_callbacks.mock_calls == [
+        expected_rasa_call,
+    ]
 
     user_vault = UserVault()
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
@@ -256,6 +262,7 @@ async def test_action_find_partner_no_photo(
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
         available_newbie1: UserStateMachine,
+        telegram_user_profile_photo_make_request_call: call,
         rasa_callbacks_expected_call_builder: Callable[[Text, Text, Dict[Text, Any]], Tuple[Text, call]],
         external_intent_response: Dict[Text, Any],
 ) -> None:
@@ -289,7 +296,12 @@ async def test_action_find_partner_no_photo(
 
     mock_asyncio_sleep.assert_called_once_with(1.1)
     mock_list_available_user_dicts.assert_called_once_with(exclude_user_id='unit_test_user', newbie=True)
-    assert mock_rasa_callbacks.mock_calls == [expected_rasa_call]
+    assert mock_telebot_make_request.mock_calls == [
+        telegram_user_profile_photo_make_request_call,
+    ]
+    assert mock_rasa_callbacks.mock_calls == [
+        expected_rasa_call,
+    ]
 
     user_vault = UserVault()
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
@@ -318,6 +330,7 @@ async def test_action_find_partner_veteran(
         domain: Dict[Text, Any],
         available_veteran1: UserStateMachine,
         telegram_user_profile_photo: Dict[Text, Any],
+        telegram_user_profile_photo_make_request_call: call,
         rasa_callbacks_expected_call_builder: Callable[[Text, Text, Dict[Text, Any]], Tuple[Text, call]],
         external_intent_response: Dict[Text, Any],
 ) -> None:
@@ -354,7 +367,12 @@ async def test_action_find_partner_veteran(
         call(exclude_user_id='unit_test_user', newbie=True),
         call(exclude_user_id='unit_test_user', newbie=False),
     ]
-    assert mock_rasa_callbacks.mock_calls == [expected_rasa_call]
+    assert mock_telebot_make_request.mock_calls == [
+        telegram_user_profile_photo_make_request_call,
+    ]
+    assert mock_rasa_callbacks.mock_calls == [
+        expected_rasa_call,
+    ]
 
     user_vault = UserVault()
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
