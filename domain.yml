@@ -47,6 +47,7 @@ entities:
 - dietcls_time
 - partner_id
 - partner_id_to_let_go
+- partner_photo_file_id
 - room_url
 slots:
   swiper_state:
@@ -79,6 +80,11 @@ slots:
     initial_value: null
     auto_fill: true
     influence_conversation: false
+  partner_photo_file_id:
+    type: rasa.shared.core.slots.TextSlot
+    initial_value: null
+    auto_fill: true
+    influence_conversation: true
   room_url:
     type: rasa.shared.core.slots.TextSlot
     initial_value: null
