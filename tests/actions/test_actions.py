@@ -247,6 +247,67 @@ async def test_action_find_partner_newbie(
 @patch.object(UserVault, '_list_available_user_dicts')
 @patch('telebot.apihelper._make_request')
 @patch('asyncio.sleep')
+async def test_action_find_partner_no_photo(
+        mock_asyncio_sleep: AsyncMock,
+        mock_telebot_make_request: MagicMock,
+        mock_list_available_user_dicts: MagicMock,
+        mock_aioresponses: aioresponses,
+        tracker: Tracker,
+        dispatcher: CollectingDispatcher,
+        domain: Dict[Text, Any],
+        available_newbie1: UserStateMachine,
+        rasa_callbacks_expected_call_builder: Callable[[Text, Text, Dict[Text, Any]], Tuple[Text, call]],
+        external_intent_response: Dict[Text, Any],
+) -> None:
+    # noinspection PyDataclass
+    mock_list_available_user_dicts.return_value = [asdict(available_newbie1)]
+    mock_telebot_make_request.return_value = {'photos': [], 'total_count': 0}
+
+    expected_rasa_url, expected_rasa_call = rasa_callbacks_expected_call_builder(
+        'available_newbie_id1',
+        'EXTERNAL_ask_to_join',
+        {
+            'partner_id': 'unit_test_user',
+            'partner_photo_file_id': None,
+        },
+    )
+    mock_rasa_callbacks = AsyncMock(return_value=CallbackResult(payload=external_intent_response))
+    mock_aioresponses.post(expected_rasa_url, callback=mock_rasa_callbacks)
+
+    action = actions.ActionFindPartner()
+    assert action.name() == 'action_find_partner'
+
+    actual_events = await action.run(dispatcher, tracker, domain)
+    assert actual_events == [
+        SlotSet('swiper_action_result', 'partner_has_been_asked'),
+        SlotSet('swiper_error', None),
+        SlotSet('swiper_error_trace', None),
+        SlotSet('swiper_state', 'waiting_partner_answer'),
+        SlotSet('partner_id', 'available_newbie_id1'),
+    ]
+    assert dispatcher.messages == []
+
+    mock_asyncio_sleep.assert_called_once_with(1.1)
+    mock_list_available_user_dicts.assert_called_once_with(exclude_user_id='unit_test_user', newbie=True)
+    assert mock_rasa_callbacks.mock_calls == [expected_rasa_call]
+
+    user_vault = UserVault()
+    assert user_vault.get_user('unit_test_user') == UserStateMachine(
+        user_id='unit_test_user',
+        state='waiting_partner_answer',
+        partner_id='available_newbie_id1',
+        newbie=True,
+        state_timestamp=1619945501,
+        state_timestamp_str='2021-05-02 08:51:41 Z',
+    )
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures('ddb_unit_test_user')
+@patch('time.time', Mock(return_value=1619945501))
+@patch.object(UserVault, '_list_available_user_dicts')
+@patch('telebot.apihelper._make_request')
+@patch('asyncio.sleep')
 async def test_action_find_partner_veteran(
         mock_asyncio_sleep: AsyncMock,
         mock_telebot_make_request: MagicMock,
