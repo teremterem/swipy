@@ -91,9 +91,9 @@ services:
       - "5002"
     volumes:
       - ./models:/app/models
-      - ./environments.yml:/app/environments.yml
+      - ./environments-docker.yml:/app/environments.yml
       - ./credentials.yml:/app/credentials.yml
-      - ./endpoints.yml:/app/endpoints.yml
+      - ./endpoints-docker.yml:/app/endpoints.yml
       - ./logs:/logs
       - ./auth:/app/auth
     environment:
