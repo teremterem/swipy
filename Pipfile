@@ -16,15 +16,10 @@ boto3 = "*"
 transitions = "*"
 
 [dev-packages]
-# https://github.com/RasaHQ/rasa/issues/7124#issuecomment-822225557
-regex = "~=2020.9.27"
-sanic = "<19.12.3"
-scikit-learn = "<0.24.0"
-#rasa = { extras = ["spacy"], version = "~=2.5.0" }
-rasa = "~=2.5.0"
-rasa-sdk = "~=2.5.0"
-rasa-x = "~=0.39.0"
-#
+rasa = "~=2.6.0"
+rasa-sdk = "~=2.6.0"
+rasa-x = "~=0.40.0"
+
 jupyterlab = "*"
 jupyterlab-kite = ">=2.0.2"
 pytest = "*"

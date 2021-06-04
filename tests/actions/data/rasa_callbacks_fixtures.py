@@ -121,7 +121,7 @@ def rasa_callbacks_expected_call_builder() -> Callable[[Text, Text, Dict[Text, A
     ) -> Tuple[Text, call]:
         # noinspection HttpUrlsUsage
         expected_url = (
-            f"http://rasa-unittest:5005/unittest-core/conversations/{expected_receiver_id}/trigger_intent"
+            f"http://rasa-unittest:5005/conversations/{expected_receiver_id}/trigger_intent"
             f"?output_channel=telegram&token=rasaunittesttoken"
         )
         expected_call = call(
