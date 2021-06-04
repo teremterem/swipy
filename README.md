@@ -1,6 +1,10 @@
 # swipy
 
-## Installation (obsolete)
+```
+docker-compose --env-file docker.env up -d
+```
+
+## Installation (obsolete?)
 ```
 pipenv sync
 pipenv run python -m spacy download en_core_web_trf
