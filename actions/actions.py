@@ -10,6 +10,7 @@ from typing import Any, Text, Dict, List
 from rasa_sdk import Action, Tracker
 from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType, UserUtteranceReverted, ReminderScheduled
 from rasa_sdk.executor import CollectingDispatcher
+from telebot import TeleBot
 
 from actions import daily_co
 from actions import rasa_callbacks
@@ -18,6 +19,8 @@ from actions.user_vault import UserVault, IUserVault
 from actions.utils import InvalidSwiperStateError, stack_trace_to_str, current_timestamp_int, datetime_now
 
 logger = logging.getLogger(__name__)
+
+SWIPY_TELEGRAM_TOKEN = os.environ['SWIPY_TELEGRAM_TOKEN']
 
 TELL_USER_ABOUT_ERRORS = strtobool(os.getenv('TELL_USER_ABOUT_ERRORS', 'yes'))
 SEND_ERROR_STACK_TRACE_TO_SLOT = strtobool(os.getenv('SEND_ERROR_STACK_TRACE_TO_SLOT', 'yes'))
@@ -212,6 +215,17 @@ class ActionFindPartner(BaseSwiperAction):
         # sleep for a second to avoid hitting a weird telegram message limit that (I still don't know why,
         # but it happens when this action is invoked externally by someone who rejected invitation)
         await asyncio.sleep(TELEGRAM_MSG_LIMIT_SLEEP_SEC)
+
+        # TODO oleksandr: move this to a dedicated action ?
+        telebot = TeleBot(SWIPY_TELEGRAM_TOKEN)
+        photos = telebot.get_user_profile_photos(current_user.user_id)
+        for phph in photos.photos:
+            for ph in phph:
+                telebot.send_photo(
+                    current_user.user_id,
+                    ph.file_id,
+                    caption=f"{ph.file_size} ({ph.width}x{ph.height}) - {ph.file_id}",
+                )
 
         partner = user_vault.get_random_available_user(
             exclude_user_id=current_user.user_id,
