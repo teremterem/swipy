@@ -18,10 +18,4 @@ def get_user_profile_photo_file_id(user_id: Text) -> Optional[Text]:
     if not current_photo_biggest:
         return None
 
-    # telebot.send_photo(
-    #     user_id,
-    #     current_photo_biggest.file_id,
-    #     caption=f"{current_photo_biggest.file_size} ({current_photo_biggest.width}x{current_photo_biggest.height}) - "
-    #             f"{current_photo_biggest.file_id}",
-    # )
     return current_photo_biggest.file_id

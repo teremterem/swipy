@@ -214,9 +214,6 @@ class ActionFindPartner(BaseSwiperAction):
         # but it happens when this action is invoked externally by someone who rejected invitation)
         await asyncio.sleep(TELEGRAM_MSG_LIMIT_SLEEP_SEC)
 
-        # TODO TODO TODO oleksandr
-        telegram_helpers.get_user_profile_photo_file_id(current_user.user_id)
-
         partner = user_vault.get_random_available_user(
             exclude_user_id=current_user.user_id,
             newbie=True,
@@ -237,7 +234,9 @@ class ActionFindPartner(BaseSwiperAction):
                     f"randomly chosen partner {repr(partner.user_id)} is in a wrong state: {repr(partner.state)}"
                 )
 
-            await rasa_callbacks.ask_to_join(current_user.user_id, partner.user_id)
+            user_profile_photo_id = telegram_helpers.get_user_profile_photo_file_id(current_user.user_id)
+
+            await rasa_callbacks.ask_to_join(current_user.user_id, partner.user_id, user_profile_photo_id)
 
             # noinspection PyUnresolvedReferences
             current_user.ask_partner(partner.user_id)
