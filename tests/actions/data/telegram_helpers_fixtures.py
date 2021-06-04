@@ -46,13 +46,3 @@ def telegram_user_profile_photo() -> Dict[Text, Any]:
         ],
         'total_count': 4,
     }
-
-
-@pytest.fixture
-def no_telegram_user_profile_photo() -> Dict[Text, Any]:
-    return 
-
-
-@pytest.fixture
-def telegram_user_profile_photo_no_files() -> Dict[Text, Any]:
-    return 
