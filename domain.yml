@@ -156,10 +156,7 @@ responses:
       Please don't go anywhere - this may take up to two minutes ⏳
   utter_found_someone_check_ready_photo:
   - custom:
-      caption: |-
-        Hooray! I have found someone who wants to chitchat!
-         
-        Are you ready for the video call? 🎥 ☎️
+      caption: "Hooray! I have found someone who wants to chitchat!\n \nAre you ready for the video call? \U0001F3A5 ☎️"
       photo: '{partner_photo_file_id}'
   utter_found_someone_check_ready:
   - text: |-
