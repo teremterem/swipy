@@ -31,8 +31,6 @@ intents:
     use_entities: true
 - EXTERNAL_ask_if_ready:
     use_entities: true
-- EXTERNAL_join_room:
-    use_entities: true
 - EXTERNAL_join_room_ready:
     use_entities: true
 - EXTERNAL_find_partner:
@@ -95,13 +93,6 @@ responses:
   - custom:
       parse_mode: html
       text: "Hi, my name is Swipy\U0001F643\n \nDo you feel lonely or isolated? \U0001F47E\n \nOr maybe you just want to talk to a new person?\U0001F469‍\U0001F4BC\n \nI can arrange <b>video chitchat</b> with another human for you \U0001F609\n \n<i>You can respond to me in your own words. I am an AI-powered chatbot and I am constantly improving.</i>"
-  utter_sad_offer_chitchat:
-  - text: |-
-      I am sorry that you're feeling down 😞
-       
-      Do you want me to put you on a video call with someone?
-       
-      This may or may not help but is still worth a try.
   utter_out_of_scope_offer_chitchat:
   - text: |-
       I'm sorry, I cannot help you with that.
@@ -142,20 +133,24 @@ responses:
       Unfortunately, I couldn't find anyone 😞
        
       I will try to get back to you when someone shows up...
+  utter_someone_wants_to_chat_photo:
+  - custom:
+      caption: "Hey! This person is looking to chitchat \U0001F5E3\n \nWould you be willing to jump on a video call with them right now? \U0001F3A5 ☎️"
+      photo: '{partner_photo_file_id}'
   utter_someone_wants_to_chat:
   - text: |-
       Hey! Someone is looking to chitchat 🗣
        
       Would you be willing to jump on a video call with that person right now? 🎥 ☎️
-  utter_someone_wants_to_chat_photo:
-  - custom:
-      caption: "Hey! This person is looking to chitchat \U0001F5E3\n \nWould you be willing to jump on a video call with them right now? \U0001F3A5 ☎️"
-      photo: '{partner_photo_file_id}'
   utter_checking_if_partner_ready_too:
   - text: |-
       Just a moment, I'm checking if that person is ready too...
        
       Please don't go anywhere - this may take up to two minutes ⏳
+  utter_found_someone_check_ready_photo:
+  - custom:
+      caption: "Hooray! I have found someone who wants to chitchat!\n \nAre you ready for the video call? \U0001F3A5 ☎️"
+      photo: '{partner_photo_file_id}'
   utter_found_someone_check_ready:
   - text: |-
       Hooray! I have found someone who wants to chitchat!
@@ -172,10 +167,6 @@ responses:
   - custom:
       parse_mode: html
       text: "Awesome!\n \n<b>Please follow this link to join the video call:</b>\n \n{room_url}"
-  utter_found_partner_room_url:
-  - custom:
-      parse_mode: html
-      text: "Hooray! I have found someone who wants to chitchat!\n \n<b>Please follow this link to join the video call:</b>\n \n{room_url}"
   utter_partner_ready_room_url:
   - custom:
       parse_mode: html
@@ -193,7 +184,7 @@ responses:
        
       See ya! 🙂
   utter_iamabot:
-  - text: I am a bot 🤖 powered by Rasa.
+  - text: I'm an AI-powered chatbot 🤖
   utter_error:
   - text: Ouch! Something went wrong 🤖
 actions:
@@ -202,8 +193,8 @@ actions:
 - action_find_partner
 - action_ask_to_join
 - action_ask_if_ready
+- action_confirm_with_asker
 - action_create_room
-- action_create_room_ready
 - action_join_room
 - action_become_ok_to_chitchat
 - action_do_not_disturb

@@ -11,10 +11,6 @@ rules:
   steps:
   - intent: how_it_works
   - action: utter_how_it_works
-- rule: user says that they are sad
-  steps:
-  - intent: mood_unhappy
-  - action: utter_sad_offer_chitchat
 - rule: user asks for something that is out of scope
   steps:
   - intent: out_of_scope
@@ -28,12 +24,6 @@ rules:
 - rule: the bot explains how it works and the user agrees
   steps:
   - action: utter_how_it_works
-  - intent: affirm
-  - action: utter_ok_arranging_chitchat
-  - action: action_find_partner
-- rule: the bot responds to a sad user, offers chitchat and the user agrees
-  steps:
-  - action: utter_sad_offer_chitchat
   - intent: affirm
   - action: utter_ok_arranging_chitchat
   - action: action_find_partner
@@ -56,11 +46,6 @@ rules:
 - rule: the bot explains how it works but the user denies
   steps:
   - action: utter_how_it_works
-  - intent: deny
-  - action: utter_help_lonely_person
-- rule: the bot responds to a sad user, offers chitchat but the user denies
-  steps:
-  - action: utter_sad_offer_chitchat
   - intent: deny
   - action: utter_help_lonely_person
 - rule: the bot responds to an out-of-scope intent, offers chitchat instead but the user denies
@@ -93,7 +78,15 @@ rules:
   - intent: EXTERNAL_ask_to_join
   - action: utter_someone_wants_to_chat
   - action: action_ask_to_join
-- rule: someone else checks if the user is ready for the call too
+- rule: someone with photo checks if the user is ready for the call too
+  condition:
+  - slot_was_set:
+    - partner_photo_file_id
+  steps:
+  - intent: EXTERNAL_ask_if_ready
+  - action: utter_found_someone_check_ready_photo
+  - action: action_ask_if_ready
+- rule: someone without photo checks if the user is ready for the call too
   steps:
   - intent: EXTERNAL_ask_if_ready
   - action: utter_found_someone_check_ready
@@ -116,7 +109,7 @@ rules:
   - or:
     - intent: affirm
     - intent: want_chitchat
-  - action: action_create_room
+  - action: action_confirm_with_asker
 - rule: someone else wants to chat but the user refuses to join
   steps:
   - action: action_ask_to_join
@@ -129,7 +122,7 @@ rules:
   - or:
     - intent: affirm
     - intent: want_chitchat
-  - action: action_create_room_ready
+  - action: action_create_room
 - rule: user is asked if still ready for the call but rejects
   steps:
   - action: action_ask_if_ready
@@ -141,7 +134,7 @@ rules:
   - slot_was_set:
     - swiper_action_result: partner_not_waiting_anymore
   steps:
-  - action: action_create_room
+  - action: action_confirm_with_asker
   - intent: affirm
   - action: utter_ok_arranging_chitchat
   - action: action_find_partner
@@ -150,24 +143,24 @@ rules:
   - slot_was_set:
     - swiper_action_result: partner_not_waiting_anymore
   steps:
-  - action: action_create_room
+  - action: action_confirm_with_asker
   - intent: deny
   - action: utter_bye_till_next_time
-- rule: the bot offers to find a replacement for a partner that wasn't waiting ready confirmation and the user agrees
+- rule: the bot offers to find a replacement for a partner that wasn't waiting for confirmation and the user agrees
   condition:
   - slot_was_set:
     - swiper_action_result: partner_not_waiting_anymore
   steps:
-  - action: action_create_room_ready
+  - action: action_create_room
   - intent: affirm
   - action: utter_ok_arranging_chitchat
   - action: action_find_partner
-- rule: the bot offers to find a replacement for a partner that wasn't waiting ready confirmation but the user denies
+- rule: the bot offers to find a replacement for a partner that wasn't waiting for confirmation but the user denies
   condition:
   - slot_was_set:
     - swiper_action_result: partner_not_waiting_anymore
   steps:
-  - action: action_create_room_ready
+  - action: action_create_room
   - intent: deny
   - action: utter_bye_till_next_time
 - rule: the bot offers to find a replacement for a non-ready partner that wasn't waiting anymore and the user agrees
@@ -203,11 +196,6 @@ rules:
   - intent: deny
   - action: action_become_ok_to_chitchat
   - action: utter_thanks_for_being_ok_to_chitchat
-- rule: a partner agrees to join a video chat and the user receives the room url
-  steps:
-  - intent: EXTERNAL_join_room
-  - action: utter_found_partner_room_url
-  - action: action_join_room
 - rule: a partner confirms readiness for the video chat and the user receives the room url
   steps:
   - intent: EXTERNAL_join_room_ready
