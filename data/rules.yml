@@ -93,7 +93,15 @@ rules:
   - intent: EXTERNAL_ask_to_join
   - action: utter_someone_wants_to_chat
   - action: action_ask_to_join
-- rule: someone else checks if the user is ready for the call too
+- rule: someone with photo checks if the user is ready for the call too
+  condition:
+  - slot_was_set:
+    - partner_photo_file_id
+  steps:
+  - intent: EXTERNAL_ask_if_ready
+  - action: utter_found_someone_check_ready_photo
+  - action: action_ask_if_ready
+- rule: someone without photo checks if the user is ready for the call too
   steps:
   - intent: EXTERNAL_ask_if_ready
   - action: utter_found_someone_check_ready

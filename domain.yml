@@ -140,20 +140,27 @@ responses:
       Unfortunately, I couldn't find anyone 😞
        
       I will try to get back to you when someone shows up...
+  utter_someone_wants_to_chat_photo:
+  - custom:
+      caption: "Hey! This person is looking to chitchat \U0001F5E3\n \nWould you be willing to jump on a video call with them right now? \U0001F3A5 ☎️"
+      photo: '{partner_photo_file_id}'
   utter_someone_wants_to_chat:
   - text: |-
       Hey! Someone is looking to chitchat 🗣
        
       Would you be willing to jump on a video call with that person right now? 🎥 ☎️
-  utter_someone_wants_to_chat_photo:
-  - custom:
-      caption: "Hey! This person is looking to chitchat \U0001F5E3\n \nWould you be willing to jump on a video call with them right now? \U0001F3A5 ☎️"
-      photo: '{partner_photo_file_id}'
   utter_checking_if_partner_ready_too:
   - text: |-
       Just a moment, I'm checking if that person is ready too...
        
       Please don't go anywhere - this may take up to two minutes ⏳
+  utter_found_someone_check_ready_photo:
+  - custom:
+      caption: |-
+        Hooray! I have found someone who wants to chitchat!
+         
+        Are you ready for the video call? 🎥 ☎️
+      photo: '{partner_photo_file_id}'
   utter_found_someone_check_ready:
   - text: |-
       Hooray! I have found someone who wants to chitchat!
