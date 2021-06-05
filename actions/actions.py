@@ -393,7 +393,9 @@ class ActionConfirmWithAsker(ActionCreateRoom):
     ) -> List[Dict[Text, Any]]:
         dispatcher.utter_message(response='utter_checking_if_partner_ready_too')
 
-        await rasa_callbacks.ask_if_ready(current_user.user_id, partner.user_id)
+        user_profile_photo_id = telegram_helpers.get_user_profile_photo_file_id(current_user.user_id)
+
+        await rasa_callbacks.ask_if_ready(current_user.user_id, partner.user_id, user_profile_photo_id)
 
         # noinspection PyUnresolvedReferences
         current_user.ask_partner(partner.user_id)

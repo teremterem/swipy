@@ -28,6 +28,7 @@ def rasa_callbacks_ask_if_ready_expected_call(
         'EXTERNAL_ask_if_ready',
         {
             'partner_id': 'unit_test_user',
+            'partner_photo_file_id': 'biggest_profile_pic_file_id',
         },
     )
     return expected_rasa_url, expected_rasa_call

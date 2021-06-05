@@ -718,22 +718,20 @@ async def test_action_create_room(
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('create_user_state_machine_table')
 @patch('time.time', Mock(return_value=1619945501))  # "now"
-async def test_action_confirm_asker(
+@patch('telebot.apihelper._make_request')
+async def test_action_confirm_with_asker(
+        mock_telebot_make_request: MagicMock,
         mock_aioresponses: aioresponses,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
-        daily_co_create_room_expected_call: Tuple[Text, call],
-        new_room1: Dict[Text, Any],
+        telegram_user_profile_photo: Dict[Text, Any],
+        telegram_user_profile_photo_make_request_call: call,
         rasa_callbacks_join_room_ready_expected_call: Tuple[Text, call],
         rasa_callbacks_ask_if_ready_expected_call: Tuple[Text, call],
         external_intent_response: Dict[Text, Any],
 ) -> None:
-    mock_daily_co = AsyncMock(return_value=CallbackResult(payload=new_room1))
-    mock_aioresponses.post(
-        daily_co_create_room_expected_call[0],
-        callback=mock_daily_co,
-    )
+    mock_telebot_make_request.return_value = telegram_user_profile_photo
 
     mock_rasa_callbacks = AsyncMock(return_value=CallbackResult(payload=external_intent_response))
     mock_aioresponses.post(rasa_callbacks_join_room_ready_expected_call[0], callback=mock_rasa_callbacks)
@@ -774,8 +772,12 @@ async def test_action_confirm_asker(
         'text': None,
     }]
 
-    mock_daily_co.assert_not_called()
-    assert mock_rasa_callbacks.mock_calls == [rasa_callbacks_ask_if_ready_expected_call[1]]
+    assert mock_telebot_make_request.mock_calls == [
+        telegram_user_profile_photo_make_request_call,
+    ]
+    assert mock_rasa_callbacks.mock_calls == [
+        rasa_callbacks_ask_if_ready_expected_call[1],
+    ]
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
