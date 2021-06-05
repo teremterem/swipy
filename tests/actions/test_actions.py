@@ -14,6 +14,7 @@ from rasa_sdk.executor import CollectingDispatcher
 from actions import actions, daily_co
 from actions.user_state_machine import UserStateMachine, UserState
 from actions.user_vault import UserVault, IUserVault
+from actions.utils import datetime_now
 
 
 @pytest.mark.asyncio
@@ -518,7 +519,6 @@ async def test_action_find_partner_swiper_error_trace(
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('create_user_state_machine_table')
 @patch('time.time', Mock(return_value=1619945501))
-@patch('actions.actions.datetime_now', Mock(return_value=datetime.datetime(2021, 5, 25)))
 @patch('uuid.uuid4', Mock(return_value=uuid.UUID('aaaabbbb-cccc-dddd-eeee-ffff11112222')))
 async def test_action_ask_to_join(
         tracker: Tracker,
@@ -540,7 +540,18 @@ async def test_action_ask_to_join(
         SlotSet('partner_id', 'an_asker'),
     ])
 
-    actual_events = await action.run(dispatcher, tracker, domain)
+    _original_datetime_now = datetime_now
+
+    def _wrap_datetime_now(*args, **kwargs) -> datetime.datetime:
+        # noinspection PyArgumentList
+        original_result = _original_datetime_now(*args, **kwargs)
+        assert isinstance(original_result, datetime.datetime)
+        return datetime.datetime(2021, 5, 25)
+
+    with patch('actions.actions.datetime_now') as mock_datetime_now:
+        mock_datetime_now.side_effect = _wrap_datetime_now
+
+        actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == [
         {
             'date_time': '2021-05-25T00:02:00',
