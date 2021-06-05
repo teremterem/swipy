@@ -16,7 +16,7 @@ from actions import rasa_callbacks
 from actions import telegram_helpers
 from actions.user_state_machine import UserStateMachine, UserState
 from actions.user_vault import UserVault, IUserVault
-from actions.utils import InvalidSwiperStateError, stack_trace_to_str, current_timestamp_int, datetime_now
+from actions.utils import InvalidSwiperStateError, stack_trace_to_str, datetime_now
 
 logger = logging.getLogger(__name__)
 
@@ -381,9 +381,9 @@ class ActionCreateRoom(BaseSwiperAction):
         ]
 
 
-class ActionConfirmAsker(ActionCreateRoom):
+class ActionConfirmWithAsker(ActionCreateRoom):
     def name(self) -> Text:
-        return 'action_confirm_asker'
+        return 'action_confirm_with_asker'
 
     async def reach_out_to_partner(
             self, dispatcher: CollectingDispatcher,
