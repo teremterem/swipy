@@ -316,11 +316,6 @@ class ActionCreateRoom(BaseSwiperAction):
     def name(self) -> Text:
         return 'action_create_room'
 
-    @staticmethod
-    async def connect_partner(current_user_id: Text, partner_id: Text, room_url: Text) -> None:
-        # put partner into the room as well
-        await rasa_callbacks.join_room(current_user_id, partner_id, room_url)
-
     async def swipy_run(
             self, dispatcher: CollectingDispatcher,
             tracker: Tracker,
@@ -349,26 +344,19 @@ class ActionCreateRoom(BaseSwiperAction):
                 ),
             ]
 
-        if current_timestamp_int() - partner.state_timestamp > QUESTION_TIMEOUT_SEC:
-            dispatcher.utter_message(response='utter_checking_if_partner_ready_too')
+        return await self.reach_out_to_partner(dispatcher, current_user, partner, user_vault)
 
-            await rasa_callbacks.ask_if_ready(current_user.user_id, partner.user_id)
-
-            # noinspection PyUnresolvedReferences
-            current_user.ask_partner(partner.user_id)
-            user_vault.save(current_user)
-
-            return [
-                SlotSet(
-                    key=SWIPER_ACTION_RESULT_SLOT,
-                    value=SwiperActionResult.PARTNER_HAS_BEEN_ASKED,
-                ),
-            ]
-
+    async def reach_out_to_partner(
+            self, dispatcher: CollectingDispatcher,
+            current_user: UserStateMachine,
+            partner: UserStateMachine,
+            user_vault: IUserVault,
+    ) -> List[Dict[Text, Any]]:
         created_room = await daily_co.create_room(current_user.user_id)
         room_url = created_room['url']
 
-        await self.connect_partner(current_user.user_id, current_user.partner_id, room_url)
+        # put partner into the room as well
+        await rasa_callbacks.join_room_ready(current_user.user_id, partner.user_id, room_url)
 
         dispatcher.utter_message(
             response='utter_room_url',
@@ -393,14 +381,30 @@ class ActionCreateRoom(BaseSwiperAction):
         ]
 
 
-class ActionCreateRoomReady(ActionCreateRoom):
+class ActionConfirmAsker(ActionCreateRoom):
     def name(self) -> Text:
-        return 'action_create_room_ready'
+        return 'action_confirm_asker'
 
-    @staticmethod
-    async def connect_partner(current_user_id: Text, partner_id: Text, room_url: Text) -> None:
-        # put partner into the room as well
-        await rasa_callbacks.join_room_ready(current_user_id, partner_id, room_url)
+    async def reach_out_to_partner(
+            self, dispatcher: CollectingDispatcher,
+            current_user: UserStateMachine,
+            partner: UserStateMachine,
+            user_vault: IUserVault,
+    ) -> List[Dict[Text, Any]]:
+        dispatcher.utter_message(response='utter_checking_if_partner_ready_too')
+
+        await rasa_callbacks.ask_if_ready(current_user.user_id, partner.user_id)
+
+        # noinspection PyUnresolvedReferences
+        current_user.ask_partner(partner.user_id)
+        user_vault.save(current_user)
+
+        return [
+            SlotSet(
+                key=SWIPER_ACTION_RESULT_SLOT,
+                value=SwiperActionResult.PARTNER_HAS_BEEN_ASKED,
+            ),
+        ]
 
 
 class ActionJoinRoom(BaseSwiperAction):
