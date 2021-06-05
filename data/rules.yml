@@ -203,11 +203,6 @@ rules:
   - intent: deny
   - action: action_become_ok_to_chitchat
   - action: utter_thanks_for_being_ok_to_chitchat
-- rule: a partner agrees to join a video chat and the user receives the room url
-  steps:
-  - intent: EXTERNAL_join_room
-  - action: utter_found_partner_room_url
-  - action: action_join_room
 - rule: a partner confirms readiness for the video chat and the user receives the room url
   steps:
   - intent: EXTERNAL_join_room_ready
