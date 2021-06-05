@@ -11,10 +11,6 @@ rules:
   steps:
   - intent: how_it_works
   - action: utter_how_it_works
-- rule: user says that they are sad
-  steps:
-  - intent: mood_unhappy
-  - action: utter_sad_offer_chitchat
 - rule: user asks for something that is out of scope
   steps:
   - intent: out_of_scope
@@ -28,12 +24,6 @@ rules:
 - rule: the bot explains how it works and the user agrees
   steps:
   - action: utter_how_it_works
-  - intent: affirm
-  - action: utter_ok_arranging_chitchat
-  - action: action_find_partner
-- rule: the bot responds to a sad user, offers chitchat and the user agrees
-  steps:
-  - action: utter_sad_offer_chitchat
   - intent: affirm
   - action: utter_ok_arranging_chitchat
   - action: action_find_partner
@@ -56,11 +46,6 @@ rules:
 - rule: the bot explains how it works but the user denies
   steps:
   - action: utter_how_it_works
-  - intent: deny
-  - action: utter_help_lonely_person
-- rule: the bot responds to a sad user, offers chitchat but the user denies
-  steps:
-  - action: utter_sad_offer_chitchat
   - intent: deny
   - action: utter_help_lonely_person
 - rule: the bot responds to an out-of-scope intent, offers chitchat instead but the user denies
