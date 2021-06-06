@@ -153,9 +153,14 @@ services:
 
   app:
     restart: always
-    image: "teremterem/swipy-actions:${SWIPY_ACTIONS_VERSION}"
+    build:
+      context: ./actions
+      args:
+        RASA_SDK_VERSION: ${RASA_SDK_VERSION}
     expose:
       - "5055"
+    volumes:
+      - ./actions:/app/actions
     environment:
       <<: *rasa-credentials
       <<: *swipy-credentials

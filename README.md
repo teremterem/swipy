@@ -3,6 +3,15 @@
 ## Run docker-compose locally
 
 ```
+ngrok http 80
+```
+
+After that set the following env var in `docker.env` file:
+```
+SWIPY_WEBHOOKS_BASE_URL=https://xxxxxxxxxxxx.ngrok.io/core
+```
+
+```
 docker-compose --env-file docker.env up -d
 ```
 
