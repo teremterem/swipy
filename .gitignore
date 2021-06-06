@@ -38,7 +38,7 @@ __pycache__/
 *.so
 
 # Distribution / packaging
-.Python
+#.Python  # duplication
 build/
 develop-eggs/
 dist/
@@ -137,7 +137,7 @@ celerybeat.pid
 
 # Environments
 .env
-.venv
+#.venv  # duplication
 env/
 venv/
 ENV/
@@ -172,12 +172,12 @@ cython_debug/
 # gitignore template for Jupyter Notebooks
 # website: http://jupyter.org/
 
-.ipynb_checkpoints
+#.ipynb_checkpoints  # duplication
 */.ipynb_checkpoints/*
 
 # IPython
-profile_default/
-ipython_config.py
+#profile_default/  # duplication
+#ipython_config.py  # duplication
 
 # Remove previous ipynb_checkpoints
 #   git rm -r .ipynb_checkpoints/
