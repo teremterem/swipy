@@ -1,7 +1,15 @@
 # swipy
 
+## Run docker-compose locally
+
 ```
 docker-compose --env-file docker.env up -d
+```
+
+## Run docker-compose in AWS EC2
+
+```
+docker-compose -f docker-compose.yml -f docker-compose.aws.yml --env-file docker-aws.env up -d
 ```
 
 ## Installation (obsolete?)

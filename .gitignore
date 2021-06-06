@@ -3,6 +3,7 @@
 .DS_Store
 
 docker.env
+docker-aws.env
 models/
 db/
 .config/
