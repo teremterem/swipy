@@ -7,7 +7,7 @@ docker-aws.env
 models/
 db/
 .config/
-credentials.yml
+#credentials.yml
 rasa.*
 events.*
 story_graph.dot
