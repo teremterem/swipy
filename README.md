@@ -14,6 +14,8 @@ SWIPY_WEBHOOKS_BASE_URL=https://xxxxxxxxxxxx.ngrok.io/core
 ```
 docker-compose --env-file docker.env up -d
 ```
+**NOTE:** Before running `docker-compose` command above make sure you are NOT in `pipenv shell`. Otherwise env var
+values from `.env` will override the ones defined in `docker.env`.
 
 ## Run docker-compose in AWS EC2
 
