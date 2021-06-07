@@ -145,7 +145,7 @@ responses:
   utter_let_them_go_stop_bothering:
   - custom:
       parse_mode: html
-      text: "Ok, I have cancelled this invitation ❌\n \nIs there any specific time of day (maybe specific days of week) when you are more likely to respond positively?"
+      text: "Ok, declined ❌\n \nIs there any specific time of day (maybe specific days of week) when you are more likely to respond positively?"
   utter_hope_to_see_you_later:
   - text: |-
       Ok, I will not bother you.
