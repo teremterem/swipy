@@ -26,7 +26,7 @@ def pytest_configure(*args, **kwargs) -> None:
     os.environ.pop('SEND_ERROR_STACK_TRACE_TO_SLOT', None)
     os.environ.pop('TELEGRAM_MSG_LIMIT_SLEEP_SEC', None)
     os.environ.pop('QUESTION_TIMEOUT_SEC', None)
-    os.environ.pop('NEW_USERS_ARE_OK_TO_CHITCHAT', None)
+    os.environ.pop('GREETING_MAKES_USER_OK_TO_CHITCHAT', None)
 
 
 @pytest.fixture

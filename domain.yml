@@ -7,23 +7,17 @@ session_config:
 intents:
 - start:
     use_entities: true
-- affirm:
-    use_entities: true
 - greet:
     use_entities: true
-- deny:
+- affirm:
     use_entities: true
-- goodbye:
+- deny:
     use_entities: true
 - how_it_works:
     use_entities: true
 - dont_bother_me:
     use_entities: true
-- mood_unhappy:
-    use_entities: true
 - bot_challenge:
-    use_entities: true
-- out_of_scope:
     use_entities: true
 - want_chitchat:
     use_entities: true
@@ -42,7 +36,6 @@ intents:
 - EXTERNAL_report_unavailable:
     use_entities: true
 entities:
-- dietcls_time
 - partner_id
 - partner_id_to_let_go
 - partner_photo_file_id
@@ -93,32 +86,11 @@ responses:
   - custom:
       parse_mode: html
       text: "Hi, my name is Swipy\U0001F643\n \nDo you feel lonely or isolated? \U0001F47E\n \nOr maybe you just want to talk to a new person?\U0001F469‍\U0001F4BC\n \nI can arrange <b>video chitchat</b> with another human for you \U0001F609\n \n<i>You can respond to me in your own words. I am an AI-powered chatbot and I am constantly improving.</i>"
-  utter_out_of_scope_offer_chitchat:
-  - text: |-
-      I'm sorry, I cannot help you with that.
-       
-      I can arrange video chitchat with another human for you, however.
-       
-      Do you want me to do that?
-  utter_out_of_scope:
-  - text: I'm sorry, I cannot help you with that.
   utter_ok_arranging_chitchat:
   - text: |-
       Great! Let me find someone for you to chitchat with.
        
       I will get back to you soon... ⏳
-  utter_help_lonely_person:
-  - text: |-
-      Ok, I understand.
-       
-      And would you be willing to respond if someone else wanted to chitchat?
-  utter_thanks_for_being_ok_to_chitchat:
-  - text: |-
-      Thank you, I appreciate this!
-       
-      Talk to you later 😉
-  utter_bye_till_next_time:
-  - text: Ok, I will get back to you another time then 😉
   utter_how_it_works:
   - text: |-
       I can arrange video chitchat with another human for you 🎥 🗣 ☎️
@@ -171,15 +143,14 @@ responses:
       parse_mode: html
       text: "Done!\n \n<b>Please follow this link to join the video call:</b>\n \n{room_url}"
   utter_let_them_go_stop_bothering:
-  - text: |-
-      Ok, I will let that person go then 😞
-       
-      Do you want me to not bother you for awhile?
+  - custom:
+      parse_mode: html
+      text: "Ok, declined ❌\n \nIs there any specific time of day (maybe specific days of week) when you are more likely to respond positively?"
   utter_hope_to_see_you_later:
   - text: |-
       Ok, I will not bother you.
        
-      Should you decide that you want to chitchat with a random person, just let me know - I will set up a video call.
+      Should you decide that you want to chitchat with someone, just let me know - I will set up a video call 😉
        
       See ya! 🙂
   utter_iamabot:
