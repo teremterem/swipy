@@ -20,10 +20,19 @@ values from `.env` will override the ones defined in `docker.env`.
 ## Run docker-compose in AWS EC2
 
 After checking out the repo make sure to fix [permissions](
-https://rasa.com/docs/rasa-x/installation-and-setup/install/docker-compose#permissions-on-mounted-directories)
-and then run the following:
+https://rasa.com/docs/rasa-x/installation-and-setup/install/docker-compose#permissions-on-mounted-directories):
 ```
-docker-compose -f docker-compose.yml -f docker-compose.aws.yml --env-file docker-aws.env up -d
+cd swipy/
+```
+```
+sudo chgrp -R root * && sudo chmod -R 770 *
+```
+
+Create `.env` file (TODO instructions).
+
+Then run the following:
+```
+docker-compose -f docker-compose.yml -f docker-compose.aws.yml up -d
 ```
 
 ## Installation (obsolete?)
