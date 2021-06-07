@@ -148,8 +148,9 @@ responses:
       text: |-
         <b>Ok, I have cancelled this invitation</b> ❌
          
-        Would you mind sharing with me if there is any specific time of day (maybe, a specific day or days of week)
-        when you are more likely to respond positively to an invitation to chitchat with someone over a video call?
+        Would you mind sharing with me if there is any specific time of day (also, maybe, a specific day or days of
+        week) when you are more likely to respond positively to an invitation to chitchat with someone over a video
+        call?
   utter_hope_to_see_you_later:
   - text: |-
       Ok, I will not bother you.
