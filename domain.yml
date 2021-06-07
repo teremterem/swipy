@@ -135,16 +135,13 @@ responses:
       I will try to get back to you when someone shows up...
   utter_someone_wants_to_chat_photo:
   - custom:
-      parse_mode: html
       caption: "Hey!\nThis person is looking to chitchat \U0001F5E3\n \nWould you be willing to jump on a <b>video call</b> now? \U0001F3A5 ☎️"
+      parse_mode: html
       photo: '{partner_photo_file_id}'
   utter_someone_wants_to_chat:
   - custom:
       parse_mode: html
-      text: |-
-        Hey! Someone is looking to chitchat 🗣
-         
-        Would you be willing to jump on a <b>video call</b> now? 🎥 ☎️
+      text: "Hey! Someone is looking to chitchat \U0001F5E3\n \nWould you be willing to jump on a <b>video call</b> now? \U0001F3A5 ☎️"
   utter_checking_if_partner_ready_too:
   - text: |-
       Just a moment, I'm checking if that person is ready too...
@@ -152,16 +149,13 @@ responses:
       Please don't go anywhere - this may take up to two minutes ⏳
   utter_found_someone_check_ready_photo:
   - custom:
-      parse_mode: html
       caption: "Hooray! I have found someone who wants to chitchat!\n \nAre you ready for a <b>video call</b>? \U0001F3A5 ☎️"
+      parse_mode: html
       photo: '{partner_photo_file_id}'
   utter_found_someone_check_ready:
   - custom:
       parse_mode: html
-      text: |-
-        Hooray! I have found someone who wants to chitchat!
-         
-        Are you ready for a <b>video call</b>? 🎥 ☎️
+      text: "Hooray! I have found someone who wants to chitchat!\n \nAre you ready for a <b>video call</b>? \U0001F3A5 ☎️"
   utter_partner_already_gone:
   - text: |-
       Unfortunately, that person has become unavailable 😵
