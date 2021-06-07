@@ -120,13 +120,13 @@ responses:
       text: "Just a moment, I'm checking if that person is ready too...\n \nPlease don't go anywhere - <b>this may take up to two minutes</b> ⏳"
   utter_found_someone_check_ready_photo:
   - custom:
-      caption: "Hooray! I have found someone who is ok to chitchat!\n \n<b>Are you ready for a video call?</b> \U0001F3A5 ☎️"
+      caption: "Hooray! I have found someone who is ok to chitchat!\n \n<b>Are you ready for a video call?</b> \U0001F3A5 ☎️ ⏳"
       parse_mode: html
       photo: '{partner_photo_file_id}'
   utter_found_someone_check_ready:
   - custom:
       parse_mode: html
-      text: "Hooray! I have found someone who is ok to chitchat!\n \n<b>Are you ready for a video call?</b> \U0001F3A5 ☎️"
+      text: "Hooray! I have found someone who is ok to chitchat!\n \n<b>Are you ready for a video call?</b> \U0001F3A5 ☎️ ⏳"
   utter_partner_already_gone:
   - text: |-
       Unfortunately, that person has become unavailable 😵
