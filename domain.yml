@@ -145,7 +145,7 @@ responses:
   utter_let_them_go_stop_bothering:
   - custom:
       parse_mode: html
-      text: "<b>Ok, I have cancelled this invitation</b> ❌\n \nWould you mind sharing with me if there is any specific time of day (also, maybe, a specific day or days of week) when you are more likely to respond positively to an invitation to chitchat with someone over a video call?"
+      text: "<b>Ok, I have cancelled this invitation</b> ❌\n \nIs there any specific time of day (also, maybe, specific days of week) when you are more likely to respond positively to an invitation to chitchat with someone over a video call?"
   utter_hope_to_see_you_later:
   - text: |-
       Ok, I will not bother you.
