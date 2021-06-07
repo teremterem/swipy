@@ -135,17 +135,17 @@ responses:
       I will try to get back to you when someone shows up...
   utter_someone_wants_to_chat_photo:
   - custom:
-      caption: "Hey! This person wants to chitchat \U0001F5E3\n \n<b>Would you be willing to jump on a video call right now?</b> \U0001F3A5 ☎️"
+      caption: "Hey! This person wants to chitchat \U0001F5E3\n \nWould you be willing to jump on a <b>video call right now?</b> \U0001F3A5 ☎️"
       parse_mode: html
       photo: '{partner_photo_file_id}'
   utter_someone_wants_to_chat:
   - custom:
       parse_mode: html
-      text: "Hey! Someone wants to chitchat \U0001F5E3\n \n<b>Would you be willing to jump on a video call right now?</b> \U0001F3A5 ☎️"
+      text: "Hey! Someone wants to chitchat \U0001F5E3\n \nWould you be willing to jump on a <b>video call right now?</b> \U0001F3A5 ☎️"
   utter_checking_if_partner_ready_too:
   - custom:
       parse_mode: html
-      text: "Just a moment, I'm checking if that person is ready too...\n \n<b>Please don't go anywhere - this may take up to two minutes</b> ⏳"
+      text: "Just a moment, I'm checking if that person is ready too...\n \nPlease don't go anywhere - <b>this may take up to two minutes</b> ⏳"
   utter_found_someone_check_ready_photo:
   - custom:
       caption: "Hooray! I have found someone who is ok to chitchat!\n \n<b>Are you ready for a video call?</b> \U0001F3A5 ☎️"
