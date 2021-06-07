@@ -11,10 +11,6 @@ rules:
   steps:
   - intent: how_it_works
   - action: utter_how_it_works
-- rule: user asks for something that is out of scope
-  steps:
-  - intent: out_of_scope
-  - action: utter_out_of_scope_offer_chitchat
 - rule: the bot greets the user, offers chitchat and the user agrees
   steps:
   - action: utter_greet_offer_chitchat
@@ -27,44 +23,11 @@ rules:
   - intent: affirm
   - action: utter_ok_arranging_chitchat
   - action: action_find_partner
-- rule: the bot responds to an out-of-scope intent, offers chitchat instead and the user agrees
-  steps:
-  - action: utter_out_of_scope_offer_chitchat
-  - intent: affirm
-  - action: utter_ok_arranging_chitchat
-  - action: action_find_partner
 - rule: user asks for chitchat directly
   steps:
   - intent: want_chitchat
   - action: utter_ok_arranging_chitchat
   - action: action_find_partner
-- rule: the bot greets the user, offers chitchat but the user denies
-  steps:
-  - action: utter_greet_offer_chitchat
-  - intent: deny
-  - action: utter_help_lonely_person
-- rule: the bot explains how it works but the user denies
-  steps:
-  - action: utter_how_it_works
-  - intent: deny
-  - action: utter_help_lonely_person
-- rule: the bot responds to an out-of-scope intent, offers chitchat instead but the user denies
-  steps:
-  - action: utter_out_of_scope_offer_chitchat
-  - intent: deny
-  - action: utter_help_lonely_person
-- rule: the bot asks the user to stick around for the sake of other people and the user agrees
-  steps:
-  - action: utter_help_lonely_person
-  - intent: affirm
-  - action: action_become_ok_to_chitchat
-  - action: utter_thanks_for_being_ok_to_chitchat
-- rule: the bot asks the user to stick around for the sake of other people but the user denies
-  steps:
-  - action: utter_help_lonely_person
-  - intent: deny
-  - action: utter_hope_to_see_you_later
-  - action: action_do_not_disturb
 - rule: someone with photo asks the user to join a video chat
   condition:
   - slot_was_set:
@@ -114,8 +77,8 @@ rules:
   steps:
   - action: action_ask_to_join
   - intent: deny
-  - action: utter_let_them_go_stop_bothering
   - action: action_do_not_disturb
+  - action: utter_let_them_go_stop_bothering
 - rule: user is asked if still ready for the call and confirms
   steps:
   - action: action_ask_if_ready
@@ -127,8 +90,8 @@ rules:
   steps:
   - action: action_ask_if_ready
   - intent: deny
-  - action: utter_let_them_go_stop_bothering
   - action: action_do_not_disturb_not_ready
+  - action: utter_let_them_go_stop_bothering
 - rule: the bot offers to find a replacement for a partner that wasn't waiting anymore and the user agrees
   condition:
   - slot_was_set:
@@ -183,19 +146,6 @@ rules:
   - intent: EXTERNAL_report_unavailable
   - action: action_become_ok_to_chitchat
   - action: utter_partner_already_gone
-- rule: the bot lets a partner go, asks if the user doesn't want to be bothered and the user confirms
-  steps:
-  - action: utter_let_them_go_stop_bothering
-  - action: action_do_not_disturb
-  - intent: affirm
-  - action: utter_hope_to_see_you_later
-- rule: the bot lets a partner go, asks if the user doesn't want to be bothered but the user denies
-  steps:
-  - action: utter_let_them_go_stop_bothering
-  - action: action_do_not_disturb
-  - intent: deny
-  - action: action_become_ok_to_chitchat
-  - action: utter_thanks_for_being_ok_to_chitchat
 - rule: a partner confirms readiness for the video chat and the user receives the room url
   steps:
   - intent: EXTERNAL_join_room_ready
@@ -204,8 +154,8 @@ rules:
 - rule: user asks not to bother them
   steps:
   - intent: dont_bother_me
-  - action: utter_hope_to_see_you_later
   - action: action_do_not_disturb
+  - action: utter_hope_to_see_you_later
 - rule: user asks the bot if the bot is a bot
   steps:
   - intent: bot_challenge
