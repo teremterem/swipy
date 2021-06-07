@@ -186,7 +186,11 @@ class ActionRegisterUser(BaseSwiperAction):
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
         if NEW_USERS_ARE_OK_TO_CHITCHAT:
-            if current_user.state == UserState.NEW:
+            if current_user.state in (
+                    UserState.NEW,
+                    UserState.DO_NOT_DISTURB,
+                    UserState.ASKED_TO_JOIN,
+            ):
                 # noinspection PyUnresolvedReferences
                 current_user.become_ok_to_chitchat()
                 user_vault.save(current_user)
