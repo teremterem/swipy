@@ -1266,7 +1266,7 @@ async def test_action_do_not_disturb_not_ready(
             UserStateMachine(
                 user_id='unit_test_user',
                 state='asked_to_join',
-                partner_id='not_the_sker',
+                partner_id='not_the_asker',
                 newbie=True,
             ),
             UserStateMachine(
@@ -1281,7 +1281,7 @@ async def test_action_do_not_disturb_not_ready(
             UserStateMachine(
                 user_id='unit_test_user',
                 state='asked_to_join',
-                partner_id='not_the_sker',
+                partner_id='not_the_asker',
                 newbie=True,
             ),
             UserStateMachine(
@@ -1311,7 +1311,7 @@ async def test_action_do_not_disturb_not_ready(
             UserStateMachine(
                 user_id='unit_test_user',
                 state='asked_to_join',
-                partner_id='not_the_sker',
+                partner_id='not_the_asker',
                 newbie=True,
             ),
             UserStateMachine(
