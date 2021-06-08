@@ -105,15 +105,17 @@ responses:
       Unfortunately, I couldn't find anyone 😞
        
       I will try to get back to you when someone shows up...
+       
+      P. S. Do you have a photo in your Telegram profile? Having a photo increases chances that someone responds.
   utter_someone_wants_to_chat_photo:
   - custom:
-      caption: "Hey! This person wants to chitchat \U0001F5E3\n \nWould you be willing to jump on a <b>video call right now?</b> \U0001F3A5 ☎️ ⏳"
+      caption: "Hey! This person wants to chitchat with someone \U0001F5E3\n \nWould you be willing to jump on a <b>video call?</b> \U0001F3A5 ☎️ ⏳"
       parse_mode: html
       photo: '{partner_photo_file_id}'
   utter_someone_wants_to_chat:
   - custom:
       parse_mode: html
-      text: "Hey! Someone wants to chitchat \U0001F5E3\n \nWould you be willing to jump on a <b>video call right now?</b> \U0001F3A5 ☎️ ⏳"
+      text: "Hey! There is someone who wants to chitchat \U0001F5E3\n \nWould you be willing to jump on a <b>video call?</b> \U0001F3A5 ☎️ ⏳"
   utter_checking_if_partner_ready_too:
   - custom:
       parse_mode: html
@@ -142,10 +144,13 @@ responses:
   - custom:
       parse_mode: html
       text: "Done!\n \n<b>Please follow this link to join the video call:</b>\n \n{room_url}"
-  utter_let_them_go_stop_bothering:
-  - custom:
-      parse_mode: html
-      text: "Ok, declined ❌\n \nIs there any specific time of day (maybe specific days of week) when you are more likely to respond positively?"
+  utter_declined:
+  - text: Ok, declined ❌
+  utter_report_expired_ask_for_time_slots:
+  - text: |-
+      Invitation has expired ⌛️
+       
+      Can I ask you if there is any specific time or times of day (maybe days of week) when you are more likely to join someone for chitchat over a video call?
   utter_hope_to_see_you_later:
   - text: |-
       Ok, I will not bother you.
