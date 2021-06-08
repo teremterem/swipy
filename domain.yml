@@ -150,7 +150,7 @@ responses:
   - text: |-
       Invitation has expired ⌛️
        
-      Can I ask you if there is any specific time or times of day (maybe specific days of week, month etc.) when you are more likely to join someone for chitchat over a video call?
+      Can I ask you if there is any specific time or times of day (maybe days of week) when you are more likely to join someone for chitchat over a video call?
   utter_hope_to_see_you_later:
   - text: |-
       Ok, I will not bother you.
