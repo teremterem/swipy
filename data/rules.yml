@@ -59,14 +59,12 @@ rules:
   - intent: EXTERNAL_let_partner_go
     entities:
       - partner_id_to_let_go
-  - action: utter_report_expired_ask_for_time_slots
   - action: action_let_partner_go
 - rule: current user does not respond to readiness confirmation, hence reminder to let partner go is triggered
   steps:
   - intent: EXTERNAL_let_partner_go_not_ready
     entities:
       - partner_id_to_let_go
-  - action: utter_report_expired_ask_for_time_slots
   - action: action_let_partner_go_not_ready
 - rule: someone else wants to chat and the user aggrees to join
   steps:

@@ -524,6 +524,9 @@ class ActionLetPartnerGo(BaseSwiperAction):
         # TODO oleksandr: safeguard with a try-except block (current user doesn't need to know about problems here) ?
         #  or maybe just don't extend this action from BaseSwiperAction ? or maybe both
         if partner_id_to_let_go:
+            if current_user.state == UserState.ASKED_TO_JOIN and current_user.partner_id == partner_id_to_let_go:
+                dispatcher.utter_message(message='utter_report_expired_ask_for_time_slots')
+
             partner_to_let_go = user_vault.get_user(partner_id_to_let_go)
             if partner_to_let_go.is_waiting_for(current_user.user_id):
                 await self.ping_partner(current_user, partner_to_let_go)
