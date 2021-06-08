@@ -106,7 +106,7 @@ responses:
        
       I will try to get back to you when someone shows up...
        
-      P. S. Do you have a photo in your Telegram profile?
+      P. S. Do you have a photo in your Telegram profile? Having a photo increases chances that someone responds.
   utter_someone_wants_to_chat_photo:
   - custom:
       caption: "Hey! This person wants to talk to someone.\n \nWould you be willing to jump on a <b>video call?</b> \U0001F3A5 ☎️ ⏳"
@@ -146,15 +146,11 @@ responses:
       text: "Done!\n \n<b>Please follow this link to join the video call:</b>\n \n{room_url}"
   utter_declined:
   - text: Ok, declined ❌
-  utter_ask_for_time_slots_and_impression:
+  utter_report_expired_ask_for_time_slots:
   - text: |-
-      Can I ask you if there is any specific time or times of day (maybe specific days of week, month etc.) when you
-      are more likely to join someone for chitchat over a video call?
+      Invitation has expired ⌛️
        
-      Or, maybe, you do not like the idea of having random video calls in general?
-       
-      I'll be honest, I'm in need of feedback and would much appreciate if you tell me what kind of impression this
-      chatbot makes.
+      Can I ask you if there is any specific time or times of day (maybe specific days of week, month etc.) when you are more likely to join someone for chitchat over a video call?
   utter_hope_to_see_you_later:
   - text: |-
       Ok, I will not bother you.
