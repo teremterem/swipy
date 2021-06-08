@@ -109,13 +109,13 @@ responses:
       P. S. Do you have a photo in your Telegram profile? Having a photo increases chances that someone responds.
   utter_someone_wants_to_chat_photo:
   - custom:
-      caption: "Hey! This person wants to chitchat with someone 🗣\n \nWould you be willing to jump on a <b>video call?</b> \U0001F3A5 ☎️ ⏳"
+      caption: "Hey! This person wants to chitchat with someone \U0001F5E3\n \nWould you be willing to jump on a <b>video call?</b> \U0001F3A5 ☎️ ⏳"
       parse_mode: html
       photo: '{partner_photo_file_id}'
   utter_someone_wants_to_chat:
   - custom:
       parse_mode: html
-      text: "Hey! There is someone who wants to chitchat 🗣\n \nWould you be willing to jump on a <b>video call?</b> \U0001F3A5 ☎️ ⏳"
+      text: "Hey! There is someone who wants to chitchat \U0001F5E3\n \nWould you be willing to jump on a <b>video call?</b> \U0001F3A5 ☎️ ⏳"
   utter_checking_if_partner_ready_too:
   - custom:
       parse_mode: html
