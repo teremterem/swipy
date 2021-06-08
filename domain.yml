@@ -144,10 +144,17 @@ responses:
   - custom:
       parse_mode: html
       text: "Done!\n \n<b>Please follow this link to join the video call:</b>\n \n{room_url}"
-  utter_let_them_go_stop_bothering:
-  - custom:
-      parse_mode: html
-      text: "Ok, declined ❌\n \nIs there any specific time of day (maybe specific days of week) when you are more likely to respond positively?"
+  utter_declined:
+  - text: Ok, declined ❌
+  utter_ask_for_time_slots_and_impression:
+  - text: |-
+      Can I ask you if there is any specific time or times of day (maybe specific days of week, month etc.) when you
+      are more likely to join someone for chitchat over a video call?
+       
+      Or, maybe, you do not like the idea of having random video calls in general?
+       
+      I'll be honest, I'm in need of feedback and would much appreciate if you tell me what kind of impression this
+      chatbot makes.
   utter_hope_to_see_you_later:
   - text: |-
       Ok, I will not bother you.
