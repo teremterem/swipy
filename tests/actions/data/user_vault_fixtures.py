@@ -112,7 +112,7 @@ def ddb_scan_of_three_users() -> List[Dict[Text, Any]]:
             'newbie': False,
             'state_timestamp': None,
             'state_timestamp_str': None,
-            'notes': '',
+            'notes': 'some note',
         },
         {
             'user_id': 'existing_user_id2',
@@ -145,7 +145,7 @@ def ddb_scan_of_ten_users() -> List[Dict[Text, Any]]:
             'newbie': False,
             'state_timestamp': None,
             'state_timestamp_str': None,
-            'notes': '',
+            'notes': 'some note',
         },
         {
             'user_id': 'available_newbie_id1',
