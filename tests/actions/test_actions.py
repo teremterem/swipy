@@ -832,7 +832,7 @@ async def test_action_create_room_partner_not_waiting(
         SlotSet('swiper_action_result', 'partner_not_waiting_anymore'),
         SlotSet('swiper_error', None),
         SlotSet('swiper_error_trace', None),
-        SlotSet('swiper_state', 'ok_to_chitchat'),
+        SlotSet('swiper_state', 'wants_chitchat'),
         SlotSet('partner_id', None),
     ]
     assert dispatcher.messages == [{
@@ -852,7 +852,7 @@ async def test_action_create_room_partner_not_waiting(
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
         user_id='unit_test_user',
-        state='ok_to_chitchat',
+        state='wants_chitchat',
         partner_id=None,
         newbie=True,
         state_timestamp=1619945501,
