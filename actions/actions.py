@@ -337,7 +337,7 @@ class ActionCreateRoom(BaseSwiperAction):
         partner = user_vault.get_user(current_user.partner_id)
         if not partner.is_waiting_for(current_user.user_id):
             # noinspection PyUnresolvedReferences
-            current_user.become_ok_to_chitchat()
+            current_user.request_chitchat()
             user_vault.save(current_user)
 
             dispatcher.utter_message(response='utter_partner_already_gone')

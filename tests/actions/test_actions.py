@@ -664,13 +664,13 @@ async def test_action_create_room(
     user_vault = UserVault()
     user_vault.save(UserStateMachine(
         user_id='an_asker',
-        state='waiting_partner_join',
+        state='waiting_partner_confirm',
         partner_id='unit_test_user',
         newbie=True,
     ))
     user_vault.save(UserStateMachine(
         user_id='unit_test_user',
-        state='asked_to_join',
+        state='asked_to_confirm',
         partner_id='an_asker',
         newbie=True,
     ))
@@ -684,8 +684,8 @@ async def test_action_create_room(
         SlotSet('room_url', 'https://swipy.daily.co/pytestroom'),
         SlotSet('swiper_error', None),
         SlotSet('swiper_error_trace', None),
-        SlotSet('swiper_state', 'ok_to_chitchat'),
-        SlotSet('partner_id', None),
+        SlotSet('swiper_state', 'roomed'),
+        SlotSet('partner_id', 'an_asker'),
     ]
     assert dispatcher.messages == [{
         'attachment': None,
@@ -708,8 +708,8 @@ async def test_action_create_room(
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
         user_id='unit_test_user',
-        state='ok_to_chitchat',  # user joined the chat and ok_to_chitchat merely allows them to be invited again later
-        partner_id=None,
+        state='roomed',
+        partner_id='an_asker',
         newbie=False,  # accepting the very first video chitchat graduates the user from newbie
         state_timestamp=1619945501,
         state_timestamp_str='2021-05-02 08:51:41 Z',
