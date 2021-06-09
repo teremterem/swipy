@@ -69,11 +69,11 @@ class UserStateMachine(UserModel):
 
         # noinspection PyTypeChecker
         self.machine.add_transition(
-            trigger='ask_partner',
+            trigger='request_chitchat',
             source='*',
-            dest=UserState.WAITING_PARTNER_ANSWER,
+            dest=UserState.WANTS_CHITCHAT,
             after=[
-                self._set_partner_id,
+                self._drop_partner_id,
             ],
         )
         # noinspection PyTypeChecker
@@ -87,10 +87,30 @@ class UserStateMachine(UserModel):
         )
         # noinspection PyTypeChecker
         self.machine.add_transition(
+            trigger='wait_partner_join',
+            source=UserState.WANTS_CHITCHAT,
+            dest=UserState.WAITING_PARTNER_JOIN,
+            after=[
+                self._set_partner_id,
+            ],
+        )
+        # noinspection PyTypeChecker
+        self.machine.add_transition(
+            trigger='become_asked_to_confirm',
+            source=UserState.WAITING_PARTNER_JOIN,
+            dest=UserState.ASKED_TO_CONFIRM,
+        )
+        # noinspection PyTypeChecker
+        self.machine.add_transition(
             trigger='become_asked_to_join',
             source=[
+                UserState.WANTS_CHITCHAT,
                 UserState.OK_TO_CHITCHAT,
-                UserState.WAITING_PARTNER_ANSWER,
+                UserState.ROOMED,
+                UserState.REJECTED_JOIN,
+                UserState.REJECTED_CONFIRM,
+                UserState.JOIN_TIMED_OUT,
+                UserState.CONFIRM_TIMED_OUT,
             ],
             dest=UserState.ASKED_TO_JOIN,
             after=[
@@ -101,10 +121,10 @@ class UserStateMachine(UserModel):
         self.machine.add_transition(
             trigger='join_room',
             source=[
-                UserState.ASKED_TO_JOIN,
-                UserState.WAITING_PARTNER_ANSWER,
+                UserState.ASKED_TO_CONFIRM,
+                UserState.WAITING_PARTNER_CONFIRM,
             ],
-            dest=UserState.OK_TO_CHITCHAT,
+            dest=UserState.ROOMED,
             after=[
                 self._graduate_from_newbie,
                 self._drop_partner_id,
@@ -119,11 +139,19 @@ class UserStateMachine(UserModel):
                 self._drop_partner_id,
             ],
         )
+        # TODO reject_join
+        # TODO reject_confirm
+        # TODO time_join_out
+        # TODO time_confirm_out
 
     def is_waiting_for(self, partner_id):
         if not partner_id:
             return False
-        return self.state == UserState.WAITING_PARTNER_ANSWER and self.partner_id == partner_id
+
+        return self.partner_id == partner_id and self.state in (
+            UserState.WAITING_PARTNER_JOIN,
+            UserState.WAITING_PARTNER_CONFIRM,
+        )
 
     def _set_partner_id(self, event) -> None:
         self.partner_id = event.args[0]
