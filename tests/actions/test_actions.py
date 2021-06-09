@@ -603,14 +603,15 @@ async def test_action_ask_if_ready(
     ))
 
     tracker.add_slots([
-        SlotSet('partner_id', 'an_different_asker'),  # TODO oleksandr: validate in the action if asker is the same
+        # TODO oleksandr: validate in the action if the asker is the same
+        SlotSet('partner_id', 'a_different_asker'),
     ])
 
     actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == [
         {
             'date_time': '2021-05-25T00:02:00',
-            'entities': {'partner_id_to_let_go': 'an_different_asker'},
+            'entities': {'partner_id_to_let_go': 'a_different_asker'},
             'event': 'reminder',
             'intent': 'EXTERNAL_let_partner_go_not_ready',
             'kill_on_user_msg': False,
@@ -939,13 +940,14 @@ async def test_action_join_room(
     user_vault = UserVault()
     user_vault.save(UserStateMachine(
         user_id='unit_test_user',  # the asker
-        state='waiting_partner_join',
+        state='waiting_partner_confirm',
         partner_id='partner_that_accepted',
         newbie=True,
     ))
 
     tracker.add_slots([
-        SlotSet('partner_id', 'partner_that_accepted'),
+        # TODO oleksandr: validate in the action if the asker is the same
+        SlotSet('partner_id', 'different_partner_that_accepted'),
     ])
 
     actual_events = await action.run(dispatcher, tracker, domain)
@@ -953,16 +955,16 @@ async def test_action_join_room(
         SlotSet('swiper_action_result', 'success'),
         SlotSet('swiper_error', None),
         SlotSet('swiper_error_trace', None),
-        SlotSet('swiper_state', 'ok_to_chitchat'),
-        SlotSet('partner_id', None),
+        SlotSet('swiper_state', 'roomed'),
+        SlotSet('partner_id', 'partner_that_accepted'),
     ]
     assert dispatcher.messages == []
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
         user_id='unit_test_user',  # the asker
-        state='ok_to_chitchat',  # user joined the chat and ok_to_chitchat merely allows them to be invited again later
-        partner_id=None,
+        state='roomed',
+        partner_id='partner_that_accepted',
         newbie=False,  # accepting the very first video chitchat graduates the user from newbie
         state_timestamp=1619945501,
         state_timestamp_str='2021-05-02 08:51:41 Z',
