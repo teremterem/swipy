@@ -9,16 +9,32 @@ from actions.utils import current_timestamp_int
 
 class UserState:
     NEW = 'new'
-    WAITING_PARTNER_ANSWER = 'waiting_partner_answer'
+    WANTS_CHITCHAT = 'wants_chitchat'
     OK_TO_CHITCHAT = 'ok_to_chitchat'
+    WAITING_PARTNER_JOIN = 'waiting_partner_join'
+    WAITING_PARTNER_CONFIRM = 'waiting_partner_confirm'
     ASKED_TO_JOIN = 'asked_to_join'
+    ASKED_TO_CONFIRM = 'asked_to_confirm'
+    ROOMED = 'roomed'
+    REJECTED_JOIN = 'rejected_join'
+    REJECTED_CONFIRM = 'rejected_confirm'
+    JOIN_TIMED_OUT = 'join_timed_out'
+    CONFIRM_TIMED_OUT = 'confirm_timed_out'
     DO_NOT_DISTURB = 'do_not_disturb'
 
     all = [
         NEW,
-        WAITING_PARTNER_ANSWER,
+        WANTS_CHITCHAT,
         OK_TO_CHITCHAT,
+        WAITING_PARTNER_JOIN,
+        WAITING_PARTNER_CONFIRM,
         ASKED_TO_JOIN,
+        ASKED_TO_CONFIRM,
+        ROOMED,
+        REJECTED_JOIN,
+        REJECTED_CONFIRM,
+        JOIN_TIMED_OUT,
+        CONFIRM_TIMED_OUT,
         DO_NOT_DISTURB,
     ]
 
