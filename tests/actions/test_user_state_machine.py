@@ -1,5 +1,6 @@
 from datetime import datetime
-from typing import Text
+from functools import partial
+from typing import Text, Optional
 from unittest.mock import Mock, patch
 
 import pytest
@@ -63,10 +64,73 @@ def test_catch_all_transitions(
     assert user.partner_id == 'previous_partner_id'
 
     trigger = getattr(user, trigger_name)
-    trigger('some_partner_id')  # this parameter is expected to be ignored
+    trigger('new_partner_id')  # this parameter is expected to be ignored
 
     assert user.state == destination_state
-    assert user.partner_id is None
+    assert user.partner_id is None  # previous partner is expected to be dropped
+
+
+@pytest.mark.parametrize('source_state, trigger_name, destination_state, partner_should_be_updated', [
+    ('new', 'wait_for_partner', None, None),
+    ('wants_chitchat', 'wait_for_partner', 'waiting_partner_join', True),
+    ('ok_to_chitchat', 'wait_for_partner', None, None),
+    ('waiting_partner_join', 'wait_for_partner', None, None),
+    ('waiting_partner_confirm', 'wait_for_partner', None, None),
+    ('asked_to_join', 'wait_for_partner', 'waiting_partner_confirm', None),
+    ('asked_to_confirm', 'wait_for_partner', None, None),
+    ('roomed', 'wait_for_partner', None, None),
+    ('rejected_join', 'wait_for_partner', None, None),
+    ('rejected_confirm', 'wait_for_partner', None, None),
+    ('join_timed_out', 'wait_for_partner', None, None),
+    ('confirm_timed_out', 'wait_for_partner', None, None),
+    ('do_not_disturb', 'wait_for_partner', None, None),
+
+    ('new', 'become_asked', None, None),
+    ('wants_chitchat', 'become_asked', 'asked_to_join', True),
+    ('ok_to_chitchat', 'become_asked', 'asked_to_join', True),
+    ('waiting_partner_join', 'become_asked', 'asked_to_confirm', False),
+    ('waiting_partner_confirm', 'become_asked', None, None),
+    ('asked_to_join', 'become_asked', None, None),
+    ('asked_to_confirm', 'become_asked', None, None),
+    ('roomed', 'become_asked', 'asked_to_join', True),
+    ('rejected_join', 'become_asked', 'asked_to_join', True),
+    ('rejected_confirm', 'become_asked', 'asked_to_join', True),
+    ('join_timed_out', 'become_asked', 'asked_to_join', True),
+    ('confirm_timed_out', 'become_asked', 'asked_to_join', True),
+    ('do_not_disturb', 'become_asked', None, None),
+])
+def test_transitions_that_involve_partner(
+        source_state: Text,
+        trigger_name: Text,
+        destination_state: Optional[Text],
+        partner_should_be_updated: Optional[bool],
+) -> None:
+    user = UserStateMachine(
+        user_id='some_user_id',
+        state=source_state,
+        partner_id='previous_partner_id',
+    )
+    assert user.state == source_state
+    assert user.partner_id == 'previous_partner_id'
+
+    trigger = partial(getattr(user, trigger_name), 'new_partner_id')
+
+    if destination_state:
+        trigger()
+
+        assert user.state == destination_state
+
+    else:
+        # transition is expected to be invalid
+        with pytest.raises(MachineError):
+            trigger()
+
+        assert user.state == source_state  # state is expected to not be changed
+
+    if partner_should_be_updated:
+        assert user.partner_id == 'new_partner_id'
+    else:
+        assert user.partner_id == 'previous_partner_id'
 
 
 # TODO TODO TODO
@@ -75,7 +139,7 @@ def test_catch_all_transitions(
 
 
 @pytest.mark.parametrize('source_state', all_expected_states)
-def test_ask_partner(source_state: Text) -> None:
+def test_wait_for_partner(source_state: Text) -> None:
     user = UserStateMachine(
         user_id='some_user_id',
         state=source_state,
