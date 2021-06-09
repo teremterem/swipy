@@ -31,6 +31,7 @@ class UserModel:
     newbie: bool = True
     state_timestamp: Optional[int] = None
     state_timestamp_str: Optional[Text] = None
+    notes: Text = ''
 
 
 class UserStateMachine(UserModel):

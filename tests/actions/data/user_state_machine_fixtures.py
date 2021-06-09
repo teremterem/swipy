@@ -15,6 +15,7 @@ def user1() -> UserStateMachine:
         state=UserState.WAITING_PARTNER_ANSWER,
         partner_id='existing_user_id2',
         newbie=False,
+        notes='some note',
     )
 
 
