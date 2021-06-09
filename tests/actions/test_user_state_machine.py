@@ -102,7 +102,19 @@ expected_more_narrow_transitions = [
     ('become_asked', 'confirm_timed_out', 'asked_to_join', 'new_partner_id'),
     ('become_asked', 'do_not_disturb', None, 'previous_partner_id'),
 
-    # ('join_room', )
+    ('join_room', 'new', None, 'previous_partner_id'),
+    ('join_room', 'wants_chitchat', None, 'previous_partner_id'),
+    ('join_room', 'ok_to_chitchat', None, 'previous_partner_id'),
+    ('join_room', 'waiting_partner_join', None, 'previous_partner_id'),
+    ('join_room', 'waiting_partner_confirm', 'roomed', 'previous_partner_id'),
+    ('join_room', 'asked_to_join', None, 'previous_partner_id'),
+    ('join_room', 'asked_to_confirm', 'roomed', 'previous_partner_id'),
+    ('join_room', 'roomed', None, 'previous_partner_id'),
+    ('join_room', 'rejected_join', None, 'previous_partner_id'),
+    ('join_room', 'rejected_confirm', None, 'previous_partner_id'),
+    ('join_room', 'join_timed_out', None, 'previous_partner_id'),
+    ('join_room', 'confirm_timed_out', None, 'previous_partner_id'),
+    ('join_room', 'do_not_disturb', None, 'previous_partner_id'),
 ]
 
 
@@ -122,7 +134,7 @@ def test_more_narrow_transitions(
         source_state: Text,
         trigger_name: Text,
         destination_state: Optional[Text],
-        expected_partner_id: Text,
+        expected_partner_id: Optional[Text],
 ) -> None:
     user = UserStateMachine(
         user_id='some_user_id',
