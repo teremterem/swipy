@@ -44,37 +44,28 @@ def test_all_expected_triggers() -> None:
 
 
 @pytest.mark.parametrize('source_state', all_expected_states)
-def test_request_chitchat(source_state: Text) -> None:
-    user = UserStateMachine(
-        user_id='some_user_id',
-        state=source_state,
-        partner_id='some_partner_id',
-    )
-    assert user.state == source_state
-    assert user.partner_id == 'some_partner_id'
-
-    # noinspection PyUnresolvedReferences
-    user.request_chitchat('some_other_partner_id')  # this parameter is expected to be ignored
-
-    assert user.state == 'wants_chitchat'
-    assert user.partner_id is None
-
-
-@pytest.mark.parametrize('source_state', all_expected_states)
-def test_become_ok_to_chitchat(source_state: Text) -> None:
+@pytest.mark.parametrize('trigger_name, destination_state', [
+    ('request_chitchat', 'wants_chitchat'),
+    ('become_ok_to_chitchat', 'ok_to_chitchat'),
+    ('become_do_not_disturb', 'do_not_disturb'),
+])
+def test_catch_all_transitions(
+        source_state: Text,
+        trigger_name: Text,
+        destination_state: Text,
+) -> None:
     user = UserStateMachine(
         user_id='some_user_id',
         state=source_state,
         partner_id='previous_partner_id',
     )
-
     assert user.state == source_state
     assert user.partner_id == 'previous_partner_id'
 
-    # noinspection PyUnresolvedReferences
-    user.become_ok_to_chitchat()
+    trigger = getattr(user, trigger_name)
+    trigger('some_partner_id')  # this parameter is expected to be ignored
 
-    assert user.state == 'ok_to_chitchat'
+    assert user.state == destination_state
     assert user.partner_id is None
 
 
@@ -190,28 +181,6 @@ def test_join_room_wrong_state(invalid_source_state: Text) -> None:
     assert user.state == invalid_source_state
     assert user.partner_id == 'some_unrelated_partner_id'
     assert user.newbie is True
-
-
-@pytest.mark.parametrize('source_state', all_expected_states)
-@pytest.mark.parametrize('newbie_status', [True, False])
-def test_become_do_not_disturb(source_state: Text, newbie_status: bool) -> None:
-    user = UserStateMachine(
-        user_id='some_user_id',
-        state=source_state,
-        partner_id='asker_id',
-        newbie=newbie_status,
-    )
-
-    assert user.state == source_state
-    assert user.partner_id == 'asker_id'
-    assert user.newbie == newbie_status
-
-    # noinspection PyUnresolvedReferences
-    user.become_do_not_disturb()
-
-    assert user.state == 'do_not_disturb'
-    assert user.partner_id is None
-    assert user.newbie == newbie_status
 
 
 @patch('time.time', Mock(return_value=1619945501))
