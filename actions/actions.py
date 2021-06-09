@@ -231,20 +231,21 @@ class ActionFindPartner(BaseSwiperAction):
         if partner:
             if partner.state != UserState.OK_TO_CHITCHAT:
                 # noinspection PyUnresolvedReferences
-                current_user.become_ok_to_chitchat()
+                current_user.request_chitchat()
                 user_vault.save(current_user)
 
                 raise InvalidSwiperStateError(
                     f"randomly chosen partner {repr(partner.user_id)} is in a wrong state: {repr(partner.state)}"
                 )
 
-            user_profile_photo_id = telegram_helpers.get_user_profile_photo_file_id(current_user.user_id)
-
-            await rasa_callbacks.ask_to_join(current_user.user_id, partner.user_id, user_profile_photo_id)
-
             # noinspection PyUnresolvedReferences
-            current_user.ask_partner(partner.user_id)
+            current_user.request_chitchat()
+            # noinspection PyUnresolvedReferences
+            current_user.wait_for_partner(partner.user_id)
             user_vault.save(current_user)
+
+            user_profile_photo_id = telegram_helpers.get_user_profile_photo_file_id(current_user.user_id)
+            await rasa_callbacks.ask_to_join(current_user.user_id, partner.user_id, user_profile_photo_id)
 
             return [
                 SlotSet(
@@ -253,11 +254,11 @@ class ActionFindPartner(BaseSwiperAction):
                 ),
             ]
 
-        dispatcher.utter_message(response='utter_no_one_was_found')
-
         # noinspection PyUnresolvedReferences
-        current_user.become_ok_to_chitchat()
+        current_user.request_chitchat()
         user_vault.save(current_user)
+
+        dispatcher.utter_message(response='utter_no_one_was_found')
 
         return [
             SlotSet(

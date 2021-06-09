@@ -410,7 +410,7 @@ async def test_action_find_partner_no_one(
         SlotSet('swiper_action_result', 'partner_was_not_found'),
         SlotSet('swiper_error', None),
         SlotSet('swiper_error_trace', None),
-        SlotSet('swiper_state', 'ok_to_chitchat'),
+        SlotSet('swiper_state', 'wants_chitchat'),
         SlotSet('partner_id', None),
     ]
     assert dispatcher.messages == [{
@@ -434,7 +434,7 @@ async def test_action_find_partner_no_one(
     user_vault = UserVault()
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
         user_id='unit_test_user',
-        state='ok_to_chitchat',
+        state='wants_chitchat',
         partner_id=None,
         newbie=True,
         state_timestamp=1619945501,
@@ -484,7 +484,7 @@ async def test_action_find_partner_swiper_error_trace(
             'is in a wrong state: \'do_not_disturb\'")',
         ),
         SlotSet('swiper_error_trace', 'stacktracegoeshere'),
-        SlotSet('swiper_state', 'ok_to_chitchat'),
+        SlotSet('swiper_state', 'wants_chitchat'),
         SlotSet('partner_id', None),
     ]
     assert dispatcher.messages == [{
@@ -508,7 +508,7 @@ async def test_action_find_partner_swiper_error_trace(
     user_vault = UserVault()
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
         user_id='unit_test_user',
-        state='ok_to_chitchat',
+        state='wants_chitchat',
         partner_id=None,
         newbie=True,
         state_timestamp=1619945501,
