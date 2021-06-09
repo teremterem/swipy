@@ -223,7 +223,7 @@ async def test_action_find_partner_newbie(
         SlotSet('swiper_action_result', 'partner_has_been_asked'),
         SlotSet('swiper_error', None),
         SlotSet('swiper_error_trace', None),
-        SlotSet('swiper_state', 'waiting_partner_answer'),
+        SlotSet('swiper_state', 'waiting_partner_join'),
         SlotSet('partner_id', 'available_newbie_id1'),
     ]
     assert dispatcher.messages == []
@@ -240,7 +240,7 @@ async def test_action_find_partner_newbie(
     user_vault = UserVault()
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
         user_id='unit_test_user',
-        state='waiting_partner_answer',
+        state='waiting_partner_join',
         partner_id='available_newbie_id1',
         newbie=True,
         state_timestamp=1619945501,
@@ -290,7 +290,7 @@ async def test_action_find_partner_no_photo(
         SlotSet('swiper_action_result', 'partner_has_been_asked'),
         SlotSet('swiper_error', None),
         SlotSet('swiper_error_trace', None),
-        SlotSet('swiper_state', 'waiting_partner_answer'),
+        SlotSet('swiper_state', 'waiting_partner_join'),
         SlotSet('partner_id', 'available_newbie_id1'),
     ]
     assert dispatcher.messages == []
@@ -307,7 +307,7 @@ async def test_action_find_partner_no_photo(
     user_vault = UserVault()
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
         user_id='unit_test_user',
-        state='waiting_partner_answer',
+        state='waiting_partner_join',
         partner_id='available_newbie_id1',
         newbie=True,
         state_timestamp=1619945501,
@@ -358,7 +358,7 @@ async def test_action_find_partner_veteran(
         SlotSet('swiper_action_result', 'partner_has_been_asked'),
         SlotSet('swiper_error', None),
         SlotSet('swiper_error_trace', None),
-        SlotSet('swiper_state', 'waiting_partner_answer'),
+        SlotSet('swiper_state', 'waiting_partner_join'),
         SlotSet('partner_id', 'available_veteran_id1'),
     ]
     assert dispatcher.messages == []
@@ -378,7 +378,7 @@ async def test_action_find_partner_veteran(
     user_vault = UserVault()
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
         user_id='unit_test_user',
-        state='waiting_partner_answer',
+        state='waiting_partner_join',
         partner_id='available_veteran_id1',
         newbie=True,
         state_timestamp=1619945501,
@@ -663,7 +663,7 @@ async def test_action_create_room(
     user_vault = UserVault()
     user_vault.save(UserStateMachine(
         user_id='an_asker',
-        state='waiting_partner_answer',
+        state='waiting_partner_join',
         partner_id='unit_test_user',
         newbie=True,
     ))
@@ -739,7 +739,7 @@ async def test_action_confirm_with_asker(
     user_vault = UserVault()
     user_vault.save(UserStateMachine(
         user_id='an_asker',
-        state='waiting_partner_answer',
+        state='waiting_partner_join',
         partner_id='unit_test_user',
         newbie=True,
     ))
@@ -758,7 +758,7 @@ async def test_action_confirm_with_asker(
         SlotSet('swiper_action_result', 'partner_has_been_asked'),
         SlotSet('swiper_error', None),
         SlotSet('swiper_error_trace', None),
-        SlotSet('swiper_state', 'waiting_partner_answer'),
+        SlotSet('swiper_state', 'waiting_partner_join'),
         SlotSet('partner_id', 'an_asker'),
     ]
     assert dispatcher.messages == [{
@@ -782,7 +782,7 @@ async def test_action_confirm_with_asker(
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
         user_id='unit_test_user',
-        state='waiting_partner_answer',
+        state='waiting_partner_join',
         partner_id='an_asker',
         newbie=True,
         state_timestamp=1619945501,
@@ -794,7 +794,7 @@ async def test_action_confirm_with_asker(
 @pytest.mark.parametrize('partner', [
     UserStateMachine(
         user_id='an_asker',
-        state='waiting_partner_answer',
+        state='waiting_partner_join',
         partner_id='a_completely_different_user',
         newbie=True,
     ),
@@ -888,7 +888,7 @@ async def test_action_create_room_no_partner_id(
     user_vault = UserVault()
     user_vault.save(UserStateMachine(
         user_id='an_asker',
-        state='waiting_partner_answer',
+        state='waiting_partner_join',
         partner_id='unit_test_user',
         newbie=True,
     ))
@@ -939,7 +939,7 @@ async def test_action_join_room(
     user_vault = UserVault()
     user_vault.save(UserStateMachine(
         user_id='unit_test_user',  # the asker
-        state='waiting_partner_answer',
+        state='waiting_partner_join',
         partner_id='partner_that_accepted',
         newbie=True,
     ))
@@ -1051,7 +1051,7 @@ async def test_action_register_user_not_new(
     user_vault = UserVault()
     user_vault.save(UserStateMachine(
         user_id='unit_test_user',
-        state='waiting_partner_answer',
+        state='waiting_partner_join',
         partner_id='the_asker',
         newbie=True,
     ))
@@ -1061,7 +1061,7 @@ async def test_action_register_user_not_new(
         SlotSet('swiper_action_result', 'success'),
         SlotSet('swiper_error', None),
         SlotSet('swiper_error_trace', None),
-        SlotSet('swiper_state', 'waiting_partner_answer'),
+        SlotSet('swiper_state', 'waiting_partner_join'),
         SlotSet('partner_id', 'the_asker'),
     ]
     assert dispatcher.messages == []
@@ -1069,7 +1069,7 @@ async def test_action_register_user_not_new(
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
         user_id='unit_test_user',
-        state='waiting_partner_answer',  # user state not changed (only new users automatically become ok_to_chitchat)
+        state='waiting_partner_join',  # user state not changed (only new users automatically become ok_to_chitchat)
         partner_id='the_asker',
         newbie=True,
     )
@@ -1103,7 +1103,7 @@ async def test_action_register_user_not_new(
             ),
             UserStateMachine(
                 user_id='the_asker',
-                state='waiting_partner_answer',
+                state='waiting_partner_join',
                 partner_id='someone_else',  # the asker is already waiting for someone else at this point
                 newbie=True,
             ),
@@ -1118,7 +1118,7 @@ async def test_action_register_user_not_new(
             ),
             UserStateMachine(
                 user_id='the_asker',
-                state='waiting_partner_answer',
+                state='waiting_partner_join',
                 partner_id='unit_test_user',
                 newbie=True,
             ),
@@ -1133,7 +1133,7 @@ async def test_action_register_user_not_new(
             ),
             UserStateMachine(
                 user_id='the_asker',
-                state='waiting_partner_answer',
+                state='waiting_partner_join',
                 partner_id='unit_test_user',
                 newbie=True,
             ),
@@ -1224,7 +1224,7 @@ async def test_action_do_not_disturb_not_ready(
     ))
     user_vault.save(UserStateMachine(
         user_id='the_asker',
-        state='waiting_partner_answer',
+        state='waiting_partner_join',
         partner_id='unit_test_user',
         newbie=True,
     ))
@@ -1252,7 +1252,7 @@ async def test_action_do_not_disturb_not_ready(
     )
     assert user_vault.get_user('the_asker') == UserStateMachine(
         user_id='the_asker',
-        state='waiting_partner_answer',
+        state='waiting_partner_join',
         partner_id='unit_test_user',
         newbie=True,
     )  # ActionDoNotDisturbNotReady should not change the asker state
@@ -1286,7 +1286,7 @@ async def test_action_do_not_disturb_not_ready(
             ),
             UserStateMachine(
                 user_id='the_asker',
-                state='waiting_partner_answer',
+                state='waiting_partner_join',
                 partner_id='someone_else',  # the asker is already waiting for someone else at this point
                 newbie=True,
             ),
@@ -1301,7 +1301,7 @@ async def test_action_do_not_disturb_not_ready(
             ),
             UserStateMachine(
                 user_id='the_asker',
-                state='waiting_partner_answer',
+                state='waiting_partner_join',
                 partner_id='unit_test_user',
                 newbie=True,
             ),
@@ -1316,7 +1316,7 @@ async def test_action_do_not_disturb_not_ready(
             ),
             UserStateMachine(
                 user_id='the_asker',
-                state='waiting_partner_answer',
+                state='waiting_partner_join',
                 partner_id='unit_test_user',
                 newbie=True,
             ),
@@ -1404,7 +1404,7 @@ async def test_action_let_partner_go_not_ready(
     ))
     user_vault.save(UserStateMachine(
         user_id='the_asker',
-        state='waiting_partner_answer',
+        state='waiting_partner_join',
         partner_id='unit_test_user',
         newbie=True,
     ))
@@ -1434,7 +1434,7 @@ async def test_action_let_partner_go_not_ready(
     )  # current user should remain unchanged
     assert user_vault.get_user('the_asker') == UserStateMachine(
         user_id='the_asker',
-        state='waiting_partner_answer',
+        state='waiting_partner_join',
         partner_id='unit_test_user',
         newbie=True,
     )  # ActionLetPartnerGoNotReady should not change the asker state
