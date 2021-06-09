@@ -6,7 +6,7 @@ from unittest.mock import Mock, patch
 import pytest
 from transitions import MachineError
 
-from actions.user_state_machine import UserStateMachine
+from actions.user_state_machine import UserStateMachine, UserState
 
 all_expected_states = [
     'new',
@@ -44,12 +44,15 @@ def test_all_expected_triggers() -> None:
     assert UserStateMachine('some_user_id').machine.get_triggers(*all_expected_states) == all_expected_triggers
 
 
-@pytest.mark.parametrize('source_state', all_expected_states)
-@pytest.mark.parametrize('trigger_name, destination_state', [
+expected_catch_all_transitions = [
     ('request_chitchat', 'wants_chitchat'),
     ('become_ok_to_chitchat', 'ok_to_chitchat'),
     ('become_do_not_disturb', 'do_not_disturb'),
-])
+]
+
+
+@pytest.mark.parametrize('source_state', all_expected_states)
+@pytest.mark.parametrize('trigger_name, destination_state', expected_catch_all_transitions)
 def test_catch_all_transitions(
         source_state: Text,
         trigger_name: Text,
@@ -70,42 +73,56 @@ def test_catch_all_transitions(
     assert user.partner_id is None  # previous partner is expected to be dropped
 
 
-@pytest.mark.parametrize('initial_newbie_status', [True, False])
-@pytest.mark.parametrize('trigger_name, source_state, destination_state, partner_should_be_updated', [
-    ('wait_for_partner', 'new', None, None),
-    ('wait_for_partner', 'wants_chitchat', 'waiting_partner_join', True),
-    ('wait_for_partner', 'ok_to_chitchat', None, None),
-    ('wait_for_partner', 'waiting_partner_join', None, None),
-    ('wait_for_partner', 'waiting_partner_confirm', None, None),
-    ('wait_for_partner', 'asked_to_join', 'waiting_partner_confirm', None),
-    ('wait_for_partner', 'asked_to_confirm', None, None),
-    ('wait_for_partner', 'roomed', None, None),
-    ('wait_for_partner', 'rejected_join', None, None),
-    ('wait_for_partner', 'rejected_confirm', None, None),
-    ('wait_for_partner', 'join_timed_out', None, None),
-    ('wait_for_partner', 'confirm_timed_out', None, None),
-    ('wait_for_partner', 'do_not_disturb', None, None),
+expected_more_narrow_transitions = [
+    ('wait_for_partner', 'new', None, 'previous_partner_id'),
+    ('wait_for_partner', 'wants_chitchat', 'waiting_partner_join', 'new_partner_id'),
+    ('wait_for_partner', 'ok_to_chitchat', None, 'previous_partner_id'),
+    ('wait_for_partner', 'waiting_partner_join', None, 'previous_partner_id'),
+    ('wait_for_partner', 'waiting_partner_confirm', None, 'previous_partner_id'),
+    ('wait_for_partner', 'asked_to_join', 'waiting_partner_confirm', 'previous_partner_id'),
+    ('wait_for_partner', 'asked_to_confirm', None, 'previous_partner_id'),
+    ('wait_for_partner', 'roomed', None, 'previous_partner_id'),
+    ('wait_for_partner', 'rejected_join', None, 'previous_partner_id'),
+    ('wait_for_partner', 'rejected_confirm', None, 'previous_partner_id'),
+    ('wait_for_partner', 'join_timed_out', None, 'previous_partner_id'),
+    ('wait_for_partner', 'confirm_timed_out', None, 'previous_partner_id'),
+    ('wait_for_partner', 'do_not_disturb', None, 'previous_partner_id'),
 
-    ('become_asked', 'new', None, None),
-    ('become_asked', 'wants_chitchat', 'asked_to_join', True),
-    ('become_asked', 'ok_to_chitchat', 'asked_to_join', True),
-    ('become_asked', 'waiting_partner_join', 'asked_to_confirm', False),
-    ('become_asked', 'waiting_partner_confirm', None, None),
-    ('become_asked', 'asked_to_join', None, None),
-    ('become_asked', 'asked_to_confirm', None, None),
-    ('become_asked', 'roomed', 'asked_to_join', True),
-    ('become_asked', 'rejected_join', 'asked_to_join', True),
-    ('become_asked', 'rejected_confirm', 'asked_to_join', True),
-    ('become_asked', 'join_timed_out', 'asked_to_join', True),
-    ('become_asked', 'confirm_timed_out', 'asked_to_join', True),
-    ('become_asked', 'do_not_disturb', None, None),
-])
+    ('become_asked', 'new', None, 'previous_partner_id'),
+    ('become_asked', 'wants_chitchat', 'asked_to_join', 'new_partner_id'),
+    ('become_asked', 'ok_to_chitchat', 'asked_to_join', 'new_partner_id'),
+    ('become_asked', 'waiting_partner_join', 'asked_to_confirm', 'previous_partner_id'),
+    ('become_asked', 'waiting_partner_confirm', None, 'previous_partner_id'),
+    ('become_asked', 'asked_to_join', None, 'previous_partner_id'),
+    ('become_asked', 'asked_to_confirm', None, 'previous_partner_id'),
+    ('become_asked', 'roomed', 'asked_to_join', 'new_partner_id'),
+    ('become_asked', 'rejected_join', 'asked_to_join', 'new_partner_id'),
+    ('become_asked', 'rejected_confirm', 'asked_to_join', 'new_partner_id'),
+    ('become_asked', 'join_timed_out', 'asked_to_join', 'new_partner_id'),
+    ('become_asked', 'confirm_timed_out', 'asked_to_join', 'new_partner_id'),
+    ('become_asked', 'do_not_disturb', None, 'previous_partner_id'),
+
+    # ('join_room', )
+]
+
+
+def test_expected_more_narrow_transition_list() -> None:
+    # make sure we are testing all the transition/initial_state combinations that exist
+    assert len(expected_more_narrow_transitions) == \
+           len(all_expected_states) * (len(all_expected_triggers) - len(expected_catch_all_transitions))
+
+
+@pytest.mark.parametrize('initial_newbie_status', [True, False])
+@pytest.mark.parametrize(
+    'trigger_name, source_state, destination_state, expected_partner_id',
+    expected_more_narrow_transitions,
+)
 def test_more_narrow_transitions(
         initial_newbie_status: bool,
         source_state: Text,
         trigger_name: Text,
         destination_state: Optional[Text],
-        partner_should_be_updated: Optional[bool],
+        expected_partner_id: Text,
 ) -> None:
     user = UserStateMachine(
         user_id='some_user_id',
@@ -130,13 +147,11 @@ def test_more_narrow_transitions(
 
         assert user.state == source_state  # state is expected to not be changed
 
-    if partner_should_be_updated:
-        assert user.partner_id == 'new_partner_id'
-    else:
-        assert user.partner_id == 'previous_partner_id'
+    assert user.partner_id == expected_partner_id
 
-    if destination_state == 'roomed':
-        assert user.newbie is False  # those who joined a room at least once stop being newbies
+    if destination_state == UserState.ROOMED:
+        # those who joined a room at least once stop being newbies
+        assert user.newbie is False
     else:
         assert user.newbie == initial_newbie_status
 
