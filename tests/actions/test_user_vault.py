@@ -33,6 +33,7 @@ def test_get_new_user() -> None:
         'newbie': True,
         'state_timestamp': None,
         'state_timestamp_str': None,
+        'notes': '',
     }]
     assert user_vault.get_user('new_user_id') is new_user  # make sure the user was cached
 
@@ -166,6 +167,7 @@ def test_save_new_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> None:
             'newbie': False,
             'state_timestamp': None,
             'state_timestamp_str': None,
+            'notes': '',
         },
         {
             'user_id': 'existing_user_id2',
@@ -174,6 +176,7 @@ def test_save_new_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> None:
             'newbie': True,
             'state_timestamp': None,
             'state_timestamp_str': None,
+            'notes': '',
         },
         {
             'user_id': 'existing_user_id3',
@@ -182,6 +185,7 @@ def test_save_new_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> None:
             'newbie': True,
             'state_timestamp': None,
             'state_timestamp_str': None,
+            'notes': '',
         },
         {
             'user_id': 'new_ddb_user_was_put',
@@ -190,6 +194,7 @@ def test_save_new_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> None:
             'newbie': True,
             'state_timestamp': None,
             'state_timestamp_str': None,
+            'notes': '',
         },
     ]
     assert user_vault.get_user(user_to_save.user_id) is user_to_save  # make sure the user was cached
@@ -215,6 +220,7 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
             'newbie': True,  # used to be False but we have overridden it
             'state_timestamp': None,
             'state_timestamp_str': None,
+            'notes': '',
         },
         {
             'user_id': 'existing_user_id2',
@@ -223,6 +229,7 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
             'newbie': True,
             'state_timestamp': None,
             'state_timestamp_str': None,
+            'notes': '',
         },
         {
             'user_id': 'existing_user_id3',
@@ -231,6 +238,7 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
             'newbie': True,
             'state_timestamp': None,
             'state_timestamp_str': None,
+            'notes': '',
         },
     ]
     assert user_vault.get_user(user_to_save.user_id) is user_to_save  # make sure the user was cached
@@ -260,6 +268,7 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
                     'newbie': True,
                     'state_timestamp': None,
                     'state_timestamp_str': None,
+                    'notes': '',
                 },
                 {
                     'user_id': 'available_newbie_id3',
@@ -268,6 +277,7 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
                     'newbie': True,
                     'state_timestamp': None,
                     'state_timestamp_str': None,
+                    'notes': '',
                 },
             ],
     ),
@@ -282,6 +292,7 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
                     'newbie': False,
                     'state_timestamp': None,
                     'state_timestamp_str': None,
+                    'notes': '',
                 },
                 {
                     'user_id': 'available_veteran_id3',
@@ -290,6 +301,7 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
                     'newbie': False,
                     'state_timestamp': None,
                     'state_timestamp_str': None,
+                    'notes': '',
                 },
             ],
     ),
@@ -304,6 +316,7 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
                     'newbie': True,
                     'state_timestamp': None,
                     'state_timestamp_str': None,
+                    'notes': '',
                 },
                 {
                     'user_id': 'available_veteran_id1',
@@ -312,6 +325,7 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
                     'newbie': False,
                     'state_timestamp': None,
                     'state_timestamp_str': None,
+                    'notes': '',
                 },
                 {
                     'user_id': 'available_newbie_id2',
@@ -320,6 +334,7 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
                     'newbie': True,
                     'state_timestamp': None,
                     'state_timestamp_str': None,
+                    'notes': '',
                 },
                 {
                     'user_id': 'available_veteran_id2',
@@ -328,6 +343,7 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
                     'newbie': False,
                     'state_timestamp': None,
                     'state_timestamp_str': None,
+                    'notes': '',
                 },
                 {
                     'user_id': 'available_newbie_id3',
@@ -336,6 +352,7 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
                     'newbie': True,
                     'state_timestamp': None,
                     'state_timestamp_str': None,
+                    'notes': '',
                 },
                 {
                     'user_id': 'available_veteran_id3',
@@ -344,6 +361,7 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
                     'newbie': False,
                     'state_timestamp': None,
                     'state_timestamp_str': None,
+                    'notes': '',
                 },
             ],
     ),

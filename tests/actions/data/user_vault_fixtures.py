@@ -112,6 +112,7 @@ def ddb_scan_of_three_users() -> List[Dict[Text, Any]]:
             'newbie': False,
             'state_timestamp': None,
             'state_timestamp_str': None,
+            'notes': '',
         },
         {
             'user_id': 'existing_user_id2',
@@ -120,6 +121,7 @@ def ddb_scan_of_three_users() -> List[Dict[Text, Any]]:
             'newbie': True,
             'state_timestamp': None,
             'state_timestamp_str': None,
+            'notes': '',
         },
         {
             'user_id': 'existing_user_id3',
@@ -128,6 +130,7 @@ def ddb_scan_of_three_users() -> List[Dict[Text, Any]]:
             'newbie': True,
             'state_timestamp': None,
             'state_timestamp_str': None,
+            'notes': '',
         },
     ]
 
@@ -142,6 +145,7 @@ def ddb_scan_of_ten_users() -> List[Dict[Text, Any]]:
             'newbie': False,
             'state_timestamp': None,
             'state_timestamp_str': None,
+            'notes': '',
         },
         {
             'user_id': 'available_newbie_id1',
@@ -150,6 +154,7 @@ def ddb_scan_of_ten_users() -> List[Dict[Text, Any]]:
             'newbie': True,
             'state_timestamp': None,
             'state_timestamp_str': None,
+            'notes': '',
         },
         {
             'user_id': 'available_veteran_id1',
@@ -158,6 +163,7 @@ def ddb_scan_of_ten_users() -> List[Dict[Text, Any]]:
             'newbie': False,
             'state_timestamp': None,
             'state_timestamp_str': None,
+            'notes': '',
         },
         {
             'user_id': 'existing_user_id2',
@@ -166,6 +172,7 @@ def ddb_scan_of_ten_users() -> List[Dict[Text, Any]]:
             'newbie': True,
             'state_timestamp': None,
             'state_timestamp_str': None,
+            'notes': '',
         },
         {
             'user_id': 'available_newbie_id2',
@@ -174,6 +181,7 @@ def ddb_scan_of_ten_users() -> List[Dict[Text, Any]]:
             'newbie': True,
             'state_timestamp': None,
             'state_timestamp_str': None,
+            'notes': '',
         },
         {
             'user_id': 'available_veteran_id2',
@@ -182,6 +190,7 @@ def ddb_scan_of_ten_users() -> List[Dict[Text, Any]]:
             'newbie': False,
             'state_timestamp': None,
             'state_timestamp_str': None,
+            'notes': '',
         },
         {
             'user_id': 'existing_user_id3',
@@ -190,6 +199,7 @@ def ddb_scan_of_ten_users() -> List[Dict[Text, Any]]:
             'newbie': True,
             'state_timestamp': None,
             'state_timestamp_str': None,
+            'notes': '',
         },
         {
             'user_id': 'available_newbie_id3',
@@ -198,6 +208,7 @@ def ddb_scan_of_ten_users() -> List[Dict[Text, Any]]:
             'newbie': True,
             'state_timestamp': None,
             'state_timestamp_str': None,
+            'notes': '',
         },
         {
             'user_id': 'available_veteran_id3',
@@ -206,6 +217,7 @@ def ddb_scan_of_ten_users() -> List[Dict[Text, Any]]:
             'newbie': False,
             'state_timestamp': None,
             'state_timestamp_str': None,
+            'notes': '',
         },
         {
             'user_id': 'existing_user_id4',
@@ -214,5 +226,6 @@ def ddb_scan_of_ten_users() -> List[Dict[Text, Any]]:
             'newbie': True,
             'state_timestamp': None,
             'state_timestamp_str': None,
+            'notes': '',
         },
     ]
