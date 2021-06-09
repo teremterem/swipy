@@ -597,20 +597,20 @@ async def test_action_ask_if_ready(
     user_vault = UserVault()
     user_vault.save(UserStateMachine(
         user_id='unit_test_user',
-        state='ok_to_chitchat',
-        partner_id=None,
+        state='waiting_partner_join',
+        partner_id='an_asker',
         newbie=True,
     ))
 
     tracker.add_slots([
-        SlotSet('partner_id', 'an_asker'),
+        SlotSet('partner_id', 'an_different_asker'),  # TODO oleksandr: validate in the action if asker is the same
     ])
 
     actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == [
         {
             'date_time': '2021-05-25T00:02:00',
-            'entities': {'partner_id_to_let_go': 'an_asker'},
+            'entities': {'partner_id_to_let_go': 'an_different_asker'},
             'event': 'reminder',
             'intent': 'EXTERNAL_let_partner_go_not_ready',
             'kill_on_user_msg': False,
@@ -620,7 +620,7 @@ async def test_action_ask_if_ready(
         SlotSet('swiper_action_result', 'success'),
         SlotSet('swiper_error', None),
         SlotSet('swiper_error_trace', None),
-        SlotSet('swiper_state', 'asked_to_join'),
+        SlotSet('swiper_state', 'asked_to_confirm'),
         SlotSet('partner_id', 'an_asker'),
     ]
     assert dispatcher.messages == []
@@ -628,7 +628,7 @@ async def test_action_ask_if_ready(
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
         user_id='unit_test_user',
-        state='asked_to_join',
+        state='asked_to_confirm',
         partner_id='an_asker',
         newbie=True,
         state_timestamp=1619945501,
