@@ -96,12 +96,6 @@ class UserStateMachine(UserModel):
         )
         # noinspection PyTypeChecker
         self.machine.add_transition(
-            trigger='become_asked_to_confirm',
-            source=UserState.WAITING_PARTNER_JOIN,
-            dest=UserState.ASKED_TO_CONFIRM,
-        )
-        # noinspection PyTypeChecker
-        self.machine.add_transition(
             trigger='become_asked_to_join',
             source=[
                 UserState.WANTS_CHITCHAT,
@@ -116,6 +110,18 @@ class UserStateMachine(UserModel):
             after=[
                 self._set_partner_id,
             ],
+        )
+        # noinspection PyTypeChecker
+        self.machine.add_transition(
+            trigger='become_asked_to_confirm',
+            source=UserState.WAITING_PARTNER_JOIN,
+            dest=UserState.ASKED_TO_CONFIRM,
+        )
+        # noinspection PyTypeChecker
+        self.machine.add_transition(
+            trigger='wait_partner_confirm',
+            source=UserState.ASKED_TO_JOIN,
+            dest=UserState.WAITING_PARTNER_CONFIRM,
         )
         # noinspection PyTypeChecker
         self.machine.add_transition(
