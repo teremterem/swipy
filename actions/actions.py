@@ -403,7 +403,7 @@ class ActionConfirmWithAsker(ActionCreateRoom):
         await rasa_callbacks.ask_if_ready(current_user.user_id, partner.user_id, user_profile_photo_id)
 
         # noinspection PyUnresolvedReferences
-        current_user.ask_partner(partner.user_id)
+        current_user.wait_for_partner(partner.user_id)
         user_vault.save(current_user)
 
         return [

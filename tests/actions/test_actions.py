@@ -758,7 +758,7 @@ async def test_action_confirm_with_asker(
         SlotSet('swiper_action_result', 'partner_has_been_asked'),
         SlotSet('swiper_error', None),
         SlotSet('swiper_error_trace', None),
-        SlotSet('swiper_state', 'waiting_partner_join'),
+        SlotSet('swiper_state', 'waiting_partner_confirm'),
         SlotSet('partner_id', 'an_asker'),
     ]
     assert dispatcher.messages == [{
@@ -782,7 +782,7 @@ async def test_action_confirm_with_asker(
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
         user_id='unit_test_user',
-        state='waiting_partner_join',
+        state='waiting_partner_confirm',
         partner_id='an_asker',
         newbie=True,
         state_timestamp=1619945501,
