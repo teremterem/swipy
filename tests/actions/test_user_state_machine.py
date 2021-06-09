@@ -70,6 +70,7 @@ def test_catch_all_transitions(
     assert user.partner_id is None  # previous partner is expected to be dropped
 
 
+@pytest.mark.parametrize('initial_newbie_status', [True, False])
 @pytest.mark.parametrize('trigger_name, source_state, destination_state, partner_should_be_updated', [
     ('wait_for_partner', 'new', None, None),
     ('wait_for_partner', 'wants_chitchat', 'waiting_partner_join', True),
@@ -99,7 +100,8 @@ def test_catch_all_transitions(
     ('become_asked', 'confirm_timed_out', 'asked_to_join', True),
     ('become_asked', 'do_not_disturb', None, None),
 ])
-def test_transitions_that_involve_partner(
+def test_more_narrow_transitions(
+        initial_newbie_status: bool,
         source_state: Text,
         trigger_name: Text,
         destination_state: Optional[Text],
@@ -109,6 +111,7 @@ def test_transitions_that_involve_partner(
         user_id='some_user_id',
         state=source_state,
         partner_id='previous_partner_id',
+        newbie=initial_newbie_status,
     )
     assert user.state == source_state
     assert user.partner_id == 'previous_partner_id'
@@ -131,6 +134,11 @@ def test_transitions_that_involve_partner(
         assert user.partner_id == 'new_partner_id'
     else:
         assert user.partner_id == 'previous_partner_id'
+
+    if destination_state == 'roomed':
+        assert user.newbie is False  # those who joined a room at least once stop being newbies
+    else:
+        assert user.newbie == initial_newbie_status
 
 
 # TODO TODO TODO
