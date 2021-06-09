@@ -87,8 +87,20 @@ class UserStateMachine(UserModel):
         )
         # noinspection PyTypeChecker
         self.machine.add_transition(
-            trigger='wait_partner_join',
-            source=UserState.WANTS_CHITCHAT,
+            trigger='become_do_not_disturb',
+            source='*',
+            dest=UserState.DO_NOT_DISTURB,
+            after=[
+                self._drop_partner_id,
+            ],
+        )
+
+        # noinspection PyTypeChecker
+        self.machine.add_transition(
+            trigger='wait_for_partner',
+            source=[
+                UserState.WANTS_CHITCHAT,
+            ],
             dest=UserState.WAITING_PARTNER_JOIN,
             after=[
                 self._set_partner_id,
@@ -96,7 +108,16 @@ class UserStateMachine(UserModel):
         )
         # noinspection PyTypeChecker
         self.machine.add_transition(
-            trigger='become_asked_to_join',
+            trigger='wait_for_partner',
+            source=[
+                UserState.ASKED_TO_JOIN,
+            ],
+            dest=UserState.WAITING_PARTNER_CONFIRM,
+        )
+
+        # noinspection PyTypeChecker
+        self.machine.add_transition(
+            trigger='become_asked',
             source=[
                 UserState.WANTS_CHITCHAT,
                 UserState.OK_TO_CHITCHAT,
@@ -113,16 +134,13 @@ class UserStateMachine(UserModel):
         )
         # noinspection PyTypeChecker
         self.machine.add_transition(
-            trigger='become_asked_to_confirm',
-            source=UserState.WAITING_PARTNER_JOIN,
+            trigger='become_asked',
+            source=[
+                UserState.WAITING_PARTNER_JOIN,
+            ],
             dest=UserState.ASKED_TO_CONFIRM,
         )
-        # noinspection PyTypeChecker
-        self.machine.add_transition(
-            trigger='wait_partner_confirm',
-            source=UserState.ASKED_TO_JOIN,
-            dest=UserState.WAITING_PARTNER_CONFIRM,
-        )
+
         # noinspection PyTypeChecker
         self.machine.add_transition(
             trigger='join_room',
@@ -133,22 +151,42 @@ class UserStateMachine(UserModel):
             dest=UserState.ROOMED,
             after=[
                 self._graduate_from_newbie,
-                self._drop_partner_id,
             ],
+        )
+
+        # noinspection PyTypeChecker
+        self.machine.add_transition(
+            trigger='reject',
+            source=[
+                UserState.ASKED_TO_JOIN,
+            ],
+            dest=UserState.REJECTED_JOIN,
         )
         # noinspection PyTypeChecker
         self.machine.add_transition(
-            trigger='become_do_not_disturb',
-            source='*',
-            dest=UserState.DO_NOT_DISTURB,
-            after=[
-                self._drop_partner_id,
+            trigger='reject',
+            source=[
+                UserState.ASKED_TO_CONFIRM,
             ],
+            dest=UserState.REJECTED_CONFIRM,
         )
-        # TODO reject_join
-        # TODO reject_confirm
-        # TODO time_join_out
-        # TODO time_confirm_out
+
+        # noinspection PyTypeChecker
+        self.machine.add_transition(
+            trigger='time_out',
+            source=[
+                UserState.ASKED_TO_JOIN,
+            ],
+            dest=UserState.JOIN_TIMED_OUT,
+        )
+        # noinspection PyTypeChecker
+        self.machine.add_transition(
+            trigger='time_out',
+            source=[
+                UserState.ASKED_TO_CONFIRM,
+            ],
+            dest=UserState.CONFIRM_TIMED_OUT,
+        )
 
     def is_waiting_for(self, partner_id):
         if not partner_id:
