@@ -285,7 +285,7 @@ class ActionAskToJoin(BaseSwiperAction):
     ) -> List[Dict[Text, Any]]:
         partner_id = tracker.get_slot(rasa_callbacks.PARTNER_ID_SLOT)
         # noinspection PyUnresolvedReferences
-        current_user.become_asked_to_join(partner_id)
+        current_user.become_asked(partner_id)
         user_vault.save(current_user)
 
         date = datetime_now() + datetime.timedelta(seconds=QUESTION_TIMEOUT_SEC)
