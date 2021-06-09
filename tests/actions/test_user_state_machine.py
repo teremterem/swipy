@@ -197,120 +197,6 @@ def test_more_narrow_transitions(
         assert user.newbie == initial_newbie_status
 
 
-# TODO TODO TODO
-# TODO TODO TODO
-# TODO TODO TODO
-
-
-@pytest.mark.parametrize('source_state', all_expected_states)
-def test_wait_for_partner(source_state: Text) -> None:
-    user = UserStateMachine(
-        user_id='some_user_id',
-        state=source_state,
-    )
-    assert user.state == source_state
-    assert user.partner_id is None
-
-    # noinspection PyUnresolvedReferences
-    user.ask_partner('some_partner_id')
-
-    assert user.state == 'waiting_partner_answer'
-    assert user.partner_id == 'some_partner_id'
-
-
-@pytest.mark.parametrize('source_state', [
-    'ok_to_chitchat',
-    'waiting_partner_answer',
-])
-def test_become_asked_to_join(source_state: Text) -> None:
-    user = UserStateMachine(
-        user_id='some_user_id',
-        state=source_state,
-    )
-    assert user.state == source_state
-    assert user.partner_id is None
-
-    # noinspection PyUnresolvedReferences
-    user.become_asked_to_join('asker_id')
-
-    assert user.state == 'asked_to_join'
-    assert user.partner_id == 'asker_id'
-
-
-@pytest.mark.parametrize('wrong_state', [
-    'new',
-    'asked_to_join',
-    'do_not_disturb',
-])
-def test_become_asked_to_join_wrong_state(wrong_state: Text) -> None:
-    user = UserStateMachine(
-        user_id='some_user_id',
-        state=wrong_state,
-        partner_id='some_unrelated_partner_id',
-    )
-
-    assert user.state == wrong_state
-    assert user.partner_id == 'some_unrelated_partner_id'
-
-    with pytest.raises(MachineError):
-        # noinspection PyUnresolvedReferences
-        user.become_asked_to_join('asker_id')
-
-    assert user.state == wrong_state
-    assert user.partner_id == 'some_unrelated_partner_id'
-
-
-@pytest.mark.parametrize('source_state', [
-    'waiting_partner_answer',
-    'asked_to_join',
-])
-@pytest.mark.parametrize('newbie_status', [True, False])
-def test_join_room(source_state: Text, newbie_status: bool) -> None:
-    user = UserStateMachine(
-        user_id='some_user_id',
-        state=source_state,
-        partner_id='asker_id',
-        newbie=newbie_status,
-    )
-
-    assert user.state == source_state
-    assert user.partner_id == 'asker_id'
-    assert user.newbie == newbie_status
-
-    # noinspection PyUnresolvedReferences
-    user.join_room()
-
-    assert user.state == 'ok_to_chitchat'
-    assert user.partner_id is None
-    assert user.newbie is False  # users stop being newbies as soon as they accept their first video chitchat
-
-
-@pytest.mark.parametrize('invalid_source_state', [
-    'new',
-    'ok_to_chitchat',
-    'do_not_disturb',
-])
-def test_join_room_wrong_state(invalid_source_state: Text) -> None:
-    user = UserStateMachine(
-        user_id='some_user_id',
-        state=invalid_source_state,
-        partner_id='some_unrelated_partner_id',
-        newbie=True,
-    )
-
-    assert user.state == invalid_source_state
-    assert user.partner_id == 'some_unrelated_partner_id'
-    assert user.newbie is True
-
-    with pytest.raises(MachineError):
-        # noinspection PyUnresolvedReferences
-        user.join_room()
-
-    assert user.state == invalid_source_state
-    assert user.partner_id == 'some_unrelated_partner_id'
-    assert user.newbie is True
-
-
 @patch('time.time', Mock(return_value=1619945501))
 @pytest.mark.parametrize('source_state', all_expected_states)
 @pytest.mark.parametrize('trigger_name', all_expected_triggers)
@@ -322,7 +208,6 @@ def test_state_timestamp(source_state: Text, trigger_name: Text) -> None:
         user_id='some_user_id',
         state=source_state,
         partner_id='asker_id',
-        newbie=False,
         state_timestamp=source_state_timestamp,
         state_timestamp_str=source_state_timestamp_str,
     )
@@ -334,12 +219,12 @@ def test_state_timestamp(source_state: Text, trigger_name: Text) -> None:
     trigger = getattr(user, trigger_name)
 
     transitions_that_dont_change_state = [
-        ('waiting_partner_answer', 'ask_partner'),
-        ('ok_to_chitchat', 'become_ok_to_chitchat'),
-        ('do_not_disturb', 'become_do_not_disturb'),
+        ('request_chitchat', 'wants_chitchat'),
+        ('become_ok_to_chitchat', 'ok_to_chitchat'),
+        ('become_do_not_disturb', 'do_not_disturb'),
     ]
 
-    if (source_state, trigger_name) in transitions_that_dont_change_state:
+    if (trigger_name, source_state) in transitions_that_dont_change_state:
         # transition is valid but it leads to the same state as before => timestamp should not be changed
         trigger('some_partner_id')
 
