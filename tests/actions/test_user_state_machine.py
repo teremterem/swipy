@@ -121,8 +121,8 @@ expected_more_narrow_transitions = [
     ('reject', 'ok_to_chitchat', None, 'previous_partner_id'),
     ('reject', 'waiting_partner_join', None, 'previous_partner_id'),
     ('reject', 'waiting_partner_confirm', None, 'previous_partner_id'),
-    ('reject', 'asked_to_join', None, 'previous_partner_id'),
-    ('reject', 'asked_to_confirm', None, 'previous_partner_id'),
+    ('reject', 'asked_to_join', 'rejected_join', 'previous_partner_id'),
+    ('reject', 'asked_to_confirm', 'rejected_confirm', 'previous_partner_id'),
     ('reject', 'roomed', None, 'previous_partner_id'),
     ('reject', 'rejected_join', None, 'previous_partner_id'),
     ('reject', 'rejected_confirm', None, 'previous_partner_id'),
@@ -135,8 +135,8 @@ expected_more_narrow_transitions = [
     ('time_out', 'ok_to_chitchat', None, 'previous_partner_id'),
     ('time_out', 'waiting_partner_join', None, 'previous_partner_id'),
     ('time_out', 'waiting_partner_confirm', None, 'previous_partner_id'),
-    ('time_out', 'asked_to_join', None, 'previous_partner_id'),
-    ('time_out', 'asked_to_confirm', None, 'previous_partner_id'),
+    ('time_out', 'asked_to_join', 'join_timed_out', 'previous_partner_id'),
+    ('time_out', 'asked_to_confirm', 'confirm_timed_out', 'previous_partner_id'),
     ('time_out', 'roomed', None, 'previous_partner_id'),
     ('time_out', 'rejected_join', None, 'previous_partner_id'),
     ('time_out', 'rejected_confirm', None, 'previous_partner_id'),
@@ -148,6 +148,7 @@ expected_more_narrow_transitions = [
 
 def test_expected_more_narrow_transition_list() -> None:
     # make sure we are testing all the transition/initial_state combinations that exist
+    # TODO oleksandr: don't just check the total number, test for presence of all the actual permutations
     assert len(expected_more_narrow_transitions) == \
            len(all_expected_states) * (len(all_expected_triggers) - len(expected_catch_all_transitions))
 
