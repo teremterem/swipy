@@ -9,18 +9,29 @@ from actions.user_state_machine import UserStateMachine
 
 all_expected_states = [
     'new',
-    'waiting_partner_answer',
+    'wants_chitchat',
     'ok_to_chitchat',
+    'waiting_partner_join',
+    'waiting_partner_confirm',
     'asked_to_join',
+    'asked_to_confirm',
+    'roomed',
+    'rejected_join',
+    'rejected_confirm',
+    'join_timed_out',
+    'confirm_timed_out',
     'do_not_disturb',
 ]
 
 all_expected_triggers = [
-    'ask_partner',
+    'request_chitchat',
     'become_ok_to_chitchat',
-    'become_asked_to_join',
-    'join_room',
     'become_do_not_disturb',
+    'wait_for_partner',
+    'become_asked',
+    'join_room',
+    'reject',
+    'time_out',
 ]
 
 
@@ -30,6 +41,22 @@ def test_all_expected_states() -> None:
 
 def test_all_expected_triggers() -> None:
     assert UserStateMachine('some_user_id').machine.get_triggers(*all_expected_states) == all_expected_triggers
+
+
+@pytest.mark.parametrize('source_state', all_expected_states)
+def test_request_chitchat(source_state: Text) -> None:
+    user = UserStateMachine(
+        user_id='some_user_id',
+        state=source_state,
+    )
+    assert user.state == source_state
+    assert user.partner_id is None
+
+    # noinspection PyUnresolvedReferences
+    user.request_chitchat('some_partner_id')  # this parameter is expected to be ignored
+
+    assert user.state == 'wants_chitchat'
+    assert user.partner_id is None
 
 
 @pytest.mark.parametrize('source_state', all_expected_states)

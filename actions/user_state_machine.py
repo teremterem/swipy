@@ -76,6 +76,7 @@ class UserStateMachine(UserModel):
                 self._drop_partner_id,
             ],
         )
+
         # noinspection PyTypeChecker
         self.machine.add_transition(
             trigger='become_ok_to_chitchat',
@@ -85,6 +86,7 @@ class UserStateMachine(UserModel):
                 self._drop_partner_id,
             ],
         )
+
         # noinspection PyTypeChecker
         self.machine.add_transition(
             trigger='become_do_not_disturb',
