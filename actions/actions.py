@@ -371,7 +371,7 @@ class ActionCreateRoom(BaseSwiperAction):
         )
 
         # noinspection PyUnresolvedReferences
-        current_user.join_room()
+        current_user.join_room(partner.user_id)
         user_vault.save(current_user)
 
         return [
@@ -425,8 +425,9 @@ class ActionJoinRoom(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
+        partner_id = tracker.get_slot(rasa_callbacks.PARTNER_ID_SLOT)
         # noinspection PyUnresolvedReferences
-        current_user.join_room()
+        current_user.join_room(partner_id)
         user_vault.save(current_user)
 
         return [

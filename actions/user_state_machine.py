@@ -165,6 +165,10 @@ class UserStateMachine(UserModel):
                 UserState.WAITING_PARTNER_CONFIRM,
             ],
             dest=UserState.ROOMED,
+            before=[
+                self._assert_partner_id_arg_not_empty,
+                self._assert_partner_id_arg_same,
+            ],
             after=[
                 self._graduate_from_newbie,
             ],

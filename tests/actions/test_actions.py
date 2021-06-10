@@ -603,15 +603,14 @@ async def test_action_ask_if_ready(
     ))
 
     tracker.add_slots([
-        # TODO oleksandr: validate in the action if the asker is the same
-        SlotSet('partner_id', 'a_different_asker'),
+        SlotSet('partner_id', 'an_asker'),
     ])
 
     actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == [
         {
             'date_time': '2021-05-25T00:02:00',
-            'entities': {'partner_id_to_let_go': 'a_different_asker'},
+            'entities': {'partner_id_to_let_go': 'an_asker'},
             'event': 'reminder',
             'intent': 'EXTERNAL_let_partner_go_not_ready',
             'kill_on_user_msg': False,
@@ -946,8 +945,7 @@ async def test_action_join_room(
     ))
 
     tracker.add_slots([
-        # TODO oleksandr: validate in the action if the asker is the same
-        SlotSet('partner_id', 'different_partner_that_accepted'),
+        SlotSet('partner_id', 'partner_that_accepted'),
     ])
 
     actual_events = await action.run(dispatcher, tracker, domain)
