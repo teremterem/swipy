@@ -1,15 +1,18 @@
 import datetime
+import re
 import traceback
 import uuid
 from dataclasses import asdict
-from typing import Dict, Text, Any, List, Callable, Tuple
+from typing import Dict, Text, Any, List, Callable, Tuple, Optional
 from unittest.mock import patch, AsyncMock, MagicMock, call, Mock
 
 import pytest
 from aioresponses import aioresponses, CallbackResult
+from aioresponses.core import RequestCall
 from rasa_sdk import Tracker
 from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType, UserUtteranceReverted
 from rasa_sdk.executor import CollectingDispatcher
+from yarl import URL
 
 from actions import actions, daily_co
 from actions.user_state_machine import UserStateMachine, UserState
@@ -1042,7 +1045,7 @@ async def test_action_register_user_not_new(
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('create_user_state_machine_table')
 @patch('time.time', Mock(return_value=1619945501))
-@pytest.mark.parametrize('current_user, asker, find_partner_call_expected', [
+@pytest.mark.parametrize('current_user, asker, expected_rasa_callback_name', [
     (
             UserStateMachine(
                 user_id='unit_test_user',
@@ -1052,11 +1055,11 @@ async def test_action_register_user_not_new(
             ),
             UserStateMachine(
                 user_id='the_asker',
-                state='ok_to_chitchat',  # the asker isn't waiting for the current user anymore
+                state='ok_to_chitchat',  # 'the_asker' isn't waiting for the current user anymore
                 partner_id=None,
                 newbie=True,
             ),
-            False,  # find_partner should not be called for "the asker"
+            None,  # 'the_asker' should not be touched
     ),
     (
             UserStateMachine(
@@ -1068,10 +1071,25 @@ async def test_action_register_user_not_new(
             UserStateMachine(
                 user_id='the_asker',
                 state='waiting_partner_join',
-                partner_id='someone_else',  # the asker is already waiting for someone else at this point
+                partner_id='someone_else',  # 'the_asker' is already waiting for someone else at this point
                 newbie=True,
             ),
-            False,  # find_partner should not be called for "the asker"
+            None,  # 'the_asker' should not be touched
+    ),
+    (
+            UserStateMachine(
+                user_id='unit_test_user',
+                state='asked_to_join',
+                partner_id='the_asker',
+                newbie=True,
+            ),
+            UserStateMachine(
+                user_id='the_asker',
+                state='waiting_partner_confirm',
+                partner_id='someone_else',  # 'the_asker' is already waiting for someone else at this point
+                newbie=True,
+            ),
+            None,  # 'the_asker' should not be touched
     ),
     (
             UserStateMachine(
@@ -1086,7 +1104,7 @@ async def test_action_register_user_not_new(
                 partner_id='unit_test_user',
                 newbie=True,
             ),
-            False,  # find_partner should not be called for "the asker"
+            None,  # 'the_asker' should not be touched
     ),
     (
             UserStateMachine(
@@ -1101,7 +1119,22 @@ async def test_action_register_user_not_new(
                 partner_id='unit_test_user',
                 newbie=True,
             ),
-            True,  # the asker is actually waiting for the current user to answer - find_partner should be called
+            'find_partner',  # 'the_asker' was waiting for the current user to join -> let them go
+    ),
+    (
+            UserStateMachine(
+                user_id='unit_test_user',
+                state='asked_to_join',
+                partner_id='the_asker',
+                newbie=True,
+            ),
+            UserStateMachine(
+                user_id='the_asker',
+                state='waiting_partner_confirm',
+                partner_id='unit_test_user',
+                newbie=True,
+            ),
+            'report_unavailable',  # 'the_asker' was waiting for the current user to confirm -> let them go
     ),
 ])
 async def test_action_do_not_disturb(
@@ -1109,19 +1142,12 @@ async def test_action_do_not_disturb(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
-        rasa_callbacks_expected_call_builder: Callable[[Text, Text, Dict[Text, Any]], Tuple[Text, call]],
         external_intent_response: Dict[Text, Any],
         current_user: UserStateMachine,
         asker: UserStateMachine,
-        find_partner_call_expected: bool,
+        expected_rasa_callback_name: Optional[Text],
 ) -> None:
-    expected_rasa_url, expected_rasa_call = rasa_callbacks_expected_call_builder(
-        'the_asker',
-        'EXTERNAL_find_partner',
-        {},
-    )
-    mock_rasa_callbacks = AsyncMock(return_value=CallbackResult(payload=external_intent_response))
-    mock_aioresponses.post(expected_rasa_url, callback=mock_rasa_callbacks)
+    mock_aioresponses.post(re.compile(r'.*'), payload=external_intent_response)
 
     action = actions.ActionDoNotDisturb()
     assert action.name() == 'action_do_not_disturb'
@@ -1138,10 +1164,42 @@ async def test_action_do_not_disturb(
     ]
     assert dispatcher.messages == []
 
-    if find_partner_call_expected:
-        assert mock_rasa_callbacks.mock_calls == [expected_rasa_call]
+    if expected_rasa_callback_name == 'find_partner':
+        # noinspection HttpUrlsUsage
+        assert mock_aioresponses.requests == {
+            ('POST', URL(
+                'http://rasa-unittest:5005/conversations/the_asker/trigger_intent'
+                '?output_channel=telegram&token=rasaunittesttoken'
+            )): [
+                RequestCall(
+                    args=(),
+                    kwargs={
+                        'data': None,
+                        'params': {'output_channel': 'telegram', 'token': 'rasaunittesttoken'},
+                        'json': {'name': 'EXTERNAL_find_partner', 'entities': {}},
+                    },
+                ),
+            ],
+        }
+    elif expected_rasa_callback_name == 'report_unavailable':
+        # noinspection HttpUrlsUsage
+        assert mock_aioresponses.requests == {
+            ('POST', URL(
+                'http://rasa-unittest:5005/conversations/the_asker/trigger_intent'
+                '?output_channel=telegram&token=rasaunittesttoken'
+            )): [
+                RequestCall(
+                    args=(),
+                    kwargs={
+                        'data': None,
+                        'params': {'output_channel': 'telegram', 'token': 'rasaunittesttoken'},
+                        'json': {'name': 'EXTERNAL_report_unavailable', 'entities': {}},
+                    },
+                ),
+            ],
+        }
     else:
-        mock_rasa_callbacks.assert_not_called()
+        assert mock_aioresponses.requests == {}
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
@@ -1158,7 +1216,7 @@ async def test_action_do_not_disturb(
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('create_user_state_machine_table')
 @patch('time.time', Mock(return_value=1619945501))
-async def test_action_do_not_disturb_not_ready(
+async def test_action_reject_invitation(
         mock_aioresponses: aioresponses,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
@@ -1174,8 +1232,8 @@ async def test_action_do_not_disturb_not_ready(
     mock_rasa_callbacks = AsyncMock(return_value=CallbackResult(payload=external_intent_response))
     mock_aioresponses.post(expected_rasa_url, callback=mock_rasa_callbacks)
 
-    action = actions.ActionDoNotDisturbNotReady()
-    assert action.name() == 'action_do_not_disturb_not_ready'
+    action = actions.ActionRejectInvitation()
+    assert action.name() == 'action_reject_invitation'
 
     user_vault = UserVault()
     user_vault.save(UserStateMachine(
