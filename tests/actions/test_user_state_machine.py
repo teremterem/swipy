@@ -98,8 +98,8 @@ expected_more_narrow_transitions = [
     ('become_asked', 'roomed', 'asked_to_join', 'previous_partner_id', 'new_partner_id'),
     ('become_asked', 'rejected_join', 'asked_to_join', 'previous_partner_id', 'new_partner_id'),
     ('become_asked', 'rejected_confirm', 'asked_to_join', 'previous_partner_id', 'new_partner_id'),
-    ('become_asked', 'join_timed_out', 'asked_to_join', 'previous_partner_id', 'new_partner_id'),
-    ('become_asked', 'confirm_timed_out', 'asked_to_join', 'previous_partner_id', 'new_partner_id'),
+    ('become_asked', 'join_timed_out', None, 'previous_partner_id', 'previous_partner_id'),
+    ('become_asked', 'confirm_timed_out', None, 'previous_partner_id', 'previous_partner_id'),
     ('become_asked', 'do_not_disturb', None, 'previous_partner_id', 'previous_partner_id'),
 
     ('join_room', 'new', None, 'previous_partner_id', 'previous_partner_id'),

@@ -1,10 +1,14 @@
+import os
 from dataclasses import dataclass
 from datetime import datetime
+from distutils.util import strtobool
 from typing import Text, Optional
 
 from transitions import Machine, EventData
 
 from actions.utils import current_timestamp_int
+
+TIMED_OUT_ARE_OK_TO_CHITCHAT = strtobool(os.getenv('TIMED_OUT_ARE_OK_TO_CHITCHAT', 'no'))
 
 
 class UserState:
@@ -37,15 +41,19 @@ class UserState:
         CONFIRM_TIMED_OUT,
         DO_NOT_DISTURB,
     ]
+
     can_be_offered_chitchat_states = [
         WANTS_CHITCHAT,
         OK_TO_CHITCHAT,
         ROOMED,
         REJECTED_JOIN,
         REJECTED_CONFIRM,
-        JOIN_TIMED_OUT,
-        CONFIRM_TIMED_OUT,
     ]
+    if TIMED_OUT_ARE_OK_TO_CHITCHAT:
+        can_be_offered_chitchat_states.extend([
+            JOIN_TIMED_OUT,
+            CONFIRM_TIMED_OUT,
+        ])
 
 
 @dataclass
@@ -136,18 +144,6 @@ class UserStateMachine(UserModel):
         # noinspection PyTypeChecker
         self.machine.add_transition(
             trigger='become_asked',
-            source=UserState.can_be_offered_chitchat_states,
-            dest=UserState.ASKED_TO_JOIN,
-            before=[
-                self._assert_partner_id_arg_not_empty,
-            ],
-            after=[
-                self._set_partner_id,
-            ],
-        )
-        # noinspection PyTypeChecker
-        self.machine.add_transition(
-            trigger='become_asked',
             source=[
                 UserState.WAITING_PARTNER_JOIN,
             ],
@@ -155,6 +151,18 @@ class UserStateMachine(UserModel):
             before=[
                 self._assert_partner_id_arg_not_empty,
                 self._assert_partner_id_arg_same,
+            ],
+        )
+        # noinspection PyTypeChecker
+        self.machine.add_transition(
+            trigger='become_asked',
+            source=UserState.can_be_offered_chitchat_states,
+            dest=UserState.ASKED_TO_JOIN,
+            before=[
+                self._assert_partner_id_arg_not_empty,
+            ],
+            after=[
+                self._set_partner_id,
             ],
         )
 
