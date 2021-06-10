@@ -121,15 +121,15 @@ rules:
   - intent: EXTERNAL_join_room_ready
   - action: utter_partner_ready_room_url
   - action: action_join_room
+- rule: user asks the bot if the bot is a bot
+  steps:
+  - intent: bot_challenge
+  - action: utter_iamabot
 - rule: user asks not to bother them
   steps:
   - intent: dont_bother_me
   - action: utter_hope_to_see_you_later
   - action: action_do_not_disturb
-- rule: user asks the bot if the bot is a bot
-  steps:
-  - intent: bot_challenge
-  - action: utter_iamabot
 - rule: user asks for chitchat directly
   steps:
   - intent: want_chitchat
