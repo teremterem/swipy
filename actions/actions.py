@@ -78,16 +78,6 @@ class BaseSwiperAction(Action, ABC):
                 user_vault.get_user(tracker.sender_id),
                 user_vault,
             ))
-            events.extend([
-                SlotSet(
-                    key=SWIPER_ERROR_SLOT,
-                    value=None,
-                ),
-                SlotSet(
-                    key=SWIPER_ERROR_TRACE_SLOT,
-                    value=None,
-                ),
-            ])
 
         except Exception as e:
             logger.exception(self.name())
@@ -145,6 +135,8 @@ class ActionSessionStart(BaseSwiperAction):
             if slot_key not in [
                 SWIPER_STATE_SLOT,
                 rasa_callbacks.PARTNER_ID_SLOT,
+                SWIPER_ERROR_SLOT,
+                SWIPER_ERROR_TRACE_SLOT,
             ]
         ]
 
@@ -159,6 +151,16 @@ class ActionSessionStart(BaseSwiperAction):
 
         if domain['session_config']['carry_over_slots_to_new_session']:
             events.extend(self._slot_set_events_from_tracker(tracker))
+            events.extend([
+                SlotSet(
+                    key=SWIPER_ERROR_SLOT,
+                    value=None,
+                ),
+                SlotSet(
+                    key=SWIPER_ERROR_TRACE_SLOT,
+                    value=None,
+                ),
+            ])
 
         return events
 
