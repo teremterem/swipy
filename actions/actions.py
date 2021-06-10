@@ -487,11 +487,13 @@ class ActionDoNotDisturb(BaseSwiperAction):
         if initial_partner_id:
             partner = user_vault.get_user(initial_partner_id)
 
-            if partner.state == UserState.WAITING_PARTNER_JOIN:
-                # force the original sender of the declined invitation to "move along" in their partner search
-                await rasa_callbacks.find_partner(current_user.user_id, partner.user_id)
-            elif partner.state == UserState.WAITING_PARTNER_CONFIRM:
-                await rasa_callbacks.report_unavailable(current_user.user_id, partner.user_id)
+            # TODO oleksandr: refactor and reuse UserStateMachine.is_waiting_for() somehow ?
+            if partner.partner_id == current_user.user_id:
+                if partner.state == UserState.WAITING_PARTNER_JOIN:
+                    # force the original sender of the declined invitation to "move along" in their partner search
+                    await rasa_callbacks.find_partner(current_user.user_id, partner.user_id)
+                elif partner.state == UserState.WAITING_PARTNER_CONFIRM:
+                    await rasa_callbacks.report_unavailable(current_user.user_id, partner.user_id)
 
         return [
             SlotSet(
