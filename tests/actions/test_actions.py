@@ -1216,6 +1216,50 @@ async def test_action_do_not_disturb(
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('create_user_state_machine_table')
 @patch('time.time', Mock(return_value=1619945501))
+@pytest.mark.parametrize('source_swiper_state, destination_swiper_state', [
+    ('asked_to_join', 'rejected_join'),
+    ('asked_to_confirm', 'rejected_confirm'),
+])
+async def test_action_reject_invitation(
+        tracker: Tracker,
+        dispatcher: CollectingDispatcher,
+        domain: Dict[Text, Any],
+        source_swiper_state: Text,
+        destination_swiper_state: Text,
+) -> None:
+    user_vault = UserVault()
+    user_vault.save(UserStateMachine(
+        user_id='unit_test_user',
+        state=source_swiper_state,
+        partner_id='',
+        newbie=True,
+    ))
+
+    action = actions.ActionRejectInvitation()
+    assert action.name() == 'action_reject_invitation'
+
+    actual_events = await action.run(dispatcher, tracker, domain)
+    assert actual_events == [
+        SlotSet('swiper_action_result', 'success'),
+        SlotSet('swiper_state', destination_swiper_state),
+        SlotSet('partner_id', ''),
+    ]
+    assert dispatcher.messages == []
+
+    user_vault = UserVault()  # create new instance to avoid hitting cache
+    assert user_vault.get_user('unit_test_user') == UserStateMachine(
+        user_id='unit_test_user',
+        state=destination_swiper_state,
+        partner_id=None,
+        newbie=True,
+        state_timestamp=1619945501,
+        state_timestamp_str='2021-05-02 08:51:41 Z',
+    )
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures('create_user_state_machine_table')
+@patch('time.time', Mock(return_value=1619945501))
 @pytest.mark.parametrize('current_user, asker, find_partner_call_expected', [
     (
             UserStateMachine(
