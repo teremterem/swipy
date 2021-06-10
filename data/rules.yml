@@ -23,11 +23,6 @@ rules:
   - intent: affirm
   - action: utter_ok_arranging_chitchat
   - action: action_find_partner
-- rule: user asks for chitchat directly
-  steps:
-  - intent: want_chitchat
-  - action: utter_ok_arranging_chitchat
-  - action: action_find_partner
 - rule: someone with photo asks the user to join a video chat
   condition:
   - slot_was_set:
@@ -57,14 +52,10 @@ rules:
 - rule: current user does not respond to invitation, hence reminder to let partner go is triggered
   steps:
   - intent: EXTERNAL_let_partner_go
-    entities:
-      - partner_id_to_let_go
   - action: action_let_partner_go
 - rule: current user does not respond to readiness confirmation, hence reminder to let partner go is triggered
   steps:
   - intent: EXTERNAL_let_partner_go_not_ready
-    entities:
-      - partner_id_to_let_go
   - action: action_let_partner_go_not_ready
 - rule: someone else wants to chat and the user aggrees to join
   steps:
@@ -139,3 +130,8 @@ rules:
   steps:
   - intent: bot_challenge
   - action: utter_iamabot
+- rule: user asks for chitchat directly
+  steps:
+  - intent: want_chitchat
+  - action: utter_ok_arranging_chitchat
+  - action: action_find_partner
