@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Text, Optional
 
-from transitions import Machine
+from transitions import Machine, EventData
 
 from actions.utils import current_timestamp_int
 
@@ -104,6 +104,9 @@ class UserStateMachine(UserModel):
                 UserState.WANTS_CHITCHAT,
             ],
             dest=UserState.WAITING_PARTNER_JOIN,
+            before=[
+                self._assert_partner_id_arg_not_empty,
+            ],
             after=[
                 self._set_partner_id,
             ],
@@ -115,6 +118,10 @@ class UserStateMachine(UserModel):
                 UserState.ASKED_TO_JOIN,
             ],
             dest=UserState.WAITING_PARTNER_CONFIRM,
+            before=[
+                self._assert_partner_id_arg_not_empty,
+                self._assert_partner_id_arg_same,
+            ],
         )
 
         # noinspection PyTypeChecker
@@ -130,6 +137,9 @@ class UserStateMachine(UserModel):
                 UserState.CONFIRM_TIMED_OUT,
             ],
             dest=UserState.ASKED_TO_JOIN,
+            before=[
+                self._assert_partner_id_arg_not_empty,
+            ],
             after=[
                 self._set_partner_id,
             ],
@@ -141,6 +151,10 @@ class UserStateMachine(UserModel):
                 UserState.WAITING_PARTNER_JOIN,
             ],
             dest=UserState.ASKED_TO_CONFIRM,
+            before=[
+                self._assert_partner_id_arg_not_empty,
+                self._assert_partner_id_arg_same,
+            ],
         )
 
         # noinspection PyTypeChecker
@@ -190,7 +204,7 @@ class UserStateMachine(UserModel):
             dest=UserState.CONFIRM_TIMED_OUT,
         )
 
-    def is_waiting_for(self, partner_id):
+    def is_waiting_for(self, partner_id: Optional[Text]):
         if not partner_id:
             return False
 
@@ -199,19 +213,32 @@ class UserStateMachine(UserModel):
             UserState.WAITING_PARTNER_CONFIRM,
         )
 
-    def _set_partner_id(self, event) -> None:
+    @staticmethod
+    def _assert_partner_id_arg_not_empty(event: EventData) -> None:
+        if not event.args or not event.args[0]:
+            raise ValueError('no or empty partner_id was passed')
+
+    def _assert_partner_id_arg_same(self, event: EventData) -> None:
+        partner_id = event.args[0]
+        if self.partner_id != partner_id:
+            raise ValueError(
+                f"partner_id that was passed ({repr(partner_id)}) "
+                f"differs from partner_id that was set before ({repr(self.partner_id)})"
+            )
+
+    def _set_partner_id(self, event: EventData) -> None:
         self.partner_id = event.args[0]
 
     # noinspection PyUnusedLocal
-    def _drop_partner_id(self, event) -> None:
+    def _drop_partner_id(self, event: EventData) -> None:
         self.partner_id = None
 
     # noinspection PyUnusedLocal
-    def _graduate_from_newbie(self, event) -> None:
+    def _graduate_from_newbie(self, event: EventData) -> None:
         self.newbie = False
 
     # noinspection PyUnusedLocal
-    def _update_state_timestamp(self, event) -> None:
+    def _update_state_timestamp(self, event: EventData) -> None:
         if event.transition.source == event.transition.dest:
             # state hasn't changed => no need to update timestamp
             return
