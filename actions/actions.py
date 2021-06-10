@@ -468,10 +468,9 @@ class ActionDoNotDisturb(BaseSwiperAction):
     def name(self) -> Text:
         return 'action_do_not_disturb'
 
-    @staticmethod
-    async def ping_partner(current_user: UserStateMachine, partner: UserStateMachine) -> None:
-        # force the original sender of the declined invitation to "move along" in their partner search
-        await rasa_callbacks.find_partner(current_user.user_id, partner.user_id)
+    def update_current_user(self, current_user: UserStateMachine):
+        # noinspection PyUnresolvedReferences
+        current_user.become_do_not_disturb()
 
     async def swipy_run(
             self, dispatcher: CollectingDispatcher,
@@ -482,14 +481,17 @@ class ActionDoNotDisturb(BaseSwiperAction):
     ) -> List[Dict[Text, Any]]:
         initial_partner_id = current_user.partner_id
 
-        # noinspection PyUnresolvedReferences
-        current_user.become_do_not_disturb()
+        self.update_current_user(current_user)
         user_vault.save(current_user)
 
         if initial_partner_id:
             partner = user_vault.get_user(initial_partner_id)
-            if partner.is_waiting_for(current_user.user_id):
-                await self.ping_partner(current_user, partner)
+
+            if partner.state == UserState.WAITING_PARTNER_JOIN:
+                # force the original sender of the declined invitation to "move along" in their partner search
+                await rasa_callbacks.find_partner(current_user.user_id, partner.user_id)
+            elif partner.state == UserState.WAITING_PARTNER_CONFIRM:
+                await rasa_callbacks.report_unavailable(current_user.user_id, partner.user_id)
 
         return [
             SlotSet(
@@ -499,21 +501,20 @@ class ActionDoNotDisturb(BaseSwiperAction):
         ]
 
 
-class ActionDoNotDisturbNotReady(ActionDoNotDisturb):
+class ActionRejectInvitation(ActionDoNotDisturb):
     def name(self) -> Text:
-        return 'action_do_not_disturb_not_ready'
+        return 'action_reject_invitation'
 
-    @staticmethod
-    async def ping_partner(current_user: UserStateMachine, partner: UserStateMachine) -> None:
-        await rasa_callbacks.report_unavailable(current_user.user_id, partner.user_id)
+    def update_current_user(self, current_user: UserStateMachine):
+        # noinspection PyUnresolvedReferences
+        current_user.reject()
 
 
 class ActionLetPartnerGo(BaseSwiperAction):
     def name(self) -> Text:
         return 'action_let_partner_go'
 
-    @staticmethod
-    async def ping_partner(current_user: UserStateMachine, partner: UserStateMachine) -> None:
+    async def ping_partner(self, current_user: UserStateMachine, partner: UserStateMachine) -> None:
         # force the original sender of the timed out invitation to "move along" in their partner search
         await rasa_callbacks.find_partner(current_user.user_id, partner.user_id)
 
@@ -547,6 +548,5 @@ class ActionLetPartnerGoNotReady(ActionLetPartnerGo):
     def name(self) -> Text:
         return 'action_let_partner_go_not_ready'
 
-    @staticmethod
-    async def ping_partner(current_user: UserStateMachine, partner: UserStateMachine) -> None:
+    async def ping_partner(self, current_user: UserStateMachine, partner: UserStateMachine) -> None:
         await rasa_callbacks.report_unavailable(current_user.user_id, partner.user_id)

@@ -173,7 +173,7 @@ actions:
 - action_join_room
 - action_become_ok_to_chitchat
 - action_do_not_disturb
-- action_do_not_disturb_not_ready
+- action_reject_invitation
 - action_let_partner_go
 - action_let_partner_go_not_ready
 forms: {}
