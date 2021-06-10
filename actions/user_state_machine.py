@@ -6,7 +6,7 @@ from typing import Text, Optional
 
 from transitions import Machine, EventData
 
-from actions.utils import current_timestamp_int
+from actions.utils import current_timestamp_int, SwiperStateMachineError
 
 TIMED_OUT_ARE_OK_TO_CHITCHAT = strtobool(os.getenv('TIMED_OUT_ARE_OK_TO_CHITCHAT', 'no'))
 
@@ -232,12 +232,12 @@ class UserStateMachine(UserModel):
     @staticmethod
     def _assert_partner_id_arg_not_empty(event: EventData) -> None:
         if not event.args or not event.args[0]:
-            raise ValueError('no or empty partner_id was passed')
+            raise SwiperStateMachineError('no or empty partner_id was passed')
 
     def _assert_partner_id_arg_same(self, event: EventData) -> None:
         partner_id = event.args[0]
         if self.partner_id != partner_id:
-            raise ValueError(
+            raise SwiperStateMachineError(
                 f"partner_id that was passed ({repr(partner_id)}) "
                 f"differs from partner_id that was set before ({repr(self.partner_id)})"
             )

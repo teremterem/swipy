@@ -24,6 +24,10 @@ class InvalidSwiperStateError(SwiperError):
     ...
 
 
+class SwiperStateMachineError(SwiperError):
+    ...
+
+
 class SwiperExternalCallError(SwiperError):
     ...
 
