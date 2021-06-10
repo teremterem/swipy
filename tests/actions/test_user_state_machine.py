@@ -207,7 +207,7 @@ def test_state_timestamp(source_state: Text, trigger_name: Text) -> None:
     user = UserStateMachine(
         user_id='some_user_id',
         state=source_state,
-        partner_id='asker_id',
+        partner_id='some_partner_id',
         state_timestamp=source_state_timestamp,
         state_timestamp_str=source_state_timestamp_str,
     )
