@@ -1250,7 +1250,7 @@ async def test_action_reject_invitation(
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
         user_id='unit_test_user',
         state=destination_swiper_state,
-        partner_id=None,
+        partner_id='',
         newbie=True,
         state_timestamp=1619945501,
         state_timestamp_str='2021-05-02 08:51:41 Z',
