@@ -176,9 +176,9 @@ class ActionSessionStart(BaseSwiperAction):
         return events
 
 
-class ActionRegisterUser(BaseSwiperAction):
+class ActionOfferChitchat(BaseSwiperAction):
     def name(self) -> Text:
-        return 'action_register_user'
+        return 'action_offer_chitchat'
 
     async def swipy_run(
             self, dispatcher: CollectingDispatcher,
@@ -190,6 +190,13 @@ class ActionRegisterUser(BaseSwiperAction):
         if GREETING_MAKES_USER_OK_TO_CHITCHAT:
             if current_user.state in (
                     UserState.NEW,
+                    # UserState.WAITING_PARTNER_JOIN,
+                    # UserState.WAITING_PARTNER_CONFIRM,
+                    # UserState.ASKED_TO_JOIN,
+                    # UserState.ASKED_TO_CONFIRM,
+                    # UserState.ROOMED,
+                    UserState.REJECTED_JOIN,  # TODO oleksandr: are you sure about this ?
+                    UserState.REJECTED_CONFIRM,  # TODO oleksandr: are you sure about this ?
                     UserState.JOIN_TIMED_OUT,
                     UserState.CONFIRM_TIMED_OUT,
                     UserState.DO_NOT_DISTURB,
@@ -197,6 +204,12 @@ class ActionRegisterUser(BaseSwiperAction):
                 # noinspection PyUnresolvedReferences
                 current_user.become_ok_to_chitchat()
                 user_vault.save(current_user)
+
+        latest_intent = tracker.get_intent_of_latest_message()
+        if latest_intent == 'how_it_works':
+            dispatcher.utter_message(response='utter_how_it_works')
+        else:  # it is either 'greet' or 'start'
+            dispatcher.utter_message(response='utter_greet_offer_chitchat')
 
         return [
             SlotSet(
@@ -446,9 +459,9 @@ class ActionJoinRoom(BaseSwiperAction):
         ]
 
 
-class ActionBecomeOkToChitchat(BaseSwiperAction):
+class ActionRequestChitchat(BaseSwiperAction):
     def name(self) -> Text:
-        return 'action_become_ok_to_chitchat'
+        return 'action_request_chitchat'
 
     async def swipy_run(
             self, dispatcher: CollectingDispatcher,
@@ -458,7 +471,7 @@ class ActionBecomeOkToChitchat(BaseSwiperAction):
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
         # noinspection PyUnresolvedReferences
-        current_user.become_ok_to_chitchat()
+        current_user.request_chitchat()
         user_vault.save(current_user)
 
         return [
