@@ -23,63 +23,24 @@ rules:
   - intent: affirm
   - action: utter_ok_arranging_chitchat
   - action: action_find_partner
-- rule: someone with photo asks the user to join a video chat
-  condition:
-  - slot_was_set:
-    - partner_photo_file_id
+- rule: someone asks the user to join/confirm a video chat
   steps:
   - intent: EXTERNAL_ask_to_join
-  - action: utter_someone_wants_to_chat_photo
   - action: action_ask_to_join
-- rule: someone without photo asks the user to join a video chat
-  steps:
-  - intent: EXTERNAL_ask_to_join
-  - action: utter_someone_wants_to_chat
-  - action: action_ask_to_join
-- rule: someone with photo checks if the user is ready for the call too
-  condition:
-  - slot_was_set:
-    - partner_photo_file_id
-  steps:
-  - intent: EXTERNAL_ask_if_ready
-  - action: utter_found_someone_check_ready_photo
-  - action: action_ask_if_ready
-- rule: someone without photo checks if the user is ready for the call too
-  steps:
-  - intent: EXTERNAL_ask_if_ready
-  - action: utter_found_someone_check_ready
-  - action: action_ask_if_ready
 - rule: current user does not respond to invitation, hence reminder to let partner go is triggered
   steps:
   - intent: EXTERNAL_let_partner_go
   - action: action_let_partner_go
-- rule: current user does not respond to readiness confirmation, hence reminder to let partner go is triggered
-  steps:
-  - intent: EXTERNAL_let_partner_go_not_ready
-  - action: action_let_partner_go
-- rule: someone else wants to chat and the user aggrees to join
+- rule: the user aggrees to join the call
   steps:
   - action: action_ask_to_join
-  - or:
-    - intent: affirm
-    - intent: want_chitchat
-  - action: action_confirm_with_asker
-- rule: someone else wants to chat but the user refuses to join
-  steps:
-  - action: action_ask_to_join
-  - intent: deny
-  - action: utter_declined
-  - action: action_reject_invitation
-- rule: user is asked if still ready for the call and confirms
-  steps:
-  - action: action_ask_if_ready
   - or:
     - intent: affirm
     - intent: want_chitchat
   - action: action_create_room
-- rule: user is asked if still ready for the call but rejects
+- rule: the user refuses to join the call
   steps:
-  - action: action_ask_if_ready
+  - action: action_ask_to_join
   - intent: deny
   - action: utter_declined
   - action: action_reject_invitation
