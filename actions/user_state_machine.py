@@ -22,7 +22,7 @@ class UserState:
     CONFIRM_TIMED_OUT = 'confirm_timed_out'
     DO_NOT_DISTURB = 'do_not_disturb'
 
-    all = [
+    all_states = [
         NEW,
         WANTS_CHITCHAT,
         OK_TO_CHITCHAT,
@@ -36,6 +36,15 @@ class UserState:
         JOIN_TIMED_OUT,
         CONFIRM_TIMED_OUT,
         DO_NOT_DISTURB,
+    ]
+    can_be_offered_chitchat_states = [
+        WANTS_CHITCHAT,
+        OK_TO_CHITCHAT,
+        ROOMED,
+        REJECTED_JOIN,
+        REJECTED_CONFIRM,
+        JOIN_TIMED_OUT,
+        CONFIRM_TIMED_OUT,
     ]
 
 
@@ -56,7 +65,7 @@ class UserStateMachine(UserModel):
 
         self.machine = Machine(
             model=self,
-            states=UserState.all,
+            states=UserState.all_states,
             initial=UserState.NEW,
             auto_transitions=False,
             send_event=True,
@@ -127,15 +136,7 @@ class UserStateMachine(UserModel):
         # noinspection PyTypeChecker
         self.machine.add_transition(
             trigger='become_asked',
-            source=[
-                UserState.WANTS_CHITCHAT,
-                UserState.OK_TO_CHITCHAT,
-                UserState.ROOMED,
-                UserState.REJECTED_JOIN,
-                UserState.REJECTED_CONFIRM,
-                UserState.JOIN_TIMED_OUT,
-                UserState.CONFIRM_TIMED_OUT,
-            ],
+            source=UserState.can_be_offered_chitchat_states,
             dest=UserState.ASKED_TO_JOIN,
             before=[
                 self._assert_partner_id_arg_not_empty,
@@ -216,6 +217,9 @@ class UserStateMachine(UserModel):
             UserState.WAITING_PARTNER_JOIN,
             UserState.WAITING_PARTNER_CONFIRM,
         )
+
+    def can_be_offered_chitchat(self):
+        return self.state in UserState.can_be_offered_chitchat_states
 
     @staticmethod
     def _assert_partner_id_arg_not_empty(event: EventData) -> None:

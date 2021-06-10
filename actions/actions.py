@@ -232,7 +232,7 @@ class ActionFindPartner(BaseSwiperAction):
             )
 
         if partner:
-            if partner.state != UserState.OK_TO_CHITCHAT:
+            if not partner.can_be_offered_chitchat():
                 # noinspection PyUnresolvedReferences
                 current_user.request_chitchat()
                 user_vault.save(current_user)
