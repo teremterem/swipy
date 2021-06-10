@@ -389,13 +389,12 @@ async def test_action_find_partner_veteran(
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('ddb_unit_test_user')
 @patch('time.time', Mock(return_value=1619945501))
-@patch('actions.rasa_callbacks.ask_to_join')
 @patch.object(UserVault, '_list_available_user_dicts')
 @patch('asyncio.sleep')
 async def test_action_find_partner_no_one(
         mock_asyncio_sleep: AsyncMock,
         mock_list_available_user_dicts: MagicMock,
-        mock_rasa_callback_ask_to_join: AsyncMock,
+        mock_aioresponses: aioresponses,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
@@ -429,7 +428,7 @@ async def test_action_find_partner_no_one(
         call(exclude_user_id='unit_test_user', newbie=True),
         call(exclude_user_id='unit_test_user', newbie=False),
     ]
-    mock_rasa_callback_ask_to_join.assert_not_called()
+    assert mock_aioresponses.requests == {}  # rasa_callbacks.ask_to_join() not called
 
     user_vault = UserVault()
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
@@ -445,13 +444,12 @@ async def test_action_find_partner_no_one(
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('ddb_unit_test_user')
 @patch('time.time', Mock(return_value=1619945501))
-@patch('actions.rasa_callbacks.ask_to_join')
 @patch.object(UserVault, '_list_available_user_dicts')
 @patch('asyncio.sleep')
 async def test_action_find_partner_swiper_error_trace(
         mock_asyncio_sleep: AsyncMock,
         mock_list_available_user_dicts: MagicMock,
-        mock_rasa_callback_ask_to_join: AsyncMock,
+        mock_aioresponses: aioresponses,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
@@ -503,7 +501,7 @@ async def test_action_find_partner_swiper_error_trace(
         call(exclude_user_id='unit_test_user', newbie=True),
         call(exclude_user_id='unit_test_user', newbie=False),
     ]
-    mock_rasa_callback_ask_to_join.assert_not_called()
+    assert mock_aioresponses.requests == {}  # rasa_callbacks.ask_to_join() not called
 
     user_vault = UserVault()
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
@@ -807,11 +805,8 @@ async def test_action_confirm_with_asker(
 ])
 @pytest.mark.usefixtures('create_user_state_machine_table')
 @patch('time.time', Mock(return_value=1619945501))
-@patch('actions.rasa_callbacks.join_room_ready')
-@patch('actions.daily_co.create_room')
 async def test_action_create_room_partner_not_waiting(
-        mock_daily_co_create_room: AsyncMock,
-        mock_rasa_callback_join_room_ready: AsyncMock,
+        mock_aioresponses: aioresponses,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
@@ -845,8 +840,8 @@ async def test_action_create_room_partner_not_waiting(
         'text': None,
     }]
 
-    mock_daily_co_create_room.assert_not_called()
-    mock_rasa_callback_join_room_ready.assert_not_called()
+    # neither daily_co.create_room() nor rasa_callbacks.join_room_ready() are called
+    assert mock_aioresponses.requests == {}
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
@@ -875,11 +870,8 @@ async def test_action_create_room_partner_not_waiting(
     ),
 ])
 @pytest.mark.usefixtures('create_user_state_machine_table')
-@patch('actions.rasa_callbacks.join_room_ready')
-@patch('actions.daily_co.create_room')
 async def test_action_create_room_no_partner_id(
-        mock_daily_co_create_room: AsyncMock,
-        mock_rasa_callback_join_room_ready: AsyncMock,
+        mock_aioresponses: aioresponses,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
@@ -918,8 +910,8 @@ async def test_action_create_room_no_partner_id(
         'text': None,
     }]
 
-    mock_daily_co_create_room.assert_not_called()
-    mock_rasa_callback_join_room_ready.assert_not_called()
+    # neither daily_co.create_room() nor rasa_callbacks.join_room_ready() are called
+    assert mock_aioresponses.requests == {}
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == current_user  # current user should not be changed
