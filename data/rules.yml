@@ -56,7 +56,7 @@ rules:
 - rule: current user does not respond to readiness confirmation, hence reminder to let partner go is triggered
   steps:
   - intent: EXTERNAL_let_partner_go_not_ready
-  - action: action_let_partner_go_not_ready
+  - action: action_let_partner_go
 - rule: someone else wants to chat and the user aggrees to join
   steps:
   - action: action_ask_to_join

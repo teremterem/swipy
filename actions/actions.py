@@ -464,6 +464,15 @@ class ActionBecomeOkToChitchat(BaseSwiperAction):
         ]
 
 
+async def let_partner_go_if_applicable(current_user: UserStateMachine, partner: UserStateMachine) -> None:
+    if partner.partner_id == current_user.user_id:
+        if partner.state == UserState.WAITING_PARTNER_JOIN:
+            # force the original sender of the declined invitation to "move along" in their partner search
+            await rasa_callbacks.find_partner(current_user.user_id, partner.user_id)
+        elif partner.state == UserState.WAITING_PARTNER_CONFIRM:
+            await rasa_callbacks.report_unavailable(current_user.user_id, partner.user_id)
+
+
 class ActionDoNotDisturb(BaseSwiperAction):
     def name(self) -> Text:
         return 'action_do_not_disturb'
@@ -486,14 +495,7 @@ class ActionDoNotDisturb(BaseSwiperAction):
 
         if initial_partner_id:
             partner = user_vault.get_user(initial_partner_id)
-
-            # TODO oleksandr: refactor and reuse UserStateMachine.is_waiting_for() somehow ?
-            if partner.partner_id == current_user.user_id:
-                if partner.state == UserState.WAITING_PARTNER_JOIN:
-                    # force the original sender of the declined invitation to "move along" in their partner search
-                    await rasa_callbacks.find_partner(current_user.user_id, partner.user_id)
-                elif partner.state == UserState.WAITING_PARTNER_CONFIRM:
-                    await rasa_callbacks.report_unavailable(current_user.user_id, partner.user_id)
+            await let_partner_go_if_applicable(current_user, partner)
 
         return [
             SlotSet(
@@ -516,10 +518,6 @@ class ActionLetPartnerGo(BaseSwiperAction):
     def name(self) -> Text:
         return 'action_let_partner_go'
 
-    async def ping_partner(self, current_user: UserStateMachine, partner: UserStateMachine) -> None:
-        # force the original sender of the timed out invitation to "move along" in their partner search
-        await rasa_callbacks.find_partner(current_user.user_id, partner.user_id)
-
     async def swipy_run(
             self, dispatcher: CollectingDispatcher,
             tracker: Tracker,
@@ -538,17 +536,8 @@ class ActionLetPartnerGo(BaseSwiperAction):
                 revert_utterance = False
 
             partner_to_let_go = user_vault.get_user(partner_id_to_let_go)
-            if partner_to_let_go.is_waiting_for(current_user.user_id):
-                await self.ping_partner(current_user, partner_to_let_go)
+            await let_partner_go_if_applicable(current_user, partner_to_let_go)
 
         if revert_utterance:
             return [UserUtteranceReverted()]
         return []
-
-
-class ActionLetPartnerGoNotReady(ActionLetPartnerGo):
-    def name(self) -> Text:
-        return 'action_let_partner_go_not_ready'
-
-    async def ping_partner(self, current_user: UserStateMachine, partner: UserStateMachine) -> None:
-        await rasa_callbacks.report_unavailable(current_user.user_id, partner.user_id)

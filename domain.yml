@@ -175,6 +175,5 @@ actions:
 - action_do_not_disturb
 - action_reject_invitation
 - action_let_partner_go
-- action_let_partner_go_not_ready
 forms: {}
 e2e_actions: []
