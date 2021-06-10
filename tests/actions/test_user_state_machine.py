@@ -148,9 +148,9 @@ expected_more_narrow_transitions = [
 
 def test_expected_more_narrow_transition_list() -> None:
     # make sure we are testing all the transition/initial_state combinations that exist
-    # TODO oleksandr: don't just check the total number, test for presence of all the actual permutations
-    assert len(expected_more_narrow_transitions) == \
-           len(all_expected_states) * (len(all_expected_triggers) - len(expected_catch_all_transitions))
+    assert len({(i[0], i[1]) for i in expected_more_narrow_transitions}) == \
+           len(set(all_expected_states)) * (len(set(all_expected_triggers)) -
+                                            len({i[0] for i in expected_catch_all_transitions}))
 
 
 @pytest.mark.parametrize('initial_newbie_status', [True, False])
