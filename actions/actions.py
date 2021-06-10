@@ -190,8 +190,9 @@ class ActionRegisterUser(BaseSwiperAction):
         if GREETING_MAKES_USER_OK_TO_CHITCHAT:
             if current_user.state in (
                     UserState.NEW,
+                    UserState.JOIN_TIMED_OUT,
+                    UserState.CONFIRM_TIMED_OUT,
                     UserState.DO_NOT_DISTURB,
-                    UserState.ASKED_TO_JOIN,
             ):
                 # noinspection PyUnresolvedReferences
                 current_user.become_ok_to_chitchat()

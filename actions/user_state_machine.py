@@ -15,7 +15,7 @@ class UserState:
     WAITING_PARTNER_CONFIRM = 'waiting_partner_confirm'
     ASKED_TO_JOIN = 'asked_to_join'
     ASKED_TO_CONFIRM = 'asked_to_confirm'
-    ROOMED = 'roomed'
+    ROOMED = 'roomed'  # logically equivalent to 'ok_to_chitchat' (except they may still be on a call)
     REJECTED_JOIN = 'rejected_join'
     REJECTED_CONFIRM = 'rejected_confirm'
     JOIN_TIMED_OUT = 'join_timed_out'
