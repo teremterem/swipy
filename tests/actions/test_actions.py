@@ -61,7 +61,7 @@ async def test_user_vault_cache_not_reused_between_action_runs(
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('ddb_unit_test_user')
-async def test_swiper_state_and_partner_id_slots_are_set_after_action_run(
+async def test_common_swiper_slots_are_set_after_action_run(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
@@ -92,8 +92,6 @@ async def test_swiper_state_and_partner_id_slots_are_set_after_action_run(
 
     actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == [
-        SlotSet('swiper_error', None),
-        SlotSet('swiper_error_trace', None),
         SlotSet('swiper_state', 'ok_to_chitchat'),  # the action is expected to use the most recent value of state
         SlotSet('partner_id', 'some_partner_id'),  # the action is expected to use the most recent value of partner_id
     ]
@@ -114,8 +112,8 @@ async def test_action_session_start_without_slots(
     actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == [
         SessionStarted(),
-        SlotSet('swiper_error', None),
-        SlotSet('swiper_error_trace', None),
+        SlotSet('swiper_error', None),  # cleared upon session start
+        SlotSet('swiper_error_trace', None),  # cleared upon session start
         SlotSet('swiper_state', 'new'),  # state taken from UserVault
         SlotSet('partner_id', None),  # partner_id taken from UserVault
         ActionExecuted('action_listen'),
@@ -169,8 +167,8 @@ async def test_action_session_start_with_slots(
 
     domain['session_config']['carry_over_slots_to_new_session'] = carry_over_slots_to_new_session
     expected_events = expected_events + [
-        SlotSet('swiper_error', None),
-        SlotSet('swiper_error_trace', None),
+        SlotSet('swiper_error', None),  # cleared upon session start
+        SlotSet('swiper_error_trace', None),  # cleared upon session start
         SlotSet('swiper_state', 'ok_to_chitchat'),  # state taken from UserVault rather than carried over
         SlotSet('partner_id', None),  # partner_id taken from UserVault rather than carried over
         ActionExecuted(action_name='action_listen'),
@@ -221,8 +219,6 @@ async def test_action_find_partner_newbie(
     actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'partner_has_been_asked'),
-        SlotSet('swiper_error', None),
-        SlotSet('swiper_error_trace', None),
         SlotSet('swiper_state', 'waiting_partner_join'),
         SlotSet('partner_id', 'available_newbie_id1'),
     ]
@@ -288,8 +284,6 @@ async def test_action_find_partner_no_photo(
     actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'partner_has_been_asked'),
-        SlotSet('swiper_error', None),
-        SlotSet('swiper_error_trace', None),
         SlotSet('swiper_state', 'waiting_partner_join'),
         SlotSet('partner_id', 'available_newbie_id1'),
     ]
@@ -356,8 +350,6 @@ async def test_action_find_partner_veteran(
     actual_events = await actions.ActionFindPartner().run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'partner_has_been_asked'),
-        SlotSet('swiper_error', None),
-        SlotSet('swiper_error_trace', None),
         SlotSet('swiper_state', 'waiting_partner_join'),
         SlotSet('partner_id', 'available_veteran_id1'),
     ]
@@ -407,8 +399,6 @@ async def test_action_find_partner_no_one(
     actual_events = await actions.ActionFindPartner().run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'partner_was_not_found'),
-        SlotSet('swiper_error', None),
-        SlotSet('swiper_error_trace', None),
         SlotSet('swiper_state', 'wants_chitchat'),
         SlotSet('partner_id', None),
     ]
@@ -561,8 +551,6 @@ async def test_action_ask_to_join(
             'timestamp': None,
         },
         SlotSet('swiper_action_result', 'success'),
-        SlotSet('swiper_error', None),
-        SlotSet('swiper_error_trace', None),
         SlotSet('swiper_state', 'asked_to_join'),
         SlotSet('partner_id', 'an_asker'),
     ]
@@ -616,8 +604,6 @@ async def test_action_ask_if_ready(
             'timestamp': None,
         },
         SlotSet('swiper_action_result', 'success'),
-        SlotSet('swiper_error', None),
-        SlotSet('swiper_error_trace', None),
         SlotSet('swiper_state', 'asked_to_confirm'),
         SlotSet('partner_id', 'an_asker'),
     ]
@@ -679,8 +665,6 @@ async def test_action_create_room(
     assert actual_events == [
         SlotSet('swiper_action_result', 'room_url_ready'),
         SlotSet('room_url', 'https://swipy.daily.co/pytestroom'),
-        SlotSet('swiper_error', None),
-        SlotSet('swiper_error_trace', None),
         SlotSet('swiper_state', 'roomed'),
         SlotSet('partner_id', 'an_asker'),
     ]
@@ -754,8 +738,6 @@ async def test_action_confirm_with_asker(
     actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'partner_has_been_asked'),
-        SlotSet('swiper_error', None),
-        SlotSet('swiper_error_trace', None),
         SlotSet('swiper_state', 'waiting_partner_confirm'),
         SlotSet('partner_id', 'an_asker'),
     ]
@@ -824,8 +806,6 @@ async def test_action_create_room_partner_not_waiting(
     actual_events = await actions.ActionCreateRoom().run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'partner_not_waiting_anymore'),
-        SlotSet('swiper_error', None),
-        SlotSet('swiper_error_trace', None),
         SlotSet('swiper_state', 'wants_chitchat'),
         SlotSet('partner_id', None),
     ]
@@ -943,8 +923,6 @@ async def test_action_join_room(
     actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'success'),
-        SlotSet('swiper_error', None),
-        SlotSet('swiper_error_trace', None),
         SlotSet('swiper_state', 'roomed'),
         SlotSet('partner_id', 'partner_that_accepted'),
     ]
@@ -983,8 +961,6 @@ async def test_action_become_ok_to_chitchat(
     actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'success'),
-        SlotSet('swiper_error', None),
-        SlotSet('swiper_error_trace', None),
         SlotSet('swiper_state', 'ok_to_chitchat'),
         SlotSet('partner_id', None),
     ]
@@ -1015,8 +991,6 @@ async def test_action_register_user(
     actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'success'),
-        SlotSet('swiper_error', None),
-        SlotSet('swiper_error_trace', None),
         SlotSet('swiper_state', 'ok_to_chitchat'),
         SlotSet('partner_id', None),
     ]
@@ -1051,8 +1025,6 @@ async def test_action_register_user_not_new(
     actual_events = await actions.ActionRegisterUser().run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'success'),
-        SlotSet('swiper_error', None),
-        SlotSet('swiper_error_trace', None),
         SlotSet('swiper_state', 'waiting_partner_join'),
         SlotSet('partner_id', 'the_asker'),
     ]
@@ -1161,8 +1133,6 @@ async def test_action_do_not_disturb(
     actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'success'),
-        SlotSet('swiper_error', None),
-        SlotSet('swiper_error_trace', None),
         SlotSet('swiper_state', 'do_not_disturb'),
         SlotSet('partner_id', None),
     ]
@@ -1224,8 +1194,6 @@ async def test_action_do_not_disturb_not_ready(
     actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'success'),
-        SlotSet('swiper_error', None),
-        SlotSet('swiper_error_trace', None),
         SlotSet('swiper_state', 'do_not_disturb'),
         SlotSet('partner_id', None),
     ]
@@ -1348,8 +1316,6 @@ async def test_action_let_partner_go(
     actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == [
         UserUtteranceReverted(),
-        SlotSet('swiper_error', None),
-        SlotSet('swiper_error_trace', None),
         SlotSet('swiper_state', current_user.state),
         SlotSet('partner_id', current_user.partner_id),
     ]
@@ -1408,8 +1374,6 @@ async def test_action_let_partner_go_not_ready(
     actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == [
         UserUtteranceReverted(),
-        SlotSet('swiper_error', None),
-        SlotSet('swiper_error_trace', None),
         SlotSet('swiper_state', 'asked_to_join'),
         SlotSet('partner_id', ''),
     ]
