@@ -1286,7 +1286,23 @@ async def test_action_reject_invitation(
                 newbie=True,
             ),
             'EXTERNAL_find_partner',  # 'the_asker' was waiting for the current user to join -> let them go
-            'asked_to_join',  # the relevancy of the reminder cannot be established => no timing out is expected
+            'asked_to_join',  # no timing out because this is an obsolete reminder (partner_id != partner_id_to_let_go)
+    ),
+    (
+            UserStateMachine(
+                user_id='unit_test_user',
+                state='asked_to_join',
+                partner_id='not_the_asker',  # unlike ActionDoNotDisturb, in this action we rely on partner_id_to_let_go
+                newbie=True,
+            ),
+            UserStateMachine(
+                user_id='the_asker',
+                state='waiting_partner_join',
+                partner_id='unit_test_user',
+                newbie=True,
+            ),
+            'EXTERNAL_find_partner',  # 'the_asker' was waiting for the current user to join -> let them go
+            'asked_to_join',  # no timing out because this is an obsolete reminder (partner_id != partner_id_to_let_go)
     ),
     (
             UserStateMachine(
@@ -1307,7 +1323,23 @@ async def test_action_reject_invitation(
     (
             UserStateMachine(
                 user_id='unit_test_user',
-                state='asked_to_join',  # should be 'asked_to_confirm' but the action should rely on partner status
+                state='asked_to_confirm',
+                partner_id='the_asker',
+                newbie=True,
+            ),
+            UserStateMachine(
+                user_id='the_asker',
+                state='waiting_partner_confirm',
+                partner_id='unit_test_user',
+                newbie=True,
+            ),
+            'EXTERNAL_report_unavailable',  # 'the_asker' was waiting for the current user to confirm -> let them go
+            'confirm_timed_out',
+    ),
+    (
+            UserStateMachine(
+                user_id='unit_test_user',
+                state='asked_to_join',  # should be 'asked_to_confirm' but action uses partner status to choose callback
                 partner_id='the_asker',
                 newbie=True,
             ),
