@@ -680,7 +680,7 @@ async def test_action_create_room(
 @pytest.mark.usefixtures('create_user_state_machine_table')
 @patch('time.time', Mock(return_value=1619945501))  # "now"
 @patch('telebot.apihelper._make_request')
-async def test_action_confirm_with_asker(
+async def test_action_create_room_confirm_with_asker(
         mock_telebot_make_request: MagicMock,
         mock_aioresponses: aioresponses,
         tracker: Tracker,
@@ -688,14 +688,11 @@ async def test_action_confirm_with_asker(
         domain: Dict[Text, Any],
         telegram_user_profile_photo: Dict[Text, Any],
         telegram_user_profile_photo_make_request_call: call,
-        rasa_callbacks_join_room_expected_call: Tuple[Text, call],
-        rasa_callbacks_ask_if_ready_expected_call: Tuple[Text, call],
+        rasa_callbacks_ask_if_ready_expected_req: Tuple[Tuple[Text, URL], RequestCall],
         external_intent_response: Dict[Text, Any],
 ) -> None:
     mock_telebot_make_request.return_value = telegram_user_profile_photo
-
-    mock_rasa_callbacks = AsyncMock(return_value=CallbackResult(payload=external_intent_response))
-    mock_aioresponses.post(rasa_callbacks_join_room_expected_call[0], callback=mock_rasa_callbacks)
+    mock_aioresponses.post(re.compile(r'.*'), payload=external_intent_response)
 
     user_vault = UserVault()
     user_vault.save(UserStateMachine(
@@ -711,7 +708,7 @@ async def test_action_confirm_with_asker(
         newbie=True,
     ))
 
-    action = actions.ActionConfirmWithAsker()
+    action = actions.ActionCreateRoom()
     assert action.name() == 'action_confirm_with_asker'
 
     actual_events = await action.run(dispatcher, tracker, domain)
@@ -734,9 +731,9 @@ async def test_action_confirm_with_asker(
     assert mock_telebot_make_request.mock_calls == [
         telegram_user_profile_photo_make_request_call,
     ]
-    assert mock_rasa_callbacks.mock_calls == [
-        rasa_callbacks_ask_if_ready_expected_call[1],
-    ]
+    assert mock_aioresponses.requests == {
+        rasa_callbacks_ask_if_ready_expected_req[0]: [rasa_callbacks_ask_if_ready_expected_req[1]],
+    }
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(

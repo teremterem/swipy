@@ -2,13 +2,15 @@ from typing import Callable, Text, Dict, Any, Tuple
 from unittest.mock import call
 
 import pytest
+from aioresponses.core import RequestCall
+from yarl import URL
 
 
 @pytest.fixture
-def rasa_callbacks_join_room_expected_call(
-        rasa_callbacks_expected_call_builder: Callable[[Text, Text, Dict[Text, Any]], Tuple[Text, call]],
-) -> Tuple[Text, call]:
-    expected_rasa_url, expected_rasa_call = rasa_callbacks_expected_call_builder(
+def rasa_callbacks_join_room_expected_req(rasa_callbacks_expected_req_builder: Callable[
+    [Text, Text, Dict[Text, Any]], Tuple[Tuple[Text, URL], RequestCall]
+]) -> Tuple[Tuple[Text, URL], RequestCall]:
+    expected_req_key, expected_req_call = rasa_callbacks_expected_req_builder(
         'an_asker',
         'EXTERNAL_join_room',
         {
@@ -16,14 +18,14 @@ def rasa_callbacks_join_room_expected_call(
             'room_url': 'https://swipy.daily.co/pytestroom',
         },
     )
-    return expected_rasa_url, expected_rasa_call
+    return expected_req_key, expected_req_call
 
 
 @pytest.fixture
-def rasa_callbacks_ask_if_ready_expected_call(
-        rasa_callbacks_expected_call_builder: Callable[[Text, Text, Dict[Text, Any]], Tuple[Text, call]],
-) -> Tuple[Text, call]:
-    expected_rasa_url, expected_rasa_call = rasa_callbacks_expected_call_builder(
+def rasa_callbacks_ask_if_ready_expected_req(rasa_callbacks_expected_req_builder: Callable[
+    [Text, Text, Dict[Text, Any]], Tuple[Tuple[Text, URL], RequestCall]
+]) -> Tuple[Tuple[Text, URL], RequestCall]:
+    expected_req_key, expected_req_call = rasa_callbacks_expected_req_builder(
         'an_asker',
         'EXTERNAL_ask_if_ready',
         {
@@ -31,4 +33,4 @@ def rasa_callbacks_ask_if_ready_expected_call(
             'partner_photo_file_id': 'biggest_profile_pic_file_id',
         },
     )
-    return expected_rasa_url, expected_rasa_call
+    return expected_req_key, expected_req_call
