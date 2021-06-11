@@ -605,59 +605,6 @@ async def test_action_ask_to_join(
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('create_user_state_machine_table')
-@patch('time.time', Mock(return_value=1619945501))
-@patch('actions.actions.datetime_now', Mock(return_value=datetime.datetime(2021, 5, 25)))
-@patch('uuid.uuid4', Mock(return_value=uuid.UUID('aaaabbbb-cccc-dddd-eeee-ffff11112222')))
-async def test_action_ask_if_ready(
-        tracker: Tracker,
-        dispatcher: CollectingDispatcher,
-        domain: Dict[Text, Any],
-) -> None:
-    action = actions.ActionAskIfReady()
-    assert action.name() == 'action_ask_if_ready'
-
-    user_vault = UserVault()
-    user_vault.save(UserStateMachine(
-        user_id='unit_test_user',
-        state='waiting_partner_join',
-        partner_id='an_asker',
-        newbie=True,
-    ))
-
-    tracker.add_slots([
-        SlotSet('partner_id', 'an_asker'),
-    ])
-
-    actual_events = await action.run(dispatcher, tracker, domain)
-    assert actual_events == [
-        {
-            'date_time': '2021-05-25T00:02:00',
-            'entities': {'partner_id_to_let_go': 'an_asker'},
-            'event': 'reminder',
-            'intent': 'EXTERNAL_let_partner_go_not_ready',
-            'kill_on_user_msg': False,
-            'name': 'aaaabbbb-cccc-dddd-eeee-ffff11112222',
-            'timestamp': None,
-        },
-        SlotSet('swiper_action_result', 'success'),
-        SlotSet('swiper_state', 'asked_to_confirm'),
-        SlotSet('partner_id', 'an_asker'),
-    ]
-    assert dispatcher.messages == []
-
-    user_vault = UserVault()  # create new instance to avoid hitting cache
-    assert user_vault.get_user('unit_test_user') == UserStateMachine(
-        user_id='unit_test_user',
-        state='asked_to_confirm',
-        partner_id='an_asker',
-        newbie=True,
-        state_timestamp=1619945501,
-        state_timestamp_str='2021-05-02 08:51:41 Z',
-    )
-
-
-@pytest.mark.asyncio
-@pytest.mark.usefixtures('create_user_state_machine_table')
 @patch('time.time', Mock(return_value=1619945501))  # "now"
 @patch('actions.daily_co.create_room', wraps=daily_co.create_room)
 async def test_action_create_room(
