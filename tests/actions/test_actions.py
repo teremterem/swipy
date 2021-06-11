@@ -572,25 +572,21 @@ async def test_action_ask_to_join(
         SlotSet('swiper_state', destination_swiper_state),
         SlotSet('partner_id', 'an_asker'),
     ]
-    if expected_response_template:
-        expected_response = {
-            'attachment': None,
-            'buttons': [],
-            'custom': {},
-            'elements': [],
-            'image': None,
-            'response': expected_response_template,
-            'template': expected_response_template,
-            'text': None,
-        }
-        if set_photo_slot:
-            expected_response['partner_photo_file_id'] = 'some photo file id'
 
-        assert dispatcher.messages == [
-            expected_response,
-        ]
-    else:
-        assert dispatcher.messages == []
+    expected_response = {
+        'attachment': None,
+        'buttons': [],
+        'custom': {},
+        'elements': [],
+        'image': None,
+        'response': expected_response_template,
+        'template': expected_response_template,
+        'text': None,
+    }
+    if set_photo_slot:
+        expected_response['partner_photo_file_id'] = 'some photo file id'
+
+    assert dispatcher.messages == [expected_response]
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
@@ -963,13 +959,20 @@ async def test_action_become_ok_to_chitchat(
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('create_user_state_machine_table')
 @patch('time.time', Mock(return_value=1619945501))
-async def test_action_register_user(
+@pytest.mark.parametrize('latest_intent, expected_response_template', [
+    ('start', 'utter_greet_offer_chitchat'),
+    ('greet', 'utter_greet_offer_chitchat'),
+    ('how_it_works', 'utter_how_it_works'),
+])
+async def test_action_offer_chitchat(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
+        latest_intent: Text,
+        expected_response_template: Text,
 ) -> None:
-    action = actions.ActionRegisterUser()
-    assert action.name() == 'action_register_user'
+    action = actions.ActionOfferChitchat()
+    assert action.name() == 'action_offer_chitchat'
 
     actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == [
@@ -977,7 +980,16 @@ async def test_action_register_user(
         SlotSet('swiper_state', 'ok_to_chitchat'),
         SlotSet('partner_id', None),
     ]
-    assert dispatcher.messages == []
+    assert dispatcher.messages == [{
+        'attachment': None,
+        'buttons': [],
+        'custom': {},
+        'elements': [],
+        'image': None,
+        'response': 'utter_greet_offer_chitchat',
+        'template': 'utter_greet_offer_chitchat',
+        'text': None,
+    }]
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
