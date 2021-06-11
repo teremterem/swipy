@@ -543,8 +543,6 @@ class ActionLetPartnerGo(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        # TODO oleksandr: safeguard with a try-except block (current user doesn't need to know about problems here) ?
-        #  or maybe just don't extend this action from BaseSwiperAction ? or maybe both
         partner_id_to_let_go = tracker.get_slot(PARTNER_ID_TO_LET_GO_SLOT)
 
         if partner_id_to_let_go:
