@@ -9,7 +9,7 @@ from actions.utils import SwiperDailyCoError
 
 logger = logging.getLogger(__name__)
 
-DAILY_CO_BASE_URL = 'https://api.daily.co/v1'
+DAILY_CO_BASE_URL = os.getenv('DAILY_CO_BASE_URL', 'https://api.daily.co/v1')
 DAILY_CO_API_TOKEN = os.environ['DAILY_CO_API_TOKEN']
 
 

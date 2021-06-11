@@ -26,7 +26,7 @@ def new_room1() -> Dict[Text, Any]:
 
 @pytest.fixture
 def daily_co_create_room_expected_req() -> Tuple[Tuple[Text, URL], RequestCall]:
-    expected_req_key = ('POST', URL('https://api.daily.co/v1/rooms'))
+    expected_req_key = ('POST', URL('https://api.daily-unittest.co/v1/rooms'))
     expected_req_call = RequestCall(
         args=(),
         kwargs={

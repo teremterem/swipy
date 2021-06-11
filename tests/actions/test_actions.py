@@ -7,7 +7,7 @@ from typing import Dict, Text, Any, List, Callable, Tuple, Optional
 from unittest.mock import patch, AsyncMock, MagicMock, call, Mock
 
 import pytest
-from aioresponses import aioresponses, CallbackResult
+from aioresponses import aioresponses
 from aioresponses.core import RequestCall
 from rasa_sdk import Tracker
 from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType, UserUtteranceReverted
@@ -609,19 +609,14 @@ async def test_action_create_room(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
-        daily_co_create_room_expected_call: Tuple[Text, call],
+        daily_co_create_room_expected_req: Tuple[Text, call],
         new_room1: Dict[Text, Any],
-        rasa_callbacks_join_room_expected_call: Tuple[Text, call],
+        rasa_callbacks_join_room_expected_req: Tuple[Text, call],
         external_intent_response: Dict[Text, Any],
 ) -> None:
-    mock_daily_co = AsyncMock(return_value=CallbackResult(payload=new_room1))
-    mock_aioresponses.post(
-        daily_co_create_room_expected_call[0],
-        callback=mock_daily_co,
-    )
-
-    mock_rasa_callbacks = AsyncMock(return_value=CallbackResult(payload=external_intent_response))
-    mock_aioresponses.post(rasa_callbacks_join_room_expected_call[0], callback=mock_rasa_callbacks)
+    mock_aioresponses.post(re.compile(r'https://api\.daily-unittest\.co/.*'), payload=new_room1)
+    # noinspection HttpUrlsUsage
+    mock_aioresponses.post(re.compile(r'http://rasa-unittest:5005/.*'), payload=external_intent_response)
 
     user_vault = UserVault()
     user_vault.save(UserStateMachine(
@@ -659,11 +654,14 @@ async def test_action_create_room(
         'room_url': 'https://swipy.daily.co/pytestroom',
     }]
 
-    assert mock_daily_co.mock_calls == [daily_co_create_room_expected_call[1]]
+    expected_requests = {
+        daily_co_create_room_expected_req[0]: [daily_co_create_room_expected_req[1]],
+        rasa_callbacks_join_room_expected_req[0]: [rasa_callbacks_join_room_expected_req[1]],
+    }
+    assert mock_aioresponses.requests == expected_requests
+
     # make sure correct sender_id was passed (for logging purposes)
     wrap_daily_co_create_room.assert_called_once_with('unit_test_user')
-
-    assert mock_rasa_callbacks.mock_calls == [rasa_callbacks_join_room_expected_call[1]]
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
