@@ -706,10 +706,7 @@ async def test_action_create_room_confirm_with_asker(
         newbie=True,
     ))
 
-    action = actions.ActionCreateRoom()
-    assert action.name() == 'action_confirm_with_asker'
-
-    actual_events = await action.run(dispatcher, tracker, domain)
+    actual_events = await actions.ActionCreateRoom().run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'partner_has_been_asked'),
         SlotSet('swiper_state', 'waiting_partner_confirm'),
@@ -847,8 +844,7 @@ async def test_action_create_room_no_partner_id(
         SlotSet('swiper_action_result', 'error'),
         SlotSet(
             'swiper_error',
-            'InvalidSwiperStateError("current user \'unit_test_user\' cannot join the room '
-            'because current_user.partner_id is empty")',
+            "ValueError('user_id cannot be empty')",
         ),
         SlotSet('swiper_state', current_user.state),
         SlotSet('partner_id', current_user.partner_id),
