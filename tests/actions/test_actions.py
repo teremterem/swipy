@@ -921,13 +921,13 @@ async def test_action_join_room(
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('create_user_state_machine_table')
 @patch('time.time', Mock(return_value=1619945501))
-async def test_action_become_ok_to_chitchat(
+async def test_action_request_chitchat(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
 ) -> None:
-    action = actions.ActionBecomeOkToChitchat()
-    assert action.name() == 'action_become_ok_to_chitchat'
+    action = actions.ActionRequestChitchat()
+    assert action.name() == 'action_request_chitchat'
 
     user_vault = UserVault()
     user_vault.save(UserStateMachine(
@@ -940,7 +940,7 @@ async def test_action_become_ok_to_chitchat(
     actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'success'),
-        SlotSet('swiper_state', 'ok_to_chitchat'),
+        SlotSet('swiper_state', 'wants_chitchat'),
         SlotSet('partner_id', None),
     ]
     assert dispatcher.messages == []
@@ -948,7 +948,7 @@ async def test_action_become_ok_to_chitchat(
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
         user_id='unit_test_user',
-        state='ok_to_chitchat',
+        state='wants_chitchat',
         partner_id=None,
         newbie=True,
         state_timestamp=1619945501,
