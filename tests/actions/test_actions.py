@@ -959,10 +959,24 @@ async def test_action_become_ok_to_chitchat(
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('create_user_state_machine_table')
 @patch('time.time', Mock(return_value=1619945501))
-@pytest.mark.parametrize('latest_intent, expected_response_template', [
-    ('start', 'utter_greet_offer_chitchat'),
-    ('greet', 'utter_greet_offer_chitchat'),
-    ('how_it_works', 'utter_how_it_works'),
+@pytest.mark.parametrize('latest_intent, expected_response_template, source_swiper_state, destination_swiper_state', [
+    ('how_it_works', 'utter_how_it_works', 'new', 'ok_to_chitchat'),
+    ('start', 'utter_greet_offer_chitchat', 'new', 'ok_to_chitchat'),
+    ('greet', 'utter_greet_offer_chitchat', 'new', 'ok_to_chitchat'),
+
+    ('greet', 'utter_greet_offer_chitchat', None, 'ok_to_chitchat'),  # user does not exist yet
+    ('greet', 'utter_greet_offer_chitchat', 'wants_chitchat', 'wants_chitchat'),
+    ('greet', 'utter_greet_offer_chitchat', 'ok_to_chitchat', 'ok_to_chitchat'),
+    ('greet', 'utter_greet_offer_chitchat', 'waiting_partner_join', 'waiting_partner_join'),
+    ('greet', 'utter_greet_offer_chitchat', 'waiting_partner_confirm', 'waiting_partner_confirm'),
+    ('greet', 'utter_greet_offer_chitchat', 'asked_to_join', 'asked_to_join'),
+    ('greet', 'utter_greet_offer_chitchat', 'asked_to_confirm', 'asked_to_confirm'),
+    ('greet', 'utter_greet_offer_chitchat', 'roomed', 'roomed'),
+    ('greet', 'utter_greet_offer_chitchat', 'rejected_join', 'ok_to_chitchat'),
+    ('greet', 'utter_greet_offer_chitchat', 'rejected_confirm', 'ok_to_chitchat'),
+    ('greet', 'utter_greet_offer_chitchat', 'join_timed_out', 'ok_to_chitchat'),
+    ('greet', 'utter_greet_offer_chitchat', 'confirm_timed_out', 'ok_to_chitchat'),
+    ('greet', 'utter_greet_offer_chitchat', 'do_not_disturb', 'ok_to_chitchat'),
 ])
 async def test_action_offer_chitchat(
         tracker: Tracker,
@@ -970,14 +984,27 @@ async def test_action_offer_chitchat(
         domain: Dict[Text, Any],
         latest_intent: Text,
         expected_response_template: Text,
+        source_swiper_state: Optional[Text],
+        destination_swiper_state: Text,
 ) -> None:
+    if source_swiper_state:
+        user_vault = UserVault()
+        user_vault.save(UserStateMachine(
+            user_id='unit_test_user',
+            state=source_swiper_state,
+            partner_id=None,
+            newbie=True,
+            state_timestamp=1619945501,
+            state_timestamp_str='2021-05-02 08:51:41 Z',
+        ))
+
     action = actions.ActionOfferChitchat()
     assert action.name() == 'action_offer_chitchat'
 
     actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'success'),
-        SlotSet('swiper_state', 'ok_to_chitchat'),
+        SlotSet('swiper_state', destination_swiper_state),
         SlotSet('partner_id', None),
     ]
     assert dispatcher.messages == [{
@@ -994,43 +1021,11 @@ async def test_action_offer_chitchat(
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
         user_id='unit_test_user',
-        state='ok_to_chitchat',
+        state=destination_swiper_state,
         partner_id=None,
         newbie=True,
         state_timestamp=1619945501,
         state_timestamp_str='2021-05-02 08:51:41 Z',
-    )
-
-
-@pytest.mark.asyncio
-@pytest.mark.usefixtures('create_user_state_machine_table')
-async def test_action_register_user_not_new(
-        tracker: Tracker,
-        dispatcher: CollectingDispatcher,
-        domain: Dict[Text, Any],
-) -> None:
-    user_vault = UserVault()
-    user_vault.save(UserStateMachine(
-        user_id='unit_test_user',
-        state='waiting_partner_join',
-        partner_id='the_asker',
-        newbie=True,
-    ))
-
-    actual_events = await actions.ActionRegisterUser().run(dispatcher, tracker, domain)
-    assert actual_events == [
-        SlotSet('swiper_action_result', 'success'),
-        SlotSet('swiper_state', 'waiting_partner_join'),
-        SlotSet('partner_id', 'the_asker'),
-    ]
-    assert dispatcher.messages == []
-
-    user_vault = UserVault()  # create new instance to avoid hitting cache
-    assert user_vault.get_user('unit_test_user') == UserStateMachine(
-        user_id='unit_test_user',
-        state='waiting_partner_join',  # user state not changed (only new users automatically become ok_to_chitchat)
-        partner_id='the_asker',
-        newbie=True,
     )
 
 
