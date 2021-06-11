@@ -1010,6 +1010,8 @@ async def test_action_offer_chitchat(
             state_timestamp_str='2021-05-02 08:51:41 Z',
         ))
 
+    tracker.latest_message = {'intent_ranking': [{'name': latest_intent}]}
+
     action = actions.ActionOfferChitchat()
     assert action.name() == 'action_offer_chitchat'
 
@@ -1025,8 +1027,8 @@ async def test_action_offer_chitchat(
         'custom': {},
         'elements': [],
         'image': None,
-        'response': 'utter_greet_offer_chitchat',
-        'template': 'utter_greet_offer_chitchat',
+        'response': expected_response_template,
+        'template': expected_response_template,
         'text': None,
     }]
 
