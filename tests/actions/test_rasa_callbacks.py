@@ -1,8 +1,10 @@
+import re
 from typing import Dict, Text, Any, Callable, Tuple
-from unittest.mock import AsyncMock, call
 
 import pytest
-from aioresponses import CallbackResult, aioresponses
+from aioresponses import aioresponses
+from aioresponses.core import RequestCall
+from yarl import URL
 
 from actions import rasa_callbacks
 from actions.utils import SwiperRasaCallbackError
@@ -10,11 +12,13 @@ from actions.utils import SwiperRasaCallbackError
 
 @pytest.mark.asyncio
 async def test_ask_to_join(
-        rasa_callbacks_expected_call_builder: Callable[[Text, Text, Dict[Text, Any]], Tuple[Text, call]],
+        rasa_callbacks_expected_request_builder: Callable[
+            [Text, Text, Dict[Text, Any]], Tuple[Tuple[Text, URL], RequestCall]
+        ],
         mock_aioresponses: aioresponses,
         external_intent_response: Dict[Text, Any],
 ) -> None:
-    expected_rasa_url, expected_rasa_call = rasa_callbacks_expected_call_builder(
+    expected_req_key, expected_req_call = rasa_callbacks_expected_request_builder(
         'partner_id_to_ask',
         'EXTERNAL_ask_to_join',
         {
@@ -22,11 +26,7 @@ async def test_ask_to_join(
             'partner_photo_file_id': 'photo_of_the_asker',
         },
     )
-    mock_rasa_callbacks = AsyncMock(return_value=CallbackResult(payload=external_intent_response))
-    mock_aioresponses.post(
-        expected_rasa_url,
-        callback=mock_rasa_callbacks,
-    )
+    mock_aioresponses.post(re.compile(r'.*'), payload=external_intent_response)
 
     assert await rasa_callbacks.ask_to_join(
         'id_of_asker',
@@ -34,16 +34,18 @@ async def test_ask_to_join(
         'photo_of_the_asker',
     ) == external_intent_response
 
-    assert mock_rasa_callbacks.mock_calls == [expected_rasa_call]
+    assert mock_aioresponses.requests == {expected_req_key: [expected_req_call]}
 
 
 @pytest.mark.asyncio
 async def test_ask_if_ready(
-        rasa_callbacks_expected_call_builder: Callable[[Text, Text, Dict[Text, Any]], Tuple[Text, call]],
+        rasa_callbacks_expected_request_builder: Callable[
+            [Text, Text, Dict[Text, Any]], Tuple[Tuple[Text, URL], RequestCall]
+        ],
         mock_aioresponses: aioresponses,
         external_intent_response: Dict[Text, Any],
 ) -> None:
-    expected_rasa_url, expected_rasa_call = rasa_callbacks_expected_call_builder(
+    expected_req_key, expected_req_call = rasa_callbacks_expected_request_builder(
         'partner_id_to_ask',
         'EXTERNAL_ask_if_ready',
         {
@@ -51,11 +53,7 @@ async def test_ask_if_ready(
             'partner_photo_file_id': 'photo_of_the_asker',
         },
     )
-    mock_rasa_callbacks = AsyncMock(return_value=CallbackResult(payload=external_intent_response))
-    mock_aioresponses.post(
-        expected_rasa_url,
-        callback=mock_rasa_callbacks,
-    )
+    mock_aioresponses.post(re.compile(r'.*'), payload=external_intent_response)
 
     assert await rasa_callbacks.ask_if_ready(
         'id_of_asker',
@@ -63,16 +61,18 @@ async def test_ask_if_ready(
         'photo_of_the_asker',
     ) == external_intent_response
 
-    assert mock_rasa_callbacks.mock_calls == [expected_rasa_call]
+    assert mock_aioresponses.requests == {expected_req_key: [expected_req_call]}
 
 
 @pytest.mark.asyncio
 async def test_join_room_ready(
-        rasa_callbacks_expected_call_builder: Callable[[Text, Text, Dict[Text, Any]], Tuple[Text, call]],
+        rasa_callbacks_expected_request_builder: Callable[
+            [Text, Text, Dict[Text, Any]], Tuple[Tuple[Text, URL], RequestCall]
+        ],
         mock_aioresponses: aioresponses,
         external_intent_response: Dict[Text, Any],
 ) -> None:
-    expected_rasa_url, expected_rasa_call = rasa_callbacks_expected_call_builder(
+    expected_req_key, expected_req_call = rasa_callbacks_expected_request_builder(
         'a_receiving_user',
         'EXTERNAL_join_room_ready',
         {
@@ -80,11 +80,7 @@ async def test_join_room_ready(
             'room_url': 'https://room-unittest/url',
         },
     )
-    mock_rasa_callbacks = AsyncMock(return_value=CallbackResult(payload=external_intent_response))
-    mock_aioresponses.post(
-        expected_rasa_url,
-        callback=mock_rasa_callbacks,
-    )
+    mock_aioresponses.post(re.compile(r'.*'), payload=external_intent_response)
 
     assert await rasa_callbacks.join_room_ready(
         'a_sending_user',
@@ -92,32 +88,30 @@ async def test_join_room_ready(
         'https://room-unittest/url',
     ) == external_intent_response
 
-    assert mock_rasa_callbacks.mock_calls == [expected_rasa_call]
+    assert mock_aioresponses.requests == {expected_req_key: [expected_req_call]}
 
 
 @pytest.mark.asyncio
 async def test_find_partner(
-        rasa_callbacks_expected_call_builder: Callable[[Text, Text, Dict[Text, Any]], Tuple[Text, call]],
+        rasa_callbacks_expected_request_builder: Callable[
+            [Text, Text, Dict[Text, Any]], Tuple[Tuple[Text, URL], RequestCall]
+        ],
         mock_aioresponses: aioresponses,
         external_intent_response: Dict[Text, Any],
 ) -> None:
-    expected_rasa_url, expected_rasa_call = rasa_callbacks_expected_call_builder(
+    expected_req_key, expected_req_call = rasa_callbacks_expected_request_builder(
         'a_receiving_user',
         'EXTERNAL_find_partner',
         {},
     )
-    mock_rasa_callbacks = AsyncMock(return_value=CallbackResult(payload=external_intent_response))
-    mock_aioresponses.post(
-        expected_rasa_url,
-        callback=mock_rasa_callbacks,
-    )
+    mock_aioresponses.post(re.compile(r'.*'), payload=external_intent_response)
 
     assert await rasa_callbacks.find_partner(
         'some_sender_id',
         'a_receiving_user',
     ) == external_intent_response
 
-    assert mock_rasa_callbacks.mock_calls == [expected_rasa_call]
+    assert mock_aioresponses.requests == {expected_req_key: [expected_req_call]}
 
 
 @pytest.mark.asyncio
@@ -131,49 +125,45 @@ async def test_find_partner(
     },
 ])
 async def test_find_partner_unsuccessful(
-        rasa_callbacks_expected_call_builder: Callable[[Text, Text, Dict[Text, Any]], Tuple[Text, call]],
+        rasa_callbacks_expected_request_builder: Callable[
+            [Text, Text, Dict[Text, Any]], Tuple[Tuple[Text, URL], RequestCall]
+        ],
         mock_aioresponses: aioresponses,
         unsuccessful_response: Dict[Text, Any],
 ) -> None:
-    expected_rasa_url, expected_rasa_call = rasa_callbacks_expected_call_builder(
+    expected_req_key, expected_req_call = rasa_callbacks_expected_request_builder(
         'a_receiving_user',
         'EXTERNAL_find_partner',
         {},
     )
-    mock_rasa_callbacks = AsyncMock(return_value=CallbackResult(payload=unsuccessful_response))
-    mock_aioresponses.post(
-        expected_rasa_url,
-        callback=mock_rasa_callbacks,
-    )
+    mock_aioresponses.post(re.compile(r'.*'), payload=unsuccessful_response)
 
     with pytest.raises(SwiperRasaCallbackError):
         await rasa_callbacks.find_partner(
             'some_sender_id',
             'a_receiving_user',
         )
-    assert mock_rasa_callbacks.mock_calls == [expected_rasa_call]
+    assert mock_aioresponses.requests == {expected_req_key: [expected_req_call]}
 
 
 @pytest.mark.asyncio
 async def test_report_unavailable(
-        rasa_callbacks_expected_call_builder: Callable[[Text, Text, Dict[Text, Any]], Tuple[Text, call]],
+        rasa_callbacks_expected_request_builder: Callable[
+            [Text, Text, Dict[Text, Any]], Tuple[Tuple[Text, URL], RequestCall]
+        ],
         mock_aioresponses: aioresponses,
         external_intent_response: Dict[Text, Any],
 ) -> None:
-    expected_rasa_url, expected_rasa_call = rasa_callbacks_expected_call_builder(
+    expected_req_key, expected_req_call = rasa_callbacks_expected_request_builder(
         'a_receiving_user',
         'EXTERNAL_report_unavailable',
         {},
     )
-    mock_rasa_callbacks = AsyncMock(return_value=CallbackResult(payload=external_intent_response))
-    mock_aioresponses.post(
-        expected_rasa_url,
-        callback=mock_rasa_callbacks,
-    )
+    mock_aioresponses.post(re.compile(r'.*'), payload=external_intent_response)
 
     assert await rasa_callbacks.report_unavailable(
         'some_sender_id',
         'a_receiving_user',
     ) == external_intent_response
 
-    assert mock_rasa_callbacks.mock_calls == [expected_rasa_call]
+    assert mock_aioresponses.requests == {expected_req_key: [expected_req_call]}
