@@ -386,7 +386,7 @@ class ActionCreateRoom(BaseSwiperAction):
 
         user_profile_photo_id = telegram_helpers.get_user_profile_photo_file_id(current_user.user_id)
 
-        await rasa_callbacks.ask_if_ready(current_user.user_id, partner.user_id, user_profile_photo_id)
+        await rasa_callbacks.ask_to_join(current_user.user_id, partner.user_id, user_profile_photo_id)
 
         # noinspection PyUnresolvedReferences
         current_user.wait_for_partner(partner.user_id)
@@ -410,7 +410,7 @@ class ActionCreateRoom(BaseSwiperAction):
         room_url = created_room['url']
 
         # put partner into the room as well
-        await rasa_callbacks.join_room_ready(current_user.user_id, partner.user_id, room_url)
+        await rasa_callbacks.join_room(current_user.user_id, partner.user_id, room_url)
 
         dispatcher.utter_message(
             response='utter_room_url',

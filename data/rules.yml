@@ -60,7 +60,7 @@ rules:
   - action: utter_partner_already_gone
 - rule: a partner confirms readiness for the video chat and the user receives the room url
   steps:
-  - intent: EXTERNAL_join_room_ready
+  - intent: EXTERNAL_join_room
   - action: utter_partner_ready_room_url
   - action: action_join_room
 - rule: user asks the bot if the bot is a bot

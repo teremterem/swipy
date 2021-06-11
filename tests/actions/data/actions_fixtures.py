@@ -5,12 +5,12 @@ import pytest
 
 
 @pytest.fixture
-def rasa_callbacks_join_room_ready_expected_call(
+def rasa_callbacks_join_room_expected_call(
         rasa_callbacks_expected_call_builder: Callable[[Text, Text, Dict[Text, Any]], Tuple[Text, call]],
 ) -> Tuple[Text, call]:
     expected_rasa_url, expected_rasa_call = rasa_callbacks_expected_call_builder(
         'an_asker',
-        'EXTERNAL_join_room_ready',
+        'EXTERNAL_join_room',
         {
             'partner_id': 'unit_test_user',
             'room_url': 'https://swipy.daily.co/pytestroom',
