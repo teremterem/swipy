@@ -138,12 +138,17 @@ class NaiveDdbUserVault(BaseUserVault):
         if newbie is not None:
             filter_expression &= Attr('newbie').eq(newbie)
 
-        ddb_resp = user_state_machine_table.query(
-            IndexName='by_state',
-            KeyConditionExpression=Key('state').eq(UserState.OK_TO_CHITCHAT),
-            FilterExpression=filter_expression,
-        )
-        return ddb_resp.get('Items') or []
+        items = []
+        for allowed_state in UserState.can_be_offered_chitchat_states:
+            # TODO oleksandr: parallelize ? no! we will later be switching to Postgres anyway
+            ddb_resp = user_state_machine_table.query(
+                IndexName='by_state',
+                KeyConditionExpression=Key('state').eq(allowed_state),
+                FilterExpression=filter_expression,
+            )
+            items.extend(ddb_resp.get('Items') or [])
+
+        return items
 
 
 UserVault: Type[IUserVault] = NaiveDdbUserVault
