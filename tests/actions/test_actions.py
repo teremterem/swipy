@@ -610,8 +610,10 @@ async def test_action_create_room(
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
         daily_co_create_room_expected_req: Tuple[Text, call],
+        rasa_callbacks_expected_req_builder: Callable[
+            [Text, Text, Dict[Text, Any]], Tuple[Tuple[Text, URL], RequestCall]
+        ],
         new_room1: Dict[Text, Any],
-        rasa_callbacks_join_room_expected_req: Tuple[Text, call],
         external_intent_response: Dict[Text, Any],
 ) -> None:
     mock_aioresponses.post(re.compile(r'https://api\.daily-unittest\.co/.*'), payload=new_room1)
@@ -654,9 +656,17 @@ async def test_action_create_room(
         'room_url': 'https://swipy.daily.co/pytestroom',
     }]
 
+    rasa_callbacks_join_room_req_key, rasa_callbacks_join_room_req_call = rasa_callbacks_expected_req_builder(
+        'an_asker',
+        'EXTERNAL_join_room',
+        {
+            'partner_id': 'unit_test_user',
+            'room_url': 'https://swipy.daily.co/pytestroom',
+        },
+    )
     expected_requests = {
         daily_co_create_room_expected_req[0]: [daily_co_create_room_expected_req[1]],
-        rasa_callbacks_join_room_expected_req[0]: [rasa_callbacks_join_room_expected_req[1]],
+        rasa_callbacks_join_room_req_key: [rasa_callbacks_join_room_req_call],
     }
     assert mock_aioresponses.requests == expected_requests
 
@@ -686,7 +696,9 @@ async def test_action_create_room_confirm_with_asker(
         domain: Dict[Text, Any],
         telegram_user_profile_photo: Dict[Text, Any],
         telegram_user_profile_photo_make_request_call: call,
-        rasa_callbacks_ask_if_ready_expected_req: Tuple[Tuple[Text, URL], RequestCall],
+        rasa_callbacks_expected_req_builder: Callable[
+            [Text, Text, Dict[Text, Any]], Tuple[Tuple[Text, URL], RequestCall]
+        ],
         external_intent_response: Dict[Text, Any],
 ) -> None:
     mock_telebot_make_request.return_value = telegram_user_profile_photo
@@ -726,8 +738,17 @@ async def test_action_create_room_confirm_with_asker(
     assert mock_telebot_make_request.mock_calls == [
         telegram_user_profile_photo_make_request_call,
     ]
+
+    rasa_callbacks_ask_if_ready_req_key, rasa_callbacks_ask_if_ready_req_call = rasa_callbacks_expected_req_builder(
+        'an_asker',
+        'EXTERNAL_ask_to_join',
+        {
+            'partner_id': 'unit_test_user',
+            'partner_photo_file_id': 'biggest_profile_pic_file_id',
+        },
+    )
     assert mock_aioresponses.requests == {
-        rasa_callbacks_ask_if_ready_expected_req[0]: [rasa_callbacks_ask_if_ready_expected_req[1]],
+        rasa_callbacks_ask_if_ready_req_key: [rasa_callbacks_ask_if_ready_req_call],
     }
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
