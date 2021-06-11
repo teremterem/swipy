@@ -548,6 +548,9 @@ class ActionLetPartnerGo(BaseSwiperAction):
         partner_id_to_let_go = tracker.get_slot(PARTNER_ID_TO_LET_GO_SLOT)
 
         if partner_id_to_let_go:
+            partner_to_let_go = user_vault.get_user(partner_id_to_let_go)
+            await let_partner_go_if_applicable(current_user, partner_to_let_go)
+
             if current_user.state in (
                     UserState.ASKED_TO_JOIN,
                     UserState.ASKED_TO_CONFIRM
@@ -555,8 +558,5 @@ class ActionLetPartnerGo(BaseSwiperAction):
                 # noinspection PyUnresolvedReferences
                 current_user.time_out()
                 user_vault.save(current_user)
-
-            partner_to_let_go = user_vault.get_user(partner_id_to_let_go)
-            await let_partner_go_if_applicable(current_user, partner_to_let_go)
 
         return [UserUtteranceReverted()]
