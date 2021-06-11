@@ -79,6 +79,8 @@ nlu:
     - I am busy until evening
     - busy
     - sry busy now
+    - cancel
+    - stop
 - intent: bot_challenge
   examples: |
     - are you a bot?

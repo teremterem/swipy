@@ -107,7 +107,7 @@ def ddb_scan_of_three_users() -> List[Dict[Text, Any]]:
     return [
         {
             'user_id': 'existing_user_id1',
-            'state': 'waiting_partner_answer',
+            'state': 'waiting_partner_join',
             'partner_id': 'existing_user_id2',
             'newbie': False,
             'state_timestamp': None,
@@ -140,7 +140,7 @@ def ddb_scan_of_ten_users() -> List[Dict[Text, Any]]:
     return [
         {
             'user_id': 'existing_user_id1',
-            'state': 'waiting_partner_answer',
+            'state': 'waiting_partner_join',
             'partner_id': 'existing_user_id2',
             'newbie': False,
             'state_timestamp': None,

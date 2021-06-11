@@ -23,15 +23,11 @@ intents:
     use_entities: true
 - EXTERNAL_ask_to_join:
     use_entities: true
-- EXTERNAL_ask_if_ready:
-    use_entities: true
-- EXTERNAL_join_room_ready:
+- EXTERNAL_join_room:
     use_entities: true
 - EXTERNAL_find_partner:
     use_entities: true
 - EXTERNAL_let_partner_go:
-    use_entities: true
-- EXTERNAL_let_partner_go_not_ready:
     use_entities: true
 - EXTERNAL_report_unavailable:
     use_entities: true
@@ -109,7 +105,7 @@ responses:
       P. S. Do you have a photo in your Telegram profile? Having a photo increases chances that someone responds.
   utter_someone_wants_to_chat_photo:
   - custom:
-      caption: "Hey! This person wants to chitchat with someone \U0001F5E3\n \nWould you be willing to jump on a <b>video call?</b> \U0001F3A5 ☎️ ⏳"
+      caption: "Hey! This person wants to chitchat \U0001F5E3\n \nWould you be willing to jump on a <b>video call?</b> \U0001F3A5 ☎️ ⏳"
       parse_mode: html
       photo: '{partner_photo_file_id}'
   utter_someone_wants_to_chat:
@@ -122,13 +118,13 @@ responses:
       text: "Just a moment, I'm checking if that person is ready too...\n \nPlease don't go anywhere - <b>this may take up to two minutes</b> ⏳"
   utter_found_someone_check_ready_photo:
   - custom:
-      caption: "Hooray! I have found someone who is ok to chitchat!\n \n<b>Are you ready for a video call?</b> \U0001F3A5 ☎️ ⏳"
+      caption: "Hooray! I have found someone who is willing to chitchat!\n \n<b>Are you ready for a video call?</b> \U0001F3A5 ☎️ ⏳"
       parse_mode: html
       photo: '{partner_photo_file_id}'
   utter_found_someone_check_ready:
   - custom:
       parse_mode: html
-      text: "Hooray! I have found someone who is ok to chitchat!\n \n<b>Are you ready for a video call?</b> \U0001F3A5 ☎️ ⏳"
+      text: "Hooray! I have found someone who is willing to chitchat!\n \n<b>Are you ready for a video call?</b> \U0001F3A5 ☎️ ⏳"
   utter_partner_already_gone:
   - text: |-
       Unfortunately, that person has become unavailable 😵
@@ -145,10 +141,8 @@ responses:
       parse_mode: html
       text: "Done!\n \n<b>Please follow this link to join the video call:</b>\n \n{room_url}"
   utter_declined:
-  - text: Ok, declined ❌
-  utter_report_expired_ask_for_time_slots:
   - text: |-
-      Invitation has expired ⌛️
+      Ok, declined ❌
        
       Can I ask you if there is any specific time or times of day (maybe days of week) when you are more likely to join someone for chitchat over a video call?
   utter_hope_to_see_you_later:
@@ -164,17 +158,14 @@ responses:
   - text: Ouch! Something went wrong 🤖
 actions:
 - action_session_start
-- action_register_user
+- action_offer_chitchat
 - action_find_partner
 - action_ask_to_join
-- action_ask_if_ready
-- action_confirm_with_asker
 - action_create_room
 - action_join_room
-- action_become_ok_to_chitchat
+- action_request_chitchat
 - action_do_not_disturb
-- action_do_not_disturb_not_ready
+- action_reject_invitation
 - action_let_partner_go
-- action_let_partner_go_not_ready
 forms: {}
 e2e_actions: []

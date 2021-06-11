@@ -165,7 +165,7 @@ def test_save_new_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> None:
     assert user_state_machine_table.scan()['Items'] == [
         {
             'user_id': 'existing_user_id1',
-            'state': 'waiting_partner_answer',
+            'state': 'waiting_partner_join',
             'partner_id': 'existing_user_id2',
             'newbie': False,
             'state_timestamp': None,
@@ -218,7 +218,7 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
     assert user_state_machine_table.scan()['Items'] == [
         {
             'user_id': 'existing_user_id1',
-            'state': 'do_not_disturb',  # used to be 'waiting_partner_answer' but we have overridden it
+            'state': 'do_not_disturb',  # used to be 'waiting_partner_join' but we have overridden it
             'partner_id': None,  # used to be 'existing_user_id2' but we have overridden it
             'newbie': True,  # used to be False but we have overridden it
             'state_timestamp': None,
@@ -379,7 +379,8 @@ def test_ddb_user_vault_list_available_user_dicts(
 
     assert user_state_machine_table.scan()['Items'] == ddb_scan_of_ten_users
     user_vault = UserVault()
-    assert user_vault._list_available_user_dicts(exclude_user_id, newbie=newbie_filter) == expected_ddb_scan
+    actual_ddb_scan = user_vault._list_available_user_dicts(exclude_user_id, newbie=newbie_filter)
+    assert actual_ddb_scan == expected_ddb_scan
 
 
 @pytest.mark.parametrize('newbie_filter', [True, False, None])

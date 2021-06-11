@@ -7,7 +7,6 @@ from boto3.resources.base import ServiceResource
 from moto import mock_dynamodb2
 
 pytest_plugins = [
-    'tests.actions.data.actions_fixtures',
     'tests.actions.data.daily_co_fixtures',
     'tests.actions.data.rasa_callbacks_fixtures',
     'tests.actions.data.telegram_helpers_fixtures',

@@ -12,7 +12,7 @@ def unit_test_user() -> UserStateMachine:
 def user1() -> UserStateMachine:
     return UserStateMachine(
         user_id='existing_user_id1',
-        state=UserState.WAITING_PARTNER_ANSWER,
+        state=UserState.WAITING_PARTNER_JOIN,
         partner_id='existing_user_id2',
         newbie=False,
         notes='some note',

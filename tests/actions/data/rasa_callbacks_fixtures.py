@@ -1,7 +1,7 @@
 from typing import Dict, Text, Any, Callable, Tuple
-from unittest.mock import call
 
 import pytest
+from aioresponses.core import RequestCall
 from yarl import URL
 
 
@@ -113,31 +113,33 @@ def external_intent_response() -> Dict[Text, Any]:
 
 
 @pytest.fixture
-def rasa_callbacks_expected_call_builder() -> Callable[[Text, Text, Dict[Text, Any]], Tuple[Text, call]]:
-    def _call_builder(
+def rasa_callbacks_expected_req_builder() -> Callable[
+    [Text, Text, Dict[Text, Any]], Tuple[Tuple[Text, URL], RequestCall]
+]:
+    def _expected_request_builder(
             expected_receiver_id: Text,
             expected_intent: Text,
             expected_entities: Dict[Text, Any],
-    ) -> Tuple[Text, call]:
+    ) -> Tuple[Tuple[Text, URL], RequestCall]:
         # noinspection HttpUrlsUsage
-        expected_url = (
+        expected_request_key = ('POST', URL(
             f"http://rasa-unittest:5005/conversations/{expected_receiver_id}/trigger_intent"
             f"?output_channel=telegram&token=rasaunittesttoken"
-        )
-        expected_call = call(
-            URL(expected_url),
-            allow_redirects=True,
-            data=None,
-            params={
-                'output_channel': 'telegram',
-                'token': 'rasaunittesttoken',
+        ))
+        expected_request_call = RequestCall(
+            args=(),
+            kwargs={
+                'data': None,
+                'params': {
+                    'output_channel': 'telegram',
+                    'token': 'rasaunittesttoken',
+                },
+                'json': {
+                    'name': expected_intent,
+                    'entities': expected_entities,
+                },
             },
-            json={
-                'name': expected_intent,
-                'entities': expected_entities,
-            },
         )
+        return expected_request_key, expected_request_call
 
-        return expected_url, expected_call
-
-    return _call_builder
+    return _expected_request_builder

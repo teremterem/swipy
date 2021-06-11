@@ -78,16 +78,6 @@ class BaseSwiperAction(Action, ABC):
                 user_vault.get_user(tracker.sender_id),
                 user_vault,
             ))
-            events.extend([
-                SlotSet(
-                    key=SWIPER_ERROR_SLOT,
-                    value=None,
-                ),
-                SlotSet(
-                    key=SWIPER_ERROR_TRACE_SLOT,
-                    value=None,
-                ),
-            ])
 
         except Exception as e:
             logger.exception(self.name())
@@ -142,10 +132,12 @@ class ActionSessionStart(BaseSwiperAction):
         return [
             SlotSet(key=slot_key, value=slot_value)
             for slot_key, slot_value in tracker.slots.items()
-            if slot_key not in [
+            if slot_key not in (
                 SWIPER_STATE_SLOT,
                 rasa_callbacks.PARTNER_ID_SLOT,
-            ]
+                SWIPER_ERROR_SLOT,
+                SWIPER_ERROR_TRACE_SLOT,
+            )
         ]
 
     async def swipy_run(
@@ -160,6 +152,16 @@ class ActionSessionStart(BaseSwiperAction):
         if domain['session_config']['carry_over_slots_to_new_session']:
             events.extend(self._slot_set_events_from_tracker(tracker))
 
+        events.extend([
+            SlotSet(
+                key=SWIPER_ERROR_SLOT,
+                value=None,
+            ),
+            SlotSet(
+                key=SWIPER_ERROR_TRACE_SLOT,
+                value=None,
+            ),
+        ])
         return events
 
     async def run(
@@ -174,9 +176,9 @@ class ActionSessionStart(BaseSwiperAction):
         return events
 
 
-class ActionRegisterUser(BaseSwiperAction):
+class ActionOfferChitchat(BaseSwiperAction):
     def name(self) -> Text:
-        return 'action_register_user'
+        return 'action_offer_chitchat'
 
     async def swipy_run(
             self, dispatcher: CollectingDispatcher,
@@ -188,12 +190,26 @@ class ActionRegisterUser(BaseSwiperAction):
         if GREETING_MAKES_USER_OK_TO_CHITCHAT:
             if current_user.state in (
                     UserState.NEW,
+                    # UserState.WAITING_PARTNER_JOIN,
+                    # UserState.WAITING_PARTNER_CONFIRM,
+                    # UserState.ASKED_TO_JOIN,
+                    # UserState.ASKED_TO_CONFIRM,
+                    # UserState.ROOMED,
+                    UserState.REJECTED_JOIN,  # TODO oleksandr: are you sure about this ?
+                    UserState.REJECTED_CONFIRM,  # TODO oleksandr: are you sure about this ?
+                    UserState.JOIN_TIMED_OUT,
+                    UserState.CONFIRM_TIMED_OUT,
                     UserState.DO_NOT_DISTURB,
-                    UserState.ASKED_TO_JOIN,
             ):
                 # noinspection PyUnresolvedReferences
                 current_user.become_ok_to_chitchat()
                 user_vault.save(current_user)
+
+        latest_intent = tracker.get_intent_of_latest_message()
+        if latest_intent == 'how_it_works':
+            dispatcher.utter_message(response='utter_how_it_works')
+        else:  # it is either 'greet' or 'start'
+            dispatcher.utter_message(response='utter_greet_offer_chitchat')
 
         return [
             SlotSet(
@@ -229,22 +245,23 @@ class ActionFindPartner(BaseSwiperAction):
             )
 
         if partner:
-            if partner.state != UserState.OK_TO_CHITCHAT:
+            if not partner.can_be_offered_chitchat():
                 # noinspection PyUnresolvedReferences
-                current_user.become_ok_to_chitchat()
+                current_user.request_chitchat()
                 user_vault.save(current_user)
 
                 raise InvalidSwiperStateError(
                     f"randomly chosen partner {repr(partner.user_id)} is in a wrong state: {repr(partner.state)}"
                 )
 
-            user_profile_photo_id = telegram_helpers.get_user_profile_photo_file_id(current_user.user_id)
-
-            await rasa_callbacks.ask_to_join(current_user.user_id, partner.user_id, user_profile_photo_id)
-
             # noinspection PyUnresolvedReferences
-            current_user.ask_partner(partner.user_id)
+            current_user.request_chitchat()
+            # noinspection PyUnresolvedReferences
+            current_user.wait_for_partner(partner.user_id)
             user_vault.save(current_user)
+
+            user_profile_photo_id = telegram_helpers.get_user_profile_photo_file_id(current_user.user_id)
+            await rasa_callbacks.ask_to_join(current_user.user_id, partner.user_id, user_profile_photo_id)
 
             return [
                 SlotSet(
@@ -253,11 +270,11 @@ class ActionFindPartner(BaseSwiperAction):
                 ),
             ]
 
-        dispatcher.utter_message(response='utter_no_one_was_found')
-
         # noinspection PyUnresolvedReferences
-        current_user.become_ok_to_chitchat()
+        current_user.request_chitchat()
         user_vault.save(current_user)
+
+        dispatcher.utter_message(response='utter_no_one_was_found')
 
         return [
             SlotSet(
@@ -271,10 +288,6 @@ class ActionAskToJoin(BaseSwiperAction):
     def name(self) -> Text:
         return 'action_ask_to_join'
 
-    @staticmethod
-    def reminder_intent():
-        return 'EXTERNAL_let_partner_go'
-
     async def swipy_run(
             self, dispatcher: CollectingDispatcher,
             tracker: Tracker,
@@ -284,13 +297,29 @@ class ActionAskToJoin(BaseSwiperAction):
     ) -> List[Dict[Text, Any]]:
         partner_id = tracker.get_slot(rasa_callbacks.PARTNER_ID_SLOT)
         # noinspection PyUnresolvedReferences
-        current_user.become_asked_to_join(partner_id)
+        current_user.become_asked(partner_id)
         user_vault.save(current_user)
+
+        if current_user.state == UserState.ASKED_TO_CONFIRM:
+            response_template = 'utter_found_someone_check_ready'
+        else:  # current_user.state == UserState.ASKED_TO_JOIN
+            response_template = 'utter_someone_wants_to_chat'
+
+        partner_photo_file_id = tracker.get_slot(rasa_callbacks.PARTNER_PHOTO_FILE_ID_SLOT)
+        if partner_photo_file_id:
+            response_template += '_photo'
+            response_kwargs = {
+                rasa_callbacks.PARTNER_PHOTO_FILE_ID_SLOT: partner_photo_file_id,
+            }
+        else:
+            response_kwargs = {}
+
+        dispatcher.utter_message(response=response_template, **response_kwargs)
 
         date = datetime_now() + datetime.timedelta(seconds=QUESTION_TIMEOUT_SEC)
 
         reminder = ReminderScheduled(
-            self.reminder_intent(),
+            'EXTERNAL_let_partner_go',
             trigger_date_time=date,
             entities={
                 PARTNER_ID_TO_LET_GO_SLOT: partner_id,
@@ -307,15 +336,6 @@ class ActionAskToJoin(BaseSwiperAction):
         ]
 
 
-class ActionAskIfReady(ActionAskToJoin):
-    def name(self) -> Text:
-        return 'action_ask_if_ready'
-
-    @staticmethod
-    def reminder_intent():
-        return 'EXTERNAL_let_partner_go_not_ready'
-
-
 class ActionCreateRoom(BaseSwiperAction):
     def name(self) -> Text:
         return 'action_create_room'
@@ -327,16 +347,10 @@ class ActionCreateRoom(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        if not current_user.partner_id:
-            raise InvalidSwiperStateError(
-                f"current user {repr(current_user.user_id)} cannot join the room "
-                f"because current_user.partner_id is empty",
-            )
-
         partner = user_vault.get_user(current_user.partner_id)
         if not partner.is_waiting_for(current_user.user_id):
             # noinspection PyUnresolvedReferences
-            current_user.become_ok_to_chitchat()
+            current_user.request_chitchat()
             user_vault.save(current_user)
 
             dispatcher.utter_message(response='utter_partner_already_gone')
@@ -348,10 +362,46 @@ class ActionCreateRoom(BaseSwiperAction):
                 ),
             ]
 
-        return await self.reach_out_to_partner(dispatcher, current_user, partner, user_vault)
+        if current_user.state == UserState.ASKED_TO_JOIN:
+            # instead of creating a room, first confirm with the partner
+            return await self.confirm_with_asker(dispatcher, current_user, partner, user_vault)
 
-    async def reach_out_to_partner(
-            self, dispatcher: CollectingDispatcher,
+        elif current_user.state == UserState.ASKED_TO_CONFIRM:
+            return await self.create_room(dispatcher, current_user, partner, user_vault)
+
+        else:  # invalid state
+            raise InvalidSwiperStateError(
+                f"Room cannot be created because current user {repr(current_user.user_id)} "
+                f"is in invalid state: {repr(current_user.state)}"
+            )
+
+    @staticmethod
+    async def confirm_with_asker(
+            dispatcher: CollectingDispatcher,
+            current_user: UserStateMachine,
+            partner: UserStateMachine,
+            user_vault: IUserVault,
+    ) -> List[Dict[Text, Any]]:
+        dispatcher.utter_message(response='utter_checking_if_partner_ready_too')
+
+        user_profile_photo_id = telegram_helpers.get_user_profile_photo_file_id(current_user.user_id)
+
+        await rasa_callbacks.ask_to_join(current_user.user_id, partner.user_id, user_profile_photo_id)
+
+        # noinspection PyUnresolvedReferences
+        current_user.wait_for_partner(partner.user_id)
+        user_vault.save(current_user)
+
+        return [
+            SlotSet(
+                key=SWIPER_ACTION_RESULT_SLOT,
+                value=SwiperActionResult.PARTNER_HAS_BEEN_ASKED,
+            ),
+        ]
+
+    @staticmethod
+    async def create_room(
+            dispatcher: CollectingDispatcher,
             current_user: UserStateMachine,
             partner: UserStateMachine,
             user_vault: IUserVault,
@@ -360,7 +410,7 @@ class ActionCreateRoom(BaseSwiperAction):
         room_url = created_room['url']
 
         # put partner into the room as well
-        await rasa_callbacks.join_room_ready(current_user.user_id, partner.user_id, room_url)
+        await rasa_callbacks.join_room(current_user.user_id, partner.user_id, room_url)
 
         dispatcher.utter_message(
             response='utter_room_url',
@@ -370,7 +420,7 @@ class ActionCreateRoom(BaseSwiperAction):
         )
 
         # noinspection PyUnresolvedReferences
-        current_user.join_room()
+        current_user.join_room(partner.user_id)
         user_vault.save(current_user)
 
         return [
@@ -381,34 +431,6 @@ class ActionCreateRoom(BaseSwiperAction):
             SlotSet(
                 key=rasa_callbacks.ROOM_URL_SLOT,
                 value=room_url,
-            ),
-        ]
-
-
-class ActionConfirmWithAsker(ActionCreateRoom):
-    def name(self) -> Text:
-        return 'action_confirm_with_asker'
-
-    async def reach_out_to_partner(
-            self, dispatcher: CollectingDispatcher,
-            current_user: UserStateMachine,
-            partner: UserStateMachine,
-            user_vault: IUserVault,
-    ) -> List[Dict[Text, Any]]:
-        dispatcher.utter_message(response='utter_checking_if_partner_ready_too')
-
-        user_profile_photo_id = telegram_helpers.get_user_profile_photo_file_id(current_user.user_id)
-
-        await rasa_callbacks.ask_if_ready(current_user.user_id, partner.user_id, user_profile_photo_id)
-
-        # noinspection PyUnresolvedReferences
-        current_user.ask_partner(partner.user_id)
-        user_vault.save(current_user)
-
-        return [
-            SlotSet(
-                key=SWIPER_ACTION_RESULT_SLOT,
-                value=SwiperActionResult.PARTNER_HAS_BEEN_ASKED,
             ),
         ]
 
@@ -424,8 +446,9 @@ class ActionJoinRoom(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
+        partner_id = tracker.get_slot(rasa_callbacks.PARTNER_ID_SLOT)
         # noinspection PyUnresolvedReferences
-        current_user.join_room()
+        current_user.join_room(partner_id)
         user_vault.save(current_user)
 
         return [
@@ -436,9 +459,9 @@ class ActionJoinRoom(BaseSwiperAction):
         ]
 
 
-class ActionBecomeOkToChitchat(BaseSwiperAction):
+class ActionRequestChitchat(BaseSwiperAction):
     def name(self) -> Text:
-        return 'action_become_ok_to_chitchat'
+        return 'action_request_chitchat'
 
     async def swipy_run(
             self, dispatcher: CollectingDispatcher,
@@ -448,7 +471,7 @@ class ActionBecomeOkToChitchat(BaseSwiperAction):
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
         # noinspection PyUnresolvedReferences
-        current_user.become_ok_to_chitchat()
+        current_user.request_chitchat()
         user_vault.save(current_user)
 
         return [
@@ -459,14 +482,22 @@ class ActionBecomeOkToChitchat(BaseSwiperAction):
         ]
 
 
+async def let_partner_go_if_applicable(current_user: UserStateMachine, partner: UserStateMachine) -> None:
+    if partner.partner_id == current_user.user_id:
+        if partner.state == UserState.WAITING_PARTNER_JOIN:
+            # force the original sender of the declined invitation to "move along" in their partner search
+            await rasa_callbacks.find_partner(current_user.user_id, partner.user_id)
+        elif partner.state == UserState.WAITING_PARTNER_CONFIRM:
+            await rasa_callbacks.report_unavailable(current_user.user_id, partner.user_id)
+
+
 class ActionDoNotDisturb(BaseSwiperAction):
     def name(self) -> Text:
         return 'action_do_not_disturb'
 
-    @staticmethod
-    async def ping_partner(current_user: UserStateMachine, partner: UserStateMachine) -> None:
-        # force the original sender of the declined invitation to "move along" in their partner search
-        await rasa_callbacks.find_partner(current_user.user_id, partner.user_id)
+    def update_current_user(self, current_user: UserStateMachine):
+        # noinspection PyUnresolvedReferences
+        current_user.become_do_not_disturb()
 
     async def swipy_run(
             self, dispatcher: CollectingDispatcher,
@@ -477,14 +508,12 @@ class ActionDoNotDisturb(BaseSwiperAction):
     ) -> List[Dict[Text, Any]]:
         initial_partner_id = current_user.partner_id
 
-        # noinspection PyUnresolvedReferences
-        current_user.become_do_not_disturb()
+        self.update_current_user(current_user)
         user_vault.save(current_user)
 
         if initial_partner_id:
             partner = user_vault.get_user(initial_partner_id)
-            if partner.is_waiting_for(current_user.user_id):
-                await self.ping_partner(current_user, partner)
+            await let_partner_go_if_applicable(current_user, partner)
 
         return [
             SlotSet(
@@ -494,23 +523,18 @@ class ActionDoNotDisturb(BaseSwiperAction):
         ]
 
 
-class ActionDoNotDisturbNotReady(ActionDoNotDisturb):
+class ActionRejectInvitation(ActionDoNotDisturb):
     def name(self) -> Text:
-        return 'action_do_not_disturb_not_ready'
+        return 'action_reject_invitation'
 
-    @staticmethod
-    async def ping_partner(current_user: UserStateMachine, partner: UserStateMachine) -> None:
-        await rasa_callbacks.report_unavailable(current_user.user_id, partner.user_id)
+    def update_current_user(self, current_user: UserStateMachine):
+        # noinspection PyUnresolvedReferences
+        current_user.reject()
 
 
 class ActionLetPartnerGo(BaseSwiperAction):
     def name(self) -> Text:
         return 'action_let_partner_go'
-
-    @staticmethod
-    async def ping_partner(current_user: UserStateMachine, partner: UserStateMachine) -> None:
-        # force the original sender of the timed out invitation to "move along" in their partner search
-        await rasa_callbacks.find_partner(current_user.user_id, partner.user_id)
 
     async def swipy_run(
             self, dispatcher: CollectingDispatcher,
@@ -519,29 +543,18 @@ class ActionLetPartnerGo(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        # TODO oleksandr: safeguard with a try-except block (current user doesn't need to know about problems here) ?
-        #  or maybe just don't extend this action from BaseSwiperAction ? or maybe both
         partner_id_to_let_go = tracker.get_slot(PARTNER_ID_TO_LET_GO_SLOT)
-        revert_utterance = True
 
         if partner_id_to_let_go:
-            if current_user.state == UserState.ASKED_TO_JOIN and current_user.partner_id == partner_id_to_let_go:
-                dispatcher.utter_message(response='utter_report_expired_ask_for_time_slots')
-                revert_utterance = False
-
             partner_to_let_go = user_vault.get_user(partner_id_to_let_go)
-            if partner_to_let_go.is_waiting_for(current_user.user_id):
-                await self.ping_partner(current_user, partner_to_let_go)
+            await let_partner_go_if_applicable(current_user, partner_to_let_go)
 
-        if revert_utterance:
-            return [UserUtteranceReverted()]
-        return []
+            if current_user.state in (
+                    UserState.ASKED_TO_JOIN,
+                    UserState.ASKED_TO_CONFIRM
+            ) and current_user.partner_id == partner_id_to_let_go:
+                # noinspection PyUnresolvedReferences
+                current_user.time_out()
+                user_vault.save(current_user)
 
-
-class ActionLetPartnerGoNotReady(ActionLetPartnerGo):
-    def name(self) -> Text:
-        return 'action_let_partner_go_not_ready'
-
-    @staticmethod
-    async def ping_partner(current_user: UserStateMachine, partner: UserStateMachine) -> None:
-        await rasa_callbacks.report_unavailable(current_user.user_id, partner.user_id)
+        return [UserUtteranceReverted()]
