@@ -1299,19 +1299,15 @@ async def test_action_let_partner_go(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
-        rasa_callbacks_expected_call_builder: Callable[[Text, Text, Dict[Text, Any]], Tuple[Text, call]],
+        rasa_callbacks_expected_request_builder: Callable[
+            [Text, Text, Dict[Text, Any]], Tuple[Tuple[Text, URL], RequestCall]
+        ],
         external_intent_response: Dict[Text, Any],
         current_user: UserStateMachine,
         asker: UserStateMachine,
         find_partner_call_expected: bool,
 ) -> None:
-    expected_rasa_url, expected_rasa_call = rasa_callbacks_expected_call_builder(
-        'the_asker',
-        'EXTERNAL_find_partner',
-        {},
-    )
-    mock_rasa_callbacks = AsyncMock(return_value=CallbackResult(payload=external_intent_response))
-    mock_aioresponses.post(expected_rasa_url, callback=mock_rasa_callbacks)
+    mock_aioresponses.post(re.compile(r'.*'), payload=external_intent_response)
 
     action = actions.ActionLetPartnerGo()
     assert action.name() == 'action_let_partner_go'
@@ -1333,9 +1329,14 @@ async def test_action_let_partner_go(
     assert dispatcher.messages == []
 
     if find_partner_call_expected:
-        assert mock_rasa_callbacks.mock_calls == [expected_rasa_call]
+        expected_req_key, expected_req_call = rasa_callbacks_expected_request_builder(
+            'the_asker',
+            'EXTERNAL_find_partner',
+            {},
+        )
+        assert mock_aioresponses.requests == {expected_req_key: [expected_req_call]}
     else:
-        mock_rasa_callbacks.assert_not_called()
+        assert mock_aioresponses.requests == {}
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == current_user  # current user should remain unchanged
