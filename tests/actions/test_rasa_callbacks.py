@@ -12,13 +12,13 @@ from actions.utils import SwiperRasaCallbackError
 
 @pytest.mark.asyncio
 async def test_ask_to_join(
-        rasa_callbacks_expected_request_builder: Callable[
+        rasa_callbacks_expected_req_builder: Callable[
             [Text, Text, Dict[Text, Any]], Tuple[Tuple[Text, URL], RequestCall]
         ],
         mock_aioresponses: aioresponses,
         external_intent_response: Dict[Text, Any],
 ) -> None:
-    expected_req_key, expected_req_call = rasa_callbacks_expected_request_builder(
+    expected_req_key, expected_req_call = rasa_callbacks_expected_req_builder(
         'partner_id_to_ask',
         'EXTERNAL_ask_to_join',
         {
@@ -39,13 +39,13 @@ async def test_ask_to_join(
 
 @pytest.mark.asyncio
 async def test_ask_if_ready(
-        rasa_callbacks_expected_request_builder: Callable[
+        rasa_callbacks_expected_req_builder: Callable[
             [Text, Text, Dict[Text, Any]], Tuple[Tuple[Text, URL], RequestCall]
         ],
         mock_aioresponses: aioresponses,
         external_intent_response: Dict[Text, Any],
 ) -> None:
-    expected_req_key, expected_req_call = rasa_callbacks_expected_request_builder(
+    expected_req_key, expected_req_call = rasa_callbacks_expected_req_builder(
         'partner_id_to_ask',
         'EXTERNAL_ask_if_ready',
         {
@@ -66,13 +66,13 @@ async def test_ask_if_ready(
 
 @pytest.mark.asyncio
 async def test_join_room_ready(
-        rasa_callbacks_expected_request_builder: Callable[
+        rasa_callbacks_expected_req_builder: Callable[
             [Text, Text, Dict[Text, Any]], Tuple[Tuple[Text, URL], RequestCall]
         ],
         mock_aioresponses: aioresponses,
         external_intent_response: Dict[Text, Any],
 ) -> None:
-    expected_req_key, expected_req_call = rasa_callbacks_expected_request_builder(
+    expected_req_key, expected_req_call = rasa_callbacks_expected_req_builder(
         'a_receiving_user',
         'EXTERNAL_join_room_ready',
         {
@@ -93,13 +93,13 @@ async def test_join_room_ready(
 
 @pytest.mark.asyncio
 async def test_find_partner(
-        rasa_callbacks_expected_request_builder: Callable[
+        rasa_callbacks_expected_req_builder: Callable[
             [Text, Text, Dict[Text, Any]], Tuple[Tuple[Text, URL], RequestCall]
         ],
         mock_aioresponses: aioresponses,
         external_intent_response: Dict[Text, Any],
 ) -> None:
-    expected_req_key, expected_req_call = rasa_callbacks_expected_request_builder(
+    expected_req_key, expected_req_call = rasa_callbacks_expected_req_builder(
         'a_receiving_user',
         'EXTERNAL_find_partner',
         {},
@@ -125,13 +125,13 @@ async def test_find_partner(
     },
 ])
 async def test_find_partner_unsuccessful(
-        rasa_callbacks_expected_request_builder: Callable[
+        rasa_callbacks_expected_req_builder: Callable[
             [Text, Text, Dict[Text, Any]], Tuple[Tuple[Text, URL], RequestCall]
         ],
         mock_aioresponses: aioresponses,
         unsuccessful_response: Dict[Text, Any],
 ) -> None:
-    expected_req_key, expected_req_call = rasa_callbacks_expected_request_builder(
+    expected_req_key, expected_req_call = rasa_callbacks_expected_req_builder(
         'a_receiving_user',
         'EXTERNAL_find_partner',
         {},
@@ -148,13 +148,13 @@ async def test_find_partner_unsuccessful(
 
 @pytest.mark.asyncio
 async def test_report_unavailable(
-        rasa_callbacks_expected_request_builder: Callable[
+        rasa_callbacks_expected_req_builder: Callable[
             [Text, Text, Dict[Text, Any]], Tuple[Tuple[Text, URL], RequestCall]
         ],
         mock_aioresponses: aioresponses,
         external_intent_response: Dict[Text, Any],
 ) -> None:
-    expected_req_key, expected_req_call = rasa_callbacks_expected_request_builder(
+    expected_req_key, expected_req_call = rasa_callbacks_expected_req_builder(
         'a_receiving_user',
         'EXTERNAL_report_unavailable',
         {},

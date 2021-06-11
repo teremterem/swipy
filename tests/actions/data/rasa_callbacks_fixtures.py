@@ -113,7 +113,7 @@ def external_intent_response() -> Dict[Text, Any]:
 
 
 @pytest.fixture
-def rasa_callbacks_expected_request_builder() -> Callable[
+def rasa_callbacks_expected_req_builder() -> Callable[
     [Text, Text, Dict[Text, Any]], Tuple[Tuple[Text, URL], RequestCall]
 ]:
     def _expected_request_builder(

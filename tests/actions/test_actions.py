@@ -198,7 +198,7 @@ async def test_action_find_partner_newbie(
         available_newbie1: UserStateMachine,
         telegram_user_profile_photo: Dict[Text, Any],
         telegram_user_profile_photo_make_request_call: call,
-        rasa_callbacks_expected_request_builder: Callable[
+        rasa_callbacks_expected_req_builder: Callable[
             [Text, Text, Dict[Text, Any]], Tuple[Tuple[Text, URL], RequestCall]
         ],
         external_intent_response: Dict[Text, Any],
@@ -226,7 +226,7 @@ async def test_action_find_partner_newbie(
         telegram_user_profile_photo_make_request_call,
     ]
 
-    expected_req_key, expected_req_call = rasa_callbacks_expected_request_builder(
+    expected_req_key, expected_req_call = rasa_callbacks_expected_req_builder(
         'available_newbie_id1',
         'EXTERNAL_ask_to_join',
         {
@@ -263,7 +263,7 @@ async def test_action_find_partner_no_photo(
         domain: Dict[Text, Any],
         available_newbie1: UserStateMachine,
         telegram_user_profile_photo_make_request_call: call,
-        rasa_callbacks_expected_request_builder: Callable[
+        rasa_callbacks_expected_req_builder: Callable[
             [Text, Text, Dict[Text, Any]], Tuple[Tuple[Text, URL], RequestCall]
         ],
         external_intent_response: Dict[Text, Any],
@@ -291,7 +291,7 @@ async def test_action_find_partner_no_photo(
         telegram_user_profile_photo_make_request_call,
     ]
 
-    expected_req_key, expected_req_call = rasa_callbacks_expected_request_builder(
+    expected_req_key, expected_req_call = rasa_callbacks_expected_req_builder(
         'available_newbie_id1',
         'EXTERNAL_ask_to_join',
         {
@@ -329,7 +329,7 @@ async def test_action_find_partner_veteran(
         available_veteran1: UserStateMachine,
         telegram_user_profile_photo: Dict[Text, Any],
         telegram_user_profile_photo_make_request_call: call,
-        rasa_callbacks_expected_request_builder: Callable[
+        rasa_callbacks_expected_req_builder: Callable[
             [Text, Text, Dict[Text, Any]], Tuple[Tuple[Text, URL], RequestCall]
         ],
         external_intent_response: Dict[Text, Any],
@@ -360,7 +360,7 @@ async def test_action_find_partner_veteran(
         telegram_user_profile_photo_make_request_call,
     ]
 
-    expected_req_key, expected_req_call = rasa_callbacks_expected_request_builder(
+    expected_req_key, expected_req_call = rasa_callbacks_expected_req_builder(
         'available_veteran_id1',
         'EXTERNAL_ask_to_join',
         {
@@ -1130,7 +1130,7 @@ async def test_action_do_not_disturb(
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
         external_intent_response: Dict[Text, Any],
-        rasa_callbacks_expected_request_builder: Callable[
+        rasa_callbacks_expected_req_builder: Callable[
             [Text, Text, Dict[Text, Any]], Tuple[Tuple[Text, URL], RequestCall]
         ],
         current_user: UserStateMachine,
@@ -1155,7 +1155,7 @@ async def test_action_do_not_disturb(
     assert dispatcher.messages == []
 
     if expected_rasa_callback_name == 'find_partner':
-        expected_req_key, expected_req_call = rasa_callbacks_expected_request_builder(
+        expected_req_key, expected_req_call = rasa_callbacks_expected_req_builder(
             'the_asker',
             'EXTERNAL_find_partner',
             {},
@@ -1163,7 +1163,7 @@ async def test_action_do_not_disturb(
         assert mock_aioresponses.requests == {expected_req_key: [expected_req_call]}
 
     elif expected_rasa_callback_name == 'report_unavailable':
-        expected_req_key, expected_req_call = rasa_callbacks_expected_request_builder(
+        expected_req_key, expected_req_call = rasa_callbacks_expected_req_builder(
             'the_asker',
             'EXTERNAL_report_unavailable',
             {},
@@ -1299,7 +1299,7 @@ async def test_action_let_partner_go(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
-        rasa_callbacks_expected_request_builder: Callable[
+        rasa_callbacks_expected_req_builder: Callable[
             [Text, Text, Dict[Text, Any]], Tuple[Tuple[Text, URL], RequestCall]
         ],
         external_intent_response: Dict[Text, Any],
@@ -1329,7 +1329,7 @@ async def test_action_let_partner_go(
     assert dispatcher.messages == []
 
     if find_partner_call_expected:
-        expected_req_key, expected_req_call = rasa_callbacks_expected_request_builder(
+        expected_req_key, expected_req_call = rasa_callbacks_expected_req_builder(
             'the_asker',
             'EXTERNAL_find_partner',
             {},
