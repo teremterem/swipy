@@ -141,10 +141,8 @@ responses:
       parse_mode: html
       text: "Done!\n \n<b>Please follow this link to join the video call:</b>\n \n{room_url}"
   utter_declined:
-  - text: Ok, declined ❌
-  utter_report_expired_ask_for_time_slots:
   - text: |-
-      Invitation has expired ⌛️
+      Ok, declined ❌
        
       Can I ask you if there is any specific time or times of day (maybe days of week) when you are more likely to join someone for chitchat over a video call?
   utter_hope_to_see_you_later:
