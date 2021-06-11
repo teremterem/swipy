@@ -198,23 +198,16 @@ async def test_action_find_partner_newbie(
         available_newbie1: UserStateMachine,
         telegram_user_profile_photo: Dict[Text, Any],
         telegram_user_profile_photo_make_request_call: call,
-        rasa_callbacks_expected_call_builder: Callable[[Text, Text, Dict[Text, Any]], Tuple[Text, call]],
+        rasa_callbacks_expected_request_builder: Callable[
+            [Text, Text, Dict[Text, Any]], Tuple[Tuple[Text, URL], RequestCall]
+        ],
         external_intent_response: Dict[Text, Any],
 ) -> None:
     # noinspection PyDataclass
     mock_list_available_user_dicts.return_value = [asdict(available_newbie1)]
     mock_telebot_make_request.return_value = telegram_user_profile_photo
 
-    expected_rasa_url, expected_rasa_call = rasa_callbacks_expected_call_builder(
-        'available_newbie_id1',
-        'EXTERNAL_ask_to_join',
-        {
-            'partner_id': 'unit_test_user',
-            'partner_photo_file_id': 'biggest_profile_pic_file_id',
-        },
-    )
-    mock_rasa_callbacks = AsyncMock(return_value=CallbackResult(payload=external_intent_response))
-    mock_aioresponses.post(expected_rasa_url, callback=mock_rasa_callbacks)
+    mock_aioresponses.post(re.compile(r'.*'), payload=external_intent_response)
 
     action = actions.ActionFindPartner()
     assert action.name() == 'action_find_partner'
@@ -232,9 +225,16 @@ async def test_action_find_partner_newbie(
     assert mock_telebot_make_request.mock_calls == [
         telegram_user_profile_photo_make_request_call,
     ]
-    assert mock_rasa_callbacks.mock_calls == [
-        expected_rasa_call,
-    ]
+
+    expected_req_key, expected_req_call = rasa_callbacks_expected_request_builder(
+        'available_newbie_id1',
+        'EXTERNAL_ask_to_join',
+        {
+            'partner_id': 'unit_test_user',
+            'partner_photo_file_id': 'biggest_profile_pic_file_id',
+        },
+    )
+    assert mock_aioresponses.requests == {expected_req_key: [expected_req_call]}
 
     user_vault = UserVault()
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
@@ -1155,20 +1155,20 @@ async def test_action_do_not_disturb(
     assert dispatcher.messages == []
 
     if expected_rasa_callback_name == 'find_partner':
-        expected_request_key, expected_request_call = rasa_callbacks_expected_request_builder(
+        expected_req_key, expected_req_call = rasa_callbacks_expected_request_builder(
             'the_asker',
             'EXTERNAL_find_partner',
             {},
         )
-        assert mock_aioresponses.requests == {expected_request_key: [expected_request_call]}
+        assert mock_aioresponses.requests == {expected_req_key: [expected_req_call]}
 
     elif expected_rasa_callback_name == 'report_unavailable':
-        expected_request_key, expected_request_call = rasa_callbacks_expected_request_builder(
+        expected_req_key, expected_req_call = rasa_callbacks_expected_request_builder(
             'the_asker',
             'EXTERNAL_report_unavailable',
             {},
         )
-        assert mock_aioresponses.requests == {expected_request_key: [expected_request_call]}
+        assert mock_aioresponses.requests == {expected_req_key: [expected_req_call]}
 
     else:
         assert mock_aioresponses.requests == {}
