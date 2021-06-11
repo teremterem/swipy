@@ -1111,7 +1111,7 @@ async def test_action_offer_chitchat(
     (
             UserStateMachine(
                 user_id='unit_test_user',
-                state='asked_to_join',
+                state='asked_to_join',  # should be 'asked_to_confirm' but the action should rely on partner status
                 partner_id='the_asker',
                 newbie=True,
             ),
