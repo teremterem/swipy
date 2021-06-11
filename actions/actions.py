@@ -132,12 +132,12 @@ class ActionSessionStart(BaseSwiperAction):
         return [
             SlotSet(key=slot_key, value=slot_value)
             for slot_key, slot_value in tracker.slots.items()
-            if slot_key not in [
+            if slot_key not in (
                 SWIPER_STATE_SLOT,
                 rasa_callbacks.PARTNER_ID_SLOT,
                 SWIPER_ERROR_SLOT,
                 SWIPER_ERROR_TRACE_SLOT,
-            ]
+            )
         ]
 
     async def swipy_run(
@@ -546,16 +546,17 @@ class ActionLetPartnerGo(BaseSwiperAction):
         # TODO oleksandr: safeguard with a try-except block (current user doesn't need to know about problems here) ?
         #  or maybe just don't extend this action from BaseSwiperAction ? or maybe both
         partner_id_to_let_go = tracker.get_slot(PARTNER_ID_TO_LET_GO_SLOT)
-        revert_utterance = True
 
         if partner_id_to_let_go:
-            if current_user.state == UserState.ASKED_TO_JOIN and current_user.partner_id == partner_id_to_let_go:
-                dispatcher.utter_message(response='utter_report_expired_ask_for_time_slots')
-                revert_utterance = False
+            if current_user.state in (
+                    UserState.ASKED_TO_JOIN,
+                    UserState.ASKED_TO_CONFIRM
+            ) and current_user.partner_id == partner_id_to_let_go:
+                # noinspection PyUnresolvedReferences
+                current_user.time_out()
+                user_vault.save(current_user)
 
             partner_to_let_go = user_vault.get_user(partner_id_to_let_go)
             await let_partner_go_if_applicable(current_user, partner_to_let_go)
 
-        if revert_utterance:
-            return [UserUtteranceReverted()]
-        return []
+        return [UserUtteranceReverted()]
