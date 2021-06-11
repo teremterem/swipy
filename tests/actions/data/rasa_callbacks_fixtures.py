@@ -2,6 +2,7 @@ from typing import Dict, Text, Any, Callable, Tuple
 from unittest.mock import call
 
 import pytest
+from aioresponses.core import RequestCall
 from yarl import URL
 
 
@@ -141,3 +142,36 @@ def rasa_callbacks_expected_call_builder() -> Callable[[Text, Text, Dict[Text, A
         return expected_url, expected_call
 
     return _call_builder
+
+
+@pytest.fixture
+def rasa_callbacks_expected_request_builder() -> Callable[
+    [Text, Text, Dict[Text, Any]], Tuple[Tuple[Text, URL], RequestCall]
+]:
+    def _expected_request_builder(
+            expected_receiver_id: Text,
+            expected_intent: Text,
+            expected_entities: Dict[Text, Any],
+    ) -> Tuple[Tuple[Text, URL], RequestCall]:
+        # noinspection HttpUrlsUsage
+        expected_request_key = ('POST', URL(
+            f"http://rasa-unittest:5005/conversations/{expected_receiver_id}/trigger_intent"
+            f"?output_channel=telegram&token=rasaunittesttoken"
+        ))
+        expected_request_call = RequestCall(
+            args=(),
+            kwargs={
+                'data': None,
+                'params': {
+                    'output_channel': 'telegram',
+                    'token': 'rasaunittesttoken',
+                },
+                'json': {
+                    'name': expected_intent,
+                    'entities': expected_entities,
+                },
+            },
+        )
+        return expected_request_key, expected_request_call
+
+    return _expected_request_builder

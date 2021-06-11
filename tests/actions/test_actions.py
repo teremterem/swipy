@@ -1130,6 +1130,9 @@ async def test_action_do_not_disturb(
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
         external_intent_response: Dict[Text, Any],
+        rasa_callbacks_expected_request_builder: Callable[
+            [Text, Text, Dict[Text, Any]], Tuple[Tuple[Text, URL], RequestCall]
+        ],
         current_user: UserStateMachine,
         asker: UserStateMachine,
         expected_rasa_callback_name: Optional[Text],
@@ -1152,39 +1155,21 @@ async def test_action_do_not_disturb(
     assert dispatcher.messages == []
 
     if expected_rasa_callback_name == 'find_partner':
-        # noinspection HttpUrlsUsage
-        assert mock_aioresponses.requests == {
-            ('POST', URL(
-                'http://rasa-unittest:5005/conversations/the_asker/trigger_intent'
-                '?output_channel=telegram&token=rasaunittesttoken'
-            )): [
-                RequestCall(
-                    args=(),
-                    kwargs={
-                        'data': None,
-                        'params': {'output_channel': 'telegram', 'token': 'rasaunittesttoken'},
-                        'json': {'name': 'EXTERNAL_find_partner', 'entities': {}},
-                    },
-                ),
-            ],
-        }
+        expected_request_key, expected_request_call = rasa_callbacks_expected_request_builder(
+            'the_asker',
+            'EXTERNAL_find_partner',
+            {},
+        )
+        assert mock_aioresponses.requests == {expected_request_key: [expected_request_call]}
+
     elif expected_rasa_callback_name == 'report_unavailable':
-        # noinspection HttpUrlsUsage
-        assert mock_aioresponses.requests == {
-            ('POST', URL(
-                'http://rasa-unittest:5005/conversations/the_asker/trigger_intent'
-                '?output_channel=telegram&token=rasaunittesttoken'
-            )): [
-                RequestCall(
-                    args=(),
-                    kwargs={
-                        'data': None,
-                        'params': {'output_channel': 'telegram', 'token': 'rasaunittesttoken'},
-                        'json': {'name': 'EXTERNAL_report_unavailable', 'entities': {}},
-                    },
-                ),
-            ],
-        }
+        expected_request_key, expected_request_call = rasa_callbacks_expected_request_builder(
+            'the_asker',
+            'EXTERNAL_report_unavailable',
+            {},
+        )
+        assert mock_aioresponses.requests == {expected_request_key: [expected_request_call]}
+
     else:
         assert mock_aioresponses.requests == {}
 
