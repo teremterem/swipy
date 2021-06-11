@@ -511,10 +511,21 @@ async def test_action_find_partner_swiper_error_trace(
 @pytest.mark.usefixtures('create_user_state_machine_table')
 @patch('time.time', Mock(return_value=1619945501))
 @patch('uuid.uuid4', Mock(return_value=uuid.UUID('aaaabbbb-cccc-dddd-eeee-ffff11112222')))
+@pytest.mark.parametrize('source_swiper_state, destination_swiper_state, set_photo_slot, expected_response_template', [
+    ('ok_to_chitchat', 'asked_to_join', True, 'utter_someone_wants_to_chat_photo'),
+    ('wants_chitchat', 'asked_to_join', True, 'utter_someone_wants_to_chat_photo'),
+    ('ok_to_chitchat', 'asked_to_join', False, 'utter_someone_wants_to_chat'),
+    ('waiting_partner_join', 'asked_to_confirm', True, 'utter_found_someone_check_ready_photo'),
+    ('waiting_partner_join', 'asked_to_confirm', False, 'utter_found_someone_check_ready'),
+])
 async def test_action_ask_to_join(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
+        source_swiper_state: Text,
+        destination_swiper_state: Text,
+        set_photo_slot: bool,
+        expected_response_template: Text,
 ) -> None:
     action = actions.ActionAskToJoin()
     assert action.name() == 'action_ask_to_join'
@@ -522,14 +533,18 @@ async def test_action_ask_to_join(
     user_vault = UserVault()
     user_vault.save(UserStateMachine(
         user_id='unit_test_user',
-        state='ok_to_chitchat',
-        partner_id=None,
+        state=source_swiper_state,
+        partner_id='an_asker',
         newbie=True,
     ))
 
     tracker.add_slots([
         SlotSet('partner_id', 'an_asker'),
     ])
+    if set_photo_slot:
+        tracker.add_slots([
+            SlotSet('partner_photo_file_id', 'some photo file id'),
+        ])
 
     _original_datetime_now = datetime_now
 
@@ -554,15 +569,33 @@ async def test_action_ask_to_join(
             'timestamp': None,
         },
         SlotSet('swiper_action_result', 'success'),
-        SlotSet('swiper_state', 'asked_to_join'),
+        SlotSet('swiper_state', destination_swiper_state),
         SlotSet('partner_id', 'an_asker'),
     ]
-    assert dispatcher.messages == []
+    if expected_response_template:
+        expected_response = {
+            'attachment': None,
+            'buttons': [],
+            'custom': {},
+            'elements': [],
+            'image': None,
+            'response': expected_response_template,
+            'template': expected_response_template,
+            'text': None,
+        }
+        if set_photo_slot:
+            expected_response['partner_photo_file_id'] = 'some photo file id'
+
+        assert dispatcher.messages == [
+            expected_response,
+        ]
+    else:
+        assert dispatcher.messages == []
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
         user_id='unit_test_user',
-        state='asked_to_join',
+        state=destination_swiper_state,
         partner_id='an_asker',
         newbie=True,
         state_timestamp=1619945501,
