@@ -5,6 +5,7 @@ import os
 import uuid
 from abc import ABC, abstractmethod
 from distutils.util import strtobool
+from pprint import pformat
 from typing import Any, Text, Dict, List
 
 from rasa_sdk import Action, Tracker
@@ -187,7 +188,10 @@ class ActionOfferChitchat(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        metadata = tracker.slots.get('session_started_metadata', {})
+        metadata = tracker.slots.get('session_started_metadata') or {}
+        if logger.isEnabledFor(logging.INFO):
+            logger.info('ActionOfferChitchat - session_started_metadata:\n%s', pformat(metadata))
+
         deeplink_data = metadata.get(DEEPLINK_DATA_SLOT)
         telegram_from = metadata.get(TELEGRAM_FROM_SLOT)
 
