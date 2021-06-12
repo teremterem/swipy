@@ -279,15 +279,7 @@ class ActionFindPartner(BaseSwiperAction):
         # but it happens when this action is invoked externally by someone who rejected invitation)
         await asyncio.sleep(TELEGRAM_MSG_LIMIT_SLEEP_SEC)
 
-        partner = user_vault.get_random_available_user(
-            exclude_user_id=current_user.user_id,
-            newbie=True,
-        )
-        if not partner:
-            partner = user_vault.get_random_available_user(
-                exclude_user_id=current_user.user_id,
-                newbie=False,
-            )
+        partner = user_vault.get_random_available_partner(current_user)
 
         if partner:
             if not partner.can_be_offered_chitchat():
