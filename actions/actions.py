@@ -216,7 +216,15 @@ class ActionOfferChitchat(BaseSwiperAction):
 
         if deeplink_data:
             current_user.deeplink_data = deeplink_data
+
+            dl_entries = deeplink_data.split('_')
+            for dl_entry in dl_entries:
+                dl_parts = dl_entry.split('-', maxsplit=1)
+                if len(dl_parts) > 1 and dl_parts[0] == 'n':
+                    current_user.native = dl_parts[1]
+
             save_current_user = True
+
         if telegram_from:
             current_user.telegram_from = telegram_from
             save_current_user = True
