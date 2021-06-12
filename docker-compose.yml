@@ -19,7 +19,7 @@ x-redis-credentials: &redis-credentials
   REDIS_DB: "1"
   REDIS_CACHE_DB: "2"
   ACCEPTABLE_QUERY_COUNT_NUMBER: "50000"
-  
+
 x-duckling-credentials: &duckling-credentials
   RASA_DUCKLING_HTTP_URL: "http://duckling:8000"
 
@@ -65,7 +65,8 @@ x-rasa-services: &default-rasa-service
   restart: always
   image: "rasa/rasa:${RASA_VERSION}-full"
   volumes:
-      - ./.config:/.config
+    - ./.config:/.config
+    - ./customize_rasa:/app/customize_rasa
   expose:
     - "5005"
   command: >
@@ -112,12 +113,12 @@ services:
       - db
 
   db-migration:
-    entrypoint: ["python"]
-    command: ["-m", "rasax.community.services.db_migration_service"]
+    entrypoint: [ "python" ]
+    command: [ "-m", "rasax.community.services.db_migration_service" ]
     restart: always
     image: "rasa/rasa-x:${RASA_X_VERSION}"
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || kill 1"]
+      test: [ "CMD-SHELL", "curl -f http://localhost:8000/health || kill 1" ]
       interval: 5s
       timeout: 1s
       retries: 3
@@ -195,7 +196,7 @@ services:
     image: "rasa/duckling:0.1.6.5-r0"
     expose:
       - "8000"
-    command: ["duckling-example-exe", "--no-access-log", "--no-error-log"]
+    command: [ "duckling-example-exe", "--no-access-log", "--no-error-log" ]
 
   nginx:
     restart: always
