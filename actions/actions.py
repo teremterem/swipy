@@ -248,6 +248,10 @@ class ActionOfferChitchat(BaseSwiperAction):
                 key=SWIPER_ACTION_RESULT_SLOT,
                 value=SwiperActionResult.SUCCESS,
             ),
+            SlotSet(
+                key='swiper_native',
+                value=current_user.native,
+            ),
         ]
         if deeplink_data:
             events.append(SlotSet(

@@ -47,8 +47,8 @@ class UserState:
         WANTS_CHITCHAT,
         OK_TO_CHITCHAT,
         ROOMED,
-        REJECTED_JOIN,  # TODO oleksandr: do not offer the same partner again
-        REJECTED_CONFIRM,  # TODO oleksandr: do not offer the same partner again
+        # REJECTED_JOIN,  # TODO oleksandr: do not offer the same partner again
+        # REJECTED_CONFIRM,  # TODO oleksandr: do not offer the same partner again
     ]
     if TIMED_OUT_ARE_OK_TO_CHITCHAT:
         can_be_offered_chitchat_states.extend([
