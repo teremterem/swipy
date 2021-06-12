@@ -258,19 +258,18 @@ async def test_action_find_partner(
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('ddb_unit_test_user')
 @patch('time.time', Mock(return_value=1619945501))
-@patch.object(UserVault, '_list_available_user_dicts')
+@patch.object(UserVault, '_query_user_dicts')
 @patch('asyncio.sleep')
 async def test_action_find_partner_no_one(
         mock_asyncio_sleep: AsyncMock,
-        mock_list_available_user_dicts: MagicMock,
+        mock_query_user_dicts: MagicMock,
         mock_aioresponses: aioresponses,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
 ) -> None:
-    mock_list_available_user_dicts.side_effect = [
-        [],  # first call - no newbies
-        [],  # second call - no veterans
+    mock_query_user_dicts.side_effect = [
+        [],  # first call
     ]
 
     actual_events = await actions.ActionFindPartner().run(dispatcher, tracker, domain)
@@ -291,9 +290,8 @@ async def test_action_find_partner_no_one(
     }]
 
     mock_asyncio_sleep.assert_called_once_with(1.1)
-    assert mock_list_available_user_dicts.mock_calls == [
-        call(exclude_user_id='unit_test_user', newbie=True),
-        call(exclude_user_id='unit_test_user', newbie=False),
+    assert mock_query_user_dicts.mock_calls == [
+        call(('wants_chitchat', 'ok_to_chitchat', 'roomed'), exclude_user_id='unit_test_user'),
     ]
     assert mock_aioresponses.requests == {}  # rasa_callbacks.ask_to_join() not called
 
@@ -311,25 +309,21 @@ async def test_action_find_partner_no_one(
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('ddb_unit_test_user')
 @patch('time.time', Mock(return_value=1619945501))
-@patch.object(UserVault, '_list_available_user_dicts')
+@patch.object(UserVault, '_query_user_dicts')
 @patch('asyncio.sleep')
 async def test_action_find_partner_swiper_error_trace(
         mock_asyncio_sleep: AsyncMock,
-        mock_list_available_user_dicts: MagicMock,
+        mock_query_user_dicts: MagicMock,
         mock_aioresponses: aioresponses,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
 ) -> None:
     # noinspection PyDataclass
-    mock_list_available_user_dicts.side_effect = [
-        [],  # first call - no newbies
-        [asdict(UserStateMachine(
-            user_id='unavailable_user_id',
-            state=UserState.DO_NOT_DISTURB,
-            newbie=False,
-        ))],  # second call - some veteran in not a valid state (dynamodb query malfunction?)
-    ]
+    mock_query_user_dicts.return_value = [asdict(UserStateMachine(
+        user_id='unavailable_user_id',
+        state=UserState.DO_NOT_DISTURB,
+    ))]  # some partner in not a valid state (dynamodb query malfunction?)
 
     _original_format_exception = traceback.format_exception
 
@@ -364,9 +358,8 @@ async def test_action_find_partner_swiper_error_trace(
     }]
 
     mock_asyncio_sleep.assert_called_once_with(1.1)
-    assert mock_list_available_user_dicts.mock_calls == [
-        call(exclude_user_id='unit_test_user', newbie=True),
-        call(exclude_user_id='unit_test_user', newbie=False),
+    assert mock_query_user_dicts.mock_calls == [
+        call(('wants_chitchat', 'ok_to_chitchat', 'roomed'), exclude_user_id='unit_test_user'),
     ]
     assert mock_aioresponses.requests == {}  # rasa_callbacks.ask_to_join() not called
 
