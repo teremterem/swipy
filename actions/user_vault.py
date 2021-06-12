@@ -2,7 +2,7 @@ import secrets
 from abc import ABC, abstractmethod
 from dataclasses import asdict
 from decimal import Decimal
-from typing import Text, Optional, List, Type, Dict, Any
+from typing import Text, Optional, List, Type, Dict, Any, Iterable
 
 from boto3.dynamodb.conditions import Key, Attr
 
@@ -15,10 +15,7 @@ class IUserVault(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def get_random_available_user(
-            self, exclude_user_id: Text,
-            newbie: Optional[bool] = None,
-    ) -> Optional[UserStateMachine]:
+    def get_random_available_partner(self, current_user: UserStateMachine) -> Optional[UserStateMachine]:
         raise NotImplementedError()
 
     @abstractmethod
@@ -35,10 +32,7 @@ class BaseUserVault(IUserVault, ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def _get_random_available_user(
-            self, exclude_user_id: Text,
-            newbie: Optional[bool] = None,
-    ) -> UserStateMachine:
+    def _get_random_available_partner(self, current_user: UserStateMachine) -> Optional[UserStateMachine]:
         raise NotImplementedError()
 
     @abstractmethod
@@ -68,14 +62,8 @@ class BaseUserVault(IUserVault, ABC):
         self._user_cache[user_id] = user
         return user
 
-    def get_random_available_user(
-            self, exclude_user_id: Text,
-            newbie: Optional[bool] = None,
-    ) -> Optional[UserStateMachine]:
-        user = self._get_random_available_user(
-            exclude_user_id=exclude_user_id,
-            newbie=newbie,
-        )
+    def get_random_available_partner(self, current_user: UserStateMachine) -> Optional[UserStateMachine]:
+        user = self._get_random_available_partner(current_user)
         if not user:
             return None
 
@@ -96,13 +84,14 @@ class NaiveDdbUserVault(BaseUserVault):
         item = ddb_resp.get('Item')
         return None if item is None else self._user_from_dict(item)
 
-    def _get_random_available_user(
-            self, exclude_user_id: Text,
-            newbie: Optional[bool] = None,
-    ) -> Optional[UserStateMachine]:
-        list_of_dicts = self._list_available_user_dicts(
-            exclude_user_id=exclude_user_id,
-            newbie=newbie,
+    def _get_random_available_partner(self, current_user: UserStateMachine) -> Optional[UserStateMachine]:
+        list_of_dicts = self._query_user_dicts(
+            (
+                UserState.WANTS_CHITCHAT,
+                UserState.OK_TO_CHITCHAT,
+                UserState.ROOMED,
+            ),
+            exclude_user_id=current_user.user_id,
         )
         if not list_of_dicts:
             return None
@@ -130,20 +119,24 @@ class NaiveDdbUserVault(BaseUserVault):
         return user
 
     @staticmethod
-    def _list_available_user_dicts(exclude_user_id: Text, newbie: Optional[bool] = None) -> List[Dict[Text, Any]]:
+    def _query_user_dicts(
+            states: Iterable[Text],
+            exclude_user_id: Text,
+            exclude_native: Optional[Text] = None,
+    ) -> List[Dict[Text, Any]]:
         # TODO oleksandr: is there a better way to ensure that the tests have a chance to mock boto3 ?
         from actions.aws_resources import user_state_machine_table
 
         filter_expression = Attr('user_id').ne(exclude_user_id)
-        if newbie is not None:
-            filter_expression &= Attr('newbie').eq(newbie)
+        if exclude_native:
+            filter_expression &= Attr('native').ne(exclude_native)
 
         items = []
-        for allowed_state in UserState.can_be_offered_chitchat_states:
-            # TODO oleksandr: parallelize ? no! we will later be switching to Postgres anyway
+        for state in states:
+            # TODO oleksandr: parallelize ? no! we will later be switching to either Redis or Postgres anyway
             ddb_resp = user_state_machine_table.query(
                 IndexName='by_state',
-                KeyConditionExpression=Key('state').eq(allowed_state),
+                KeyConditionExpression=Key('state').eq(state),
                 FilterExpression=filter_expression,
             )
             items.extend(ddb_resp.get('Items') or [])
