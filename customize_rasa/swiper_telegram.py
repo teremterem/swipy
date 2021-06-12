@@ -13,6 +13,8 @@ class SwiperTelegramInput(TelegramInput):
         async def handler(message: UserMessage) -> Any:
             if message.text and message.text.startswith(START_DEEPLINK_PREFIX):
                 deeplink_data = message.text[len(START_DEEPLINK_PREFIX):]
+                message.text = '/start'
+
                 message.metadata = message.metadata or {}
                 message.metadata['deeplink_data'] = deeplink_data
             res = await on_new_message(message)
