@@ -2,7 +2,7 @@ import os
 from dataclasses import dataclass
 from datetime import datetime
 from distutils.util import strtobool
-from typing import Text, Optional
+from typing import Text, Optional, Dict, Any
 
 from transitions import Machine, EventData
 
@@ -65,6 +65,8 @@ class UserModel:
     state_timestamp: Optional[int] = None
     state_timestamp_str: Optional[Text] = None
     notes: Text = ''
+    deeplink_data: Optional[Text] = None
+    telegram_from: Optional[Dict[Text, Any]] = None
 
 
 class UserStateMachine(UserModel):
