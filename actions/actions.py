@@ -15,7 +15,7 @@ from rasa_sdk.executor import CollectingDispatcher
 from actions import daily_co
 from actions import rasa_callbacks
 from actions import telegram_helpers
-from actions.user_state_machine import UserStateMachine, UserState
+from actions.user_state_machine import UserStateMachine, UserState, NATIVE_UNKNOWN
 from actions.user_vault import UserVault, IUserVault
 from actions.utils import InvalidSwiperStateError, stack_trace_to_str, datetime_now
 
@@ -222,11 +222,16 @@ class ActionOfferChitchat(BaseSwiperAction):
                 dl_parts = dl_entry.split('-', maxsplit=1)
                 if len(dl_parts) > 1 and dl_parts[0] == 'n':
                     current_user.native = dl_parts[1]
+                    break
 
             save_current_user = True
 
         if telegram_from:
             current_user.telegram_from = telegram_from
+
+            if current_user.native == NATIVE_UNKNOWN:
+                current_user.native = telegram_from.get('language_code') or NATIVE_UNKNOWN
+
             save_current_user = True
 
         if save_current_user:

@@ -9,6 +9,7 @@ from transitions import Machine, EventData
 from actions.utils import current_timestamp_int, SwiperStateMachineError
 
 TIMED_OUT_ARE_OK_TO_CHITCHAT = strtobool(os.getenv('TIMED_OUT_ARE_OK_TO_CHITCHAT', 'no'))
+NATIVE_UNKNOWN = 'unknown'
 
 
 class UserState:
@@ -66,7 +67,7 @@ class UserModel:
     state_timestamp_str: Optional[Text] = None
     notes: Text = ''
     deeplink_data: Text = ''
-    native: Text = 'unknown'
+    native: Text = NATIVE_UNKNOWN
     telegram_from: Optional[Dict[Text, Any]] = None
 
 
