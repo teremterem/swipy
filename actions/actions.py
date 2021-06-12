@@ -203,7 +203,7 @@ class ActionOfferChitchat(BaseSwiperAction):
                     # UserState.WAITING_PARTNER_CONFIRM,
                     # UserState.ASKED_TO_JOIN,
                     # UserState.ASKED_TO_CONFIRM,
-                    # UserState.ROOMED,
+                    UserState.ROOMED,
                     UserState.REJECTED_JOIN,  # TODO oleksandr: are you sure about this ?
                     UserState.REJECTED_CONFIRM,  # TODO oleksandr: are you sure about this ?
                     UserState.JOIN_TIMED_OUT,
