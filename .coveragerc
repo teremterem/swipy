@@ -2,6 +2,7 @@
 branch = True
 source =
     actions/
+    swiperasa/
 
 [report]
 # Regexes for lines to exclude from consideration
