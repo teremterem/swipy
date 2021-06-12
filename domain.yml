@@ -57,6 +57,16 @@ slots:
     initial_value: null
     auto_fill: false
     influence_conversation: false
+  deeplink_data:
+    type: rasa.shared.core.slots.TextSlot
+    initial_value: null
+    auto_fill: false
+    influence_conversation: false
+  telegram_from:
+    type: rasa.shared.core.slots.AnySlot
+    initial_value: null
+    auto_fill: false
+    influence_conversation: false
   partner_id:
     type: rasa.shared.core.slots.TextSlot
     initial_value: null
@@ -141,8 +151,10 @@ responses:
       parse_mode: html
       text: "Done!\n \n<b>Please follow this link to join the video call:</b>\n \n{room_url}"
   utter_declined:
+  - text: OK, declined ❌
+  - text: Declined ❌
   - text: |-
-      Ok, declined ❌
+      OK, declined ❌
        
       Can I ask you if there is any specific time or times of day (maybe days of week) when you are more likely to join someone for chitchat over a video call?
   utter_hope_to_see_you_later:
