@@ -12,13 +12,13 @@ class SwiperTelegramInput(TelegramInput):
             self, on_new_message: Callable[[UserMessage], Awaitable[Any]]
     ) -> Blueprint:
         async def handler(message: UserMessage) -> Any:
+            deeplink_data = None  # ActionOfferChitchat copies it to dedicated slot (if and only if it is not empty)
             if message.text and message.text.startswith(START_DEEPLINK_PREFIX):
                 deeplink_data = message.text[len(START_DEEPLINK_PREFIX):]
                 message.text = '/start'
 
-                if deeplink_data:
-                    message.metadata = message.metadata or {}
-                    message.metadata['deeplink_data'] = deeplink_data
+            message.metadata = message.metadata or {}
+            message.metadata['deeplink_data'] = deeplink_data
 
             res = await on_new_message(message)
             return res
