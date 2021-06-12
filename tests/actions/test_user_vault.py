@@ -94,61 +94,53 @@ def test_user_vault_cache_not_reused_between_instances(
     assert mock_ddb_get_user.call_count == 2
 
 
-@pytest.mark.parametrize('newbie_filter', [True, False, None])
-@patch.object(UserVault, '_list_available_user_dicts')
+@patch.object(UserVault, '_query_user_dicts')
 @patch('actions.user_vault.secrets.choice')
-def test_get_random_available_user(
+def test_get_random_available_partner(
         mock_choice: MagicMock,
-        mock_list_available_user_dicts: MagicMock,
-        ddb_user1: UserStateMachine,
-        ddb_user2: UserStateMachine,
-        ddb_user3: UserStateMachine,
-        newbie_filter: Optional[bool],
+        mock_query_user_dicts: MagicMock,
+        user1: UserStateMachine,
+        user2: UserStateMachine,
+        user3: UserStateMachine,
+        user4: UserStateMachine,
 ) -> None:
     # noinspection PyDataclass
-    list_of_dicts = [asdict(ddb_user1), asdict(ddb_user2), asdict(ddb_user3)]
+    list_of_dicts = [asdict(user4), asdict(user2), asdict(user3)]
 
-    mock_list_available_user_dicts.return_value = list_of_dicts
+    mock_query_user_dicts.return_value = list_of_dicts
     mock_choice.return_value = list_of_dicts[1]
 
     user_vault = UserVault()
-    actual_random_user = user_vault.get_random_available_user(
-        exclude_user_id='existing_user_id1',
-        newbie=newbie_filter,
-    )
-    assert actual_random_user == ddb_user2
+    actual_random_user = user_vault.get_random_available_partner(user1)
+    assert actual_random_user == user2
 
-    mock_list_available_user_dicts.assert_called_once_with(
+    mock_query_user_dicts.assert_called_once_with(
+        ('wants_chitchat', 'ok_to_chitchat', 'roomed'),
         exclude_user_id='existing_user_id1',
-        newbie=newbie_filter,
     )
     mock_choice.assert_called_once_with(list_of_dicts)
 
     assert user_vault.get_user(actual_random_user.user_id) is actual_random_user  # make sure the user was cached
 
 
-@pytest.mark.parametrize('newbie_filter', [True, False, None])
-@pytest.mark.parametrize('empty_list_variant', [[], None])
-@patch.object(UserVault, '_list_available_user_dicts')
+@patch.object(UserVault, '_query_user_dicts')
 @patch('actions.user_vault.secrets.choice')
-def test_no_available_user(
+@pytest.mark.parametrize('empty_list_variant', [[], None])
+def test_no_available_partner(
         mock_choice: MagicMock,
         mock_list_available_user_dicts: MagicMock,
-        newbie_filter: Optional[bool],
+        user1: UserStateMachine,
         empty_list_variant: Optional[list],
 ) -> None:
     mock_list_available_user_dicts.return_value = empty_list_variant
     mock_choice.side_effect = ValueError("secrets.choice shouldn't have been called with None or empty list")
 
     user_vault = UserVault()
-    assert user_vault.get_random_available_user(
-        'existing_user_id1',
-        newbie=newbie_filter,
-    ) is None
+    assert user_vault.get_random_available_partner(user1) is None
 
     mock_list_available_user_dicts.assert_called_once_with(
+        ('wants_chitchat', 'ok_to_chitchat', 'roomed'),
         exclude_user_id='existing_user_id1',
-        newbie=newbie_filter,
     )
     mock_choice.assert_not_called()
 
@@ -437,12 +429,12 @@ def test_ddb_user_vault_list_available_user_dicts(
     assert actual_ddb_scan == expected_ddb_scan
 
 
-@pytest.mark.parametrize('newbie_filter', [True, False, None])
 @pytest.mark.usefixtures(
     'ddb_user1',
     'ddb_user2',
     'ddb_user3',
 )
+@pytest.mark.parametrize('newbie_filter', [True, False, None])
 def test_ddb_user_vault_list_no_available_users_dicts(
         newbie_filter: Optional[bool],
         ddb_scan_of_three_users: List[Dict[Text, Any]],
