@@ -16,8 +16,9 @@ class SwiperTelegramInput(TelegramInput):
                 deeplink_data = message.text[len(START_DEEPLINK_PREFIX):]
                 message.text = '/start'
 
-                message.metadata = message.metadata or {}
-                message.metadata['deeplink_data'] = deeplink_data
+                if deeplink_data:
+                    message.metadata = message.metadata or {}
+                    message.metadata['deeplink_data'] = deeplink_data
 
             res = await on_new_message(message)
             return res
