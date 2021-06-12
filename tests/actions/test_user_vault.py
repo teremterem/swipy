@@ -275,13 +275,36 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
     'ddb_available_veteran3',
     'ddb_user4',
 )
-@pytest.mark.parametrize('newbie_filter, exclude_user_id, expected_ddb_scan', [
+@pytest.mark.parametrize('exclude_user_id, expected_ddb_scan', [
     (
-            True,
-            'available_newbie_id2',
+            'available_veteran_id2',
             [
                 {
                     'user_id': 'available_newbie_id1',
+                    'state': 'ok_to_chitchat',
+                    'partner_id': None,
+                    'newbie': True,
+                    'state_timestamp': None,
+                    'state_timestamp_str': None,
+                    'notes': '',
+                    'deeplink_data': '',
+                    'native': 'unknown',
+                    'telegram_from': None,
+                },
+                {
+                    'user_id': 'available_veteran_id1',
+                    'state': 'ok_to_chitchat',
+                    'partner_id': None,
+                    'newbie': False,
+                    'state_timestamp': None,
+                    'state_timestamp_str': None,
+                    'notes': '',
+                    'deeplink_data': '',
+                    'native': 'unknown',
+                    'telegram_from': None,
+                },
+                {
+                    'user_id': 'available_newbie_id2',
                     'state': 'ok_to_chitchat',
                     'partner_id': None,
                     'newbie': True,
@@ -304,24 +327,6 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
                     'native': 'unknown',
                     'telegram_from': None,
                 },
-            ],
-    ),
-    (
-            False,
-            'available_veteran_id2',
-            [
-                {
-                    'user_id': 'available_veteran_id1',
-                    'state': 'ok_to_chitchat',
-                    'partner_id': None,
-                    'newbie': False,
-                    'state_timestamp': None,
-                    'state_timestamp_str': None,
-                    'notes': '',
-                    'deeplink_data': '',
-                    'native': 'unknown',
-                    'telegram_from': None,
-                },
                 {
                     'user_id': 'available_veteran_id3',
                     'state': 'ok_to_chitchat',
@@ -337,7 +342,6 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
             ],
     ),
     (
-            None,
             'existing_user_id1',
             [
                 {
@@ -415,9 +419,8 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
             ],
     ),
 ])
-def test_ddb_user_vault_list_available_user_dicts(
+def test_ddb_user_vault_query_user_dicts(
         ddb_scan_of_ten_users: List[Dict[Text, Any]],
-        newbie_filter: bool,
         exclude_user_id: Text,
         expected_ddb_scan: List[Dict[Text, Any]],
 ) -> None:
@@ -425,7 +428,10 @@ def test_ddb_user_vault_list_available_user_dicts(
 
     assert user_state_machine_table.scan()['Items'] == ddb_scan_of_ten_users
     user_vault = UserVault()
-    actual_ddb_scan = user_vault._list_available_user_dicts(exclude_user_id, newbie=newbie_filter)
+    actual_ddb_scan = user_vault._query_user_dicts(
+        ('wants_chitchat', 'ok_to_chitchat', 'roomed'),
+        exclude_user_id=exclude_user_id,
+    )
     assert actual_ddb_scan == expected_ddb_scan
 
 
@@ -434,16 +440,15 @@ def test_ddb_user_vault_list_available_user_dicts(
     'ddb_user2',
     'ddb_user3',
 )
-@pytest.mark.parametrize('newbie_filter', [True, False, None])
-def test_ddb_user_vault_list_no_available_users_dicts(
-        newbie_filter: Optional[bool],
-        ddb_scan_of_three_users: List[Dict[Text, Any]],
-) -> None:
+def test_ddb_user_vault_list_no_available_users_dicts(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> None:
     from actions.aws_resources import user_state_machine_table
 
     assert user_state_machine_table.scan()['Items'] == ddb_scan_of_three_users
     user_vault = UserVault()
-    assert user_vault._list_available_user_dicts('existing_user_id1', newbie=newbie_filter) == []
+    assert user_vault._query_user_dicts(
+        ('wants_chitchat', 'ok_to_chitchat', 'roomed'),
+        exclude_user_id='existing_user_id1',
+    ) == []
 
 
 @pytest.mark.usefixtures('ddb_user1', 'ddb_user3')
