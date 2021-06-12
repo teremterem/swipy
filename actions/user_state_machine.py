@@ -44,8 +44,6 @@ class UserState:
         WANTS_CHITCHAT,
         OK_TO_CHITCHAT,
         ROOMED,
-        # REJECTED_JOIN,  # TODO oleksandr: do not offer the same partner again
-        # REJECTED_CONFIRM,  # TODO oleksandr: do not offer the same partner again
     ]
 
 
@@ -184,6 +182,7 @@ class UserStateMachine(UserModel):
             trigger='reject',
             source=[
                 UserState.ASKED_TO_JOIN,
+                UserState.JOIN_TIMED_OUT,
             ],
             dest=UserState.REJECTED_JOIN,
         )
@@ -192,6 +191,7 @@ class UserStateMachine(UserModel):
             trigger='reject',
             source=[
                 UserState.ASKED_TO_CONFIRM,
+                UserState.CONFIRM_TIMED_OUT,
             ],
             dest=UserState.REJECTED_CONFIRM,
         )

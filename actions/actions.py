@@ -199,13 +199,11 @@ class ActionOfferChitchat(BaseSwiperAction):
         if GREETING_MAKES_USER_OK_TO_CHITCHAT:
             if current_user.state in (
                     UserState.NEW,
-                    # UserState.WAITING_PARTNER_JOIN,
-                    # UserState.WAITING_PARTNER_CONFIRM,
-                    # UserState.ASKED_TO_JOIN,
-                    # UserState.ASKED_TO_CONFIRM,
+                    UserState.ASKED_TO_JOIN,  # TODO oleksandr: are you sure about this ?
+                    UserState.ASKED_TO_CONFIRM,  # TODO oleksandr: are you sure about this ?
                     UserState.ROOMED,
-                    UserState.REJECTED_JOIN,  # TODO oleksandr: are you sure about this ?
-                    UserState.REJECTED_CONFIRM,  # TODO oleksandr: are you sure about this ?
+                    UserState.REJECTED_JOIN,
+                    UserState.REJECTED_CONFIRM,
                     UserState.JOIN_TIMED_OUT,
                     UserState.CONFIRM_TIMED_OUT,
                     UserState.DO_NOT_DISTURB,
