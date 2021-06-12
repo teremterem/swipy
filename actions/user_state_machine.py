@@ -65,7 +65,7 @@ class UserModel:
     state_timestamp: Optional[int] = None
     state_timestamp_str: Optional[Text] = None
     notes: Text = ''
-    deeplink_data: Optional[Text] = None
+    deeplink_data: Optional[Text] = ''
     telegram_from: Optional[Dict[Text, Any]] = None
 
 
