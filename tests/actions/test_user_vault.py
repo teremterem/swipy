@@ -34,6 +34,9 @@ def test_get_new_user() -> None:
         'state_timestamp': None,
         'state_timestamp_str': None,
         'notes': '',
+        'deeplink_data': '',
+        'native': 'unknown',
+        'telegram_from': None,
     }]
     assert user_vault.get_user('new_user_id') is new_user  # make sure the user was cached
 
@@ -171,6 +174,9 @@ def test_save_new_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> None:
             'state_timestamp': None,
             'state_timestamp_str': None,
             'notes': 'some note',
+            'deeplink_data': '',
+            'native': 'unknown',
+            'telegram_from': None,
         },
         {
             'user_id': 'existing_user_id2',
@@ -180,6 +186,9 @@ def test_save_new_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> None:
             'state_timestamp': None,
             'state_timestamp_str': None,
             'notes': '',
+            'deeplink_data': '',
+            'native': 'unknown',
+            'telegram_from': None,
         },
         {
             'user_id': 'existing_user_id3',
@@ -189,6 +198,9 @@ def test_save_new_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> None:
             'state_timestamp': None,
             'state_timestamp_str': None,
             'notes': '',
+            'deeplink_data': '',
+            'native': 'unknown',
+            'telegram_from': None,
         },
         {
             'user_id': 'new_ddb_user_was_put',
@@ -198,6 +210,9 @@ def test_save_new_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> None:
             'state_timestamp': None,
             'state_timestamp_str': None,
             'notes': 'some other note',
+            'deeplink_data': '',
+            'native': 'unknown',
+            'telegram_from': None,
         },
     ]
     assert user_vault.get_user(user_to_save.user_id) is user_to_save  # make sure the user was cached
@@ -224,6 +239,9 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
             'state_timestamp': None,
             'state_timestamp_str': None,
             'notes': '',  # TODO oleksandr: note value is lost in this case... should I worry about it ?
+            'deeplink_data': '',
+            'native': 'unknown',
+            'telegram_from': None,
         },
         {
             'user_id': 'existing_user_id2',
@@ -233,6 +251,9 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
             'state_timestamp': None,
             'state_timestamp_str': None,
             'notes': '',
+            'deeplink_data': '',
+            'native': 'unknown',
+            'telegram_from': None,
         },
         {
             'user_id': 'existing_user_id3',
@@ -242,6 +263,9 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
             'state_timestamp': None,
             'state_timestamp_str': None,
             'notes': '',
+            'deeplink_data': '',
+            'native': 'unknown',
+            'telegram_from': None,
         },
     ]
     assert user_vault.get_user(user_to_save.user_id) is user_to_save  # make sure the user was cached
@@ -272,6 +296,9 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
                     'state_timestamp': None,
                     'state_timestamp_str': None,
                     'notes': '',
+                    'deeplink_data': '',
+                    'native': 'unknown',
+                    'telegram_from': None,
                 },
                 {
                     'user_id': 'available_newbie_id3',
@@ -281,6 +308,9 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
                     'state_timestamp': None,
                     'state_timestamp_str': None,
                     'notes': '',
+                    'deeplink_data': '',
+                    'native': 'unknown',
+                    'telegram_from': None,
                 },
             ],
     ),
@@ -296,6 +326,9 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
                     'state_timestamp': None,
                     'state_timestamp_str': None,
                     'notes': '',
+                    'deeplink_data': '',
+                    'native': 'unknown',
+                    'telegram_from': None,
                 },
                 {
                     'user_id': 'available_veteran_id3',
@@ -305,6 +338,9 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
                     'state_timestamp': None,
                     'state_timestamp_str': None,
                     'notes': '',
+                    'deeplink_data': '',
+                    'native': 'unknown',
+                    'telegram_from': None,
                 },
             ],
     ),
@@ -320,6 +356,9 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
                     'state_timestamp': None,
                     'state_timestamp_str': None,
                     'notes': '',
+                    'deeplink_data': '',
+                    'native': 'unknown',
+                    'telegram_from': None,
                 },
                 {
                     'user_id': 'available_veteran_id1',
@@ -329,6 +368,9 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
                     'state_timestamp': None,
                     'state_timestamp_str': None,
                     'notes': '',
+                    'deeplink_data': '',
+                    'native': 'unknown',
+                    'telegram_from': None,
                 },
                 {
                     'user_id': 'available_newbie_id2',
@@ -338,6 +380,9 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
                     'state_timestamp': None,
                     'state_timestamp_str': None,
                     'notes': '',
+                    'deeplink_data': '',
+                    'native': 'unknown',
+                    'telegram_from': None,
                 },
                 {
                     'user_id': 'available_veteran_id2',
@@ -347,6 +392,9 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
                     'state_timestamp': None,
                     'state_timestamp_str': None,
                     'notes': '',
+                    'deeplink_data': '',
+                    'native': 'unknown',
+                    'telegram_from': None,
                 },
                 {
                     'user_id': 'available_newbie_id3',
@@ -356,6 +404,9 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
                     'state_timestamp': None,
                     'state_timestamp_str': None,
                     'notes': '',
+                    'deeplink_data': '',
+                    'native': 'unknown',
+                    'telegram_from': None,
                 },
                 {
                     'user_id': 'available_veteran_id3',
@@ -365,6 +416,9 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
                     'state_timestamp': None,
                     'state_timestamp_str': None,
                     'notes': '',
+                    'deeplink_data': '',
+                    'native': 'unknown',
+                    'telegram_from': None,
                 },
             ],
     ),

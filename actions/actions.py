@@ -5,6 +5,7 @@ import os
 import uuid
 from abc import ABC, abstractmethod
 from distutils.util import strtobool
+from pprint import pformat
 from typing import Any, Text, Dict, List
 
 from rasa_sdk import Action, Tracker
@@ -14,7 +15,7 @@ from rasa_sdk.executor import CollectingDispatcher
 from actions import daily_co
 from actions import rasa_callbacks
 from actions import telegram_helpers
-from actions.user_state_machine import UserStateMachine, UserState
+from actions.user_state_machine import UserStateMachine, UserState, NATIVE_UNKNOWN
 from actions.user_vault import UserVault, IUserVault
 from actions.utils import InvalidSwiperStateError, stack_trace_to_str, datetime_now
 
@@ -28,6 +29,8 @@ GREETING_MAKES_USER_OK_TO_CHITCHAT = strtobool(os.getenv('GREETING_MAKES_USER_OK
 
 SWIPER_STATE_SLOT = 'swiper_state'
 SWIPER_ACTION_RESULT_SLOT = 'swiper_action_result'
+DEEPLINK_DATA_SLOT = 'deeplink_data'
+TELEGRAM_FROM_SLOT = 'telegram_from'
 
 SWIPER_ERROR_SLOT = 'swiper_error'
 SWIPER_ERROR_TRACE_SLOT = 'swiper_error_trace'
@@ -127,8 +130,6 @@ class ActionSessionStart(BaseSwiperAction):
 
     @staticmethod
     def _slot_set_events_from_tracker(tracker: Tracker) -> List[EventType]:
-        # TODO oleksandr: should I skip session_started_metadata slot ?
-        #  (metadata seems to receive some kind of special treatment in Rasa Core version of the action)
         return [
             SlotSet(key=slot_key, value=slot_value)
             for slot_key, slot_value in tracker.slots.items()
@@ -187,6 +188,14 @@ class ActionOfferChitchat(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
+        metadata = tracker.latest_message.get('metadata') or {}
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('ActionOfferChitchat - latest_message.metadata:\n%s', pformat(metadata))
+
+        deeplink_data = metadata.get(DEEPLINK_DATA_SLOT)
+        telegram_from = metadata.get(TELEGRAM_FROM_SLOT)
+
+        save_current_user = False
         if GREETING_MAKES_USER_OK_TO_CHITCHAT:
             if current_user.state in (
                     UserState.NEW,
@@ -203,7 +212,30 @@ class ActionOfferChitchat(BaseSwiperAction):
             ):
                 # noinspection PyUnresolvedReferences
                 current_user.become_ok_to_chitchat()
-                user_vault.save(current_user)
+                save_current_user = True
+
+        if deeplink_data:
+            current_user.deeplink_data = deeplink_data
+
+            dl_entries = deeplink_data.split('_')
+            for dl_entry in dl_entries:
+                dl_parts = dl_entry.split('-', maxsplit=1)
+                if len(dl_parts) > 1 and dl_parts[0] == 'n':
+                    current_user.native = dl_parts[1]
+                    break
+
+            save_current_user = True
+
+        if telegram_from:
+            current_user.telegram_from = telegram_from
+
+            if current_user.native == NATIVE_UNKNOWN:
+                current_user.native = telegram_from.get('language_code') or NATIVE_UNKNOWN
+
+            save_current_user = True
+
+        if save_current_user:
+            user_vault.save(current_user)
 
         latest_intent = tracker.get_intent_of_latest_message()
         if latest_intent == 'how_it_works':
@@ -211,12 +243,27 @@ class ActionOfferChitchat(BaseSwiperAction):
         else:  # it is either 'greet' or 'start'
             dispatcher.utter_message(response='utter_greet_offer_chitchat')
 
-        return [
+        events = [
             SlotSet(
                 key=SWIPER_ACTION_RESULT_SLOT,
                 value=SwiperActionResult.SUCCESS,
             ),
+            SlotSet(
+                key='swiper_native',
+                value=current_user.native,
+            ),
         ]
+        if deeplink_data:
+            events.append(SlotSet(
+                key=DEEPLINK_DATA_SLOT,
+                value=deeplink_data,
+            ))
+        if telegram_from:
+            events.append(SlotSet(
+                key=TELEGRAM_FROM_SLOT,
+                value=telegram_from,
+            ))
+        return events
 
 
 class ActionFindPartner(BaseSwiperAction):

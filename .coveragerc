@@ -2,6 +2,7 @@
 branch = True
 source =
     actions/
+    customize_rasa/
 
 [report]
 # Regexes for lines to exclude from consideration

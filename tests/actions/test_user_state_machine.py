@@ -96,8 +96,8 @@ expected_more_narrow_transitions = [
     ('become_asked', 'asked_to_join', None, 'previous_partner_id', 'previous_partner_id'),
     ('become_asked', 'asked_to_confirm', None, 'previous_partner_id', 'previous_partner_id'),
     ('become_asked', 'roomed', 'asked_to_join', 'previous_partner_id', 'new_partner_id'),
-    ('become_asked', 'rejected_join', 'asked_to_join', 'previous_partner_id', 'new_partner_id'),
-    ('become_asked', 'rejected_confirm', 'asked_to_join', 'previous_partner_id', 'new_partner_id'),
+    ('become_asked', 'rejected_join', None, 'previous_partner_id', 'previous_partner_id'),  # TODO oleksandr
+    ('become_asked', 'rejected_confirm', None, 'previous_partner_id', 'previous_partner_id'),  # TODO oleksandr
     ('become_asked', 'join_timed_out', None, 'previous_partner_id', 'previous_partner_id'),
     ('become_asked', 'confirm_timed_out', None, 'previous_partner_id', 'previous_partner_id'),
     ('become_asked', 'do_not_disturb', None, 'previous_partner_id', 'previous_partner_id'),

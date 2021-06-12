@@ -113,6 +113,9 @@ def ddb_scan_of_three_users() -> List[Dict[Text, Any]]:
             'state_timestamp': None,
             'state_timestamp_str': None,
             'notes': 'some note',
+            'deeplink_data': '',
+            'native': 'unknown',
+            'telegram_from': None,
         },
         {
             'user_id': 'existing_user_id2',
@@ -122,6 +125,9 @@ def ddb_scan_of_three_users() -> List[Dict[Text, Any]]:
             'state_timestamp': None,
             'state_timestamp_str': None,
             'notes': '',
+            'deeplink_data': '',
+            'native': 'unknown',
+            'telegram_from': None,
         },
         {
             'user_id': 'existing_user_id3',
@@ -131,6 +137,9 @@ def ddb_scan_of_three_users() -> List[Dict[Text, Any]]:
             'state_timestamp': None,
             'state_timestamp_str': None,
             'notes': '',
+            'deeplink_data': '',
+            'native': 'unknown',
+            'telegram_from': None,
         },
     ]
 
@@ -146,6 +155,9 @@ def ddb_scan_of_ten_users() -> List[Dict[Text, Any]]:
             'state_timestamp': None,
             'state_timestamp_str': None,
             'notes': 'some note',
+            'deeplink_data': '',
+            'native': 'unknown',
+            'telegram_from': None,
         },
         {
             'user_id': 'available_newbie_id1',
@@ -155,6 +167,9 @@ def ddb_scan_of_ten_users() -> List[Dict[Text, Any]]:
             'state_timestamp': None,
             'state_timestamp_str': None,
             'notes': '',
+            'deeplink_data': '',
+            'native': 'unknown',
+            'telegram_from': None,
         },
         {
             'user_id': 'available_veteran_id1',
@@ -164,6 +179,9 @@ def ddb_scan_of_ten_users() -> List[Dict[Text, Any]]:
             'state_timestamp': None,
             'state_timestamp_str': None,
             'notes': '',
+            'deeplink_data': '',
+            'native': 'unknown',
+            'telegram_from': None,
         },
         {
             'user_id': 'existing_user_id2',
@@ -173,6 +191,9 @@ def ddb_scan_of_ten_users() -> List[Dict[Text, Any]]:
             'state_timestamp': None,
             'state_timestamp_str': None,
             'notes': '',
+            'deeplink_data': '',
+            'native': 'unknown',
+            'telegram_from': None,
         },
         {
             'user_id': 'available_newbie_id2',
@@ -182,6 +203,9 @@ def ddb_scan_of_ten_users() -> List[Dict[Text, Any]]:
             'state_timestamp': None,
             'state_timestamp_str': None,
             'notes': '',
+            'deeplink_data': '',
+            'native': 'unknown',
+            'telegram_from': None,
         },
         {
             'user_id': 'available_veteran_id2',
@@ -191,6 +215,9 @@ def ddb_scan_of_ten_users() -> List[Dict[Text, Any]]:
             'state_timestamp': None,
             'state_timestamp_str': None,
             'notes': '',
+            'deeplink_data': '',
+            'native': 'unknown',
+            'telegram_from': None,
         },
         {
             'user_id': 'existing_user_id3',
@@ -200,6 +227,9 @@ def ddb_scan_of_ten_users() -> List[Dict[Text, Any]]:
             'state_timestamp': None,
             'state_timestamp_str': None,
             'notes': '',
+            'deeplink_data': '',
+            'native': 'unknown',
+            'telegram_from': None,
         },
         {
             'user_id': 'available_newbie_id3',
@@ -209,6 +239,9 @@ def ddb_scan_of_ten_users() -> List[Dict[Text, Any]]:
             'state_timestamp': None,
             'state_timestamp_str': None,
             'notes': '',
+            'deeplink_data': '',
+            'native': 'unknown',
+            'telegram_from': None,
         },
         {
             'user_id': 'available_veteran_id3',
@@ -218,6 +251,9 @@ def ddb_scan_of_ten_users() -> List[Dict[Text, Any]]:
             'state_timestamp': None,
             'state_timestamp_str': None,
             'notes': '',
+            'deeplink_data': '',
+            'native': 'unknown',
+            'telegram_from': None,
         },
         {
             'user_id': 'existing_user_id4',
@@ -227,5 +263,8 @@ def ddb_scan_of_ten_users() -> List[Dict[Text, Any]]:
             'state_timestamp': None,
             'state_timestamp_str': None,
             'notes': '',
+            'deeplink_data': '',
+            'native': 'unknown',
+            'telegram_from': None,
         },
     ]

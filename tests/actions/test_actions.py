@@ -1018,6 +1018,7 @@ async def test_action_offer_chitchat(
     actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'success'),
+        SlotSet('swiper_native', 'unknown'),
         SlotSet('swiper_state', destination_swiper_state),
         SlotSet('partner_id', None),
     ]
