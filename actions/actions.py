@@ -127,8 +127,6 @@ class ActionSessionStart(BaseSwiperAction):
 
     @staticmethod
     def _slot_set_events_from_tracker(tracker: Tracker) -> List[EventType]:
-        # TODO oleksandr: should I skip session_started_metadata slot ?
-        #  (metadata seems to receive some kind of special treatment in Rasa Core version of the action)
         return [
             SlotSet(key=slot_key, value=slot_value)
             for slot_key, slot_value in tracker.slots.items()
