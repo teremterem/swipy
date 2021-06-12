@@ -30,10 +30,9 @@ class SwiperTelegramInput(TelegramInput):
             request_dict = request.json
 
             # TODO oleksandr: account for other types of updates too (not all of them have 'message') ?
-            telegram_from = request_dict.get('message', {}).get('from')
+            telegram_message = request_dict.get('message') or {}
+            telegram_from = telegram_message.get('from')
             if telegram_from:
-                return {
-                    'telegram_from': telegram_from,
-                }
+                return {'telegram_from': telegram_from}
 
         return None

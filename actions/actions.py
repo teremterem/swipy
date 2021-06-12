@@ -188,9 +188,9 @@ class ActionOfferChitchat(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        metadata = tracker.slots.get('session_started_metadata') or {}
-        if logger.isEnabledFor(logging.INFO):
-            logger.info('ActionOfferChitchat - session_started_metadata:\n%s', pformat(metadata))
+        metadata = tracker.latest_message.get('metadata') or {}
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('ActionOfferChitchat - latest_message.metadata:\n%s', pformat(metadata))
 
         deeplink_data = metadata.get(DEEPLINK_DATA_SLOT)
         telegram_from = metadata.get(TELEGRAM_FROM_SLOT)
