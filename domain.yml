@@ -96,7 +96,7 @@ responses:
   utter_greet_offer_chitchat:
   - custom:
       parse_mode: html
-      text: "Hi, my name is Swipy\U0001F643\n \nDo you feel lonely or isolated? \U0001F47E\n \nOr maybe you just want to talk to a new person?\U0001F469‍\U0001F4BC\n \nI can arrange <b>video chitchat</b> with another human for you \U0001F609\n \n<i>You can respond to me in your own words. I am an AI-powered chatbot and I am constantly improving.</i>"
+      text: "Hi, my name is Swipy\U0001F643\n \nI can connect you with a stranger in a video chat so you could practice your English speaking skills \U0001F1EC\U0001F1E7\n \n<b>Would you like to give it a try?</b>"
   utter_ok_arranging_chitchat:
   - text: |-
       Great! Let me find someone for you to chitchat with.
@@ -162,9 +162,7 @@ responses:
   - text: |-
       Ok, I will not bother you 🛑
        
-      Should you decide that you want to chitchat with someone, just let me know - I will set up a video call 🙂
-       
-      See ya! 😉
+      Should you change your mind and decide that you want to chitchat with someone, just let me know - I will set up a video call 😉
   utter_iamabot:
   - text: I'm an AI-powered chatbot 🤖
   utter_error:
