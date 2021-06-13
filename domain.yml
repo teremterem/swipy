@@ -157,7 +157,7 @@ responses:
   - text: |-
       Ok, declined ❌
        
-      Can I ask you if there is any specific time or times of day (maybe days of week) when you are more likely to join someone for chitchat over a video call?
+      May I ask you if there is any specific time or times of day (maybe days of week) when you are more likely to join someone for chitchat over a video call?
   utter_hope_to_see_you_later:
   - text: |-
       Ok, I will not bother you 🛑
