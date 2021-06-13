@@ -226,10 +226,8 @@ async def test_action_find_partner(
     assert dispatcher.messages == []
 
     mock_asyncio_sleep.assert_called_once_with(1.1)
-    mock_query_user_dicts.assert_called_once_with(
-        ('wants_chitchat', 'ok_to_chitchat', 'roomed'),
-        exclude_user_id='unit_test_user',
-    )
+    mock_query_user_dicts.assert_called_once_with(('wants_chitchat',), 'unit_test_user', exclude_natives=('unknown',))
+
     assert mock_telebot_make_request.mock_calls == [
         telegram_user_profile_photo_make_request_call,
     ]
