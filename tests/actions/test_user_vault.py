@@ -115,8 +115,7 @@ def test_get_random_available_partner(
     assert actual_random_user == user2
 
     mock_query_user_dicts.assert_called_once_with(
-        ('wants_chitchat', 'ok_to_chitchat', 'roomed'),
-        exclude_user_id='existing_user_id1',
+        ('wants_chitchat',), 'existing_user_id1', exclude_natives=('unknown',)
     )
     mock_choice.assert_called_once_with(list_of_dicts)
 
