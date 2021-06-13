@@ -266,9 +266,7 @@ async def test_action_find_partner_no_one(
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
 ) -> None:
-    mock_query_user_dicts.side_effect = [
-        [],  # first call
-    ]
+    mock_query_user_dicts.return_value = []
 
     actual_events = await actions.ActionFindPartner().run(dispatcher, tracker, domain)
     assert actual_events == [
@@ -289,7 +287,12 @@ async def test_action_find_partner_no_one(
 
     mock_asyncio_sleep.assert_called_once_with(1.1)
     assert mock_query_user_dicts.mock_calls == [
-        call(('wants_chitchat', 'ok_to_chitchat', 'roomed'), exclude_user_id='unit_test_user'),
+        call(('wants_chitchat',), 'unit_test_user', exclude_natives=('unknown',)),
+        call(('ok_to_chitchat',), 'unit_test_user', exclude_natives=('unknown',)),
+        call(('roomed',), 'unit_test_user', exclude_natives=('unknown',)),
+        call(('wants_chitchat',), 'unit_test_user', exclude_natives=()),
+        call(('ok_to_chitchat',), 'unit_test_user', exclude_natives=()),
+        call(('roomed',), 'unit_test_user', exclude_natives=()),
     ]
     assert mock_aioresponses.requests == {}  # rasa_callbacks.ask_to_join() not called
 
