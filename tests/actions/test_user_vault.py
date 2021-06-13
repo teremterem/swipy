@@ -1,6 +1,6 @@
 from dataclasses import asdict
 from typing import List, Dict, Text, Any, Optional
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, call
 
 import pytest
 
@@ -137,10 +137,14 @@ def test_no_available_partner(
     user_vault = UserVault()
     assert user_vault.get_random_available_partner(user1) is None
 
-    mock_list_available_user_dicts.assert_called_once_with(
-        ('wants_chitchat', 'ok_to_chitchat', 'roomed'),
-        exclude_user_id='existing_user_id1',
-    )
+    assert mock_list_available_user_dicts.mock_calls == [
+        call(('wants_chitchat',), 'existing_user_id1', exclude_natives=('unknown',)),
+        call(('ok_to_chitchat',), 'existing_user_id1', exclude_natives=('unknown',)),
+        call(('roomed',), 'existing_user_id1', exclude_natives=('unknown',)),
+        call(('wants_chitchat',), 'existing_user_id1', exclude_natives=()),
+        call(('ok_to_chitchat',), 'existing_user_id1', exclude_natives=()),
+        call(('roomed',), 'existing_user_id1', exclude_natives=()),
+    ]
     mock_choice.assert_not_called()
 
 
