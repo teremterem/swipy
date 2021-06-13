@@ -113,7 +113,10 @@ class NaiveDdbUserVault(BaseUserVault):
         # TODO oleksandr: is there a better way to ensure that the tests have a chance to mock boto3 ?
         from actions.aws_resources import user_state_machine_table
 
-        ddb_resp = user_state_machine_table.get_item(Key={'user_id': user_id})
+        ddb_resp = user_state_machine_table.get_item(
+            Key={'user_id': user_id},
+            # ConsistentRead=True,
+        )
         item = ddb_resp.get('Item')
         return None if item is None else self._user_from_dict(item)
 

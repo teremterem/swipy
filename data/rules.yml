@@ -3,7 +3,6 @@ rules:
 - rule: user sends /start command in Telegram, greets the bot or asks how the bot works
   steps:
   - or:
-    - intent: start
     - intent: greet
     - intent: how_it_works
   - action: action_offer_chitchat
@@ -59,6 +58,9 @@ rules:
   - action: action_do_not_disturb
 - rule: user asks for chitchat directly
   steps:
-  - intent: want_chitchat
+  - or:
+    - intent: start
+    - intent: want_chitchat
   - action: utter_ok_arranging_chitchat
   - action: action_find_partner
+  - action: action_metadata_to_slots

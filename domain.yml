@@ -171,6 +171,7 @@ responses:
   - text: Ouch! Something went wrong 🤖
 actions:
 - action_session_start
+- action_metadata_to_slots
 - action_offer_chitchat
 - action_find_partner
 - action_ask_to_join
