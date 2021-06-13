@@ -440,7 +440,7 @@ def test_ddb_user_vault_query_user_dicts(
     'ddb_user2',
     'ddb_user3',
 )
-def test_ddb_user_vault_list_no_available_users_dicts(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> None:
+def test_ddb_user_vault_query_users_dicts_none_available(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> None:
     from actions.aws_resources import user_state_machine_table
 
     assert user_state_machine_table.scan()['Items'] == ddb_scan_of_three_users
