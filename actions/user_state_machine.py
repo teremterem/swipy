@@ -45,6 +45,11 @@ class UserState:
         OK_TO_CHITCHAT,
         ROOMED,
     ]
+    chitchatable_tiers = [
+        (WANTS_CHITCHAT,),
+        (OK_TO_CHITCHAT,),
+        (ROOMED,),
+    ]
 
 
 @dataclass
