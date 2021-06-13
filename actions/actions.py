@@ -199,13 +199,11 @@ class ActionOfferChitchat(BaseSwiperAction):
         if GREETING_MAKES_USER_OK_TO_CHITCHAT:
             if current_user.state in (
                     UserState.NEW,
-                    # UserState.WAITING_PARTNER_JOIN,
-                    # UserState.WAITING_PARTNER_CONFIRM,
-                    # UserState.ASKED_TO_JOIN,
-                    # UserState.ASKED_TO_CONFIRM,
-                    # UserState.ROOMED,
-                    UserState.REJECTED_JOIN,  # TODO oleksandr: are you sure about this ?
-                    UserState.REJECTED_CONFIRM,  # TODO oleksandr: are you sure about this ?
+                    UserState.ASKED_TO_JOIN,  # TODO oleksandr: are you sure about this ?
+                    UserState.ASKED_TO_CONFIRM,  # TODO oleksandr: are you sure about this ?
+                    UserState.ROOMED,
+                    UserState.REJECTED_JOIN,
+                    UserState.REJECTED_CONFIRM,
                     UserState.JOIN_TIMED_OUT,
                     UserState.CONFIRM_TIMED_OUT,
                     UserState.DO_NOT_DISTURB,
@@ -281,15 +279,7 @@ class ActionFindPartner(BaseSwiperAction):
         # but it happens when this action is invoked externally by someone who rejected invitation)
         await asyncio.sleep(TELEGRAM_MSG_LIMIT_SLEEP_SEC)
 
-        partner = user_vault.get_random_available_user(
-            exclude_user_id=current_user.user_id,
-            newbie=True,
-        )
-        if not partner:
-            partner = user_vault.get_random_available_user(
-                exclude_user_id=current_user.user_id,
-                newbie=False,
-            )
+        partner = user_vault.get_random_available_partner(current_user)
 
         if partner:
             if not partner.can_be_offered_chitchat():

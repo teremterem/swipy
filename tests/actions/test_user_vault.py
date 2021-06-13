@@ -1,6 +1,6 @@
 from dataclasses import asdict
 from typing import List, Dict, Text, Any, Optional
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, call
 
 import pytest
 
@@ -94,62 +94,57 @@ def test_user_vault_cache_not_reused_between_instances(
     assert mock_ddb_get_user.call_count == 2
 
 
-@pytest.mark.parametrize('newbie_filter', [True, False, None])
-@patch.object(UserVault, '_list_available_user_dicts')
+@patch.object(UserVault, '_query_user_dicts')
 @patch('actions.user_vault.secrets.choice')
-def test_get_random_available_user(
+def test_get_random_available_partner(
         mock_choice: MagicMock,
-        mock_list_available_user_dicts: MagicMock,
-        ddb_user1: UserStateMachine,
-        ddb_user2: UserStateMachine,
-        ddb_user3: UserStateMachine,
-        newbie_filter: Optional[bool],
+        mock_query_user_dicts: MagicMock,
+        user1: UserStateMachine,
+        user2: UserStateMachine,
+        user3: UserStateMachine,
+        user4: UserStateMachine,
 ) -> None:
     # noinspection PyDataclass
-    list_of_dicts = [asdict(ddb_user1), asdict(ddb_user2), asdict(ddb_user3)]
+    list_of_dicts = [asdict(user4), asdict(user2), asdict(user3)]
 
-    mock_list_available_user_dicts.return_value = list_of_dicts
+    mock_query_user_dicts.return_value = list_of_dicts
     mock_choice.return_value = list_of_dicts[1]
 
     user_vault = UserVault()
-    actual_random_user = user_vault.get_random_available_user(
-        exclude_user_id='existing_user_id1',
-        newbie=newbie_filter,
-    )
-    assert actual_random_user == ddb_user2
+    actual_random_user = user_vault.get_random_available_partner(user1)
+    assert actual_random_user == user2
 
-    mock_list_available_user_dicts.assert_called_once_with(
-        exclude_user_id='existing_user_id1',
-        newbie=newbie_filter,
+    mock_query_user_dicts.assert_called_once_with(
+        ('wants_chitchat',), 'existing_user_id1', exclude_natives=('unknown',)
     )
     mock_choice.assert_called_once_with(list_of_dicts)
 
     assert user_vault.get_user(actual_random_user.user_id) is actual_random_user  # make sure the user was cached
 
 
-@pytest.mark.parametrize('newbie_filter', [True, False, None])
-@pytest.mark.parametrize('empty_list_variant', [[], None])
-@patch.object(UserVault, '_list_available_user_dicts')
+@patch.object(UserVault, '_query_user_dicts')
 @patch('actions.user_vault.secrets.choice')
-def test_no_available_user(
+@pytest.mark.parametrize('empty_list_variant', [[], None])
+def test_no_available_partner(
         mock_choice: MagicMock,
         mock_list_available_user_dicts: MagicMock,
-        newbie_filter: Optional[bool],
+        user1: UserStateMachine,
         empty_list_variant: Optional[list],
 ) -> None:
     mock_list_available_user_dicts.return_value = empty_list_variant
     mock_choice.side_effect = ValueError("secrets.choice shouldn't have been called with None or empty list")
 
     user_vault = UserVault()
-    assert user_vault.get_random_available_user(
-        'existing_user_id1',
-        newbie=newbie_filter,
-    ) is None
+    assert user_vault.get_random_available_partner(user1) is None
 
-    mock_list_available_user_dicts.assert_called_once_with(
-        exclude_user_id='existing_user_id1',
-        newbie=newbie_filter,
-    )
+    assert mock_list_available_user_dicts.mock_calls == [
+        call(('wants_chitchat',), 'existing_user_id1', exclude_natives=('unknown',)),
+        call(('ok_to_chitchat',), 'existing_user_id1', exclude_natives=('unknown',)),
+        call(('roomed',), 'existing_user_id1', exclude_natives=('unknown',)),
+        call(('wants_chitchat',), 'existing_user_id1', exclude_natives=()),
+        call(('ok_to_chitchat',), 'existing_user_id1', exclude_natives=()),
+        call(('roomed',), 'existing_user_id1', exclude_natives=()),
+    ]
     mock_choice.assert_not_called()
 
 
@@ -283,13 +278,36 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
     'ddb_available_veteran3',
     'ddb_user4',
 )
-@pytest.mark.parametrize('newbie_filter, exclude_user_id, expected_ddb_scan', [
+@pytest.mark.parametrize('exclude_user_id, expected_ddb_scan', [
     (
-            True,
-            'available_newbie_id2',
+            'available_veteran_id2',
             [
                 {
                     'user_id': 'available_newbie_id1',
+                    'state': 'ok_to_chitchat',
+                    'partner_id': None,
+                    'newbie': True,
+                    'state_timestamp': None,
+                    'state_timestamp_str': None,
+                    'notes': '',
+                    'deeplink_data': '',
+                    'native': 'unknown',
+                    'telegram_from': None,
+                },
+                {
+                    'user_id': 'available_veteran_id1',
+                    'state': 'ok_to_chitchat',
+                    'partner_id': None,
+                    'newbie': False,
+                    'state_timestamp': None,
+                    'state_timestamp_str': None,
+                    'notes': '',
+                    'deeplink_data': '',
+                    'native': 'unknown',
+                    'telegram_from': None,
+                },
+                {
+                    'user_id': 'available_newbie_id2',
                     'state': 'ok_to_chitchat',
                     'partner_id': None,
                     'newbie': True,
@@ -312,24 +330,6 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
                     'native': 'unknown',
                     'telegram_from': None,
                 },
-            ],
-    ),
-    (
-            False,
-            'available_veteran_id2',
-            [
-                {
-                    'user_id': 'available_veteran_id1',
-                    'state': 'ok_to_chitchat',
-                    'partner_id': None,
-                    'newbie': False,
-                    'state_timestamp': None,
-                    'state_timestamp_str': None,
-                    'notes': '',
-                    'deeplink_data': '',
-                    'native': 'unknown',
-                    'telegram_from': None,
-                },
                 {
                     'user_id': 'available_veteran_id3',
                     'state': 'ok_to_chitchat',
@@ -345,7 +345,6 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
             ],
     ),
     (
-            None,
             'existing_user_id1',
             [
                 {
@@ -423,9 +422,8 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
             ],
     ),
 ])
-def test_ddb_user_vault_list_available_user_dicts(
+def test_ddb_user_vault_query_user_dicts(
         ddb_scan_of_ten_users: List[Dict[Text, Any]],
-        newbie_filter: bool,
         exclude_user_id: Text,
         expected_ddb_scan: List[Dict[Text, Any]],
 ) -> None:
@@ -433,25 +431,27 @@ def test_ddb_user_vault_list_available_user_dicts(
 
     assert user_state_machine_table.scan()['Items'] == ddb_scan_of_ten_users
     user_vault = UserVault()
-    actual_ddb_scan = user_vault._list_available_user_dicts(exclude_user_id, newbie=newbie_filter)
+    actual_ddb_scan = user_vault._query_user_dicts(
+        ('wants_chitchat', 'ok_to_chitchat', 'roomed'),
+        exclude_user_id=exclude_user_id,
+    )
     assert actual_ddb_scan == expected_ddb_scan
 
 
-@pytest.mark.parametrize('newbie_filter', [True, False, None])
 @pytest.mark.usefixtures(
     'ddb_user1',
     'ddb_user2',
     'ddb_user3',
 )
-def test_ddb_user_vault_list_no_available_users_dicts(
-        newbie_filter: Optional[bool],
-        ddb_scan_of_three_users: List[Dict[Text, Any]],
-) -> None:
+def test_ddb_user_vault_query_users_dicts_none_available(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> None:
     from actions.aws_resources import user_state_machine_table
 
     assert user_state_machine_table.scan()['Items'] == ddb_scan_of_three_users
     user_vault = UserVault()
-    assert user_vault._list_available_user_dicts('existing_user_id1', newbie=newbie_filter) == []
+    assert user_vault._query_user_dicts(
+        ('wants_chitchat', 'ok_to_chitchat', 'roomed'),
+        exclude_user_id='existing_user_id1',
+    ) == []
 
 
 @pytest.mark.usefixtures('ddb_user1', 'ddb_user3')

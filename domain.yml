@@ -156,19 +156,17 @@ responses:
       parse_mode: html
       text: "Done!\n \n<b>Please follow this link to join the video call:</b>\n \n{room_url}"
   utter_declined:
-  - text: OK, declined ❌
-  - text: Declined ❌
   - text: |-
       OK, declined ❌
        
       Can I ask you if there is any specific time or times of day (maybe days of week) when you are more likely to join someone for chitchat over a video call?
   utter_hope_to_see_you_later:
   - text: |-
-      Ok, I will not bother you.
+      Ok, I will not bother you 🛑
        
-      Should you decide that you want to chitchat with someone, just let me know - I will set up a video call 😉
+      Should you decide that you want to chitchat with someone, just let me know - I will set up a video call 🙂
        
-      See ya! 🙂
+      See ya! 😉
   utter_iamabot:
   - text: I'm an AI-powered chatbot 🤖
   utter_error:

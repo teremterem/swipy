@@ -184,13 +184,14 @@ async def test_action_session_start_with_slots(
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('ddb_unit_test_user')
 @patch('time.time', Mock(return_value=1619945501))
-@patch.object(UserVault, '_list_available_user_dicts')
+@patch.object(UserVault, '_query_user_dicts')
 @patch('telebot.apihelper._make_request')
 @patch('asyncio.sleep')
-async def test_action_find_partner_newbie(
+@pytest.mark.parametrize('user_has_photo', [True, False])
+async def test_action_find_partner(
         mock_asyncio_sleep: AsyncMock,
         mock_telebot_make_request: MagicMock,
-        mock_list_available_user_dicts: MagicMock,
+        mock_query_user_dicts: MagicMock,
         mock_aioresponses: aioresponses,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
@@ -202,10 +203,14 @@ async def test_action_find_partner_newbie(
             [Text, Text, Dict[Text, Any]], Tuple[Tuple[Text, URL], RequestCall]
         ],
         external_intent_response: Dict[Text, Any],
+        user_has_photo: bool,
 ) -> None:
     # noinspection PyDataclass
-    mock_list_available_user_dicts.return_value = [asdict(available_newbie1)]
-    mock_telebot_make_request.return_value = telegram_user_profile_photo
+    mock_query_user_dicts.return_value = [asdict(available_newbie1)]
+    if user_has_photo:
+        mock_telebot_make_request.return_value = telegram_user_profile_photo
+    else:
+        mock_telebot_make_request.return_value = {'photos': [], 'total_count': 0}
 
     mock_aioresponses.post(re.compile(r'.*'), payload=external_intent_response)
 
@@ -221,7 +226,8 @@ async def test_action_find_partner_newbie(
     assert dispatcher.messages == []
 
     mock_asyncio_sleep.assert_called_once_with(1.1)
-    mock_list_available_user_dicts.assert_called_once_with(exclude_user_id='unit_test_user', newbie=True)
+    mock_query_user_dicts.assert_called_once_with(('wants_chitchat',), 'unit_test_user', exclude_natives=('unknown',))
+
     assert mock_telebot_make_request.mock_calls == [
         telegram_user_profile_photo_make_request_call,
     ]
@@ -231,7 +237,7 @@ async def test_action_find_partner_newbie(
         'EXTERNAL_ask_to_join',
         {
             'partner_id': 'unit_test_user',
-            'partner_photo_file_id': 'biggest_profile_pic_file_id',
+            'partner_photo_file_id': 'biggest_profile_pic_file_id' if user_has_photo else None,
         },
     )
     assert mock_aioresponses.requests == {expected_req_key: [expected_req_call]}
@@ -250,154 +256,17 @@ async def test_action_find_partner_newbie(
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('ddb_unit_test_user')
 @patch('time.time', Mock(return_value=1619945501))
-@patch.object(UserVault, '_list_available_user_dicts')
-@patch('telebot.apihelper._make_request')
-@patch('asyncio.sleep')
-async def test_action_find_partner_no_photo(
-        mock_asyncio_sleep: AsyncMock,
-        mock_telebot_make_request: MagicMock,
-        mock_list_available_user_dicts: MagicMock,
-        mock_aioresponses: aioresponses,
-        tracker: Tracker,
-        dispatcher: CollectingDispatcher,
-        domain: Dict[Text, Any],
-        available_newbie1: UserStateMachine,
-        telegram_user_profile_photo_make_request_call: call,
-        rasa_callbacks_expected_req_builder: Callable[
-            [Text, Text, Dict[Text, Any]], Tuple[Tuple[Text, URL], RequestCall]
-        ],
-        external_intent_response: Dict[Text, Any],
-) -> None:
-    # noinspection PyDataclass
-    mock_list_available_user_dicts.return_value = [asdict(available_newbie1)]
-    mock_telebot_make_request.return_value = {'photos': [], 'total_count': 0}
-
-    mock_aioresponses.post(re.compile(r'.*'), payload=external_intent_response)
-
-    action = actions.ActionFindPartner()
-    assert action.name() == 'action_find_partner'
-
-    actual_events = await action.run(dispatcher, tracker, domain)
-    assert actual_events == [
-        SlotSet('swiper_action_result', 'partner_has_been_asked'),
-        SlotSet('swiper_state', 'waiting_partner_join'),
-        SlotSet('partner_id', 'available_newbie_id1'),
-    ]
-    assert dispatcher.messages == []
-
-    mock_asyncio_sleep.assert_called_once_with(1.1)
-    mock_list_available_user_dicts.assert_called_once_with(exclude_user_id='unit_test_user', newbie=True)
-    assert mock_telebot_make_request.mock_calls == [
-        telegram_user_profile_photo_make_request_call,
-    ]
-
-    expected_req_key, expected_req_call = rasa_callbacks_expected_req_builder(
-        'available_newbie_id1',
-        'EXTERNAL_ask_to_join',
-        {
-            'partner_id': 'unit_test_user',
-            'partner_photo_file_id': None,
-        },
-    )
-    assert mock_aioresponses.requests == {expected_req_key: [expected_req_call]}
-
-    user_vault = UserVault()
-    assert user_vault.get_user('unit_test_user') == UserStateMachine(
-        user_id='unit_test_user',
-        state='waiting_partner_join',
-        partner_id='available_newbie_id1',
-        newbie=True,
-        state_timestamp=1619945501,
-        state_timestamp_str='2021-05-02 08:51:41 Z',
-    )
-
-
-@pytest.mark.asyncio
-@pytest.mark.usefixtures('ddb_unit_test_user')
-@patch('time.time', Mock(return_value=1619945501))
-@patch.object(UserVault, '_list_available_user_dicts')
-@patch('telebot.apihelper._make_request')
-@patch('asyncio.sleep')
-async def test_action_find_partner_veteran(
-        mock_asyncio_sleep: AsyncMock,
-        mock_telebot_make_request: MagicMock,
-        mock_list_available_user_dicts: MagicMock,
-        mock_aioresponses: aioresponses,
-        tracker: Tracker,
-        dispatcher: CollectingDispatcher,
-        domain: Dict[Text, Any],
-        available_veteran1: UserStateMachine,
-        telegram_user_profile_photo: Dict[Text, Any],
-        telegram_user_profile_photo_make_request_call: call,
-        rasa_callbacks_expected_req_builder: Callable[
-            [Text, Text, Dict[Text, Any]], Tuple[Tuple[Text, URL], RequestCall]
-        ],
-        external_intent_response: Dict[Text, Any],
-) -> None:
-    # noinspection PyDataclass
-    mock_list_available_user_dicts.side_effect = [
-        [],  # first call - no newbies
-        [asdict(available_veteran1)],  # second call - one veteran
-    ]
-    mock_telebot_make_request.return_value = telegram_user_profile_photo
-
-    mock_aioresponses.post(re.compile(r'.*'), payload=external_intent_response)
-
-    actual_events = await actions.ActionFindPartner().run(dispatcher, tracker, domain)
-    assert actual_events == [
-        SlotSet('swiper_action_result', 'partner_has_been_asked'),
-        SlotSet('swiper_state', 'waiting_partner_join'),
-        SlotSet('partner_id', 'available_veteran_id1'),
-    ]
-    assert dispatcher.messages == []
-
-    mock_asyncio_sleep.assert_called_once_with(1.1)
-    assert mock_list_available_user_dicts.mock_calls == [
-        call(exclude_user_id='unit_test_user', newbie=True),
-        call(exclude_user_id='unit_test_user', newbie=False),
-    ]
-    assert mock_telebot_make_request.mock_calls == [
-        telegram_user_profile_photo_make_request_call,
-    ]
-
-    expected_req_key, expected_req_call = rasa_callbacks_expected_req_builder(
-        'available_veteran_id1',
-        'EXTERNAL_ask_to_join',
-        {
-            'partner_id': 'unit_test_user',
-            'partner_photo_file_id': 'biggest_profile_pic_file_id',
-        },
-    )
-    assert mock_aioresponses.requests == {expected_req_key: [expected_req_call]}
-
-    user_vault = UserVault()
-    assert user_vault.get_user('unit_test_user') == UserStateMachine(
-        user_id='unit_test_user',
-        state='waiting_partner_join',
-        partner_id='available_veteran_id1',
-        newbie=True,
-        state_timestamp=1619945501,
-        state_timestamp_str='2021-05-02 08:51:41 Z',
-    )
-
-
-@pytest.mark.asyncio
-@pytest.mark.usefixtures('ddb_unit_test_user')
-@patch('time.time', Mock(return_value=1619945501))
-@patch.object(UserVault, '_list_available_user_dicts')
+@patch.object(UserVault, '_query_user_dicts')
 @patch('asyncio.sleep')
 async def test_action_find_partner_no_one(
         mock_asyncio_sleep: AsyncMock,
-        mock_list_available_user_dicts: MagicMock,
+        mock_query_user_dicts: MagicMock,
         mock_aioresponses: aioresponses,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
 ) -> None:
-    mock_list_available_user_dicts.side_effect = [
-        [],  # first call - no newbies
-        [],  # second call - no veterans
-    ]
+    mock_query_user_dicts.return_value = []
 
     actual_events = await actions.ActionFindPartner().run(dispatcher, tracker, domain)
     assert actual_events == [
@@ -417,9 +286,13 @@ async def test_action_find_partner_no_one(
     }]
 
     mock_asyncio_sleep.assert_called_once_with(1.1)
-    assert mock_list_available_user_dicts.mock_calls == [
-        call(exclude_user_id='unit_test_user', newbie=True),
-        call(exclude_user_id='unit_test_user', newbie=False),
+    assert mock_query_user_dicts.mock_calls == [
+        call(('wants_chitchat',), 'unit_test_user', exclude_natives=('unknown',)),
+        call(('ok_to_chitchat',), 'unit_test_user', exclude_natives=('unknown',)),
+        call(('roomed',), 'unit_test_user', exclude_natives=('unknown',)),
+        call(('wants_chitchat',), 'unit_test_user', exclude_natives=()),
+        call(('ok_to_chitchat',), 'unit_test_user', exclude_natives=()),
+        call(('roomed',), 'unit_test_user', exclude_natives=()),
     ]
     assert mock_aioresponses.requests == {}  # rasa_callbacks.ask_to_join() not called
 
@@ -437,25 +310,21 @@ async def test_action_find_partner_no_one(
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('ddb_unit_test_user')
 @patch('time.time', Mock(return_value=1619945501))
-@patch.object(UserVault, '_list_available_user_dicts')
+@patch.object(UserVault, '_query_user_dicts')
 @patch('asyncio.sleep')
 async def test_action_find_partner_swiper_error_trace(
         mock_asyncio_sleep: AsyncMock,
-        mock_list_available_user_dicts: MagicMock,
+        mock_query_user_dicts: MagicMock,
         mock_aioresponses: aioresponses,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
 ) -> None:
     # noinspection PyDataclass
-    mock_list_available_user_dicts.side_effect = [
-        [],  # first call - no newbies
-        [asdict(UserStateMachine(
-            user_id='unavailable_user_id',
-            state=UserState.DO_NOT_DISTURB,
-            newbie=False,
-        ))],  # second call - some veteran in not a valid state (dynamodb query malfunction?)
-    ]
+    mock_query_user_dicts.return_value = [asdict(UserStateMachine(
+        user_id='unavailable_user_id',
+        state=UserState.DO_NOT_DISTURB,
+    ))]  # some partner in not a valid state (dynamodb query malfunction?)
 
     _original_format_exception = traceback.format_exception
 
@@ -490,9 +359,8 @@ async def test_action_find_partner_swiper_error_trace(
     }]
 
     mock_asyncio_sleep.assert_called_once_with(1.1)
-    assert mock_list_available_user_dicts.mock_calls == [
-        call(exclude_user_id='unit_test_user', newbie=True),
-        call(exclude_user_id='unit_test_user', newbie=False),
+    assert mock_query_user_dicts.mock_calls == [
+        call(('wants_chitchat',), 'unit_test_user', exclude_natives=('unknown',)),
     ]
     assert mock_aioresponses.requests == {}  # rasa_callbacks.ask_to_join() not called
 
@@ -981,9 +849,9 @@ async def test_action_request_chitchat(
     ('greet', 'utter_greet_offer_chitchat', 'ok_to_chitchat', 'ok_to_chitchat'),
     ('greet', 'utter_greet_offer_chitchat', 'waiting_partner_join', 'waiting_partner_join'),
     ('greet', 'utter_greet_offer_chitchat', 'waiting_partner_confirm', 'waiting_partner_confirm'),
-    ('greet', 'utter_greet_offer_chitchat', 'asked_to_join', 'asked_to_join'),
-    ('greet', 'utter_greet_offer_chitchat', 'asked_to_confirm', 'asked_to_confirm'),
-    ('greet', 'utter_greet_offer_chitchat', 'roomed', 'roomed'),
+    ('greet', 'utter_greet_offer_chitchat', 'asked_to_join', 'ok_to_chitchat'),
+    ('greet', 'utter_greet_offer_chitchat', 'asked_to_confirm', 'ok_to_chitchat'),
+    ('greet', 'utter_greet_offer_chitchat', 'roomed', 'ok_to_chitchat'),
     ('greet', 'utter_greet_offer_chitchat', 'rejected_join', 'ok_to_chitchat'),
     ('greet', 'utter_greet_offer_chitchat', 'rejected_confirm', 'ok_to_chitchat'),
     ('greet', 'utter_greet_offer_chitchat', 'join_timed_out', 'ok_to_chitchat'),
