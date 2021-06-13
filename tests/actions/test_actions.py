@@ -10,7 +10,7 @@ import pytest
 from aioresponses import aioresponses
 from aioresponses.core import RequestCall
 from rasa_sdk import Tracker
-from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType, UserUtteranceReverted
+from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType, UserUtteranceReverted, FollowupAction
 from rasa_sdk.executor import CollectingDispatcher
 from yarl import URL
 
@@ -666,6 +666,7 @@ async def test_action_create_room_partner_not_waiting(
     actual_events = await actions.ActionCreateRoom().run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'partner_not_waiting_anymore'),
+        FollowupAction('action_find_partner'),
         SlotSet('swiper_state', 'wants_chitchat'),
         SlotSet('partner_id', None),
     ]

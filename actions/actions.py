@@ -9,7 +9,8 @@ from pprint import pformat
 from typing import Any, Text, Dict, List
 
 from rasa_sdk import Action, Tracker
-from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType, UserUtteranceReverted, ReminderScheduled
+from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType, UserUtteranceReverted, \
+    ReminderScheduled, FollowupAction
 from rasa_sdk.executor import CollectingDispatcher
 
 from actions import daily_co
@@ -397,6 +398,7 @@ class ActionCreateRoom(BaseSwiperAction):
                     key=SWIPER_ACTION_RESULT_SLOT,
                     value=SwiperActionResult.PARTNER_NOT_WAITING_ANYMORE,
                 ),
+                FollowupAction('action_find_partner'),
             ]
 
         if current_user.state == UserState.ASKED_TO_JOIN:

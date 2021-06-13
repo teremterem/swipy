@@ -144,9 +144,7 @@ responses:
   - text: |-
       Unfortunately, that person has become unavailable 😵
        
-      Not all is lost, however!
-       
-      Would you like me to look for someone else? 🙂
+      Fear not! I am already looking for someone else to connect you with... ⏳
   utter_room_url:
   - custom:
       parse_mode: html
@@ -157,9 +155,9 @@ responses:
       text: "Done!\n \n<b>Please follow this link to join the video call:</b>\n \n{room_url}"
   utter_declined:
   - text: |-
-      OK, declined ❌
+      Ok, declined ❌
        
-      Can I ask you if there is any specific time or times of day (maybe days of week) when you are more likely to join someone for chitchat over a video call?
+      May I ask you if there is any specific time or times of day (maybe days of week) when you are more likely to join someone for chitchat over a video call?
   utter_hope_to_see_you_later:
   - text: |-
       Ok, I will not bother you 🛑
