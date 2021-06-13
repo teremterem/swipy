@@ -27,9 +27,9 @@ async def test_user_vault_cache_not_reused_between_action_runs(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
-        unit_test_user: UserStateMachine,
+        ddb_unit_test_user: UserStateMachine,
 ) -> None:
-    mock_ddb_get_user.return_value = unit_test_user
+    mock_ddb_get_user.return_value = ddb_unit_test_user
 
     class SomeSwiperAction(actions.BaseSwiperAction):
         def name(self) -> Text:
@@ -887,7 +887,6 @@ async def test_action_offer_chitchat(
     actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'success'),
-        SlotSet('swiper_native', 'unknown'),
         SlotSet('swiper_state', destination_swiper_state),
         SlotSet('partner_id', None),
     ]
