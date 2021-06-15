@@ -140,10 +140,10 @@ def test_no_available_partner(
 
     assert mock_list_available_user_dicts.mock_calls == [
         call(('wants_chitchat',), 'existing_user_id1', exclude_natives=('unknown',)),
-        call(('ok_to_chitchat',), 'existing_user_id1', exclude_natives=('unknown',)),
-        call(('roomed',), 'existing_user_id1', exclude_natives=('unknown',)),
         call(('wants_chitchat',), 'existing_user_id1', exclude_natives=()),
+        call(('ok_to_chitchat',), 'existing_user_id1', exclude_natives=('unknown',)),
         call(('ok_to_chitchat',), 'existing_user_id1', exclude_natives=()),
+        call(('roomed',), 'existing_user_id1', exclude_natives=('unknown',)),
         call(('roomed',), 'existing_user_id1', exclude_natives=()),
     ]
     mock_choice.assert_not_called()
