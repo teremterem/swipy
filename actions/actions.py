@@ -91,15 +91,19 @@ class BaseSwiperAction(Action, ABC):
                 dl_entries = deeplink_data.split('_')
                 for dl_entry in dl_entries:
                     dl_parts = dl_entry.split('-', maxsplit=1)
-                    if len(dl_parts) > 1 and dl_parts[0] == 'n':
+                    if len(dl_parts) > 1 and dl_parts[0] == 'n' and dl_parts[1]:
                         current_user.native = dl_parts[1]
                         break
 
             if telegram_from:
                 current_user.telegram_from = telegram_from
 
-                if current_user.native == NATIVE_UNKNOWN:
-                    current_user.native = telegram_from.get('language_code') or NATIVE_UNKNOWN
+                teleg_lang_code = telegram_from.get('language_code')
+                if teleg_lang_code:
+                    current_user.teleg_lang_code = teleg_lang_code
+
+                    if current_user.native == NATIVE_UNKNOWN:
+                        current_user.native = teleg_lang_code
 
             user_vault.save(current_user)
 
