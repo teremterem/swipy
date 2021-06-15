@@ -63,6 +63,7 @@ class UserModel:
     notes: Text = ''
     deeplink_data: Text = ''
     native: Text = NATIVE_UNKNOWN
+    teleg_lang_code: Optional[Text] = None
     telegram_from: Optional[Dict[Text, Any]] = None
 
 

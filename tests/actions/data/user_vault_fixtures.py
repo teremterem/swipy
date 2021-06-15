@@ -115,6 +115,7 @@ def ddb_scan_of_three_users() -> List[Dict[Text, Any]]:
             'notes': 'some note',
             'deeplink_data': '',
             'native': 'unknown',
+            'teleg_lang_code': None,
             'telegram_from': None,
         },
         {
@@ -127,6 +128,7 @@ def ddb_scan_of_three_users() -> List[Dict[Text, Any]]:
             'notes': '',
             'deeplink_data': '',
             'native': 'unknown',
+            'teleg_lang_code': None,
             'telegram_from': None,
         },
         {
@@ -139,6 +141,7 @@ def ddb_scan_of_three_users() -> List[Dict[Text, Any]]:
             'notes': '',
             'deeplink_data': '',
             'native': 'unknown',
+            'teleg_lang_code': None,
             'telegram_from': None,
         },
     ]
@@ -157,6 +160,7 @@ def ddb_scan_of_ten_users() -> List[Dict[Text, Any]]:
             'notes': 'some note',
             'deeplink_data': '',
             'native': 'unknown',
+            'teleg_lang_code': None,
             'telegram_from': None,
         },
         {
@@ -169,6 +173,7 @@ def ddb_scan_of_ten_users() -> List[Dict[Text, Any]]:
             'notes': '',
             'deeplink_data': '',
             'native': 'unknown',
+            'teleg_lang_code': None,
             'telegram_from': None,
         },
         {
@@ -181,6 +186,7 @@ def ddb_scan_of_ten_users() -> List[Dict[Text, Any]]:
             'notes': '',
             'deeplink_data': '',
             'native': 'unknown',
+            'teleg_lang_code': None,
             'telegram_from': None,
         },
         {
@@ -193,6 +199,7 @@ def ddb_scan_of_ten_users() -> List[Dict[Text, Any]]:
             'notes': '',
             'deeplink_data': '',
             'native': 'unknown',
+            'teleg_lang_code': None,
             'telegram_from': None,
         },
         {
@@ -205,6 +212,7 @@ def ddb_scan_of_ten_users() -> List[Dict[Text, Any]]:
             'notes': '',
             'deeplink_data': '',
             'native': 'unknown',
+            'teleg_lang_code': None,
             'telegram_from': None,
         },
         {
@@ -217,6 +225,7 @@ def ddb_scan_of_ten_users() -> List[Dict[Text, Any]]:
             'notes': '',
             'deeplink_data': '',
             'native': 'unknown',
+            'teleg_lang_code': None,
             'telegram_from': None,
         },
         {
@@ -229,6 +238,7 @@ def ddb_scan_of_ten_users() -> List[Dict[Text, Any]]:
             'notes': '',
             'deeplink_data': '',
             'native': 'unknown',
+            'teleg_lang_code': None,
             'telegram_from': None,
         },
         {
@@ -241,6 +251,7 @@ def ddb_scan_of_ten_users() -> List[Dict[Text, Any]]:
             'notes': '',
             'deeplink_data': '',
             'native': 'unknown',
+            'teleg_lang_code': None,
             'telegram_from': None,
         },
         {
@@ -253,6 +264,7 @@ def ddb_scan_of_ten_users() -> List[Dict[Text, Any]]:
             'notes': '',
             'deeplink_data': '',
             'native': 'unknown',
+            'teleg_lang_code': None,
             'telegram_from': None,
         },
         {
@@ -265,6 +277,7 @@ def ddb_scan_of_ten_users() -> List[Dict[Text, Any]]:
             'notes': '',
             'deeplink_data': '',
             'native': 'unknown',
+            'teleg_lang_code': None,
             'telegram_from': None,
         },
     ]

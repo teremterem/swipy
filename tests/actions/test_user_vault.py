@@ -36,6 +36,7 @@ def test_get_new_user() -> None:
         'notes': '',
         'deeplink_data': '',
         'native': 'unknown',
+        'teleg_lang_code': None,
         'telegram_from': None,
     }]
     assert user_vault.get_user('new_user_id') is new_user  # make sure the user was cached
@@ -171,6 +172,7 @@ def test_save_new_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> None:
             'notes': 'some note',
             'deeplink_data': '',
             'native': 'unknown',
+            'teleg_lang_code': None,
             'telegram_from': None,
         },
         {
@@ -183,6 +185,7 @@ def test_save_new_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> None:
             'notes': '',
             'deeplink_data': '',
             'native': 'unknown',
+            'teleg_lang_code': None,
             'telegram_from': None,
         },
         {
@@ -195,6 +198,7 @@ def test_save_new_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> None:
             'notes': '',
             'deeplink_data': '',
             'native': 'unknown',
+            'teleg_lang_code': None,
             'telegram_from': None,
         },
         {
@@ -207,6 +211,7 @@ def test_save_new_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> None:
             'notes': 'some other note',
             'deeplink_data': '',
             'native': 'unknown',
+            'teleg_lang_code': None,
             'telegram_from': None,
         },
     ]
@@ -236,6 +241,7 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
             'notes': '',  # TODO oleksandr: note value is lost in this case... should I worry about it ?
             'deeplink_data': '',
             'native': 'unknown',
+            'teleg_lang_code': None,
             'telegram_from': None,
         },
         {
@@ -248,6 +254,7 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
             'notes': '',
             'deeplink_data': '',
             'native': 'unknown',
+            'teleg_lang_code': None,
             'telegram_from': None,
         },
         {
@@ -260,6 +267,7 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
             'notes': '',
             'deeplink_data': '',
             'native': 'unknown',
+            'teleg_lang_code': None,
             'telegram_from': None,
         },
     ]
@@ -292,6 +300,7 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
                     'notes': '',
                     'deeplink_data': '',
                     'native': 'unknown',
+                    'teleg_lang_code': None,
                     'telegram_from': None,
                 },
                 {
@@ -304,6 +313,7 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
                     'notes': '',
                     'deeplink_data': '',
                     'native': 'unknown',
+                    'teleg_lang_code': None,
                     'telegram_from': None,
                 },
                 {
@@ -316,6 +326,7 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
                     'notes': '',
                     'deeplink_data': '',
                     'native': 'unknown',
+                    'teleg_lang_code': None,
                     'telegram_from': None,
                 },
                 {
@@ -328,6 +339,7 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
                     'notes': '',
                     'deeplink_data': '',
                     'native': 'unknown',
+                    'teleg_lang_code': None,
                     'telegram_from': None,
                 },
                 {
@@ -340,6 +352,7 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
                     'notes': '',
                     'deeplink_data': '',
                     'native': 'unknown',
+                    'teleg_lang_code': None,
                     'telegram_from': None,
                 },
             ],
@@ -357,6 +370,7 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
                     'notes': '',
                     'deeplink_data': '',
                     'native': 'unknown',
+                    'teleg_lang_code': None,
                     'telegram_from': None,
                 },
                 {
@@ -369,6 +383,7 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
                     'notes': '',
                     'deeplink_data': '',
                     'native': 'unknown',
+                    'teleg_lang_code': None,
                     'telegram_from': None,
                 },
                 {
@@ -381,6 +396,7 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
                     'notes': '',
                     'deeplink_data': '',
                     'native': 'unknown',
+                    'teleg_lang_code': None,
                     'telegram_from': None,
                 },
                 {
@@ -393,6 +409,7 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
                     'notes': '',
                     'deeplink_data': '',
                     'native': 'unknown',
+                    'teleg_lang_code': None,
                     'telegram_from': None,
                 },
                 {
@@ -405,6 +422,7 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
                     'notes': '',
                     'deeplink_data': '',
                     'native': 'unknown',
+                    'teleg_lang_code': None,
                     'telegram_from': None,
                 },
                 {
@@ -417,6 +435,7 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
                     'notes': '',
                     'deeplink_data': '',
                     'native': 'unknown',
+                    'teleg_lang_code': None,
                     'telegram_from': None,
                 },
             ],
