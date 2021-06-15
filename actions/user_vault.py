@@ -69,16 +69,6 @@ class BaseUserVault(IUserVault, ABC):
         self._user_cache[user_id] = user
         return user
 
-    def _get_random_available_partner_from_tiers(
-            self, exclude_user_id: Text,
-            exclude_natives: Iterable[Text] = (),
-    ) -> Optional[UserStateMachine]:
-        for tier in UserState.chitchatable_tiers:
-            partner = self._get_random_available_partner(tier, exclude_user_id, exclude_natives=exclude_natives)
-            if partner:
-                return partner
-        return None
-
     def _get_random_available_foreigner(self, current_user: UserStateMachine) -> Optional[UserStateMachine]:
         if current_user.native == EN:
             # if current user is a possible English native then there is no point in excluding anyone by language
@@ -94,6 +84,16 @@ class BaseUserVault(IUserVault, ABC):
             # foreigners not found, last resort - look among everyone
             partner = self._get_random_available_partner_from_tiers(current_user.user_id)
         return partner
+
+    def _get_random_available_partner_from_tiers(
+            self, exclude_user_id: Text,
+            exclude_natives: Iterable[Text] = (),
+    ) -> Optional[UserStateMachine]:
+        for tier in UserState.chitchatable_tiers:
+            partner = self._get_random_available_partner(tier, exclude_user_id, exclude_natives=exclude_natives)
+            if partner:
+                return partner
+        return None
 
     def get_random_available_partner(self, current_user: UserStateMachine) -> Optional[UserStateMachine]:
         user = self._get_random_available_foreigner(current_user)
