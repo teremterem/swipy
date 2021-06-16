@@ -16,6 +16,9 @@ nlu:
     - good afternoon
     - hey, what's up?
     - good time of day
+    - Hi
+    - Hello
+    - Hey hi
 - intent: affirm
   examples: |
     - yes, please
@@ -43,15 +46,23 @@ nlu:
     - please do
     - yes i am
     - +
+    - Ok
+    - Yes
+    - Ok where is the link?
+    - Ok. How to call you?
+    - yes i do
+    - Ja
+    - Yeah
+    - Yes , I want
+    - yeas
+    - let’s try that
+    - yes, sure
+    - yes, plaese
+    - Yes, please
+    - That would be great
+    - Ok, cool
 - intent: deny
   examples: |
-    - no, I'm ok
-    - no i'm ok
-    - no, it's ok
-    - no its ok
-    - no, I'm fine
-    - no i'm fine
-    - no, I'm fine, thanks
     - no, thanks
     - no
     - n
@@ -62,6 +73,9 @@ nlu:
     - not really
     - no thanks
     - -
+    - nope
+    - No
+    - Thanks, not at the moment, I have a lot of stuff to do
 - intent: how_it_works
   examples: |
     - how does it work?
@@ -70,6 +84,7 @@ nlu:
     - how will you do that?
     - what do you do, specifically?
     - great, and what can you do?
+    - how it works
 - intent: dont_bother_me
   examples: |
     - don't bother me
@@ -82,6 +97,9 @@ nlu:
     - sry busy now
     - cancel
     - stop
+    - Cancel
+    - dont bother me
+    - do not disturb
 - intent: bot_challenge
   examples: |
     - are you a bot?
@@ -109,4 +127,9 @@ nlu:
     - video chitchat
     - video chit chat
     - call
+    - now
+    - Chat
+    - Any time
+    - chat
+    - chit-chat
     - english

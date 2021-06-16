@@ -1,91 +1,244 @@
-#### This file contains tests to evaluate that your bot behaves as expected.
-#### If you want to learn more, please see the docs: https://rasa.com/docs/rasa/testing-your-assistant
-
+version: "2.0"
 stories:
-- story: happy path 1
+- story: Story from Conversation ID 416082217
   steps:
-  - user: |
-      hello there!
-    intent: greet
-  - action: utter_greet
-  - user: |
-      amazing
-    intent: mood_great
-  - action: utter_happy
-
-- story: happy path 2
-  steps:
-  - user: |
-      hello there!
-    intent: greet
-  - action: utter_greet
-  - user: |
-      amazing
-    intent: mood_great
-  - action: utter_happy
-  - user: |
-      bye-bye!
-    intent: goodbye
-  - action: utter_goodbye
-
-- story: sad path 1
-  steps:
-  - user: |
-      hello
-    intent: greet
-  - action: utter_greet
-  - user: |
-      not good
-    intent: mood_unhappy
-  - action: utter_cheer_up
-  - action: utter_did_that_help
-  - user: |
-      yes
-    intent: affirm
-  - action: utter_happy
-
-- story: sad path 2
-  steps:
-  - user: |
-      hello
-    intent: greet
-  - action: utter_greet
-  - user: |
-      not good
-    intent: mood_unhappy
-  - action: utter_cheer_up
-  - action: utter_did_that_help
-  - user: |
-      not really
-    intent: deny
-  - action: utter_goodbye
-
-- story: sad path 3
-  steps:
-  - user: |
-      hi
-    intent: greet
-  - action: utter_greet
-  - user: |
-      very terrible
-    intent: mood_unhappy
-  - action: utter_cheer_up
-  - action: utter_did_that_help
-  - user: |
-      no
-    intent: deny
-  - action: utter_goodbye
-
-- story: say goodbye
-  steps:
-  - user: |
-      bye-bye!
-    intent: goodbye
-  - action: utter_goodbye
-
-- story: bot challenge
-  steps:
-  - user: |
-      are you a bot?
-    intent: bot_challenge
-  - action: utter_iamabot
+  - slot_was_set:
+    - session_started_metadata:
+        telegram_from:
+          id: 416082217
+          is_bot: false
+          first_name: Oleh
+          last_name: Pylyp
+          username: oleh_pylyp_b
+          language_code: en
+        deeplink_data: s1033_n-uk
+  - slot_was_set:
+    - swiper_action_result: null
+  - slot_was_set:
+    - swiper_native: null
+  - slot_was_set:
+    - deeplink_data: null
+  - slot_was_set:
+    - telegram_from: null
+  - slot_was_set:
+    - partner_id_to_let_go: null
+  - slot_was_set:
+    - partner_photo_file_id: null
+  - slot_was_set:
+    - room_url: null
+  - slot_was_set:
+    - session_started_metadata:
+        telegram_from:
+          id: 416082217
+          is_bot: false
+          first_name: Oleh
+          last_name: Pylyp
+          username: oleh_pylyp_b
+          language_code: en
+        deeplink_data: s1033_n-uk
+  - slot_was_set:
+    - swiper_error: null
+  - slot_was_set:
+    - swiper_error_trace: null
+  - slot_was_set:
+    - swiper_state: new
+  - slot_was_set:
+    - partner_id: null
+  - intent: start
+    user: |-
+      /start
+  - action: utter_ok_arranging_chitchat
+  - action: action_find_partner
+  - slot_was_set:
+    - swiper_action_result: partner_was_not_found
+  - slot_was_set:
+    - swiper_state: wants_chitchat
+  - slot_was_set:
+    - partner_id: null
+  - action: action_metadata_to_slots
+  - slot_was_set:
+    - swiper_native: uk
+  - slot_was_set:
+    - deeplink_data: s1033_n-uk
+  - slot_was_set:
+    - telegram_from:
+        last_name: Pylyp
+        language_code: en
+        id: 416082217.0
+        is_bot: false
+        first_name: Oleh
+        username: oleh_pylyp_b
+  - intent: EXTERNAL_ask_to_join
+    user: |-
+      EXTERNAL: EXTERNAL_ask_to_join
+  - slot_was_set:
+    - partner_id: '210723289'
+  - slot_was_set:
+    - partner_photo_file_id: AgACAgIAAxkDAAIa4mDI1Bo18xb-sOiX_-vNkXNcRqVKAAIiqDEb2WGPDD40Xu2Jm05WvYUXpC4AAwEAAwIAA2MAAw4YAgABHwQ
+  - action: action_ask_to_join
+  - slot_was_set:
+    - swiper_action_result: success
+  - slot_was_set:
+    - swiper_state: asked_to_join
+  - slot_was_set:
+    - partner_id: '210723289'
+  - intent: affirm
+    user: |-
+      Yes
+  - action: action_create_room
+  - slot_was_set:
+    - swiper_action_result: partner_has_been_asked
+  - slot_was_set:
+    - swiper_state: waiting_partner_confirm
+  - slot_was_set:
+    - partner_id: '210723289'
+  - intent: EXTERNAL_join_room
+    user: |-
+      EXTERNAL: EXTERNAL_join_room
+  - slot_was_set:
+    - partner_id: '210723289'
+  - slot_was_set:
+    - room_url: https://swipy.daily.co/m7yQX2oLDLXCqyxnjZni
+  - action: utter_partner_ready_room_url
+  - action: action_join_room
+  - slot_was_set:
+    - swiper_action_result: success
+  - slot_was_set:
+    - swiper_state: roomed
+  - slot_was_set:
+    - partner_id: '210723289'
+  - intent: EXTERNAL_let_partner_go
+    user: |-
+      EXTERNAL: EXTERNAL_let_partner_go
+  - slot_was_set:
+    - partner_id_to_let_go: '210723289'
+  - action: action_let_partner_go
+  - slot_was_set:
+    - swiper_state: roomed
+  - slot_was_set:
+    - partner_id: '210723289'
+  - intent: EXTERNAL_ask_to_join
+    user: |-
+      EXTERNAL: EXTERNAL_ask_to_join
+  - slot_was_set:
+    - partner_id: '763073080'
+  - slot_was_set:
+    - partner_photo_file_id: AgACAgIAAxUAAWDI3-Nvp7PUrDl3aJba9L6aCOZtAAKqpzEbOJJ7LbkCwCLzsgxgQBTeky4AAwEAAwIAA2MAA2oZAgABHwQ
+  - action: action_ask_to_join
+  - slot_was_set:
+    - swiper_action_result: success
+  - slot_was_set:
+    - swiper_state: asked_to_join
+  - slot_was_set:
+    - partner_id: '763073080'
+  - intent: EXTERNAL_let_partner_go
+    user: |-
+      EXTERNAL: EXTERNAL_let_partner_go
+  - slot_was_set:
+    - partner_id_to_let_go: '763073080'
+  - action: action_let_partner_go
+  - slot_was_set:
+    - swiper_state: join_timed_out
+  - slot_was_set:
+    - partner_id: '763073080'
+  - intent: start
+    user: |-
+      /start
+  - action: utter_ok_arranging_chitchat
+  - action: action_find_partner
+  - slot_was_set:
+    - swiper_action_result: partner_has_been_asked
+  - slot_was_set:
+    - swiper_state: waiting_partner_join
+  - slot_was_set:
+    - partner_id: '210723289'
+  - action: action_metadata_to_slots
+  - slot_was_set:
+    - swiper_native: uk
+  - slot_was_set:
+    - deeplink_data: s1033_n-uk
+  - slot_was_set:
+    - telegram_from:
+        last_name: Pylyp
+        language_code: en
+        id: 416082217.0
+        is_bot: false
+        first_name: Oleh
+        username: oleh_pylyp_b
+  - intent: EXTERNAL_ask_to_join
+    user: |-
+      EXTERNAL: EXTERNAL_ask_to_join
+  - slot_was_set:
+    - partner_id: '210723289'
+  - slot_was_set:
+    - partner_photo_file_id: AgACAgIAAxkDAAIbAWDI_Lk_oMs6wnbsNsZjlq6KIk0LAAIiqDEb2WGPDD40Xu2Jm05WvYUXpC4AAwEAAwIAA2MAAw4YAgABHwQ
+  - action: action_ask_to_join
+  - slot_was_set:
+    - swiper_action_result: success
+  - slot_was_set:
+    - swiper_state: asked_to_confirm
+  - slot_was_set:
+    - partner_id: '210723289'
+  - intent: affirm
+    user: |-
+      Yes
+  - action: action_create_room
+  - slot_was_set:
+    - swiper_action_result: room_url_ready
+  - slot_was_set:
+    - room_url: https://swipy.daily.co/ltGvxA7Cyha1J54J0g0C
+  - slot_was_set:
+    - swiper_state: roomed
+  - slot_was_set:
+    - partner_id: '210723289'
+  - intent: EXTERNAL_let_partner_go
+    user: |-
+      EXTERNAL: EXTERNAL_let_partner_go
+  - slot_was_set:
+    - partner_id_to_let_go: '210723289'
+  - action: action_let_partner_go
+  - slot_was_set:
+    - swiper_state: roomed
+  - slot_was_set:
+    - partner_id: '210723289'
+  - intent: EXTERNAL_ask_to_join
+    user: |-
+      EXTERNAL: EXTERNAL_ask_to_join
+  - slot_was_set:
+    - partner_id: '1455916431'
+  - slot_was_set:
+    - partner_photo_file_id: AgACAgIAAxkDAAIa_2DI_HNLDQj-3F62TJ5UxbZpDcymAAKvuDEbJy4ZSo85kP7jckRo_7ykoi4AAwEAAwIAA2MAA3qGAwABHwQ
+  - action: action_ask_to_join
+  - slot_was_set:
+    - swiper_action_result: success
+  - slot_was_set:
+    - swiper_state: asked_to_join
+  - slot_was_set:
+    - partner_id: '1455916431'
+  - intent: EXTERNAL_let_partner_go
+    user: |-
+      EXTERNAL: EXTERNAL_let_partner_go
+  - slot_was_set:
+    - partner_id_to_let_go: '1455916431'
+  - action: action_let_partner_go
+  - slot_was_set:
+    - swiper_state: join_timed_out
+  - slot_was_set:
+    - partner_id: '1455916431'
+  - intent: EXTERNAL_ask_to_join
+    user: |-
+      EXTERNAL: EXTERNAL_ask_to_join
+  - slot_was_set:
+    - partner_id: '836632678'
+  - slot_was_set:
+    - partner_photo_file_id: AgACAgIAAxkDAAIbc2DJ1LMRnIl32ubndoD4kGuN5_Q9AAKqpzEbZgAB3jGIK1ixIGffqdztF5guAAMBAAMCAANjAAMsHAQAAR8E
+  - action: action_ask_to_join
+  - slot_was_set:
+    - swiper_action_result: success
+  - slot_was_set:
+    - swiper_state: asked_to_join
+  - slot_was_set:
+    - partner_id: '836632678'
+  - intent: EXTERNAL_let_partner_go
+    user: |-
+      EXTERNAL: EXTERNAL_let_partner_go
