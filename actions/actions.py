@@ -467,8 +467,15 @@ class ActionCreateRoom(BaseSwiperAction):
         created_room = await daily_co.create_room(current_user.user_id)
         room_url = created_room['url']
 
-        # put partner into the room as well
-        await rasa_callbacks.join_room(current_user.user_id, partner.user_id, room_url)
+        # noinspection PyBroadException
+        try:
+            # put partner into the room as well
+            await rasa_callbacks.join_room(current_user.user_id, partner.user_id, room_url)
+        except Exception:
+            # noinspection PyUnresolvedReferences
+            current_user.request_chitchat()
+            user_vault.save(current_user)
+            raise
 
         dispatcher.utter_message(
             response='utter_room_url',
