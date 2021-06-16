@@ -5,6 +5,7 @@
 docker.env
 docker-aws.env
 models/
+/results/
 db/
 .config/
 #credentials.yml
