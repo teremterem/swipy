@@ -551,9 +551,17 @@ async def let_partner_go_if_applicable(current_user: UserStateMachine, partner: 
     if partner.partner_id == current_user.user_id:
         if partner.state == UserState.WAITING_PARTNER_JOIN:
             # force the original sender of the declined invitation to "move along" in their partner search
-            await rasa_callbacks.find_partner(current_user.user_id, partner.user_id)
+            await rasa_callbacks.find_partner(
+                current_user.user_id,
+                partner.user_id,
+                suppress_callback_errors=True,
+            )
         elif partner.state == UserState.WAITING_PARTNER_CONFIRM:
-            await rasa_callbacks.report_unavailable(current_user.user_id, partner.user_id)
+            await rasa_callbacks.report_unavailable(
+                current_user.user_id,
+                partner.user_id,
+                suppress_callback_errors=True,
+            )
 
 
 class ActionDoNotDisturb(BaseSwiperAction):
