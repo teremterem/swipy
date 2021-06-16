@@ -297,23 +297,21 @@ class ActionFindPartner(BaseSwiperAction):
         partner = user_vault.get_random_available_partner(current_user)
 
         if partner:
-            if not partner.can_be_offered_chitchat():
-                # noinspection PyUnresolvedReferences
-                current_user.request_chitchat()
-                user_vault.save(current_user)
+            # noinspection PyUnresolvedReferences
+            current_user.request_chitchat()
+            user_vault.save(current_user)
 
+            if not partner.can_be_offered_chitchat():
                 raise InvalidSwiperStateError(
                     f"randomly chosen partner {repr(partner.user_id)} is in a wrong state: {repr(partner.state)}"
                 )
 
-            # noinspection PyUnresolvedReferences
-            current_user.request_chitchat()
+            user_profile_photo_id = telegram_helpers.get_user_profile_photo_file_id(current_user.user_id)
+            await rasa_callbacks.ask_to_join(current_user.user_id, partner.user_id, user_profile_photo_id)
+
             # noinspection PyUnresolvedReferences
             current_user.wait_for_partner(partner.user_id)
             user_vault.save(current_user)
-
-            user_profile_photo_id = telegram_helpers.get_user_profile_photo_file_id(current_user.user_id)
-            await rasa_callbacks.ask_to_join(current_user.user_id, partner.user_id, user_profile_photo_id)
 
             return [
                 SlotSet(
@@ -439,7 +437,14 @@ class ActionCreateRoom(BaseSwiperAction):
 
         user_profile_photo_id = telegram_helpers.get_user_profile_photo_file_id(current_user.user_id)
 
-        await rasa_callbacks.ask_to_join(current_user.user_id, partner.user_id, user_profile_photo_id)
+        # noinspection PyBroadException
+        try:
+            await rasa_callbacks.ask_to_join(current_user.user_id, partner.user_id, user_profile_photo_id)
+        except Exception:
+            # noinspection PyUnresolvedReferences
+            current_user.request_chitchat()
+            user_vault.save(current_user)
+            raise
 
         # noinspection PyUnresolvedReferences
         current_user.wait_for_partner(partner.user_id)
