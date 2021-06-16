@@ -61,16 +61,8 @@ nlu:
     - Yes, please
     - That would be great
     - Ok, cool
-    - Thanks
 - intent: deny
   examples: |
-    - no, I'm ok
-    - no i'm ok
-    - no, it's ok
-    - no its ok
-    - no, I'm fine
-    - no i'm fine
-    - no, I'm fine, thanks
     - no, thanks
     - no
     - n
