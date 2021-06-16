@@ -88,38 +88,6 @@ async def test_find_partner(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize('unsuccessful_response', [
-    {'no_tracker': 'here'},
-    {'tracker': None},
-    {'tracker': {}},
-    {
-        'tracker': {'is': 'here, but'},
-        'status': 'failure',
-    },
-])
-async def test_find_partner_unsuccessful(
-        rasa_callbacks_expected_req_builder: Callable[
-            [Text, Text, Dict[Text, Any]], Tuple[Tuple[Text, URL], RequestCall]
-        ],
-        mock_aioresponses: aioresponses,
-        unsuccessful_response: Dict[Text, Any],
-) -> None:
-    expected_req_key, expected_req_call = rasa_callbacks_expected_req_builder(
-        'a_receiving_user',
-        'EXTERNAL_find_partner',
-        {},
-    )
-    mock_aioresponses.post(re.compile(r'.*'), payload=unsuccessful_response)
-
-    with pytest.raises(SwiperRasaCallbackError):
-        await rasa_callbacks.find_partner(
-            'some_sender_id',
-            'a_receiving_user',
-        )
-    assert mock_aioresponses.requests == {expected_req_key: [expected_req_call]}
-
-
-@pytest.mark.asyncio
 async def test_report_unavailable(
         rasa_callbacks_expected_req_builder: Callable[
             [Text, Text, Dict[Text, Any]], Tuple[Tuple[Text, URL], RequestCall]
@@ -139,4 +107,51 @@ async def test_report_unavailable(
         'a_receiving_user',
     ) == external_intent_response
 
+    assert mock_aioresponses.requests == {expected_req_key: [expected_req_call]}
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('suppress_callback_errors', [True, False])
+@pytest.mark.parametrize('unsuccessful_response', [
+    {'no_tracker': 'here'},
+    {'tracker': None},
+    {'tracker': {}},
+    {
+        'tracker': {'is': 'here, but'},
+        'status': 'failure',
+    },
+])
+async def test_callback_unsuccessful(
+        rasa_callbacks_expected_req_builder: Callable[
+            [Text, Text, Dict[Text, Any]], Tuple[Tuple[Text, URL], RequestCall]
+        ],
+        mock_aioresponses: aioresponses,
+        unsuccessful_response: Dict[Text, Any],
+        suppress_callback_errors: bool,
+) -> None:
+    expected_req_key, expected_req_call = rasa_callbacks_expected_req_builder(
+        'a_receiving_user',
+        'EXTERNAL_intent',
+        {'some_entity': 'entity_value'},
+    )
+    mock_aioresponses.post(re.compile(r'.*'), payload=unsuccessful_response)
+
+    if suppress_callback_errors:
+        result = await rasa_callbacks._trigger_external_rasa_intent(
+            'some_sender_id',
+            'a_receiving_user',
+            'EXTERNAL_intent',
+            {'some_entity': 'entity_value'},
+            suppress_callback_errors,
+        )
+        assert result is None  # we are not returning anything if errors are suppressed
+    else:
+        with pytest.raises(SwiperRasaCallbackError):
+            await rasa_callbacks._trigger_external_rasa_intent(
+                'some_sender_id',
+                'a_receiving_user',
+                'EXTERNAL_intent',
+                {'some_entity': 'entity_value'},
+                suppress_callback_errors,
+            )
     assert mock_aioresponses.requests == {expected_req_key: [expected_req_call]}
