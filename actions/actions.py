@@ -210,34 +210,6 @@ class ActionSessionStart(BaseSwiperAction):
         return events
 
 
-class ActionMetadataToSlots(Action):
-    def name(self) -> Text:
-        return 'action_metadata_to_slots'
-
-    async def run(
-            self, dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any],
-    ) -> List[Dict[Text, Any]]:
-        user_vault = UserVault()
-        current_user = user_vault.get_user(tracker.sender_id)
-
-        return [
-            SlotSet(
-                key=SWIPER_NATIVE_SLOT,
-                value=current_user.native,
-            ),
-            SlotSet(
-                key=DEEPLINK_DATA_SLOT,
-                value=current_user.deeplink_data,
-            ),
-            SlotSet(
-                key=TELEGRAM_FROM_SLOT,
-                value=current_user.telegram_from,
-            ),
-        ]
-
-
 class ActionOfferChitchat(BaseSwiperAction):
     def name(self) -> Text:
         return 'action_offer_chitchat'
@@ -275,6 +247,18 @@ class ActionOfferChitchat(BaseSwiperAction):
             SlotSet(
                 key=SWIPER_ACTION_RESULT_SLOT,
                 value=SwiperActionResult.SUCCESS,
+            ),
+            SlotSet(
+                key=SWIPER_NATIVE_SLOT,
+                value=current_user.native,
+            ),
+            SlotSet(
+                key=DEEPLINK_DATA_SLOT,
+                value=current_user.deeplink_data,
+            ),
+            SlotSet(
+                key=TELEGRAM_FROM_SLOT,
+                value=current_user.telegram_from,
             ),
         ]
 
