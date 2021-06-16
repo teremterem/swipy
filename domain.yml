@@ -144,7 +144,9 @@ responses:
   - text: |-
       That person has become unavailable 😵
        
-      Fear not! I am already looking for someone else to connect you with... ⏳
+      Fear not!
+       
+      I am already looking for someone else to connect you with... ⏳
   utter_room_url:
   - custom:
       parse_mode: html
