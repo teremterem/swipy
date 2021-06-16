@@ -1,5 +1,6 @@
 import re
 from typing import Dict, Text, Any, Callable, Tuple
+from unittest.mock import patch, AsyncMock
 
 import pytest
 from aioresponses import aioresponses
@@ -11,7 +12,9 @@ from actions.utils import SwiperRasaCallbackError
 
 
 @pytest.mark.asyncio
+@patch('actions.rasa_callbacks._trigger_external_rasa_intent', wraps=rasa_callbacks._trigger_external_rasa_intent)
 async def test_ask_to_join(
+        wrap_trigger_external_rasa_intent: AsyncMock,
         rasa_callbacks_expected_req_builder: Callable[
             [Text, Text, Dict[Text, Any]], Tuple[Tuple[Text, URL], RequestCall]
         ],
@@ -35,10 +38,22 @@ async def test_ask_to_join(
     ) == external_intent_response
 
     assert mock_aioresponses.requests == {expected_req_key: [expected_req_call]}
+    wrap_trigger_external_rasa_intent.assert_called_once_with(
+        'id_of_asker',
+        'partner_id_to_ask',
+        'EXTERNAL_ask_to_join',
+        {
+            'partner_id': 'id_of_asker',
+            'partner_photo_file_id': 'photo_of_the_asker',
+        },
+        False,  # make sure errors are not suppressed by default
+    )
 
 
 @pytest.mark.asyncio
+@patch('actions.rasa_callbacks._trigger_external_rasa_intent', wraps=rasa_callbacks._trigger_external_rasa_intent)
 async def test_join_room(
+        wrap_trigger_external_rasa_intent: AsyncMock,
         rasa_callbacks_expected_req_builder: Callable[
             [Text, Text, Dict[Text, Any]], Tuple[Tuple[Text, URL], RequestCall]
         ],
@@ -62,10 +77,22 @@ async def test_join_room(
     ) == external_intent_response
 
     assert mock_aioresponses.requests == {expected_req_key: [expected_req_call]}
+    wrap_trigger_external_rasa_intent.assert_called_once_with(
+        'a_sending_user',
+        'a_receiving_user',
+        'EXTERNAL_join_room',
+        {
+            'partner_id': 'a_sending_user',
+            'room_url': 'https://room-unittest/url',
+        },
+        False,  # make sure errors are not suppressed by default
+    )
 
 
 @pytest.mark.asyncio
+@patch('actions.rasa_callbacks._trigger_external_rasa_intent', wraps=rasa_callbacks._trigger_external_rasa_intent)
 async def test_find_partner(
+        wrap_trigger_external_rasa_intent: AsyncMock,
         rasa_callbacks_expected_req_builder: Callable[
             [Text, Text, Dict[Text, Any]], Tuple[Tuple[Text, URL], RequestCall]
         ],
@@ -85,10 +112,19 @@ async def test_find_partner(
     ) == external_intent_response
 
     assert mock_aioresponses.requests == {expected_req_key: [expected_req_call]}
+    wrap_trigger_external_rasa_intent.assert_called_once_with(
+        'some_sender_id',
+        'a_receiving_user',
+        'EXTERNAL_find_partner',
+        {},
+        False,  # make sure errors are not suppressed by default
+    )
 
 
 @pytest.mark.asyncio
+@patch('actions.rasa_callbacks._trigger_external_rasa_intent', wraps=rasa_callbacks._trigger_external_rasa_intent)
 async def test_report_unavailable(
+        wrap_trigger_external_rasa_intent: AsyncMock,
         rasa_callbacks_expected_req_builder: Callable[
             [Text, Text, Dict[Text, Any]], Tuple[Tuple[Text, URL], RequestCall]
         ],
@@ -108,6 +144,13 @@ async def test_report_unavailable(
     ) == external_intent_response
 
     assert mock_aioresponses.requests == {expected_req_key: [expected_req_call]}
+    wrap_trigger_external_rasa_intent.assert_called_once_with(
+        'some_sender_id',
+        'a_receiving_user',
+        'EXTERNAL_report_unavailable',
+        {},
+        False,  # make sure errors are not suppressed by default
+    )
 
 
 @pytest.mark.asyncio
