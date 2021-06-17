@@ -210,34 +210,6 @@ class ActionSessionStart(BaseSwiperAction):
         return events
 
 
-class ActionMetadataToSlots(Action):
-    def name(self) -> Text:
-        return 'action_metadata_to_slots'
-
-    async def run(
-            self, dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any],
-    ) -> List[Dict[Text, Any]]:
-        user_vault = UserVault()
-        current_user = user_vault.get_user(tracker.sender_id)
-
-        return [
-            SlotSet(
-                key=SWIPER_NATIVE_SLOT,
-                value=current_user.native,
-            ),
-            SlotSet(
-                key=DEEPLINK_DATA_SLOT,
-                value=current_user.deeplink_data,
-            ),
-            SlotSet(
-                key=TELEGRAM_FROM_SLOT,
-                value=current_user.telegram_from,
-            ),
-        ]
-
-
 class ActionOfferChitchat(BaseSwiperAction):
     def name(self) -> Text:
         return 'action_offer_chitchat'
@@ -276,6 +248,18 @@ class ActionOfferChitchat(BaseSwiperAction):
                 key=SWIPER_ACTION_RESULT_SLOT,
                 value=SwiperActionResult.SUCCESS,
             ),
+            SlotSet(
+                key=SWIPER_NATIVE_SLOT,
+                value=current_user.native,
+            ),
+            SlotSet(
+                key=DEEPLINK_DATA_SLOT,
+                value=current_user.deeplink_data,
+            ),
+            SlotSet(
+                key=TELEGRAM_FROM_SLOT,
+                value=current_user.telegram_from,
+            ),
         ]
 
 
@@ -297,23 +281,21 @@ class ActionFindPartner(BaseSwiperAction):
         partner = user_vault.get_random_available_partner(current_user)
 
         if partner:
-            if not partner.can_be_offered_chitchat():
-                # noinspection PyUnresolvedReferences
-                current_user.request_chitchat()
-                user_vault.save(current_user)
+            # noinspection PyUnresolvedReferences
+            current_user.request_chitchat()
+            user_vault.save(current_user)
 
+            if not partner.can_be_offered_chitchat():
                 raise InvalidSwiperStateError(
                     f"randomly chosen partner {repr(partner.user_id)} is in a wrong state: {repr(partner.state)}"
                 )
 
-            # noinspection PyUnresolvedReferences
-            current_user.request_chitchat()
+            user_profile_photo_id = telegram_helpers.get_user_profile_photo_file_id(current_user.user_id)
+            await rasa_callbacks.ask_to_join(current_user.user_id, partner.user_id, user_profile_photo_id)
+
             # noinspection PyUnresolvedReferences
             current_user.wait_for_partner(partner.user_id)
             user_vault.save(current_user)
-
-            user_profile_photo_id = telegram_helpers.get_user_profile_photo_file_id(current_user.user_id)
-            await rasa_callbacks.ask_to_join(current_user.user_id, partner.user_id, user_profile_photo_id)
 
             return [
                 SlotSet(
@@ -439,7 +421,14 @@ class ActionCreateRoom(BaseSwiperAction):
 
         user_profile_photo_id = telegram_helpers.get_user_profile_photo_file_id(current_user.user_id)
 
-        await rasa_callbacks.ask_to_join(current_user.user_id, partner.user_id, user_profile_photo_id)
+        # noinspection PyBroadException
+        try:
+            await rasa_callbacks.ask_to_join(current_user.user_id, partner.user_id, user_profile_photo_id)
+        except Exception:
+            # noinspection PyUnresolvedReferences
+            current_user.request_chitchat()
+            user_vault.save(current_user)
+            raise
 
         # noinspection PyUnresolvedReferences
         current_user.wait_for_partner(partner.user_id)
@@ -462,8 +451,15 @@ class ActionCreateRoom(BaseSwiperAction):
         created_room = await daily_co.create_room(current_user.user_id)
         room_url = created_room['url']
 
-        # put partner into the room as well
-        await rasa_callbacks.join_room(current_user.user_id, partner.user_id, room_url)
+        # noinspection PyBroadException
+        try:
+            # put partner into the room as well
+            await rasa_callbacks.join_room(current_user.user_id, partner.user_id, room_url)
+        except Exception:
+            # noinspection PyUnresolvedReferences
+            current_user.request_chitchat()
+            user_vault.save(current_user)
+            raise
 
         dispatcher.utter_message(
             response='utter_room_url',
@@ -539,9 +535,17 @@ async def let_partner_go_if_applicable(current_user: UserStateMachine, partner: 
     if partner.partner_id == current_user.user_id:
         if partner.state == UserState.WAITING_PARTNER_JOIN:
             # force the original sender of the declined invitation to "move along" in their partner search
-            await rasa_callbacks.find_partner(current_user.user_id, partner.user_id)
+            await rasa_callbacks.find_partner(
+                current_user.user_id,
+                partner.user_id,
+                suppress_callback_errors=True,
+            )
         elif partner.state == UserState.WAITING_PARTNER_CONFIRM:
-            await rasa_callbacks.report_unavailable(current_user.user_id, partner.user_id)
+            await rasa_callbacks.report_unavailable(
+                current_user.user_id,
+                partner.user_id,
+                suppress_callback_errors=True,
+            )
 
 
 class ActionDoNotDisturb(BaseSwiperAction):

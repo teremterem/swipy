@@ -1,7 +1,7 @@
 import logging
 import os
 from pprint import pformat
-from typing import Text, Dict, Any
+from typing import Text, Dict, Any, Optional
 
 import aiohttp
 
@@ -19,7 +19,12 @@ PARTNER_PHOTO_FILE_ID_SLOT = 'partner_photo_file_id'
 ROOM_URL_SLOT = 'room_url'
 
 
-async def ask_to_join(sender_id: Text, receiver_id: Text, photo_file_id: Text) -> Dict[Text, Any]:
+async def ask_to_join(
+        sender_id: Text,
+        receiver_id: Text,
+        photo_file_id: Text,
+        suppress_callback_errors: bool = False,
+) -> Optional[Dict[Text, Any]]:
     return await _trigger_external_rasa_intent(
         sender_id,
         receiver_id,
@@ -28,10 +33,16 @@ async def ask_to_join(sender_id: Text, receiver_id: Text, photo_file_id: Text) -
             PARTNER_ID_SLOT: sender_id,
             PARTNER_PHOTO_FILE_ID_SLOT: photo_file_id,
         },
+        suppress_callback_errors,
     )
 
 
-async def join_room(sender_id: Text, receiver_id: Text, room_url: Text) -> Dict[Text, Any]:
+async def join_room(
+        sender_id: Text,
+        receiver_id: Text,
+        room_url: Text,
+        suppress_callback_errors: bool = False,
+) -> Optional[Dict[Text, Any]]:
     return await _trigger_external_rasa_intent(
         sender_id,
         receiver_id,
@@ -40,24 +51,35 @@ async def join_room(sender_id: Text, receiver_id: Text, room_url: Text) -> Dict[
             PARTNER_ID_SLOT: sender_id,
             ROOM_URL_SLOT: room_url,
         },
+        suppress_callback_errors,
     )
 
 
-async def find_partner(sender_id: Text, receiver_id: Text) -> Dict[Text, Any]:
+async def find_partner(
+        sender_id: Text,
+        receiver_id: Text,
+        suppress_callback_errors: bool = False,
+) -> Optional[Dict[Text, Any]]:
     return await _trigger_external_rasa_intent(
         sender_id,
         receiver_id,
         'EXTERNAL_find_partner',
         {},
+        suppress_callback_errors,
     )
 
 
-async def report_unavailable(sender_id: Text, receiver_id: Text) -> Dict[Text, Any]:
+async def report_unavailable(
+        sender_id: Text,
+        receiver_id: Text,
+        suppress_callback_errors: bool = False,
+) -> Optional[Dict[Text, Any]]:
     return await _trigger_external_rasa_intent(
         sender_id,
         receiver_id,
         'EXTERNAL_report_unavailable',
         {},
+        suppress_callback_errors,
     )
 
 
@@ -66,7 +88,8 @@ async def _trigger_external_rasa_intent(
         receiver_id: Text,
         intent_name: Text,
         entities: Dict[Text, Text],
-) -> Dict[Text, Any]:
+        suppress_callback_errors: bool,
+) -> Optional[Dict[Text, Any]]:
     # TODO oleksandr: do I need to reuse ClientSession instance ? what should be its lifetime ?
     async with aiohttp.ClientSession() as session:
         params = {
@@ -97,6 +120,13 @@ async def _trigger_external_rasa_intent(
         )
 
     if not resp_json.get('tracker') or resp_json.get('status') == 'failure':
-        raise SwiperRasaCallbackError(repr(resp_json))
+        try:
+            raise SwiperRasaCallbackError(repr(resp_json))
+        except SwiperRasaCallbackError:
+            logger.exception('failure in ' + repr(intent_name))
+            if not suppress_callback_errors:
+                raise
 
-    return resp_json
+    if not suppress_callback_errors:
+        return resp_json
+    return None
