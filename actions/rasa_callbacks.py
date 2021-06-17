@@ -55,34 +55,6 @@ async def join_room(
     )
 
 
-async def find_partner(
-        sender_id: Text,
-        receiver_id: Text,
-        suppress_callback_errors: bool = False,
-) -> Optional[Dict[Text, Any]]:
-    return await _trigger_external_rasa_intent(
-        sender_id,
-        receiver_id,
-        'EXTERNAL_find_partner',
-        {},
-        suppress_callback_errors,
-    )
-
-
-async def report_unavailable(
-        sender_id: Text,
-        receiver_id: Text,
-        suppress_callback_errors: bool = False,
-) -> Optional[Dict[Text, Any]]:
-    return await _trigger_external_rasa_intent(
-        sender_id,
-        receiver_id,
-        'EXTERNAL_report_unavailable',
-        {},
-        suppress_callback_errors,
-    )
-
-
 async def _trigger_external_rasa_intent(
         sender_id: Text,
         receiver_id: Text,

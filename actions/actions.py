@@ -307,6 +307,7 @@ class ActionFindPartner(BaseSwiperAction):
 
         dispatcher.utter_message(response='utter_no_one_was_found')
 
+        # TODO oleksandr: rewind user intent if it was a reminder
         return [
             SlotSet(
                 key=SWIPER_ACTION_RESULT_SLOT,
