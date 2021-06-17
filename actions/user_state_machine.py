@@ -257,9 +257,5 @@ class UserStateMachine(UserModel):
 
     # noinspection PyUnusedLocal
     def _update_state_timestamp(self, event: EventData) -> None:
-        if event.transition.source == event.transition.dest:
-            # state hasn't changed => no need to update timestamp
-            return
-
         self.state_timestamp = current_timestamp_int()
         self.state_timestamp_str = datetime.utcfromtimestamp(self.state_timestamp).strftime('%Y-%m-%d %H:%M:%S Z')
