@@ -916,137 +916,43 @@ async def test_action_offer_chitchat(
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('create_user_state_machine_table')
 @patch('time.time', Mock(return_value=1619945501))
-@pytest.mark.parametrize('current_user, asker, expected_rasa_callback_intent', [
-    (
-            UserStateMachine(
-                user_id='unit_test_user',
-                state='asked_to_join',
-                partner_id='the_asker',
-                newbie=True,
-            ),
-            UserStateMachine(
-                user_id='the_asker',
-                state='ok_to_chitchat',  # 'the_asker' isn't waiting for the current user anymore
-                partner_id=None,
-                newbie=True,
-            ),
-            None,  # 'the_asker' should not be touched
-    ),
-    (
-            UserStateMachine(
-                user_id='unit_test_user',
-                state='asked_to_join',
-                partner_id='the_asker',
-                newbie=True,
-            ),
-            UserStateMachine(
-                user_id='the_asker',
-                state='waiting_partner_join',
-                partner_id='someone_else',  # 'the_asker' is already waiting for someone else at this point
-                newbie=True,
-            ),
-            None,  # 'the_asker' should not be touched
-    ),
-    (
-            UserStateMachine(
-                user_id='unit_test_user',
-                state='asked_to_join',
-                partner_id='the_asker',
-                newbie=True,
-            ),
-            UserStateMachine(
-                user_id='the_asker',
-                state='waiting_partner_confirm',
-                partner_id='someone_else',  # 'the_asker' is already waiting for someone else at this point
-                newbie=True,
-            ),
-            None,  # 'the_asker' should not be touched
-    ),
-    (
-            UserStateMachine(
-                user_id='unit_test_user',
-                state='asked_to_join',
-                partner_id='',  # an invalid state
-                newbie=True,
-            ),
-            UserStateMachine(
-                user_id='the_asker',
-                state='waiting_partner_join',
-                partner_id='unit_test_user',
-                newbie=True,
-            ),
-            None,  # 'the_asker' should not be touched
-    ),
-    (
-            UserStateMachine(
-                user_id='unit_test_user',
-                state='asked_to_join',
-                partner_id='the_asker',
-                newbie=True,
-            ),
-            UserStateMachine(
-                user_id='the_asker',
-                state='waiting_partner_join',
-                partner_id='unit_test_user',
-                newbie=True,
-            ),
-            'EXTERNAL_find_partner',  # 'the_asker' was waiting for the current user to join -> let them go
-    ),
-    (
-            UserStateMachine(
-                user_id='unit_test_user',
-                state='asked_to_join',  # should be 'asked_to_confirm' but the action should rely on partner status
-                partner_id='the_asker',
-                newbie=True,
-            ),
-            UserStateMachine(
-                user_id='the_asker',
-                state='waiting_partner_confirm',
-                partner_id='unit_test_user',
-                newbie=True,
-            ),
-            'EXTERNAL_report_unavailable',  # 'the_asker' was waiting for the current user to confirm -> let them go
-    ),
+@pytest.mark.parametrize('source_swiper_state', [
+    'new',
+    'wants_chitchat',
+    'ok_to_chitchat',
+    'waiting_partner_join',
+    'waiting_partner_confirm',
+    'asked_to_join',
+    'asked_to_confirm',
+    'roomed',
+    'rejected_join',
+    'rejected_confirm',
+    'do_not_disturb',
 ])
 async def test_action_do_not_disturb(
-        mock_aioresponses: aioresponses,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
-        external_intent_response: Dict[Text, Any],
-        rasa_callbacks_expected_req_builder: Callable[
-            [Text, Text, Dict[Text, Any]], Tuple[Tuple[Text, URL], RequestCall]
-        ],
-        current_user: UserStateMachine,
-        asker: UserStateMachine,
-        expected_rasa_callback_intent: Optional[Text],
+        source_swiper_state: Text,
 ) -> None:
-    mock_aioresponses.post(re.compile(r'.*'), payload=external_intent_response)
+    user_vault = UserVault()
+    user_vault.save(UserStateMachine(
+        user_id='unit_test_user',
+        state=source_swiper_state,
+        partner_id='',
+        newbie=True,
+    ))
 
     action = actions.ActionDoNotDisturb()
     assert action.name() == 'action_do_not_disturb'
-
-    user_vault = UserVault()
-    user_vault.save(current_user)
-    user_vault.save(asker)
 
     actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'success'),
         SlotSet('swiper_state', 'do_not_disturb'),
-        SlotSet('partner_id', None),
+        SlotSet('partner_id', ''),
     ]
     assert dispatcher.messages == []
-
-    if expected_rasa_callback_intent:
-        expected_req_key, expected_req_call = rasa_callbacks_expected_req_builder(
-            'the_asker',
-            expected_rasa_callback_intent,
-            {},
-        )
-        assert mock_aioresponses.requests == {expected_req_key: [expected_req_call]}
-    else:
-        assert mock_aioresponses.requests == {}
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
@@ -1057,7 +963,6 @@ async def test_action_do_not_disturb(
         state_timestamp=1619945501,
         state_timestamp_str='2021-05-02 08:51:41 Z',
     )
-    assert user_vault.get_user('the_asker') == asker  # ActionDoNotDisturb should not change the asker state directly
 
 
 @pytest.mark.asyncio

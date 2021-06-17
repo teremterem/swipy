@@ -77,11 +77,6 @@ slots:
     initial_value: null
     auto_fill: true
     influence_conversation: false
-  partner_id_to_let_go:
-    type: rasa.shared.core.slots.TextSlot
-    initial_value: null
-    auto_fill: true
-    influence_conversation: false
   partner_photo_file_id:
     type: rasa.shared.core.slots.TextSlot
     initial_value: null
@@ -180,6 +175,5 @@ actions:
 - action_request_chitchat
 - action_do_not_disturb
 - action_reject_invitation
-- action_let_partner_go
 forms: {}
 e2e_actions: []
