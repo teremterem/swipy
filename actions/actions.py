@@ -9,8 +9,7 @@ from pprint import pformat
 from typing import Any, Text, Dict, List
 
 from rasa_sdk import Action, Tracker
-from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType, UserUtteranceReverted, \
-    ReminderScheduled, FollowupAction
+from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType, ReminderScheduled, FollowupAction
 from rasa_sdk.executor import CollectingDispatcher
 
 from actions import daily_co
@@ -531,30 +530,9 @@ class ActionRequestChitchat(BaseSwiperAction):
         ]
 
 
-async def let_partner_go_if_applicable(current_user: UserStateMachine, partner: UserStateMachine) -> None:
-    if partner.partner_id == current_user.user_id:
-        if partner.state == UserState.WAITING_PARTNER_JOIN:
-            # force the original sender of the declined invitation to "move along" in their partner search
-            await rasa_callbacks.find_partner(
-                current_user.user_id,
-                partner.user_id,
-                suppress_callback_errors=True,
-            )
-        elif partner.state == UserState.WAITING_PARTNER_CONFIRM:
-            await rasa_callbacks.report_unavailable(
-                current_user.user_id,
-                partner.user_id,
-                suppress_callback_errors=True,
-            )
-
-
 class ActionDoNotDisturb(BaseSwiperAction):
     def name(self) -> Text:
         return 'action_do_not_disturb'
-
-    def update_current_user(self, current_user: UserStateMachine):
-        # noinspection PyUnresolvedReferences
-        current_user.become_do_not_disturb()
 
     async def swipy_run(
             self, dispatcher: CollectingDispatcher,
@@ -563,14 +541,9 @@ class ActionDoNotDisturb(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        initial_partner_id = current_user.partner_id
-
-        self.update_current_user(current_user)
+        # noinspection PyUnresolvedReferences
+        current_user.become_do_not_disturb()
         user_vault.save(current_user)
-
-        if initial_partner_id:
-            partner = user_vault.get_user(initial_partner_id)
-            await let_partner_go_if_applicable(current_user, partner)
 
         return [
             SlotSet(
@@ -580,18 +553,9 @@ class ActionDoNotDisturb(BaseSwiperAction):
         ]
 
 
-class ActionRejectInvitation(ActionDoNotDisturb):
+class ActionRejectInvitation(BaseSwiperAction):
     def name(self) -> Text:
         return 'action_reject_invitation'
-
-    def update_current_user(self, current_user: UserStateMachine):
-        # noinspection PyUnresolvedReferences
-        current_user.reject()
-
-
-class ActionLetPartnerGo(BaseSwiperAction):
-    def name(self) -> Text:
-        return 'action_let_partner_go'
 
     async def swipy_run(
             self, dispatcher: CollectingDispatcher,
@@ -600,18 +564,13 @@ class ActionLetPartnerGo(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        partner_id_to_let_go = tracker.get_slot(PARTNER_ID_TO_LET_GO_SLOT)
+        # noinspection PyUnresolvedReferences
+        current_user.reject()
+        user_vault.save(current_user)
 
-        if partner_id_to_let_go:
-            partner_to_let_go = user_vault.get_user(partner_id_to_let_go)
-            await let_partner_go_if_applicable(current_user, partner_to_let_go)
-
-            if current_user.state in (
-                    UserState.ASKED_TO_JOIN,
-                    UserState.ASKED_TO_CONFIRM
-            ) and current_user.partner_id == partner_id_to_let_go:
-                # noinspection PyUnresolvedReferences
-                current_user.time_out()
-                user_vault.save(current_user)
-
-        return [UserUtteranceReverted()]
+        return [
+            SlotSet(
+                key=SWIPER_ACTION_RESULT_SLOT,
+                value=SwiperActionResult.SUCCESS,
+            ),
+        ]
