@@ -950,7 +950,7 @@ async def test_action_do_not_disturb(
     assert actual_events == [
         SlotSet('swiper_action_result', 'success'),
         SlotSet('swiper_state', 'do_not_disturb'),
-        SlotSet('partner_id', ''),
+        SlotSet('partner_id', None),
     ]
     assert dispatcher.messages == []
 
