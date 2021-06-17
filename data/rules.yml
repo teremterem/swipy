@@ -35,7 +35,7 @@ rules:
   - intent: deny
   - action: utter_declined
   - action: action_reject_invitation
-- rule: a partner rejected chitchat - we need to find someone else for the user
+- rule: ask next random partner
   steps:
   - intent: EXTERNAL_find_partner
   - action: action_find_partner
