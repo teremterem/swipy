@@ -224,8 +224,8 @@ class ActionOfferChitchat(BaseSwiperAction):
         if GREETING_MAKES_USER_OK_TO_CHITCHAT:
             if current_user.state in (
                     UserState.NEW,
-                    UserState.ASKED_TO_JOIN,  # TODO oleksandr: are you sure about this ?
-                    UserState.ASKED_TO_CONFIRM,  # TODO oleksandr: are you sure about this ?
+                    # UserState.ASKED_TO_JOIN,  # TODO oleksandr: are you sure about this ?
+                    # UserState.ASKED_TO_CONFIRM,  # TODO oleksandr: are you sure about this ?
                     UserState.ROOMED,
                     UserState.REJECTED_JOIN,
                     UserState.REJECTED_CONFIRM,
