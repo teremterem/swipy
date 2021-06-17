@@ -228,8 +228,6 @@ class ActionOfferChitchat(BaseSwiperAction):
                     UserState.ROOMED,
                     UserState.REJECTED_JOIN,
                     UserState.REJECTED_CONFIRM,
-                    UserState.JOIN_TIMED_OUT,
-                    UserState.CONFIRM_TIMED_OUT,
                     UserState.DO_NOT_DISTURB,
             ):
                 # noinspection PyUnresolvedReferences
