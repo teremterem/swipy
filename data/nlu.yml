@@ -19,6 +19,9 @@ nlu:
     - Hi
     - Hello
     - Hey hi
+    - here
+    - Hey
+    - h
 - intent: affirm
   examples: |
     - yes, please
@@ -61,6 +64,8 @@ nlu:
     - Yes, please
     - That would be great
     - Ok, cool
+    - Yes,of course
+    - Yeap
 - intent: deny
   examples: |
     - no, thanks
@@ -76,6 +81,7 @@ nlu:
     - nope
     - No
     - Thanks, not at the moment, I have a lot of stuff to do
+    - Maybe later, thanks
 - intent: how_it_works
   examples: |
     - how does it work?
@@ -100,6 +106,7 @@ nlu:
     - Cancel
     - dont bother me
     - do not disturb
+    - Stop
 - intent: bot_challenge
   examples: |
     - are you a bot?
@@ -133,3 +140,5 @@ nlu:
     - chat
     - chit-chat
     - english
+    - run
+    - one more
