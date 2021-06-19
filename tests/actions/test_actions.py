@@ -10,7 +10,7 @@ import pytest
 from aioresponses import aioresponses
 from aioresponses.core import RequestCall
 from rasa_sdk import Tracker
-from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType, FollowupAction
+from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType, FollowupAction, UserUtteranceReverted
 from rasa_sdk.executor import CollectingDispatcher
 from yarl import URL
 
@@ -182,11 +182,22 @@ async def test_action_session_start_with_slots(
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('ddb_unit_test_user')
+@pytest.mark.usefixtures('create_user_state_machine_table')
 @patch('time.time', Mock(return_value=1619945501))
 @patch.object(UserVault, '_query_user_dicts')
 @patch('telebot.apihelper._make_request')
-@pytest.mark.parametrize('user_has_photo', [True, False])
+@pytest.mark.parametrize(
+    'user_has_photo, tracker_latest_message, expect_as_reminder, source_swiper_state, expect_dry_run',
+    [
+        (True, {}, False, 'new', False),
+        (False, {'intent': None}, False, 'new', False),
+        (True, {'intent': {'name': None}}, False, 'new', False),
+        (False, {'intent': {'name': 'want_chitchat'}}, False, 'new', False),
+        (True, {'intent': {'name': 'want_chitchat'}}, False, 'wants_chitchat', False),
+        (False, {'intent': {'name': 'EXTERNAL_find_partner'}}, True, 'wants_chitchat', False),
+        (True, {'intent': {'name': 'EXTERNAL_find_partner'}}, True, 'asked_to_join', True),
+    ],
+)
 async def test_action_find_partner(
         mock_telebot_make_request: MagicMock,
         mock_query_user_dicts: MagicMock,
@@ -202,7 +213,17 @@ async def test_action_find_partner(
         ],
         external_intent_response: Dict[Text, Any],
         user_has_photo: bool,
+        tracker_latest_message: Dict[Text, Any],
+        expect_as_reminder: bool,
+        source_swiper_state: Text,
+        expect_dry_run: bool,
 ) -> None:
+    user_vault = UserVault()
+    user_vault.save(UserStateMachine(
+        user_id='unit_test_user',
+        state=source_swiper_state,
+    ))
+
     # noinspection PyDataclass
     mock_query_user_dicts.return_value = [asdict(available_newbie1)]
     if user_has_photo:
@@ -211,6 +232,8 @@ async def test_action_find_partner(
         mock_telebot_make_request.return_value = {'photos': [], 'total_count': 0}
 
     mock_aioresponses.post(re.compile(r'.*'), payload=external_intent_response)
+
+    tracker.latest_message = tracker_latest_message
 
     action = actions.ActionFindPartner()
     assert action.name() == 'action_find_partner'
@@ -227,46 +250,58 @@ async def test_action_find_partner(
         mock_datetime_now.side_effect = _wrap_datetime_now
 
         actual_events = await action.run(dispatcher, tracker, domain)
-    assert actual_events == [
-        {
-            'date_time': '2021-05-25T00:00:20',
-            'entities': None,
-            'event': 'reminder',
-            'intent': 'EXTERNAL_find_partner',
-            'kill_on_user_msg': False,
-            'name': 'EXTERNAL_find_partner',
-            'timestamp': None,
-        },
-        SlotSet('swiper_action_result', 'success'),
-        SlotSet('swiper_state', 'wants_chitchat'),
-        SlotSet('partner_id', None),
-    ]
+
+    if expect_dry_run:
+        assert actual_events == [
+            UserUtteranceReverted(),
+            SlotSet('swiper_state', source_swiper_state),
+            SlotSet('partner_id', None),
+        ]
+        mock_query_user_dicts.assert_not_called()
+        mock_telebot_make_request.assert_not_called()
+        assert mock_aioresponses.requests == {}
+
+    else:
+        assert actual_events == [
+            {
+                'date_time': '2021-05-25T00:00:20',
+                'entities': None,
+                'event': 'reminder',
+                'intent': 'EXTERNAL_find_partner',
+                'kill_on_user_msg': False,
+                'name': 'EXTERNAL_find_partner',
+                'timestamp': None,
+            },
+            UserUtteranceReverted() if expect_as_reminder else SlotSet('swiper_action_result', 'success'),
+            SlotSet('swiper_state', 'wants_chitchat'),
+            SlotSet('partner_id', None),
+        ]
+        mock_query_user_dicts.assert_called_once_with(
+            ('wants_chitchat',), 'unit_test_user', exclude_natives=('unknown',)
+        )
+        assert mock_telebot_make_request.mock_calls == [
+            telegram_user_profile_photo_make_request_call,
+        ]
+        expected_req_key, expected_req_call = rasa_callbacks_expected_req_builder(
+            'available_newbie_id1',
+            'EXTERNAL_ask_to_join',
+            {
+                'partner_id': 'unit_test_user',
+                'partner_photo_file_id': 'biggest_profile_pic_file_id' if user_has_photo else None,
+            },
+        )
+        assert mock_aioresponses.requests == {expected_req_key: [expected_req_call]}
+
     assert dispatcher.messages == []
-
-    mock_query_user_dicts.assert_called_once_with(('wants_chitchat',), 'unit_test_user', exclude_natives=('unknown',))
-
-    assert mock_telebot_make_request.mock_calls == [
-        telegram_user_profile_photo_make_request_call,
-    ]
-
-    expected_req_key, expected_req_call = rasa_callbacks_expected_req_builder(
-        'available_newbie_id1',
-        'EXTERNAL_ask_to_join',
-        {
-            'partner_id': 'unit_test_user',
-            'partner_photo_file_id': 'biggest_profile_pic_file_id' if user_has_photo else None,
-        },
-    )
-    assert mock_aioresponses.requests == {expected_req_key: [expected_req_call]}
 
     user_vault = UserVault()
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
         user_id='unit_test_user',
-        state='wants_chitchat',
+        state=source_swiper_state if expect_dry_run else 'wants_chitchat',
         partner_id=None,
         newbie=True,
-        state_timestamp=1619945501,
-        state_timestamp_str='2021-05-02 08:51:41 Z',
+        state_timestamp=None if expect_dry_run else 1619945501,
+        state_timestamp_str=None if expect_dry_run else '2021-05-02 08:51:41 Z',
     )
 
 
