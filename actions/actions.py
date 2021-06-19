@@ -1,4 +1,3 @@
-import asyncio
 import datetime
 import logging
 import os
@@ -9,7 +8,8 @@ from pprint import pformat
 from typing import Any, Text, Dict, List
 
 from rasa_sdk import Action, Tracker
-from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType, ReminderScheduled, FollowupAction
+from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType, ReminderScheduled, FollowupAction, \
+    UserUtteranceReverted
 from rasa_sdk.executor import CollectingDispatcher
 
 from actions import daily_co
@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 TELL_USER_ABOUT_ERRORS = strtobool(os.getenv('TELL_USER_ABOUT_ERRORS', 'yes'))
 SEND_ERROR_STACK_TRACE_TO_SLOT = strtobool(os.getenv('SEND_ERROR_STACK_TRACE_TO_SLOT', 'yes'))
 TELEGRAM_MSG_LIMIT_SLEEP_SEC = float(os.getenv('TELEGRAM_MSG_LIMIT_SLEEP_SEC', '1.1'))
+FIND_PARTNER_FREQUENCY_SEC = float(os.getenv('FIND_PARTNER_FREQUENCY_SEC', '20'))
 QUESTION_TIMEOUT_SEC = float(os.getenv('QUESTION_TIMEOUT_SEC', '120'))
 GREETING_MAKES_USER_OK_TO_CHITCHAT = strtobool(os.getenv('GREETING_MAKES_USER_OK_TO_CHITCHAT', 'yes'))
 
@@ -37,6 +38,8 @@ SWIPER_ERROR_SLOT = 'swiper_error'
 SWIPER_ERROR_TRACE_SLOT = 'swiper_error_trace'
 
 PARTNER_ID_TO_LET_GO_SLOT = 'partner_id_to_let_go'
+
+EXTERNAL_FIND_PARTNER_INTENT = 'EXTERNAL_find_partner'
 
 
 class SwiperActionResult:
@@ -271,17 +274,27 @@ class ActionFindPartner(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        # sleep for a second to avoid hitting a weird telegram message limit that (I still don't know why,
-        # but it happens when this action is invoked externally by someone who rejected invitation)
-        await asyncio.sleep(TELEGRAM_MSG_LIMIT_SLEEP_SEC)
+        latest_intent = tracker.get_intent_of_latest_message()
+        triggered_by_reminder = latest_intent == EXTERNAL_FIND_PARTNER_INTENT
 
-        partner = user_vault.get_random_available_partner(current_user)
-
-        if partner:
+        if triggered_by_reminder:
+            if current_user.state != UserState.WANTS_CHITCHAT:
+                # the search was stopped for the user one way or another (user said stop, or was asked to join etc.)
+                # => don't do any partner searching and don't schedule another reminder
+                return [
+                    UserUtteranceReverted(),  # get rid of artificial intent so it doesn't interfere with predictions
+                    # ReminderCancelled(
+                    #     name=EXTERNAL_FIND_PARTNER_INTENT,
+                    # ),
+                ]
+        else:  # user just requested chitchat
             # noinspection PyUnresolvedReferences
             current_user.request_chitchat()
             user_vault.save(current_user)
 
+        partner = user_vault.get_random_available_partner(current_user)
+
+        if partner:
             if not partner.can_be_offered_chitchat():
                 raise InvalidSwiperStateError(
                     f"randomly chosen partner {repr(partner.user_id)} is in a wrong state: {repr(partner.state)}"
@@ -290,24 +303,23 @@ class ActionFindPartner(BaseSwiperAction):
             user_profile_photo_id = telegram_helpers.get_user_profile_photo_file_id(current_user.user_id)
             await rasa_callbacks.ask_to_join(current_user.user_id, partner.user_id, user_profile_photo_id)
 
-            # noinspection PyUnresolvedReferences
-            current_user.wait_for_partner(partner.user_id)
-            user_vault.save(current_user)
+            date = datetime_now() + datetime.timedelta(seconds=FIND_PARTNER_FREQUENCY_SEC)
 
             return [
-                SlotSet(
+                UserUtteranceReverted() if triggered_by_reminder else SlotSet(
                     key=SWIPER_ACTION_RESULT_SLOT,
-                    value=SwiperActionResult.PARTNER_HAS_BEEN_ASKED,
+                    value=SwiperActionResult.SUCCESS,
+                ),
+                ReminderScheduled(
+                    EXTERNAL_FIND_PARTNER_INTENT,
+                    trigger_date_time=date,
+                    name=EXTERNAL_FIND_PARTNER_INTENT,
+                    kill_on_user_message=False,
                 ),
             ]
 
-        # noinspection PyUnresolvedReferences
-        current_user.request_chitchat()
-        user_vault.save(current_user)
-
         dispatcher.utter_message(response='utter_no_one_was_found')
 
-        # TODO oleksandr: rewind user intent if it was a reminder
         return [
             SlotSet(
                 key=SWIPER_ACTION_RESULT_SLOT,
