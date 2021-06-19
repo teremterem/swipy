@@ -325,9 +325,7 @@ async def test_action_find_partner_no_one(
 @pytest.mark.usefixtures('ddb_unit_test_user')
 @patch('time.time', Mock(return_value=1619945501))
 @patch.object(UserVault, '_query_user_dicts')
-@patch('asyncio.sleep')
 async def test_action_find_partner_swiper_error_trace(
-        mock_asyncio_sleep: AsyncMock,
         mock_query_user_dicts: MagicMock,
         mock_aioresponses: aioresponses,
         tracker: Tracker,
@@ -372,7 +370,6 @@ async def test_action_find_partner_swiper_error_trace(
         'text': None,
     }]
 
-    mock_asyncio_sleep.assert_called_once_with(1.1)
     assert mock_query_user_dicts.mock_calls == [
         call(('wants_chitchat',), 'unit_test_user', exclude_natives=('unknown',)),
     ]
