@@ -228,7 +228,6 @@ async def test_action_find_partner(
 
         actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == [
-        SlotSet('swiper_action_result', 'success'),
         {
             'date_time': '2021-05-25T00:00:20',
             'entities': None,
@@ -238,6 +237,7 @@ async def test_action_find_partner(
             'name': 'EXTERNAL_find_partner',
             'timestamp': None,
         },
+        SlotSet('swiper_action_result', 'success'),
         SlotSet('swiper_state', 'wants_chitchat'),
         SlotSet('partner_id', None),
     ]
