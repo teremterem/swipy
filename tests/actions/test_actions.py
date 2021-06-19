@@ -300,8 +300,8 @@ async def test_action_find_partner(
         state=source_swiper_state if expect_dry_run else 'wants_chitchat',
         partner_id=None,
         newbie=True,
-        state_timestamp=None if expect_dry_run else 1619945501,
-        state_timestamp_str=None if expect_dry_run else '2021-05-02 08:51:41 Z',
+        state_timestamp=1619945501,
+        state_timestamp_str='2021-05-02 08:51:41 Z',
     )
 
 
