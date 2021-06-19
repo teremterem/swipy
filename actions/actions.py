@@ -285,7 +285,8 @@ class ActionFindPartner(BaseSwiperAction):
                 # the search was stopped for the user one way or another (user said stop, or was asked to join etc.)
                 # => don't do any partner searching and don't schedule another reminder
                 return [
-                    UserUtteranceReverted(),  # get rid of artificial intent so it doesn't interfere with predictions
+                    # get rid of artificial intent so it doesn't interfere with story predictions
+                    UserUtteranceReverted(),
                 ]
         else:  # user just requested chitchat
             # noinspection PyUnresolvedReferences
@@ -305,11 +306,7 @@ class ActionFindPartner(BaseSwiperAction):
 
             date = datetime_now() + datetime.timedelta(seconds=FIND_PARTNER_FREQUENCY_SEC)
 
-            return [
-                UserUtteranceReverted() if triggered_by_reminder else SlotSet(
-                    key=SWIPER_ACTION_RESULT_SLOT,
-                    value=SwiperActionResult.SUCCESS,
-                ),
+            events = [
                 ReminderScheduled(
                     EXTERNAL_FIND_PARTNER_INTENT,
                     trigger_date_time=date,
@@ -317,6 +314,15 @@ class ActionFindPartner(BaseSwiperAction):
                     kill_on_user_message=False,
                 ),
             ]
+            if triggered_by_reminder:
+                # get rid of artificial intent so it doesn't interfere with story predictions
+                events.append(UserUtteranceReverted())
+            else:
+                events.append(SlotSet(
+                    key=SWIPER_ACTION_RESULT_SLOT,
+                    value=SwiperActionResult.SUCCESS,
+                ))
+            return events
 
         dispatcher.utter_message(response='utter_no_one_was_found')
 
