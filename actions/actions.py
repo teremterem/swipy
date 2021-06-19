@@ -274,8 +274,11 @@ class ActionFindPartner(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        latest_intent = tracker.get_intent_of_latest_message()
-        triggered_by_reminder = latest_intent == EXTERNAL_FIND_PARTNER_INTENT
+        # tracker.get_intent_of_latest_message() doesn't work for artificial messages because intent_ranking is absent
+        triggered_by_reminder = (
+                tracker.latest_message and
+                (tracker.latest_message.get('intent') or {}).get('name') == EXTERNAL_FIND_PARTNER_INTENT
+        )
 
         if triggered_by_reminder:
             if current_user.state != UserState.WANTS_CHITCHAT:
