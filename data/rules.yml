@@ -6,7 +6,6 @@ rules:
     - intent: start
     - intent: greet
     - intent: how_it_works
-  - action: action_metadata_to_slots
   - action: action_offer_chitchat
 - rule: the bot offers chitchat and the user agrees
   steps:
