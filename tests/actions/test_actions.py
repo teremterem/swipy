@@ -186,10 +186,8 @@ async def test_action_session_start_with_slots(
 @patch('time.time', Mock(return_value=1619945501))
 @patch.object(UserVault, '_query_user_dicts')
 @patch('telebot.apihelper._make_request')
-@patch('asyncio.sleep')
 @pytest.mark.parametrize('user_has_photo', [True, False])
 async def test_action_find_partner(
-        mock_asyncio_sleep: AsyncMock,
         mock_telebot_make_request: MagicMock,
         mock_query_user_dicts: MagicMock,
         mock_aioresponses: aioresponses,
@@ -217,15 +215,34 @@ async def test_action_find_partner(
     action = actions.ActionFindPartner()
     assert action.name() == 'action_find_partner'
 
-    actual_events = await action.run(dispatcher, tracker, domain)
+    _original_datetime_now = datetime_now
+
+    def _wrap_datetime_now(*args, **kwargs) -> datetime.datetime:
+        # noinspection PyArgumentList
+        original_result = _original_datetime_now(*args, **kwargs)
+        assert isinstance(original_result, datetime.datetime)
+        return datetime.datetime(2021, 5, 25)
+
+    with patch('actions.actions.datetime_now') as mock_datetime_now:
+        mock_datetime_now.side_effect = _wrap_datetime_now
+
+        actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == [
-        SlotSet('swiper_action_result', 'partner_has_been_asked'),
-        SlotSet('swiper_state', 'waiting_partner_join'),
-        SlotSet('partner_id', 'available_newbie_id1'),
+        SlotSet('swiper_action_result', 'success'),
+        {
+            'date_time': '2021-05-25T00:00:20',
+            'entities': None,
+            'event': 'reminder',
+            'intent': 'EXTERNAL_find_partner',
+            'kill_on_user_msg': False,
+            'name': 'EXTERNAL_find_partner',
+            'timestamp': None,
+        },
+        SlotSet('swiper_state', 'wants_chitchat'),
+        SlotSet('partner_id', None),
     ]
     assert dispatcher.messages == []
 
-    mock_asyncio_sleep.assert_called_once_with(1.1)
     mock_query_user_dicts.assert_called_once_with(('wants_chitchat',), 'unit_test_user', exclude_natives=('unknown',))
 
     assert mock_telebot_make_request.mock_calls == [
@@ -245,8 +262,8 @@ async def test_action_find_partner(
     user_vault = UserVault()
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
         user_id='unit_test_user',
-        state='waiting_partner_join',
-        partner_id='available_newbie_id1',
+        state='wants_chitchat',
+        partner_id=None,
         newbie=True,
         state_timestamp=1619945501,
         state_timestamp_str='2021-05-02 08:51:41 Z',

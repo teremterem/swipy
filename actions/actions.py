@@ -286,9 +286,6 @@ class ActionFindPartner(BaseSwiperAction):
                 # => don't do any partner searching and don't schedule another reminder
                 return [
                     UserUtteranceReverted(),  # get rid of artificial intent so it doesn't interfere with predictions
-                    # ReminderCancelled(
-                    #     name=EXTERNAL_FIND_PARTNER_INTENT,
-                    # ),
                 ]
         else:  # user just requested chitchat
             # noinspection PyUnresolvedReferences
