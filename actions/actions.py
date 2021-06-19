@@ -278,7 +278,7 @@ class ActionFindPartner(BaseSwiperAction):
         triggered_by_reminder = (
                 tracker.latest_message and
                 (tracker.latest_message.get('intent') or {}).get('name') == EXTERNAL_FIND_PARTNER_INTENT
-        )  # TODO oleksandr: extract part of this logic to utils.py::get_intent_of_latest_message_reliably()
+        )  # TODO oleksandr: extract part of this expression to utils.py::get_intent_of_latest_message_reliably() ?
 
         if triggered_by_reminder:
             if current_user.state != UserState.WANTS_CHITCHAT:
