@@ -312,7 +312,7 @@ def test_ddb_get_random_available_partner_dict_none(user_dicts: List[Dict[Text, 
 
 
 @pytest.mark.usefixtures('ddb_user1', 'ddb_user3')
-def test_ddb_user_vault_get_existing_user(ddb_user2: UserStateMachine) -> None:
+def test_ddb_get_existing_user(ddb_user2: UserStateMachine) -> None:
     from actions.aws_resources import user_state_machine_table
 
     assert len(user_state_machine_table.scan()['Items']) == 3
@@ -322,7 +322,7 @@ def test_ddb_user_vault_get_existing_user(ddb_user2: UserStateMachine) -> None:
 
 
 @pytest.mark.usefixtures('ddb_user1', 'ddb_user2', 'ddb_user3')
-def test_ddb_user_vault_get_nonexistent_user() -> None:
+def test_ddb_get_nonexistent_user() -> None:
     from actions.aws_resources import user_state_machine_table
 
     assert len(user_state_machine_table.scan()['Items']) == 3
