@@ -365,15 +365,15 @@ async def test_action_find_partner(
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('ddb_unit_test_user')
 @patch('time.time', Mock(return_value=1619945501))
-@patch.object(UserVault, '_query_user_dicts')
+@patch.object(UserVault, '_get_random_available_partner_dict')
 async def test_action_find_partner_no_one(
-        mock_query_user_dicts: MagicMock,
+        mock_get_random_available_partner_dict: MagicMock,
         mock_aioresponses: aioresponses,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
 ) -> None:
-    mock_query_user_dicts.return_value = []
+    mock_get_random_available_partner_dict.return_value = None
 
     actual_events = await actions.ActionFindPartner().run(dispatcher, tracker, domain)
     assert actual_events == [
@@ -392,7 +392,7 @@ async def test_action_find_partner_no_one(
         'text': None,
     }]
 
-    assert mock_query_user_dicts.mock_calls == [
+    assert mock_get_random_available_partner_dict.mock_calls == [
         call(('wants_chitchat',), 'unit_test_user'),
         call(('ok_to_chitchat',), 'unit_test_user'),
         call(('roomed',), 'unit_test_user'),
