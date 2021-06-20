@@ -95,28 +95,20 @@ def test_user_vault_cache_not_reused_between_instances(
     assert mock_ddb_get_user.call_count == 2
 
 
-@patch.object(UserVault, '_query_user_dicts')
-@patch('actions.user_vault.secrets.choice')
+@patch.object(UserVault, '_get_random_available_partner_dict')
 def test_get_random_available_partner(
-        mock_choice: MagicMock,
-        mock_query_user_dicts: MagicMock,
+        mock_get_random_available_partner_dict: MagicMock,
         user1: UserStateMachine,
         user2: UserStateMachine,
-        user3: UserStateMachine,
-        user4: UserStateMachine,
 ) -> None:
     # noinspection PyDataclass
-    list_of_dicts = [asdict(user4), asdict(user2), asdict(user3)]
-
-    mock_query_user_dicts.return_value = list_of_dicts
-    mock_choice.return_value = list_of_dicts[1]
+    mock_get_random_available_partner_dict.return_value = asdict(user2)
 
     user_vault = UserVault()
     actual_random_user = user_vault.get_random_available_partner(user1)
     assert actual_random_user == user2
 
-    mock_query_user_dicts.assert_called_once_with(('wants_chitchat',), 'existing_user_id1')
-    mock_choice.assert_called_once_with(list_of_dicts)
+    mock_get_random_available_partner_dict.assert_called_once_with(('wants_chitchat',), 'existing_user_id1')
 
     assert user_vault.get_user(actual_random_user.user_id) is actual_random_user  # make sure the user was cached
 
