@@ -236,7 +236,7 @@ async def test_action_session_start_with_slots(
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('create_user_state_machine_table')
 @patch('time.time', Mock(return_value=1619945501))
-@patch.object(UserVault, '_query_user_dicts')
+@patch.object(UserVault, '_get_random_available_partner_dict')
 @patch('telebot.apihelper._make_request')
 @pytest.mark.parametrize(
     'user_has_photo, tracker_latest_message, expect_as_reminder, source_swiper_state, expect_dry_run, '
@@ -253,7 +253,7 @@ async def test_action_session_start_with_slots(
 )
 async def test_action_find_partner(
         mock_telebot_make_request: MagicMock,
-        mock_query_user_dicts: MagicMock,
+        mock_get_random_available_partner_dict: MagicMock,
         mock_aioresponses: aioresponses,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
@@ -279,7 +279,8 @@ async def test_action_find_partner(
     ))
 
     # noinspection PyDataclass
-    mock_query_user_dicts.return_value = [asdict(available_newbie1)]
+    mock_get_random_available_partner_dict.return_value = asdict(available_newbie1)
+
     if user_has_photo:
         mock_telebot_make_request.return_value = telegram_user_profile_photo
     else:
@@ -315,7 +316,7 @@ async def test_action_find_partner(
             SlotSet('swiper_state', source_swiper_state),
             SlotSet('partner_id', None),
         ]
-        mock_query_user_dicts.assert_not_called()
+        mock_get_random_available_partner_dict.assert_not_called()
         mock_telebot_make_request.assert_not_called()
         assert mock_aioresponses.requests == {}
 
@@ -334,7 +335,7 @@ async def test_action_find_partner(
             SlotSet('swiper_state', 'wants_chitchat'),
             SlotSet('partner_id', None),
         ]
-        mock_query_user_dicts.assert_called_once_with(('wants_chitchat',), 'unit_test_user')
+        mock_get_random_available_partner_dict.assert_called_once_with(('wants_chitchat',), 'unit_test_user')
         assert mock_telebot_make_request.mock_calls == [
             telegram_user_profile_photo_make_request_call,
         ]
