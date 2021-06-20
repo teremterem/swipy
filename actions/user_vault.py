@@ -139,7 +139,7 @@ class NaiveDdbUserVault(BaseUserVault):
         for state in states:
             # TODO oleksandr: parallelize ? no! we will later be switching to either Redis or Postgres anyway
             ddb_resp = user_state_machine_table.query(
-                IndexName='by_state',
+                IndexName='by_state_and_timestamp',
                 KeyConditionExpression=Key('state').eq(state),
                 FilterExpression=Attr('user_id').ne(exclude_user_id),
             )
