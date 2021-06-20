@@ -35,7 +35,6 @@ class BaseUserVault(IUserVault, ABC):
     def _get_random_available_partner(
             self, states: Iterable[Text],
             exclude_user_id: Text,
-            exclude_natives: Iterable[Text] = (),
     ) -> Optional[UserStateMachine]:
         raise NotImplementedError()
 
@@ -101,9 +100,8 @@ class NaiveDdbUserVault(BaseUserVault):
     def _get_random_available_partner(
             self, states: Iterable[Text],
             exclude_user_id: Text,
-            exclude_natives: Iterable[Text] = (),
     ) -> Optional[UserStateMachine]:
-        list_of_dicts = self._query_user_dicts(states, exclude_user_id, exclude_natives=exclude_natives)
+        list_of_dicts = self._query_user_dicts(states, exclude_user_id)
         if not list_of_dicts:
             return None
 
@@ -133,14 +131,9 @@ class NaiveDdbUserVault(BaseUserVault):
     def _query_user_dicts(
             states: Iterable[Text],
             exclude_user_id: Text,
-            exclude_natives: Iterable[Text] = (),
     ) -> List[Dict[Text, Any]]:
         # TODO oleksandr: is there a better way to ensure that the tests have a chance to mock boto3 ?
         from actions.aws_resources import user_state_machine_table
-
-        filter_expression = Attr('user_id').ne(exclude_user_id)
-        for exclude_native in exclude_natives:
-            filter_expression &= Attr('native').ne(exclude_native)
 
         items = []
         for state in states:
@@ -148,7 +141,7 @@ class NaiveDdbUserVault(BaseUserVault):
             ddb_resp = user_state_machine_table.query(
                 IndexName='by_state',
                 KeyConditionExpression=Key('state').eq(state),
-                FilterExpression=filter_expression,
+                FilterExpression=Attr('user_id').ne(exclude_user_id),
             )
             items.extend(ddb_resp.get('Items') or [])
 
