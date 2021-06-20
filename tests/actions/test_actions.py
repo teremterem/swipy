@@ -392,12 +392,9 @@ async def test_action_find_partner_no_one(
     }]
 
     assert mock_query_user_dicts.mock_calls == [
-        call(('wants_chitchat',), 'unit_test_user', exclude_natives=('unknown',)),
-        call(('wants_chitchat',), 'unit_test_user', exclude_natives=()),
-        call(('ok_to_chitchat',), 'unit_test_user', exclude_natives=('unknown',)),
-        call(('ok_to_chitchat',), 'unit_test_user', exclude_natives=()),
-        call(('roomed',), 'unit_test_user', exclude_natives=('unknown',)),
-        call(('roomed',), 'unit_test_user', exclude_natives=()),
+        call(('wants_chitchat',), 'unit_test_user'),
+        call(('ok_to_chitchat',), 'unit_test_user'),
+        call(('roomed',), 'unit_test_user'),
     ]
     assert mock_aioresponses.requests == {}  # rasa_callbacks.ask_to_join() not called
 
