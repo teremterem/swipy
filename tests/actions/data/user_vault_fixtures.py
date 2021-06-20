@@ -148,7 +148,7 @@ def ddb_scan_of_three_users() -> List[Dict[Text, Any]]:
 
 
 @pytest.fixture
-def ddb_scan_of_ten_users() -> List[Dict[Text, Any]]:
+def ten_user_dicts() -> List[Dict[Text, Any]]:
     return [
         {
             'user_id': 'existing_user_id1',
