@@ -1,4 +1,3 @@
-import asyncio
 import datetime
 import logging
 import os
@@ -9,8 +8,8 @@ from pprint import pformat
 from typing import Any, Text, Dict, List
 
 from rasa_sdk import Action, Tracker
-from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType, UserUtteranceReverted, \
-    ReminderScheduled, FollowupAction
+from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType, ReminderScheduled, FollowupAction, \
+    UserUtteranceReverted
 from rasa_sdk.executor import CollectingDispatcher
 
 from actions import daily_co
@@ -25,6 +24,7 @@ logger = logging.getLogger(__name__)
 TELL_USER_ABOUT_ERRORS = strtobool(os.getenv('TELL_USER_ABOUT_ERRORS', 'yes'))
 SEND_ERROR_STACK_TRACE_TO_SLOT = strtobool(os.getenv('SEND_ERROR_STACK_TRACE_TO_SLOT', 'yes'))
 TELEGRAM_MSG_LIMIT_SLEEP_SEC = float(os.getenv('TELEGRAM_MSG_LIMIT_SLEEP_SEC', '1.1'))
+FIND_PARTNER_FREQUENCY_SEC = float(os.getenv('FIND_PARTNER_FREQUENCY_SEC', '20'))
 QUESTION_TIMEOUT_SEC = float(os.getenv('QUESTION_TIMEOUT_SEC', '120'))
 GREETING_MAKES_USER_OK_TO_CHITCHAT = strtobool(os.getenv('GREETING_MAKES_USER_OK_TO_CHITCHAT', 'yes'))
 
@@ -38,6 +38,8 @@ SWIPER_ERROR_SLOT = 'swiper_error'
 SWIPER_ERROR_TRACE_SLOT = 'swiper_error_trace'
 
 PARTNER_ID_TO_LET_GO_SLOT = 'partner_id_to_let_go'
+
+EXTERNAL_FIND_PARTNER_INTENT = 'EXTERNAL_find_partner'
 
 
 class SwiperActionResult:
@@ -229,8 +231,6 @@ class ActionOfferChitchat(BaseSwiperAction):
                     UserState.ROOMED,
                     UserState.REJECTED_JOIN,
                     UserState.REJECTED_CONFIRM,
-                    UserState.JOIN_TIMED_OUT,
-                    UserState.CONFIRM_TIMED_OUT,
                     UserState.DO_NOT_DISTURB,
             ):
                 # noinspection PyUnresolvedReferences
@@ -274,39 +274,60 @@ class ActionFindPartner(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        # sleep for a second to avoid hitting a weird telegram message limit that (I still don't know why,
-        # but it happens when this action is invoked externally by someone who rejected invitation)
-        await asyncio.sleep(TELEGRAM_MSG_LIMIT_SLEEP_SEC)
+        # tracker.get_intent_of_latest_message() doesn't work for artificial messages because intent_ranking is absent
+        triggered_by_reminder = (
+                tracker.latest_message and
+                (tracker.latest_message.get('intent') or {}).get('name') == EXTERNAL_FIND_PARTNER_INTENT
+        )  # TODO oleksandr: extract part of this expression to utils.py::get_intent_of_latest_message_reliably() ?
 
-        partner = user_vault.get_random_available_partner(current_user)
-
-        if partner:
+        if triggered_by_reminder:
+            if current_user.state != UserState.WANTS_CHITCHAT:
+                # the search was stopped for the user one way or another (user said stop, or was asked to join etc.)
+                # => don't do any partner searching and don't schedule another reminder
+                return [
+                    # get rid of artificial intent so it doesn't interfere with story predictions
+                    UserUtteranceReverted(),
+                ]
+        else:  # user just requested chitchat
             # noinspection PyUnresolvedReferences
             current_user.request_chitchat()
             user_vault.save(current_user)
 
+        partner = user_vault.get_random_available_partner(current_user)
+
+        if partner:
             if not partner.can_be_offered_chitchat():
                 raise InvalidSwiperStateError(
                     f"randomly chosen partner {repr(partner.user_id)} is in a wrong state: {repr(partner.state)}"
                 )
 
             user_profile_photo_id = telegram_helpers.get_user_profile_photo_file_id(current_user.user_id)
-            await rasa_callbacks.ask_to_join(current_user.user_id, partner.user_id, user_profile_photo_id)
+            await rasa_callbacks.ask_to_join(
+                current_user.user_id,
+                partner.user_id,
+                user_profile_photo_id,
+                suppress_callback_errors=True,
+            )
 
-            # noinspection PyUnresolvedReferences
-            current_user.wait_for_partner(partner.user_id)
-            user_vault.save(current_user)
+            date = datetime_now() + datetime.timedelta(seconds=FIND_PARTNER_FREQUENCY_SEC)
 
-            return [
-                SlotSet(
-                    key=SWIPER_ACTION_RESULT_SLOT,
-                    value=SwiperActionResult.PARTNER_HAS_BEEN_ASKED,
+            events = [
+                ReminderScheduled(
+                    EXTERNAL_FIND_PARTNER_INTENT,
+                    trigger_date_time=date,
+                    name=EXTERNAL_FIND_PARTNER_INTENT,
+                    kill_on_user_message=False,
                 ),
             ]
-
-        # noinspection PyUnresolvedReferences
-        current_user.request_chitchat()
-        user_vault.save(current_user)
+            if triggered_by_reminder:
+                # get rid of artificial intent so it doesn't interfere with story predictions
+                events.append(UserUtteranceReverted())
+            else:
+                events.append(SlotSet(
+                    key=SWIPER_ACTION_RESULT_SLOT,
+                    value=SwiperActionResult.SUCCESS,
+                ))
+            return events
 
         dispatcher.utter_message(response='utter_no_one_was_found')
 
@@ -531,30 +552,9 @@ class ActionRequestChitchat(BaseSwiperAction):
         ]
 
 
-async def let_partner_go_if_applicable(current_user: UserStateMachine, partner: UserStateMachine) -> None:
-    if partner.partner_id == current_user.user_id:
-        if partner.state == UserState.WAITING_PARTNER_JOIN:
-            # force the original sender of the declined invitation to "move along" in their partner search
-            await rasa_callbacks.find_partner(
-                current_user.user_id,
-                partner.user_id,
-                suppress_callback_errors=True,
-            )
-        elif partner.state == UserState.WAITING_PARTNER_CONFIRM:
-            await rasa_callbacks.report_unavailable(
-                current_user.user_id,
-                partner.user_id,
-                suppress_callback_errors=True,
-            )
-
-
 class ActionDoNotDisturb(BaseSwiperAction):
     def name(self) -> Text:
         return 'action_do_not_disturb'
-
-    def update_current_user(self, current_user: UserStateMachine):
-        # noinspection PyUnresolvedReferences
-        current_user.become_do_not_disturb()
 
     async def swipy_run(
             self, dispatcher: CollectingDispatcher,
@@ -563,14 +563,9 @@ class ActionDoNotDisturb(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        initial_partner_id = current_user.partner_id
-
-        self.update_current_user(current_user)
+        # noinspection PyUnresolvedReferences
+        current_user.become_do_not_disturb()
         user_vault.save(current_user)
-
-        if initial_partner_id:
-            partner = user_vault.get_user(initial_partner_id)
-            await let_partner_go_if_applicable(current_user, partner)
 
         return [
             SlotSet(
@@ -580,18 +575,9 @@ class ActionDoNotDisturb(BaseSwiperAction):
         ]
 
 
-class ActionRejectInvitation(ActionDoNotDisturb):
+class ActionRejectInvitation(BaseSwiperAction):
     def name(self) -> Text:
         return 'action_reject_invitation'
-
-    def update_current_user(self, current_user: UserStateMachine):
-        # noinspection PyUnresolvedReferences
-        current_user.reject()
-
-
-class ActionLetPartnerGo(BaseSwiperAction):
-    def name(self) -> Text:
-        return 'action_let_partner_go'
 
     async def swipy_run(
             self, dispatcher: CollectingDispatcher,
@@ -600,18 +586,13 @@ class ActionLetPartnerGo(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        partner_id_to_let_go = tracker.get_slot(PARTNER_ID_TO_LET_GO_SLOT)
+        # noinspection PyUnresolvedReferences
+        current_user.reject()
+        user_vault.save(current_user)
 
-        if partner_id_to_let_go:
-            partner_to_let_go = user_vault.get_user(partner_id_to_let_go)
-            await let_partner_go_if_applicable(current_user, partner_to_let_go)
-
-            if current_user.state in (
-                    UserState.ASKED_TO_JOIN,
-                    UserState.ASKED_TO_CONFIRM
-            ) and current_user.partner_id == partner_id_to_let_go:
-                # noinspection PyUnresolvedReferences
-                current_user.time_out()
-                user_vault.save(current_user)
-
-        return [UserUtteranceReverted()]
+        return [
+            SlotSet(
+                key=SWIPER_ACTION_RESULT_SLOT,
+                value=SwiperActionResult.SUCCESS,
+            ),
+        ]

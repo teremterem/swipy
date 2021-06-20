@@ -10,7 +10,7 @@ import pytest
 from aioresponses import aioresponses
 from aioresponses.core import RequestCall
 from rasa_sdk import Tracker
-from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType, UserUtteranceReverted, FollowupAction
+from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType, FollowupAction, UserUtteranceReverted
 from rasa_sdk.executor import CollectingDispatcher
 from yarl import URL
 
@@ -182,14 +182,24 @@ async def test_action_session_start_with_slots(
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('ddb_unit_test_user')
+@pytest.mark.usefixtures('create_user_state_machine_table')
 @patch('time.time', Mock(return_value=1619945501))
 @patch.object(UserVault, '_query_user_dicts')
 @patch('telebot.apihelper._make_request')
-@patch('asyncio.sleep')
-@pytest.mark.parametrize('user_has_photo', [True, False])
+@pytest.mark.parametrize(
+    'user_has_photo, tracker_latest_message, expect_as_reminder, source_swiper_state, expect_dry_run, '
+    'partner_blocked_bot',
+    [
+        (True, {}, False, 'new', False, True),
+        (False, {'intent': None}, False, 'new', False, False),
+        (True, {'intent': {'name': None}}, False, 'new', False, False),
+        (False, {'intent': {'name': 'want_chitchat'}}, False, 'new', False, False),
+        (True, {'intent': {'name': 'want_chitchat'}}, False, 'wants_chitchat', False, False),
+        (False, {'intent': {'name': 'EXTERNAL_find_partner'}}, True, 'wants_chitchat', False, False),
+        (True, {'intent': {'name': 'EXTERNAL_find_partner'}}, True, 'asked_to_join', True, False),
+    ],
+)
 async def test_action_find_partner(
-        mock_asyncio_sleep: AsyncMock,
         mock_telebot_make_request: MagicMock,
         mock_query_user_dicts: MagicMock,
         mock_aioresponses: aioresponses,
@@ -204,7 +214,18 @@ async def test_action_find_partner(
         ],
         external_intent_response: Dict[Text, Any],
         user_has_photo: bool,
+        tracker_latest_message: Dict[Text, Any],
+        expect_as_reminder: bool,
+        source_swiper_state: Text,
+        expect_dry_run: bool,
+        partner_blocked_bot: bool,
 ) -> None:
+    user_vault = UserVault()
+    user_vault.save(UserStateMachine(
+        user_id='unit_test_user',
+        state=source_swiper_state,
+    ))
+
     # noinspection PyDataclass
     mock_query_user_dicts.return_value = [asdict(available_newbie1)]
     if user_has_photo:
@@ -212,44 +233,81 @@ async def test_action_find_partner(
     else:
         mock_telebot_make_request.return_value = {'photos': [], 'total_count': 0}
 
-    mock_aioresponses.post(re.compile(r'.*'), payload=external_intent_response)
+    if partner_blocked_bot:
+        # ActionFindPartner should NOT fail because of rasa_callbacks.ask_to_join() failure
+        mock_aioresponses.post(re.compile(r'.*'), payload={'status': 'failure'})
+    else:
+        mock_aioresponses.post(re.compile(r'.*'), payload=external_intent_response)
+
+    tracker.latest_message = tracker_latest_message
 
     action = actions.ActionFindPartner()
     assert action.name() == 'action_find_partner'
 
-    actual_events = await action.run(dispatcher, tracker, domain)
-    assert actual_events == [
-        SlotSet('swiper_action_result', 'partner_has_been_asked'),
-        SlotSet('swiper_state', 'waiting_partner_join'),
-        SlotSet('partner_id', 'available_newbie_id1'),
-    ]
+    _original_datetime_now = datetime_now
+
+    def _wrap_datetime_now(*args, **kwargs) -> datetime.datetime:
+        # noinspection PyArgumentList
+        original_result = _original_datetime_now(*args, **kwargs)
+        assert isinstance(original_result, datetime.datetime)
+        return datetime.datetime(2021, 5, 25)
+
+    with patch('actions.actions.datetime_now') as mock_datetime_now:
+        mock_datetime_now.side_effect = _wrap_datetime_now
+
+        actual_events = await action.run(dispatcher, tracker, domain)
+
+    if expect_dry_run:
+        assert actual_events == [
+            UserUtteranceReverted(),
+            SlotSet('swiper_state', source_swiper_state),
+            SlotSet('partner_id', None),
+        ]
+        mock_query_user_dicts.assert_not_called()
+        mock_telebot_make_request.assert_not_called()
+        assert mock_aioresponses.requests == {}
+
+    else:
+        assert actual_events == [
+            {
+                'date_time': '2021-05-25T00:00:20',
+                'entities': None,
+                'event': 'reminder',
+                'intent': 'EXTERNAL_find_partner',
+                'kill_on_user_msg': False,
+                'name': 'EXTERNAL_find_partner',
+                'timestamp': None,
+            },
+            UserUtteranceReverted() if expect_as_reminder else SlotSet('swiper_action_result', 'success'),
+            SlotSet('swiper_state', 'wants_chitchat'),
+            SlotSet('partner_id', None),
+        ]
+        mock_query_user_dicts.assert_called_once_with(
+            ('wants_chitchat',), 'unit_test_user', exclude_natives=('unknown',)
+        )
+        assert mock_telebot_make_request.mock_calls == [
+            telegram_user_profile_photo_make_request_call,
+        ]
+        expected_req_key, expected_req_call = rasa_callbacks_expected_req_builder(
+            'available_newbie_id1',
+            'EXTERNAL_ask_to_join',
+            {
+                'partner_id': 'unit_test_user',
+                'partner_photo_file_id': 'biggest_profile_pic_file_id' if user_has_photo else None,
+            },
+        )
+        assert mock_aioresponses.requests == {expected_req_key: [expected_req_call]}
+
     assert dispatcher.messages == []
-
-    mock_asyncio_sleep.assert_called_once_with(1.1)
-    mock_query_user_dicts.assert_called_once_with(('wants_chitchat',), 'unit_test_user', exclude_natives=('unknown',))
-
-    assert mock_telebot_make_request.mock_calls == [
-        telegram_user_profile_photo_make_request_call,
-    ]
-
-    expected_req_key, expected_req_call = rasa_callbacks_expected_req_builder(
-        'available_newbie_id1',
-        'EXTERNAL_ask_to_join',
-        {
-            'partner_id': 'unit_test_user',
-            'partner_photo_file_id': 'biggest_profile_pic_file_id' if user_has_photo else None,
-        },
-    )
-    assert mock_aioresponses.requests == {expected_req_key: [expected_req_call]}
 
     user_vault = UserVault()
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
         user_id='unit_test_user',
-        state='waiting_partner_join',
-        partner_id='available_newbie_id1',
+        state=source_swiper_state if expect_dry_run else 'wants_chitchat',
+        partner_id=None,
         newbie=True,
-        state_timestamp=1619945501,
-        state_timestamp_str='2021-05-02 08:51:41 Z',
+        state_timestamp=None if expect_as_reminder else 1619945501,
+        state_timestamp_str=None if expect_as_reminder else '2021-05-02 08:51:41 Z',
     )
 
 
@@ -257,9 +315,7 @@ async def test_action_find_partner(
 @pytest.mark.usefixtures('ddb_unit_test_user')
 @patch('time.time', Mock(return_value=1619945501))
 @patch.object(UserVault, '_query_user_dicts')
-@patch('asyncio.sleep')
 async def test_action_find_partner_no_one(
-        mock_asyncio_sleep: AsyncMock,
         mock_query_user_dicts: MagicMock,
         mock_aioresponses: aioresponses,
         tracker: Tracker,
@@ -285,7 +341,6 @@ async def test_action_find_partner_no_one(
         'text': None,
     }]
 
-    mock_asyncio_sleep.assert_called_once_with(1.1)
     assert mock_query_user_dicts.mock_calls == [
         call(('wants_chitchat',), 'unit_test_user', exclude_natives=('unknown',)),
         call(('wants_chitchat',), 'unit_test_user', exclude_natives=()),
@@ -311,9 +366,7 @@ async def test_action_find_partner_no_one(
 @pytest.mark.usefixtures('ddb_unit_test_user')
 @patch('time.time', Mock(return_value=1619945501))
 @patch.object(UserVault, '_query_user_dicts')
-@patch('asyncio.sleep')
 async def test_action_find_partner_swiper_error_trace(
-        mock_asyncio_sleep: AsyncMock,
         mock_query_user_dicts: MagicMock,
         mock_aioresponses: aioresponses,
         tracker: Tracker,
@@ -358,7 +411,6 @@ async def test_action_find_partner_swiper_error_trace(
         'text': None,
     }]
 
-    mock_asyncio_sleep.assert_called_once_with(1.1)
     assert mock_query_user_dicts.mock_calls == [
         call(('wants_chitchat',), 'unit_test_user', exclude_natives=('unknown',)),
     ]
@@ -855,8 +907,6 @@ async def test_action_request_chitchat(
     ('greet', 'utter_greet_offer_chitchat', 'roomed', 'ok_to_chitchat'),
     ('greet', 'utter_greet_offer_chitchat', 'rejected_join', 'ok_to_chitchat'),
     ('greet', 'utter_greet_offer_chitchat', 'rejected_confirm', 'ok_to_chitchat'),
-    ('greet', 'utter_greet_offer_chitchat', 'join_timed_out', 'ok_to_chitchat'),
-    ('greet', 'utter_greet_offer_chitchat', 'confirm_timed_out', 'ok_to_chitchat'),
     ('greet', 'utter_greet_offer_chitchat', 'do_not_disturb', 'ok_to_chitchat'),
 ])
 async def test_action_offer_chitchat(
@@ -918,119 +968,35 @@ async def test_action_offer_chitchat(
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('create_user_state_machine_table')
 @patch('time.time', Mock(return_value=1619945501))
-@pytest.mark.parametrize('current_user, asker, expected_rasa_callback_intent', [
-    (
-            UserStateMachine(
-                user_id='unit_test_user',
-                state='asked_to_join',
-                partner_id='the_asker',
-                newbie=True,
-            ),
-            UserStateMachine(
-                user_id='the_asker',
-                state='ok_to_chitchat',  # 'the_asker' isn't waiting for the current user anymore
-                partner_id=None,
-                newbie=True,
-            ),
-            None,  # 'the_asker' should not be touched
-    ),
-    (
-            UserStateMachine(
-                user_id='unit_test_user',
-                state='asked_to_join',
-                partner_id='the_asker',
-                newbie=True,
-            ),
-            UserStateMachine(
-                user_id='the_asker',
-                state='waiting_partner_join',
-                partner_id='someone_else',  # 'the_asker' is already waiting for someone else at this point
-                newbie=True,
-            ),
-            None,  # 'the_asker' should not be touched
-    ),
-    (
-            UserStateMachine(
-                user_id='unit_test_user',
-                state='asked_to_join',
-                partner_id='the_asker',
-                newbie=True,
-            ),
-            UserStateMachine(
-                user_id='the_asker',
-                state='waiting_partner_confirm',
-                partner_id='someone_else',  # 'the_asker' is already waiting for someone else at this point
-                newbie=True,
-            ),
-            None,  # 'the_asker' should not be touched
-    ),
-    (
-            UserStateMachine(
-                user_id='unit_test_user',
-                state='asked_to_join',
-                partner_id='',  # an invalid state
-                newbie=True,
-            ),
-            UserStateMachine(
-                user_id='the_asker',
-                state='waiting_partner_join',
-                partner_id='unit_test_user',
-                newbie=True,
-            ),
-            None,  # 'the_asker' should not be touched
-    ),
-    (
-            UserStateMachine(
-                user_id='unit_test_user',
-                state='asked_to_join',
-                partner_id='the_asker',
-                newbie=True,
-            ),
-            UserStateMachine(
-                user_id='the_asker',
-                state='waiting_partner_join',
-                partner_id='unit_test_user',
-                newbie=True,
-            ),
-            'EXTERNAL_find_partner',  # 'the_asker' was waiting for the current user to join -> let them go
-    ),
-    (
-            UserStateMachine(
-                user_id='unit_test_user',
-                state='asked_to_join',  # should be 'asked_to_confirm' but the action should rely on partner status
-                partner_id='the_asker',
-                newbie=True,
-            ),
-            UserStateMachine(
-                user_id='the_asker',
-                state='waiting_partner_confirm',
-                partner_id='unit_test_user',
-                newbie=True,
-            ),
-            'EXTERNAL_report_unavailable',  # 'the_asker' was waiting for the current user to confirm -> let them go
-    ),
+@pytest.mark.parametrize('source_swiper_state', [
+    'new',
+    'wants_chitchat',
+    'ok_to_chitchat',
+    'waiting_partner_join',
+    'waiting_partner_confirm',
+    'asked_to_join',
+    'asked_to_confirm',
+    'roomed',
+    'rejected_join',
+    'rejected_confirm',
+    'do_not_disturb',
 ])
 async def test_action_do_not_disturb(
-        mock_aioresponses: aioresponses,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
-        external_intent_response: Dict[Text, Any],
-        rasa_callbacks_expected_req_builder: Callable[
-            [Text, Text, Dict[Text, Any]], Tuple[Tuple[Text, URL], RequestCall]
-        ],
-        current_user: UserStateMachine,
-        asker: UserStateMachine,
-        expected_rasa_callback_intent: Optional[Text],
+        source_swiper_state: Text,
 ) -> None:
-    mock_aioresponses.post(re.compile(r'.*'), payload=external_intent_response)
+    user_vault = UserVault()
+    user_vault.save(UserStateMachine(
+        user_id='unit_test_user',
+        state=source_swiper_state,
+        partner_id='',
+        newbie=True,
+    ))
 
     action = actions.ActionDoNotDisturb()
     assert action.name() == 'action_do_not_disturb'
-
-    user_vault = UserVault()
-    user_vault.save(current_user)
-    user_vault.save(asker)
 
     actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == [
@@ -1039,16 +1005,6 @@ async def test_action_do_not_disturb(
         SlotSet('partner_id', None),
     ]
     assert dispatcher.messages == []
-
-    if expected_rasa_callback_intent:
-        expected_req_key, expected_req_call = rasa_callbacks_expected_req_builder(
-            'the_asker',
-            expected_rasa_callback_intent,
-            {},
-        )
-        assert mock_aioresponses.requests == {expected_req_key: [expected_req_call]}
-    else:
-        assert mock_aioresponses.requests == {}
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
@@ -1059,7 +1015,6 @@ async def test_action_do_not_disturb(
         state_timestamp=1619945501,
         state_timestamp_str='2021-05-02 08:51:41 Z',
     )
-    assert user_vault.get_user('the_asker') == asker  # ActionDoNotDisturb should not change the asker state directly
 
 
 @pytest.mark.asyncio
@@ -1104,190 +1059,3 @@ async def test_action_reject_invitation(
         state_timestamp=1619945501,
         state_timestamp_str='2021-05-02 08:51:41 Z',
     )
-
-
-@pytest.mark.asyncio
-@pytest.mark.usefixtures('create_user_state_machine_table')
-@patch('time.time', Mock(return_value=1619945501))
-@pytest.mark.parametrize('current_user, asker, expected_rasa_callback_intent, expected_swiper_state', [
-    (
-            UserStateMachine(
-                user_id='unit_test_user',
-                state='asked_to_join',
-                partner_id='the_asker',
-                newbie=True,
-            ),
-            UserStateMachine(
-                user_id='the_asker',
-                state='ok_to_chitchat',  # 'the_asker' isn't waiting for the current user anymore
-                partner_id=None,
-                newbie=True,
-            ),
-            None,  # 'the_asker' should not be touched
-            'join_timed_out',
-    ),
-    (
-            UserStateMachine(
-                user_id='unit_test_user',
-                state='asked_to_join',
-                partner_id='the_asker',
-                newbie=True,
-            ),
-            UserStateMachine(
-                user_id='the_asker',
-                state='waiting_partner_join',
-                partner_id='someone_else',  # 'the_asker' is already waiting for someone else at this point
-                newbie=True,
-            ),
-            None,  # 'the_asker' should not be touched
-            'join_timed_out',
-    ),
-    (
-            UserStateMachine(
-                user_id='unit_test_user',
-                state='asked_to_join',
-                partner_id='the_asker',
-                newbie=True,
-            ),
-            UserStateMachine(
-                user_id='the_asker',
-                state='waiting_partner_confirm',
-                partner_id='someone_else',  # 'the_asker' is already waiting for someone else at this point
-                newbie=True,
-            ),
-            None,  # 'the_asker' should not be touched
-            'join_timed_out',
-    ),
-    (
-            UserStateMachine(
-                user_id='unit_test_user',
-                state='asked_to_join',
-                partner_id='',  # unlike ActionDoNotDisturb, in this action we rely on partner_id_to_let_go
-                newbie=True,
-            ),
-            UserStateMachine(
-                user_id='the_asker',
-                state='waiting_partner_join',
-                partner_id='unit_test_user',
-                newbie=True,
-            ),
-            'EXTERNAL_find_partner',  # 'the_asker' was waiting for the current user to join -> let them go
-            'asked_to_join',  # no timing out because this is an obsolete reminder (partner_id != partner_id_to_let_go)
-    ),
-    (
-            UserStateMachine(
-                user_id='unit_test_user',
-                state='asked_to_join',
-                partner_id='not_the_asker',  # unlike ActionDoNotDisturb, in this action we rely on partner_id_to_let_go
-                newbie=True,
-            ),
-            UserStateMachine(
-                user_id='the_asker',
-                state='waiting_partner_join',
-                partner_id='unit_test_user',
-                newbie=True,
-            ),
-            'EXTERNAL_find_partner',  # 'the_asker' was waiting for the current user to join -> let them go
-            'asked_to_join',  # no timing out because this is an obsolete reminder (partner_id != partner_id_to_let_go)
-    ),
-    (
-            UserStateMachine(
-                user_id='unit_test_user',
-                state='asked_to_join',
-                partner_id='the_asker',
-                newbie=True,
-            ),
-            UserStateMachine(
-                user_id='the_asker',
-                state='waiting_partner_join',
-                partner_id='unit_test_user',
-                newbie=True,
-            ),
-            'EXTERNAL_find_partner',  # 'the_asker' was waiting for the current user to join -> let them go
-            'join_timed_out',
-    ),
-    (
-            UserStateMachine(
-                user_id='unit_test_user',
-                state='asked_to_confirm',
-                partner_id='the_asker',
-                newbie=True,
-            ),
-            UserStateMachine(
-                user_id='the_asker',
-                state='waiting_partner_confirm',
-                partner_id='unit_test_user',
-                newbie=True,
-            ),
-            'EXTERNAL_report_unavailable',  # 'the_asker' was waiting for the current user to confirm -> let them go
-            'confirm_timed_out',
-    ),
-    (
-            UserStateMachine(
-                user_id='unit_test_user',
-                state='asked_to_join',  # should be 'asked_to_confirm' but action uses partner status to choose callback
-                partner_id='the_asker',
-                newbie=True,
-            ),
-            UserStateMachine(
-                user_id='the_asker',
-                state='waiting_partner_confirm',
-                partner_id='unit_test_user',
-                newbie=True,
-            ),
-            'EXTERNAL_report_unavailable',  # 'the_asker' was waiting for the current user to confirm -> let them go
-            'join_timed_out',
-    ),
-])
-async def test_action_let_partner_go(
-        mock_aioresponses: aioresponses,
-        tracker: Tracker,
-        dispatcher: CollectingDispatcher,
-        domain: Dict[Text, Any],
-        external_intent_response: Dict[Text, Any],
-        rasa_callbacks_expected_req_builder: Callable[
-            [Text, Text, Dict[Text, Any]], Tuple[Tuple[Text, URL], RequestCall]
-        ],
-        current_user: UserStateMachine,
-        asker: UserStateMachine,
-        expected_rasa_callback_intent: Optional[Text],
-        expected_swiper_state: Text,
-) -> None:
-    mock_aioresponses.post(re.compile(r'.*'), payload=external_intent_response)
-
-    action = actions.ActionLetPartnerGo()
-    assert action.name() == 'action_let_partner_go'
-
-    user_vault = UserVault()
-    user_vault.save(current_user)
-    user_vault.save(asker)
-
-    tracker.add_slots([
-        SlotSet('partner_id_to_let_go', 'the_asker'),
-    ])
-
-    actual_events = await action.run(dispatcher, tracker, domain)
-    assert actual_events == [
-        UserUtteranceReverted(),
-        SlotSet('swiper_state', expected_swiper_state),
-        SlotSet('partner_id', current_user.partner_id),
-    ]
-    assert dispatcher.messages == []
-
-    if expected_rasa_callback_intent:
-        expected_req_key, expected_req_call = rasa_callbacks_expected_req_builder(
-            'the_asker',
-            expected_rasa_callback_intent,
-            {},
-        )
-        assert mock_aioresponses.requests == {expected_req_key: [expected_req_call]}
-    else:
-        assert mock_aioresponses.requests == {}
-
-    user_vault = UserVault()  # create new instance to avoid hitting cache
-
-    new_current_user = user_vault.get_user('unit_test_user')
-    assert new_current_user.state == expected_swiper_state
-    assert new_current_user.partner_id == current_user.partner_id
-
-    assert user_vault.get_user('the_asker') == asker  # ActionLetPartnerGo should not change the asker state directly

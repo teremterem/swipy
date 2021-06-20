@@ -20,8 +20,6 @@ class UserState:
     ROOMED = 'roomed'  # equivalent to 'ok_to_chitchat' ('want_chitchat'?) except they may still be on a call
     REJECTED_JOIN = 'rejected_join'
     REJECTED_CONFIRM = 'rejected_confirm'
-    JOIN_TIMED_OUT = 'join_timed_out'
-    CONFIRM_TIMED_OUT = 'confirm_timed_out'
     DO_NOT_DISTURB = 'do_not_disturb'
 
     all_states = [
@@ -35,8 +33,6 @@ class UserState:
         ROOMED,
         REJECTED_JOIN,
         REJECTED_CONFIRM,
-        JOIN_TIMED_OUT,
-        CONFIRM_TIMED_OUT,
         DO_NOT_DISTURB,
     ]
 
@@ -188,7 +184,6 @@ class UserStateMachine(UserModel):
             trigger='reject',
             source=[
                 UserState.ASKED_TO_JOIN,
-                UserState.JOIN_TIMED_OUT,
             ],
             dest=UserState.REJECTED_JOIN,
         )
@@ -197,26 +192,8 @@ class UserStateMachine(UserModel):
             trigger='reject',
             source=[
                 UserState.ASKED_TO_CONFIRM,
-                UserState.CONFIRM_TIMED_OUT,
             ],
             dest=UserState.REJECTED_CONFIRM,
-        )
-
-        # noinspection PyTypeChecker
-        self.machine.add_transition(
-            trigger='time_out',
-            source=[
-                UserState.ASKED_TO_JOIN,
-            ],
-            dest=UserState.JOIN_TIMED_OUT,
-        )
-        # noinspection PyTypeChecker
-        self.machine.add_transition(
-            trigger='time_out',
-            source=[
-                UserState.ASKED_TO_CONFIRM,
-            ],
-            dest=UserState.CONFIRM_TIMED_OUT,
         )
 
     def is_waiting_for(self, partner_id: Optional[Text]):
@@ -257,9 +234,5 @@ class UserStateMachine(UserModel):
 
     # noinspection PyUnusedLocal
     def _update_state_timestamp(self, event: EventData) -> None:
-        if event.transition.source == event.transition.dest:
-            # state hasn't changed => no need to update timestamp
-            return
-
         self.state_timestamp = current_timestamp_int()
         self.state_timestamp_str = datetime.utcfromtimestamp(self.state_timestamp).strftime('%Y-%m-%d %H:%M:%S Z')
