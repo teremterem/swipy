@@ -296,11 +296,6 @@ class ActionFindPartner(BaseSwiperAction):
         partner = user_vault.get_random_available_partner(current_user)
 
         if partner:
-            if not partner.can_be_offered_chitchat():
-                raise InvalidSwiperStateError(
-                    f"randomly chosen partner {repr(partner.user_id)} is in a wrong state: {repr(partner.state)}"
-                )
-
             user_profile_photo_id = telegram_helpers.get_user_profile_photo_file_id(current_user.user_id)
             await rasa_callbacks.ask_to_join(
                 current_user.user_id,
