@@ -147,7 +147,7 @@ class NaiveDdbUserVault(BaseUserVault):
                 if items:
                     yield items[0]
 
-        return max(item_generator(), key=lambda i: int(i.get('timestamp') or 0), default=None)
+        return max(item_generator(), key=lambda i: int(i.get('state_timestamp') or 0), default=None)
 
 
 UserVault: Type[IUserVault] = NaiveDdbUserVault

@@ -306,4 +306,17 @@ def user_dicts() -> List[Dict[Text, Any]]:
             'teleg_lang_code': None,
             'telegram_from': None,
         },
+        {
+            'user_id': 'roomed_id1',
+            'state': 'roomed',
+            'partner_id': 'some_partner_id',
+            'newbie': True,
+            'state_timestamp': 1619900001,
+            'state_timestamp_str': None,
+            'notes': '',
+            'deeplink_data': '',
+            'native': 'unknown',
+            'teleg_lang_code': None,
+            'telegram_from': None,
+        },
     ]

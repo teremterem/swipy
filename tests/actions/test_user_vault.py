@@ -449,8 +449,8 @@ def test_ddb_get_random_available_partner_dict(user_dicts: List[Dict[Text, Any]]
 
     user_vault = UserVault()
     partner_dict = user_vault._get_random_available_partner_dict(
-        ('wants_chitchat', 'ok_to_chitchat', 'roomed'),  # let's forget about "tiers" and check all states at once
-        exclude_user_id='existing_user_id1',
+        ('wants_chitchat', 'ok_to_chitchat', 'fake_state', 'roomed'),  # let's forget about "tiers" here
+        exclude_user_id='ok_to_chitchat_id3',
     )
     assert partner_dict == {
         'deeplink_data': '',
