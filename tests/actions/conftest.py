@@ -45,6 +45,10 @@ def create_user_state_machine_table(mock_ddb: ServiceResource) -> None:
                 'AttributeName': 'state',
                 'AttributeType': 'S',
             },
+            {
+                'AttributeName': 'state_timestamp',
+                'AttributeType': 'N',
+            },
         ],
         KeySchema=[
             {
@@ -54,11 +58,15 @@ def create_user_state_machine_table(mock_ddb: ServiceResource) -> None:
         ],
         GlobalSecondaryIndexes=[
             {
-                'IndexName': 'by_state',
+                'IndexName': 'by_state_and_timestamp',
                 'KeySchema': [
                     {
                         'AttributeName': 'state',
                         'KeyType': 'HASH',
+                    },
+                    {
+                        'AttributeName': 'state_timestamp',
+                        'KeyType': 'RANGE',
                     },
                 ],
                 'Projection': {

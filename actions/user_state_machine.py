@@ -205,9 +205,6 @@ class UserStateMachine(UserModel):
             UserState.WAITING_PARTNER_CONFIRM,
         )
 
-    def can_be_offered_chitchat(self):
-        return self.state in UserState.can_be_offered_chitchat_states
-
     @staticmethod
     def _assert_partner_id_arg_not_empty(event: EventData) -> None:
         if not event.args or not event.args[0]:
