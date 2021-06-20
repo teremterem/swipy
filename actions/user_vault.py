@@ -8,9 +8,6 @@ from boto3.dynamodb.conditions import Key, Attr
 
 from actions.user_state_machine import UserStateMachine, UserState
 
-UK_BE_RU = ('uk', 'be', 'ru')
-EN = 'en'
-
 
 class IUserVault(ABC):
     @abstractmethod
@@ -69,29 +66,9 @@ class BaseUserVault(IUserVault, ABC):
         self._user_cache[user_id] = user
         return user
 
-    def _get_random_available_foreigner(
-            self,
-            states: Iterable[Text],
-            current_user: UserStateMachine,
-    ) -> Optional[UserStateMachine]:
-        if current_user.native == EN:
-            # if current user is a possible English native then there is no point in excluding anyone by language
-            return self._get_random_available_partner(states, current_user.user_id)
-
-        if current_user.native in UK_BE_RU:
-            exclude_natives = UK_BE_RU
-        else:
-            exclude_natives = (current_user.native,)
-
-        partner = self._get_random_available_partner(states, current_user.user_id, exclude_natives=exclude_natives)
-        if not partner:
-            # foreigners not found, hence look for non-foreigners as well
-            partner = self._get_random_available_partner(states, current_user.user_id)
-        return partner
-
     def _get_random_available_partner_from_tiers(self, current_user: UserStateMachine) -> Optional[UserStateMachine]:
         for tier in UserState.chitchatable_tiers:
-            partner = self._get_random_available_foreigner(tier, current_user)
+            partner = self._get_random_available_partner(tier, current_user.user_id)
             if partner:
                 return partner
         return None
