@@ -467,6 +467,33 @@ def test_ddb_get_random_available_partner_dict(user_dicts: List[Dict[Text, Any]]
     }
 
 
+@pytest.mark.usefixtures('create_user_state_machine_table')
+def test_ddb_get_random_available_partner_dict_none(user_dicts: List[Dict[Text, Any]]) -> None:
+    from actions.aws_resources import user_state_machine_table
+
+    user_state_machine_table.put_item(Item={
+        'user_id': 'do_not_disturb_id1',
+        'state': 'do_not_disturb',
+        'partner_id': None,
+        'newbie': True,
+        'state_timestamp': 1619999999,
+        'state_timestamp_str': None,
+        'notes': '',
+        'deeplink_data': '',
+        'native': 'unknown',
+        'teleg_lang_code': None,
+        'telegram_from': None,
+    })
+    assert len(user_state_machine_table.scan()['Items']) == 1  # I don't know why I keep doing this
+
+    user_vault = UserVault()
+    partner_dict = user_vault._get_random_available_partner_dict(
+        ('wants_chitchat', 'ok_to_chitchat', 'fake_state', 'roomed'),  # let's forget about "tiers" here
+        exclude_user_id='ok_to_chitchat_id3',
+    )
+    assert partner_dict is None
+
+
 @pytest.mark.usefixtures(
     'ddb_user1',
     'ddb_user2',
