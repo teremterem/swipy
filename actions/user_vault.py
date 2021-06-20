@@ -1,4 +1,3 @@
-import secrets
 from abc import ABC, abstractmethod
 from dataclasses import asdict
 from decimal import Decimal
@@ -101,11 +100,10 @@ class NaiveDdbUserVault(BaseUserVault):
             self, states: Iterable[Text],
             exclude_user_id: Text,
     ) -> Optional[UserStateMachine]:
-        list_of_dicts = self._query_user_dicts(states, exclude_user_id)
-        if not list_of_dicts:
+        user_dict = self._get_random_available_partner_dict(states, exclude_user_id)
+        if not user_dict:
             return None
 
-        user_dict = secrets.choice(list_of_dicts)
         user = self._user_from_dict(user_dict)
         return user
 
@@ -128,24 +126,28 @@ class NaiveDdbUserVault(BaseUserVault):
         return user
 
     @staticmethod
-    def _query_user_dicts(
+    def _get_random_available_partner_dict(
             states: Iterable[Text],
             exclude_user_id: Text,
     ) -> List[Dict[Text, Any]]:
         # TODO oleksandr: is there a better way to ensure that the tests have a chance to mock boto3 ?
         from actions.aws_resources import user_state_machine_table
 
-        items = []
-        for state in states:
-            # TODO oleksandr: parallelize ? no! we will later be switching to either Redis or Postgres anyway
-            ddb_resp = user_state_machine_table.query(
-                IndexName='by_state_and_timestamp',
-                KeyConditionExpression=Key('state').eq(state),
-                FilterExpression=Attr('user_id').ne(exclude_user_id),
-            )
-            items.extend(ddb_resp.get('Items') or [])
+        def item_generator():
+            for state in states:
+                # TODO oleksandr: parallelize ? no! we will later be switching to either Redis or Postgres anyway
+                ddb_resp = user_state_machine_table.query(
+                    IndexName='by_state_and_timestamp',
+                    KeyConditionExpression=Key('state').eq(state),
+                    FilterExpression=Attr('user_id').ne(exclude_user_id),
+                    ScanIndexForward=False,
+                    Limit=2,  # exclude_user_id may be selected as well (filter expression is applied AFTER limit)
+                )
+                items = ddb_resp.get('Items')
+                if items:
+                    yield items[0]
 
-        return items
+        return max(item_generator(), key=lambda i: int(i.get('timestamp') or 0), default=None)
 
 
 UserVault: Type[IUserVault] = NaiveDdbUserVault
