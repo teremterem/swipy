@@ -115,9 +115,7 @@ def test_get_random_available_partner(
     actual_random_user = user_vault.get_random_available_partner(user1)
     assert actual_random_user == user2
 
-    mock_query_user_dicts.assert_called_once_with(
-        ('wants_chitchat',), 'existing_user_id1', exclude_natives=('unknown',)
-    )
+    mock_query_user_dicts.assert_called_once_with(('wants_chitchat',), 'existing_user_id1')
     mock_choice.assert_called_once_with(list_of_dicts)
 
     assert user_vault.get_user(actual_random_user.user_id) is actual_random_user  # make sure the user was cached
@@ -139,12 +137,9 @@ def test_no_available_partner(
     assert user_vault.get_random_available_partner(user1) is None
 
     assert mock_list_available_user_dicts.mock_calls == [
-        call(('wants_chitchat',), 'existing_user_id1', exclude_natives=('unknown',)),
-        call(('wants_chitchat',), 'existing_user_id1', exclude_natives=()),
-        call(('ok_to_chitchat',), 'existing_user_id1', exclude_natives=('unknown',)),
-        call(('ok_to_chitchat',), 'existing_user_id1', exclude_natives=()),
-        call(('roomed',), 'existing_user_id1', exclude_natives=('unknown',)),
-        call(('roomed',), 'existing_user_id1', exclude_natives=()),
+        call(('wants_chitchat',), 'existing_user_id1'),
+        call(('ok_to_chitchat',), 'existing_user_id1'),
+        call(('roomed',), 'existing_user_id1'),
     ]
     mock_choice.assert_not_called()
 
