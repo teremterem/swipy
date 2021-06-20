@@ -438,6 +438,34 @@ def test_ddb_user_vault_query_user_dicts(
     assert actual_ddb_scan == expected_ddb_scan
 
 
+@pytest.mark.usefixtures('create_user_state_machine_table')
+def test_ddb_get_random_available_partner_dict(ddb_scan_of_ten_users: List[Dict[Text, Any]]) -> None:
+    from actions.aws_resources import user_state_machine_table
+
+    for item in ddb_scan_of_ten_users:
+        user_state_machine_table.put_item(Item=item)
+    assert user_state_machine_table.scan()['Items'] == ddb_scan_of_ten_users  # I don't know why I keep doing this
+
+    user_vault = UserVault()
+    partner_dict = user_vault._get_random_available_partner_dict(
+        ('wants_chitchat', 'ok_to_chitchat', 'roomed'),  # let's forget about "tiers" and check all states at once
+        exclude_user_id='existing_user_id1',
+    )
+    assert partner_dict == {
+        'deeplink_data': '',
+        'native': 'unknown',
+        'newbie': False,
+        'notes': '',
+        'partner_id': None,
+        'state': 'ok_to_chitchat',
+        'state_timestamp': None,
+        'state_timestamp_str': None,
+        'teleg_lang_code': None,
+        'telegram_from': None,
+        'user_id': 'available_veteran_id3',
+    }
+
+
 @pytest.mark.usefixtures(
     'ddb_user1',
     'ddb_user2',
