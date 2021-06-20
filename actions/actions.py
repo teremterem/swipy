@@ -302,7 +302,12 @@ class ActionFindPartner(BaseSwiperAction):
                 )
 
             user_profile_photo_id = telegram_helpers.get_user_profile_photo_file_id(current_user.user_id)
-            await rasa_callbacks.ask_to_join(current_user.user_id, partner.user_id, user_profile_photo_id)
+            await rasa_callbacks.ask_to_join(
+                current_user.user_id,
+                partner.user_id,
+                user_profile_photo_id,
+                suppress_callback_errors=True,
+            )
 
             date = datetime_now() + datetime.timedelta(seconds=FIND_PARTNER_FREQUENCY_SEC)
 

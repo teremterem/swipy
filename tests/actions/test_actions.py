@@ -187,15 +187,16 @@ async def test_action_session_start_with_slots(
 @patch.object(UserVault, '_query_user_dicts')
 @patch('telebot.apihelper._make_request')
 @pytest.mark.parametrize(
-    'user_has_photo, tracker_latest_message, expect_as_reminder, source_swiper_state, expect_dry_run',
+    'user_has_photo, tracker_latest_message, expect_as_reminder, source_swiper_state, expect_dry_run, '
+    'partner_blocked_bot',
     [
-        (True, {}, False, 'new', False),
-        (False, {'intent': None}, False, 'new', False),
-        (True, {'intent': {'name': None}}, False, 'new', False),
-        (False, {'intent': {'name': 'want_chitchat'}}, False, 'new', False),
-        (True, {'intent': {'name': 'want_chitchat'}}, False, 'wants_chitchat', False),
-        (False, {'intent': {'name': 'EXTERNAL_find_partner'}}, True, 'wants_chitchat', False),
-        (True, {'intent': {'name': 'EXTERNAL_find_partner'}}, True, 'asked_to_join', True),
+        (True, {}, False, 'new', False, True),
+        (False, {'intent': None}, False, 'new', False, False),
+        (True, {'intent': {'name': None}}, False, 'new', False, False),
+        (False, {'intent': {'name': 'want_chitchat'}}, False, 'new', False, False),
+        (True, {'intent': {'name': 'want_chitchat'}}, False, 'wants_chitchat', False, False),
+        (False, {'intent': {'name': 'EXTERNAL_find_partner'}}, True, 'wants_chitchat', False, False),
+        (True, {'intent': {'name': 'EXTERNAL_find_partner'}}, True, 'asked_to_join', True, False),
     ],
 )
 async def test_action_find_partner(
@@ -217,6 +218,7 @@ async def test_action_find_partner(
         expect_as_reminder: bool,
         source_swiper_state: Text,
         expect_dry_run: bool,
+        partner_blocked_bot: bool,
 ) -> None:
     user_vault = UserVault()
     user_vault.save(UserStateMachine(
@@ -231,7 +233,11 @@ async def test_action_find_partner(
     else:
         mock_telebot_make_request.return_value = {'photos': [], 'total_count': 0}
 
-    mock_aioresponses.post(re.compile(r'.*'), payload=external_intent_response)
+    if partner_blocked_bot:
+        # ActionFindPartner should NOT fail because of rasa_callbacks.ask_to_join() failure
+        mock_aioresponses.post(re.compile(r'.*'), payload={'status': 'failure'})
+    else:
+        mock_aioresponses.post(re.compile(r'.*'), payload=external_intent_response)
 
     tracker.latest_message = tracker_latest_message
 
