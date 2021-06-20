@@ -439,12 +439,12 @@ def test_ddb_user_vault_query_user_dicts(
 
 
 @pytest.mark.usefixtures('create_user_state_machine_table')
-def test_ddb_get_random_available_partner_dict(ten_user_dicts: List[Dict[Text, Any]]) -> None:
+def test_ddb_get_random_available_partner_dict(user_dicts: List[Dict[Text, Any]]) -> None:
     from actions.aws_resources import user_state_machine_table
 
-    for item in ten_user_dicts:
+    for item in user_dicts:
         user_state_machine_table.put_item(Item=item)
-    assert user_state_machine_table.scan()['Items'] == ten_user_dicts  # I don't know why I keep doing this
+    assert user_state_machine_table.scan()['Items'] == user_dicts  # I don't know why I keep doing this
 
     user_vault = UserVault()
     partner_dict = user_vault._get_random_available_partner_dict(

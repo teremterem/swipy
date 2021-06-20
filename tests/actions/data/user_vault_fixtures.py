@@ -148,11 +148,11 @@ def ddb_scan_of_three_users() -> List[Dict[Text, Any]]:
 
 
 @pytest.fixture
-def ten_user_dicts() -> List[Dict[Text, Any]]:
+def user_dicts() -> List[Dict[Text, Any]]:
     return [
         {
-            'user_id': 'existing_user_id1',
-            'state': 'waiting_partner_join',
+            'user_id': 'wants_chitchat_id1',
+            'state': 'wants_chitchat',
             'partner_id': 'existing_user_id2',
             'newbie': False,
             'state_timestamp': None,
@@ -164,8 +164,8 @@ def ten_user_dicts() -> List[Dict[Text, Any]]:
             'telegram_from': None,
         },
         {
-            'user_id': 'available_newbie_id1',
-            'state': 'ok_to_chitchat',
+            'user_id': 'wants_chitchat_id2',
+            'state': 'wants_chitchat',
             'partner_id': None,
             'newbie': True,
             'state_timestamp': None,
@@ -177,8 +177,8 @@ def ten_user_dicts() -> List[Dict[Text, Any]]:
             'telegram_from': None,
         },
         {
-            'user_id': 'available_veteran_id1',
-            'state': 'ok_to_chitchat',
+            'user_id': 'wants_chitchat_id3',
+            'state': 'wants_chitchat',
             'partner_id': None,
             'newbie': False,
             'state_timestamp': None,
@@ -190,7 +190,7 @@ def ten_user_dicts() -> List[Dict[Text, Any]]:
             'telegram_from': None,
         },
         {
-            'user_id': 'existing_user_id2',
+            'user_id': 'asked_to_join_id1',
             'state': 'asked_to_join',
             'partner_id': 'existing_user_id1',
             'newbie': True,
@@ -203,7 +203,7 @@ def ten_user_dicts() -> List[Dict[Text, Any]]:
             'telegram_from': None,
         },
         {
-            'user_id': 'available_newbie_id2',
+            'user_id': 'ok_to_chitchat_id1',
             'state': 'ok_to_chitchat',
             'partner_id': None,
             'newbie': True,
@@ -216,7 +216,7 @@ def ten_user_dicts() -> List[Dict[Text, Any]]:
             'telegram_from': None,
         },
         {
-            'user_id': 'available_veteran_id2',
+            'user_id': 'ok_to_chitchat_id2',
             'state': 'ok_to_chitchat',
             'partner_id': None,
             'newbie': False,
@@ -229,7 +229,33 @@ def ten_user_dicts() -> List[Dict[Text, Any]]:
             'telegram_from': None,
         },
         {
-            'user_id': 'existing_user_id3',
+            'user_id': 'ok_to_chitchat_id3',
+            'state': 'ok_to_chitchat',
+            'partner_id': None,
+            'newbie': True,
+            'state_timestamp': None,
+            'state_timestamp_str': None,
+            'notes': '',
+            'deeplink_data': '',
+            'native': 'unknown',
+            'teleg_lang_code': None,
+            'telegram_from': None,
+        },
+        {
+            'user_id': 'ok_to_chitchat_id4',
+            'state': 'ok_to_chitchat',
+            'partner_id': None,
+            'newbie': False,
+            'state_timestamp': None,
+            'state_timestamp_str': None,
+            'notes': '',
+            'deeplink_data': '',
+            'native': 'unknown',
+            'teleg_lang_code': None,
+            'telegram_from': None,
+        },
+        {
+            'user_id': 'new_id1',
             'state': 'new',
             'partner_id': None,
             'newbie': True,
@@ -242,33 +268,7 @@ def ten_user_dicts() -> List[Dict[Text, Any]]:
             'telegram_from': None,
         },
         {
-            'user_id': 'available_newbie_id3',
-            'state': 'ok_to_chitchat',
-            'partner_id': None,
-            'newbie': True,
-            'state_timestamp': None,
-            'state_timestamp_str': None,
-            'notes': '',
-            'deeplink_data': '',
-            'native': 'unknown',
-            'teleg_lang_code': None,
-            'telegram_from': None,
-        },
-        {
-            'user_id': 'available_veteran_id3',
-            'state': 'ok_to_chitchat',
-            'partner_id': None,
-            'newbie': False,
-            'state_timestamp': None,
-            'state_timestamp_str': None,
-            'notes': '',
-            'deeplink_data': '',
-            'native': 'unknown',
-            'teleg_lang_code': None,
-            'telegram_from': None,
-        },
-        {
-            'user_id': 'existing_user_id4',
+            'user_id': 'do_not_disturb_id1',
             'state': 'do_not_disturb',
             'partner_id': None,
             'newbie': True,
