@@ -1,4 +1,5 @@
 from dataclasses import asdict
+from decimal import Decimal
 from typing import List, Dict, Text, Any
 from unittest.mock import patch, MagicMock, call
 
@@ -458,11 +459,11 @@ def test_ddb_get_random_available_partner_dict(user_dicts: List[Dict[Text, Any]]
         'notes': '',
         'partner_id': None,
         'state': 'ok_to_chitchat',
-        'state_timestamp': None,
+        'state_timestamp': Decimal(1619900999),
         'state_timestamp_str': None,
         'teleg_lang_code': None,
         'telegram_from': None,
-        'user_id': 'available_veteran_id3',
+        'user_id': 'ok_to_chitchat_id2',
     }
 
 
