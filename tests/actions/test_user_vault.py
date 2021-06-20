@@ -1,5 +1,5 @@
 from dataclasses import asdict
-from typing import List, Dict, Text, Any, Optional
+from typing import List, Dict, Text, Any
 from unittest.mock import patch, MagicMock, call
 
 import pytest
@@ -113,27 +113,21 @@ def test_get_random_available_partner(
     assert user_vault.get_user(actual_random_user.user_id) is actual_random_user  # make sure the user was cached
 
 
-@patch.object(UserVault, '_query_user_dicts')
-@patch('actions.user_vault.secrets.choice')
-@pytest.mark.parametrize('empty_list_variant', [[], None])
-def test_no_available_partner(
-        mock_choice: MagicMock,
-        mock_list_available_user_dicts: MagicMock,
+@patch.object(UserVault, '_get_random_available_partner_dict')
+def test_get_random_available_partner_none(
+        mock_get_random_available_partner_dict: MagicMock,
         user1: UserStateMachine,
-        empty_list_variant: Optional[list],
 ) -> None:
-    mock_list_available_user_dicts.return_value = empty_list_variant
-    mock_choice.side_effect = ValueError("secrets.choice shouldn't have been called with None or empty list")
+    mock_get_random_available_partner_dict.return_value = None
 
     user_vault = UserVault()
     assert user_vault.get_random_available_partner(user1) is None
 
-    assert mock_list_available_user_dicts.mock_calls == [
+    assert mock_get_random_available_partner_dict.mock_calls == [
         call(('wants_chitchat',), 'existing_user_id1'),
         call(('ok_to_chitchat',), 'existing_user_id1'),
         call(('roomed',), 'existing_user_id1'),
     ]
-    mock_choice.assert_not_called()
 
 
 @pytest.mark.usefixtures('ddb_user1', 'ddb_user2', 'ddb_user3')
