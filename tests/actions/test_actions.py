@@ -334,9 +334,7 @@ async def test_action_find_partner(
             SlotSet('swiper_state', 'wants_chitchat'),
             SlotSet('partner_id', None),
         ]
-        mock_query_user_dicts.assert_called_once_with(
-            ('wants_chitchat',), 'unit_test_user', exclude_natives=('unknown',)
-        )
+        mock_query_user_dicts.assert_called_once_with(('wants_chitchat',), 'unit_test_user')
         assert mock_telebot_make_request.mock_calls == [
             telegram_user_profile_photo_make_request_call,
         ]
