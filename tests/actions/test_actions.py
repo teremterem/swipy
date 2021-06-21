@@ -499,6 +499,8 @@ async def test_action_ask_to_join(
         newbie=True,
         state_timestamp=1619945501,
         state_timestamp_str='2021-05-02 08:51:41 Z',
+        state_timeout_ts=1619945501 + (60 * 60 * 4),
+        state_timeout_ts_str='2021-05-02 12:51:41 Z',
     )
 
 
