@@ -49,6 +49,10 @@ def create_user_state_machine_table(mock_ddb: ServiceResource) -> None:
                 'AttributeName': 'state_timestamp',
                 'AttributeType': 'N',
             },
+            {
+                'AttributeName': 'state_timeout_ts',
+                'AttributeType': 'N',
+            },
         ],
         KeySchema=[
             {
@@ -66,6 +70,22 @@ def create_user_state_machine_table(mock_ddb: ServiceResource) -> None:
                     },
                     {
                         'AttributeName': 'state_timestamp',
+                        'KeyType': 'RANGE',
+                    },
+                ],
+                'Projection': {
+                    'ProjectionType': 'ALL',
+                },
+            },
+            {
+                'IndexName': 'by_state_and_timeout_ts',
+                'KeySchema': [
+                    {
+                        'AttributeName': 'state',
+                        'KeyType': 'HASH',
+                    },
+                    {
+                        'AttributeName': 'state_timeout_ts',
                         'KeyType': 'RANGE',
                     },
                 ],
