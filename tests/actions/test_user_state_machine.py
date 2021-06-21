@@ -1,6 +1,5 @@
-from datetime import datetime
 from functools import partial
-from typing import Text, Optional
+from typing import Text, Optional, Tuple
 from unittest.mock import Mock, patch
 
 import pytest
@@ -177,33 +176,66 @@ def test_more_narrow_transitions(
 @pytest.mark.parametrize('source_state', all_expected_states)
 @pytest.mark.parametrize('trigger_name', all_expected_triggers)
 def test_state_timestamps(source_state: Text, trigger_name: Text) -> None:
-    source_state_timestamp = 1619697022
-    source_state_timestamp_str = datetime.utcfromtimestamp(source_state_timestamp).strftime('%Y-%m-%d %H:%M:%S Z')
-
     user = UserStateMachine(
         user_id='some_user_id',
         state=source_state,
         partner_id='some_partner_id',
-        state_timestamp=source_state_timestamp,
-        state_timestamp_str=source_state_timestamp_str,
+        state_timestamp=1619697022,
+        state_timestamp_str='2021-04-29 11:50:22 Z',
+        state_timeout_ts=1619697052,
+        state_timeout_ts_str='2021-04-29 11:50:52 Z',
     )
     transition_is_valid = trigger_name in user.machine.get_triggers(source_state)
 
-    assert user.state_timestamp == 1619697022
-    assert user.state_timestamp_str == '2021-04-29 11:50:22 Z'
-
     trigger = getattr(user, trigger_name)
+
+    def get_expected_timeout_ts() -> Tuple[Optional[int], Optional[Text]]:
+        if not transition_is_valid:
+            # invalid transition => state_timeout_ts[_str] should remain unchanged
+            return 1619697052, '2021-04-29 11:50:52 Z'
+        elif user.state in [
+            'asked_to_join',
+            'asked_to_confirm',
+            'roomed',
+            'rejected_join',
+            'rejected_confirm',
+        ]:
+            # destination state is supposed to have a timeout (a new one, set by transition)
+            return 1619945501 + (60 * 60 * 4), '2021-05-02 12:51:41 Z'
+        else:
+            # destination state is NOT supposed to have a timeout
+            return None, None
 
     if transition_is_valid:
         trigger('some_partner_id')  # run trigger and pass partner_id just in case (some triggers need it)
 
-        assert user.state_timestamp == 1619945501  # new timestamp
-        assert user.state_timestamp_str == '2021-05-02 08:51:41 Z'  # new timestamp
+        expected_timeout_ts, expected_timeout_ts_str = get_expected_timeout_ts()
+        assert user == UserStateMachine(
+            user_id=user.user_id,  # don't try to validate this
+            state=user.state,  # don't try to validate this
+            partner_id=user.partner_id,  # don't try to validate this
+            newbie=user.newbie,  # don't try to validate this
+
+            state_timestamp=1619945501,  # new timestamp
+            state_timestamp_str='2021-05-02 08:51:41 Z',  # new timestamp
+            state_timeout_ts=expected_timeout_ts,
+            state_timeout_ts_str=expected_timeout_ts_str,
+        )
 
     else:
         # invalid transition is expected to not go through
         with pytest.raises(MachineError):
             trigger(partner_id='some_partner_id')
 
-        assert user.state_timestamp == 1619697022  # timestamp is expected to remain unchanged
-        assert user.state_timestamp_str == '2021-04-29 11:50:22 Z'  # timestamp is expected to remain unchanged
+        expected_timeout_ts, expected_timeout_ts_str = get_expected_timeout_ts()
+        assert user == UserStateMachine(
+            user_id=user.user_id,  # don't try to validate this
+            state=user.state,  # don't try to validate this
+            partner_id=user.partner_id,  # don't try to validate this
+            newbie=user.newbie,  # don't try to validate this
+
+            state_timestamp=1619697022,  # timestamp is expected to remain unchanged
+            state_timestamp_str='2021-04-29 11:50:22 Z',  # timestamp is expected to remain unchanged
+            state_timeout_ts=expected_timeout_ts,
+            state_timeout_ts_str=expected_timeout_ts_str,
+        )
