@@ -1,10 +1,12 @@
+import os
 from dataclasses import dataclass
-from datetime import datetime
 from typing import Text, Optional, Dict, Any
 
 from transitions import Machine, EventData
 
-from actions.utils import current_timestamp_int, SwiperStateMachineError
+from actions.utils import current_timestamp_int, SwiperStateMachineError, format_swipy_timestamp
+
+SWIPER_STATE_TIMEOUT = int(os.getenv('SWIPER_STATE_TIMEOUT', '14400'))  # 60 * 60 * 4 seconds = 4 hours
 
 NATIVE_UNKNOWN = 'unknown'
 
@@ -26,7 +28,7 @@ class UserState:
         NEW,
         WANTS_CHITCHAT,
         OK_TO_CHITCHAT,
-        WAITING_PARTNER_JOIN,
+        WAITING_PARTNER_JOIN,  # TODO oleksandr: drop this state
         WAITING_PARTNER_CONFIRM,
         ASKED_TO_JOIN,
         ASKED_TO_CONFIRM,
@@ -34,6 +36,14 @@ class UserState:
         REJECTED_JOIN,
         REJECTED_CONFIRM,
         DO_NOT_DISTURB,
+    ]
+
+    states_with_timeouts = [
+        ASKED_TO_JOIN,
+        ASKED_TO_CONFIRM,
+        ROOMED,
+        REJECTED_JOIN,
+        REJECTED_CONFIRM,
     ]
 
     can_be_offered_chitchat_states = [
@@ -56,6 +66,8 @@ class UserModel:
     newbie: bool = True
     state_timestamp: Optional[int] = None
     state_timestamp_str: Optional[Text] = None
+    state_timeout_ts: Optional[int] = None
+    state_timeout_ts_str: Optional[Text] = None
     notes: Text = ''
     deeplink_data: Text = ''
     native: Text = NATIVE_UNKNOWN
@@ -75,6 +87,7 @@ class UserStateMachine(UserModel):
             send_event=True,
             after_state_change=[
                 self._update_state_timestamp,
+                self._update_state_timeout_ts,
             ],
         )
         if state is not None:
@@ -232,4 +245,13 @@ class UserStateMachine(UserModel):
     # noinspection PyUnusedLocal
     def _update_state_timestamp(self, event: EventData) -> None:
         self.state_timestamp = current_timestamp_int()
-        self.state_timestamp_str = datetime.utcfromtimestamp(self.state_timestamp).strftime('%Y-%m-%d %H:%M:%S Z')
+        self.state_timestamp_str = format_swipy_timestamp(self.state_timestamp)
+
+    # noinspection PyUnusedLocal
+    def _update_state_timeout_ts(self, event: EventData) -> None:
+        if event.transition.dest in UserState.states_with_timeouts:
+            self.state_timeout_ts = self.state_timestamp + SWIPER_STATE_TIMEOUT
+            self.state_timeout_ts_str = format_swipy_timestamp(self.state_timeout_ts)
+        else:
+            self.state_timeout_ts = None
+            self.state_timeout_ts_str = None
