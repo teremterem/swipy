@@ -66,6 +66,8 @@ class UserModel:
     newbie: bool = True
     state_timestamp: Optional[int] = None
     state_timestamp_str: Optional[Text] = None
+    state_timeout_ts: Optional[int] = None
+    state_timeout_ts_str: Optional[Text] = None
     notes: Text = ''
     deeplink_data: Text = ''
     native: Text = NATIVE_UNKNOWN
