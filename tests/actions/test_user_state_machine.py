@@ -50,7 +50,6 @@ expected_catch_all_transitions = [
 
 @pytest.mark.parametrize('source_state', all_expected_states)
 @pytest.mark.parametrize('trigger_name, destination_state', expected_catch_all_transitions)
-@patch('time.time', Mock(return_value=1619945501))
 def test_catch_all_transitions(
         source_state: Text,
         trigger_name: Text,
@@ -61,19 +60,14 @@ def test_catch_all_transitions(
         state=source_state,
         partner_id='previous_partner_id',
     )
+    assert user.state == source_state
+    assert user.partner_id == 'previous_partner_id'
 
     trigger = getattr(user, trigger_name)
     trigger('new_partner_id')  # this parameter is expected to be ignored
 
-    assert user == UserStateMachine(
-        user_id='some_user_id',
-        state=destination_state,
-        partner_id=None,
-        state_timestamp=1619945501,
-        state_timestamp_str='2021-05-02 08:51:41 Z',
-        state_timeout_ts=None,
-        state_timeout_ts_str=None,
-    )
+    assert user.state == destination_state
+    assert user.partner_id is None  # previous partner is expected to be dropped
 
 
 expected_more_narrow_transitions = [
@@ -182,7 +176,7 @@ def test_more_narrow_transitions(
 @patch('time.time', Mock(return_value=1619945501))
 @pytest.mark.parametrize('source_state', all_expected_states)
 @pytest.mark.parametrize('trigger_name', all_expected_triggers)
-def test_state_timestamp(source_state: Text, trigger_name: Text) -> None:
+def test_state_timestamps(source_state: Text, trigger_name: Text) -> None:
     source_state_timestamp = 1619697022
     source_state_timestamp_str = datetime.utcfromtimestamp(source_state_timestamp).strftime('%Y-%m-%d %H:%M:%S Z')
 
