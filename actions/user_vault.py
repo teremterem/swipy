@@ -6,6 +6,7 @@ from typing import Text, Optional, List, Type, Dict, Any, Iterable
 from boto3.dynamodb.conditions import Key, Attr
 
 from actions.user_state_machine import UserStateMachine, UserState
+from actions.utils import current_timestamp_int
 
 
 class IUserVault(ABC):
@@ -133,21 +134,38 @@ class NaiveDdbUserVault(BaseUserVault):
         # TODO oleksandr: is there a better way to ensure that the tests have a chance to mock boto3 ?
         from actions.aws_resources import user_state_machine_table
 
-        def item_generator():
-            for state in states:
-                # TODO oleksandr: parallelize ? no! we will later be switching to either Redis or Postgres anyway
-                ddb_resp = user_state_machine_table.query(
-                    IndexName='by_state_and_timestamp',
-                    KeyConditionExpression=Key('state').eq(state),
-                    FilterExpression=Attr('user_id').ne(exclude_user_id),
-                    ScanIndexForward=False,
-                    Limit=2,  # exclude_user_id may be selected as well (filter expression is applied AFTER limit)
-                )
-                items = ddb_resp.get('Items')
-                if items:
-                    yield items[0]
+        current_timestamp = current_timestamp_int()
 
-        return max(item_generator(), key=lambda i: int(i.get('state_timestamp') or 0), default=None)
+        def timestamp_extractor(item: Dict[Text, Any]) -> int:
+            return int(item.get('state_timestamp') or 0)
+
+        def item_generator():
+            # TODO oleksandr: parallelize ? no! we will later be switching to Redis and/or Postgres anyway
+            for state in states:
+                if state in UserState.states_with_timeouts:
+                    # disregard the possibility of truncated item list - we will be replacing DDB later
+                    ddb_resp = user_state_machine_table.query(
+                        IndexName='by_state_and_timeout_ts',
+                        KeyConditionExpression=Key('state').eq(state) & Key('state_timeout_ts').lt(current_timestamp),
+                        FilterExpression=Attr('user_id').ne(exclude_user_id),
+                    )
+                    items = ddb_resp.get('Items')
+                    if items:
+                        yield max(items, key=timestamp_extractor)
+
+                else:
+                    ddb_resp = user_state_machine_table.query(
+                        IndexName='by_state_and_timestamp',
+                        KeyConditionExpression=Key('state').eq(state),
+                        FilterExpression=Attr('user_id').ne(exclude_user_id),
+                        ScanIndexForward=False,
+                        Limit=2,  # exclude_user_id may be selected as well (filter expression is applied AFTER limit)
+                    )
+                    items = ddb_resp.get('Items')
+                    if items:
+                        yield items[0]
+
+        return max(item_generator(), key=timestamp_extractor, default=None)
 
 
 UserVault: Type[IUserVault] = NaiveDdbUserVault
