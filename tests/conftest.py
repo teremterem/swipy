@@ -23,7 +23,6 @@ def pytest_configure(*args, **kwargs) -> None:
     # delete these env vars to make sure default settings are tested
     os.environ.pop('TELL_USER_ABOUT_ERRORS', None)
     os.environ.pop('SEND_ERROR_STACK_TRACE_TO_SLOT', None)
-    os.environ.pop('TELEGRAM_MSG_LIMIT_SLEEP_SEC', None)
     os.environ.pop('FIND_PARTNER_FREQUENCY_SEC', None)
     os.environ.pop('QUESTION_TIMEOUT_SEC', None)
     os.environ.pop('GREETING_MAKES_USER_OK_TO_CHITCHAT', None)

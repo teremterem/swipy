@@ -323,7 +323,7 @@ async def test_action_find_partner(
     else:
         assert actual_events == [
             {
-                'date_time': '2021-05-25T00:00:20',
+                'date_time': '2021-05-25T00:00:10',
                 'entities': None,
                 'event': 'reminder',
                 'intent': 'EXTERNAL_find_partner',
