@@ -1,7 +1,7 @@
 from dataclasses import asdict
 from decimal import Decimal
 from typing import List, Dict, Text, Any
-from unittest.mock import patch, MagicMock, call
+from unittest.mock import patch, MagicMock, call, Mock
 
 import pytest
 
@@ -272,8 +272,50 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
     assert user_vault.get_user(user_to_save.user_id) is user_to_save  # make sure the user was cached
 
 
+@pytest.mark.parametrize('current_timestamp, expected_partner_dict', [
+    (
+            1624000000,  # "roomed" partner was active the most recently and the state has already timed out
+            {  # expect "roomed" partner to be returned
+                'user_id': 'roomed_id2',
+                'state': 'roomed',
+                'partner_id': 'some_partner_id',
+                'newbie': True,
+                'state_timestamp': Decimal(1622999999),
+                'state_timestamp_str': None,
+                'state_timeout_ts': Decimal(1623999999),
+                'state_timeout_ts_str': None,
+                'notes': '',
+                'deeplink_data': '',
+                'native': 'unknown',
+                'teleg_lang_code': None,
+                'telegram_from': None,
+            },
+    ),
+    (
+            1623999998,  # even though "roomed" partner was active the most recently, the state hasn't timed out yet
+            {  # expect another recently active partner to be returned
+                'deeplink_data': '',
+                'native': 'unknown',
+                'newbie': False,
+                'notes': '',
+                'partner_id': None,
+                'state': 'ok_to_chitchat',
+                'state_timestamp': Decimal(1619900999),
+                'state_timestamp_str': None,
+                'state_timeout_ts': None,
+                'state_timeout_ts_str': None,
+                'teleg_lang_code': None,
+                'telegram_from': None,
+                'user_id': 'ok_to_chitchat_id2',
+            },
+    ),
+])
 @pytest.mark.usefixtures('create_user_state_machine_table')
-def test_ddb_get_random_available_partner_dict(user_dicts: List[Dict[Text, Any]]) -> None:
+def test_ddb_get_random_available_partner_dict(
+        user_dicts: List[Dict[Text, Any]],
+        current_timestamp: int,
+        expected_partner_dict: Dict[Text, Any],
+) -> None:
     from actions.aws_resources import user_state_machine_table
 
     for item in user_dicts:
@@ -281,25 +323,13 @@ def test_ddb_get_random_available_partner_dict(user_dicts: List[Dict[Text, Any]]
     assert user_state_machine_table.scan()['Items'] == user_dicts  # I don't know why I keep doing this
 
     user_vault = UserVault()
-    partner_dict = user_vault._get_random_available_partner_dict(
-        ('wants_chitchat', 'ok_to_chitchat', 'fake_state', 'roomed'),  # let's forget about "tiers" here
-        exclude_user_id='ok_to_chitchat_id3',
-    )
-    assert partner_dict == {
-        'deeplink_data': '',
-        'native': 'unknown',
-        'newbie': False,
-        'notes': '',
-        'partner_id': None,
-        'state': 'ok_to_chitchat',
-        'state_timestamp': Decimal(1619900999),
-        'state_timestamp_str': None,
-        'state_timeout_ts': None,
-        'state_timeout_ts_str': None,
-        'teleg_lang_code': None,
-        'telegram_from': None,
-        'user_id': 'ok_to_chitchat_id2',
-    }
+    with patch('time.time', Mock(return_value=current_timestamp)):
+        partner_dict = user_vault._get_random_available_partner_dict(
+            ('wants_chitchat', 'ok_to_chitchat', 'fake_state', 'roomed'),  # let's forget about "tiers" here
+            exclude_user_id='ok_to_chitchat_id3',
+        )
+
+    assert partner_dict == expected_partner_dict
 
 
 @pytest.mark.usefixtures('create_user_state_machine_table')
