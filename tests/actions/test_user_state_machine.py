@@ -50,6 +50,7 @@ expected_catch_all_transitions = [
 
 @pytest.mark.parametrize('source_state', all_expected_states)
 @pytest.mark.parametrize('trigger_name, destination_state', expected_catch_all_transitions)
+@patch('time.time', Mock(return_value=1619945501))
 def test_catch_all_transitions(
         source_state: Text,
         trigger_name: Text,
@@ -60,14 +61,19 @@ def test_catch_all_transitions(
         state=source_state,
         partner_id='previous_partner_id',
     )
-    assert user.state == source_state
-    assert user.partner_id == 'previous_partner_id'
 
     trigger = getattr(user, trigger_name)
     trigger('new_partner_id')  # this parameter is expected to be ignored
 
-    assert user.state == destination_state
-    assert user.partner_id is None  # previous partner is expected to be dropped
+    assert user == UserStateMachine(
+        user_id='some_user_id',
+        state=destination_state,
+        partner_id=None,
+        state_timestamp=1619945501,
+        state_timestamp_str='2021-05-02 08:51:41 Z',
+        state_timeout_ts=None,
+        state_timeout_ts_str=None,
+    )
 
 
 expected_more_narrow_transitions = [
@@ -91,8 +97,8 @@ expected_more_narrow_transitions = [
     ('become_asked', 'asked_to_join', None, 'previous_partner_id', 'previous_partner_id'),
     ('become_asked', 'asked_to_confirm', None, 'previous_partner_id', 'previous_partner_id'),
     ('become_asked', 'roomed', 'asked_to_join', 'previous_partner_id', 'new_partner_id'),
-    ('become_asked', 'rejected_join', None, 'previous_partner_id', 'previous_partner_id'),  # TODO oleksandr
-    ('become_asked', 'rejected_confirm', None, 'previous_partner_id', 'previous_partner_id'),  # TODO oleksandr
+    ('become_asked', 'rejected_join', None, 'previous_partner_id', 'previous_partner_id'),
+    ('become_asked', 'rejected_confirm', None, 'previous_partner_id', 'previous_partner_id'),
     ('become_asked', 'do_not_disturb', None, 'previous_partner_id', 'previous_partner_id'),
 
     ('join_room', 'new', None, 'previous_partner_id', 'previous_partner_id'),
