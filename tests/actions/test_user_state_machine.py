@@ -1,5 +1,5 @@
 from functools import partial
-from typing import Text, Optional, Tuple
+from typing import Text, Optional
 from unittest.mock import Mock, patch
 
 import pytest
@@ -189,11 +189,10 @@ def test_state_timestamps(source_state: Text, trigger_name: Text) -> None:
 
     trigger = getattr(user, trigger_name)
 
-    def get_expected_timeout_ts() -> Tuple[Optional[int], Optional[Text]]:
-        if not transition_is_valid:
-            # invalid transition => state_timeout_ts[_str] should remain unchanged
-            return 1619697052, '2021-04-29 11:50:52 Z'
-        elif user.state in [
+    if transition_is_valid:
+        trigger('some_partner_id')  # run trigger and pass partner_id just in case (some triggers need it)
+
+        if user.state in [
             'asked_to_join',
             'asked_to_confirm',
             'roomed',
@@ -201,15 +200,13 @@ def test_state_timestamps(source_state: Text, trigger_name: Text) -> None:
             'rejected_confirm',
         ]:
             # destination state is supposed to have a timeout (a new one, set by transition)
-            return 1619945501 + (60 * 60 * 4), '2021-05-02 12:51:41 Z'
+            expected_timeout_ts = 1619945501 + (60 * 60 * 4)
+            expected_timeout_ts_str = '2021-05-02 12:51:41 Z'
         else:
             # destination state is NOT supposed to have a timeout
-            return None, None
+            expected_timeout_ts = None
+            expected_timeout_ts_str = None
 
-    if transition_is_valid:
-        trigger('some_partner_id')  # run trigger and pass partner_id just in case (some triggers need it)
-
-        expected_timeout_ts, expected_timeout_ts_str = get_expected_timeout_ts()
         assert user == UserStateMachine(
             user_id=user.user_id,  # don't try to validate this
             state=user.state,  # don't try to validate this
@@ -227,7 +224,6 @@ def test_state_timestamps(source_state: Text, trigger_name: Text) -> None:
         with pytest.raises(MachineError):
             trigger(partner_id='some_partner_id')
 
-        expected_timeout_ts, expected_timeout_ts_str = get_expected_timeout_ts()
         assert user == UserStateMachine(
             user_id=user.user_id,  # don't try to validate this
             state=user.state,  # don't try to validate this
@@ -236,6 +232,6 @@ def test_state_timestamps(source_state: Text, trigger_name: Text) -> None:
 
             state_timestamp=1619697022,  # timestamp is expected to remain unchanged
             state_timestamp_str='2021-04-29 11:50:22 Z',  # timestamp is expected to remain unchanged
-            state_timeout_ts=expected_timeout_ts,
-            state_timeout_ts_str=expected_timeout_ts_str,
+            state_timeout_ts=1619697052,  # timeout timestamp is expected to remain unchanged
+            state_timeout_ts_str='2021-04-29 11:50:52 Z',  # timeout timestamp is expected to remain unchanged
         )
