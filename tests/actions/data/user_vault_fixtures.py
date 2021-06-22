@@ -1,4 +1,5 @@
 from dataclasses import asdict
+from decimal import Decimal
 from typing import List, Dict, Text, Any
 
 import pytest
@@ -110,9 +111,9 @@ def ddb_scan_of_three_users() -> List[Dict[Text, Any]]:
             'state': 'waiting_partner_join',
             'partner_id': 'existing_user_id2',
             'newbie': False,
-            'state_timestamp': None,
+            'state_timestamp': Decimal(0),
             'state_timestamp_str': None,
-            'state_timeout_ts': None,
+            'state_timeout_ts': Decimal(0),
             'state_timeout_ts_str': None,
             'notes': 'some note',
             'deeplink_data': '',
@@ -125,9 +126,9 @@ def ddb_scan_of_three_users() -> List[Dict[Text, Any]]:
             'state': 'asked_to_join',
             'partner_id': 'existing_user_id1',
             'newbie': True,
-            'state_timestamp': None,
+            'state_timestamp': Decimal(0),
             'state_timestamp_str': None,
-            'state_timeout_ts': None,
+            'state_timeout_ts': Decimal(0),
             'state_timeout_ts_str': None,
             'notes': '',
             'deeplink_data': '',
@@ -140,9 +141,9 @@ def ddb_scan_of_three_users() -> List[Dict[Text, Any]]:
             'state': 'new',
             'partner_id': None,
             'newbie': True,
-            'state_timestamp': None,
+            'state_timestamp': Decimal(0),
             'state_timestamp_str': None,
-            'state_timeout_ts': None,
+            'state_timeout_ts': Decimal(0),
             'state_timeout_ts_str': None,
             'notes': '',
             'deeplink_data': '',
