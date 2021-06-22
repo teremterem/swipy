@@ -26,7 +26,7 @@ rules:
   - or:
     - intent: affirm
     - intent: want_chitchat
-  - action: action_create_room
+  - action: action_try_to_create_room
 - rule: the user refuses to join the call
   steps:
   - action: action_ask_to_join

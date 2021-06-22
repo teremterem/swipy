@@ -389,9 +389,9 @@ class ActionAskToJoin(BaseSwiperAction):
         ]
 
 
-class ActionCreateRoom(BaseSwiperAction):
+class ActionTryToCreateRoom(BaseSwiperAction):
     def name(self) -> Text:
-        return 'action_create_room'
+        return 'action_try_to_create_room'
 
     async def swipy_run(
             self, dispatcher: CollectingDispatcher,
