@@ -38,6 +38,8 @@ SWIPER_ERROR_TRACE_SLOT = 'swiper_error_trace'
 PARTNER_ID_TO_LET_GO_SLOT = 'partner_id_to_let_go'
 
 EXTERNAL_FIND_PARTNER_INTENT = 'EXTERNAL_find_partner'
+ACTION_FIND_PARTNER = 'action_find_partner'
+ACTION_TRY_TO_CREATE_ROOM = 'action_try_to_create_room'
 
 
 class SwiperActionResult:
@@ -275,7 +277,7 @@ def schedule_find_partner_reminder() -> ReminderScheduled:
 
 class ActionFindPartner(BaseSwiperAction):
     def name(self) -> Text:
-        return 'action_find_partner'
+        return ACTION_FIND_PARTNER
 
     async def swipy_run(
             self, dispatcher: CollectingDispatcher,
@@ -300,7 +302,13 @@ class ActionFindPartner(BaseSwiperAction):
                 ]
 
         else:  # user just requested chitchat
-            dispatcher.utter_message(response='utter_ok_arranging_chitchat')
+            if not (
+                    tracker.latest_action_name == ACTION_TRY_TO_CREATE_ROOM and
+                    tracker.followup_action == ACTION_FIND_PARTNER
+            ):  # make sure this action is not a side-effect of user saying yes to an invitation
+                # (in which case it should be silent)
+                dispatcher.utter_message(response='utter_ok_arranging_chitchat')
+                # TODO oleksandr: make sure other utterances in this action are safeguarded the same way
 
             # noinspection PyUnresolvedReferences
             current_user.request_chitchat()
@@ -382,7 +390,7 @@ class ActionAskToJoin(BaseSwiperAction):
 
 class ActionTryToCreateRoom(BaseSwiperAction):
     def name(self) -> Text:
-        return 'action_try_to_create_room'
+        return ACTION_TRY_TO_CREATE_ROOM
 
     async def swipy_run(
             self, dispatcher: CollectingDispatcher,
