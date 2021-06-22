@@ -204,7 +204,7 @@ def test_state_timestamps(source_state: Text, trigger_name: Text) -> None:
             expected_timeout_ts_str = '2021-05-02 12:51:41 Z'
         else:
             # destination state is NOT supposed to have a timeout
-            expected_timeout_ts = None
+            expected_timeout_ts = 0
             expected_timeout_ts_str = None
 
         assert user == UserStateMachine(

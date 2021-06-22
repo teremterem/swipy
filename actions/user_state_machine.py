@@ -19,7 +19,7 @@ class UserState:
     WAITING_PARTNER_CONFIRM = 'waiting_partner_confirm'
     ASKED_TO_JOIN = 'asked_to_join'
     ASKED_TO_CONFIRM = 'asked_to_confirm'
-    ROOMED = 'roomed'  # equivalent to 'ok_to_chitchat' ('want_chitchat'?) except they may still be on a call
+    ROOMED = 'roomed'
     REJECTED_JOIN = 'rejected_join'
     REJECTED_CONFIRM = 'rejected_confirm'
     DO_NOT_DISTURB = 'do_not_disturb'
@@ -64,9 +64,9 @@ class UserModel:
     state: Text = None  # the state machine will set it to UserState.NEW if not provided explicitly
     partner_id: Optional[Text] = None
     newbie: bool = True
-    state_timestamp: Optional[int] = None
+    state_timestamp: int = 0  # DDB GSI does not allow None
     state_timestamp_str: Optional[Text] = None
-    state_timeout_ts: Optional[int] = None
+    state_timeout_ts: int = 0  # DDB GSI does not allow None
     state_timeout_ts_str: Optional[Text] = None
     notes: Text = ''
     deeplink_data: Text = ''
@@ -253,5 +253,5 @@ class UserStateMachine(UserModel):
             self.state_timeout_ts = self.state_timestamp + SWIPER_STATE_TIMEOUT
             self.state_timeout_ts_str = format_swipy_timestamp(self.state_timeout_ts)
         else:
-            self.state_timeout_ts = None
+            self.state_timeout_ts = 0  # DDB GSI does not allow None
             self.state_timeout_ts_str = None

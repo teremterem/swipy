@@ -1,6 +1,7 @@
 [run]
 branch = True
 source =
+#    tests/
     actions/
     customize_rasa/
 
