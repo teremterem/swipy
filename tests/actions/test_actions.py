@@ -988,7 +988,16 @@ async def test_action_do_not_disturb(
         SlotSet('swiper_state', 'do_not_disturb'),
         SlotSet('partner_id', None),
     ]
-    assert dispatcher.messages == []
+    assert dispatcher.messages == [{
+        'attachment': None,
+        'buttons': [],
+        'custom': {},
+        'elements': [],
+        'image': None,
+        'response': 'utter_hope_to_see_you_later',
+        'template': 'utter_hope_to_see_you_later',
+        'text': None,
+    }]
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(

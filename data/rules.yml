@@ -53,7 +53,6 @@ rules:
 - rule: user asks not to bother them
   steps:
   - intent: dont_bother_me
-  - action: utter_hope_to_see_you_later
   - action: action_do_not_disturb
 - rule: user asks for chitchat directly
   steps:
