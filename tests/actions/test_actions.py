@@ -349,7 +349,19 @@ async def test_action_find_partner(
         )
         assert mock_aioresponses.requests == {expected_req_key: [expected_req_call]}
 
-    assert dispatcher.messages == []
+    if expect_as_reminder:
+        assert dispatcher.messages == []
+    else:
+        assert dispatcher.messages == [{
+            'attachment': None,
+            'buttons': [],
+            'custom': {},
+            'elements': [],
+            'image': None,
+            'response': 'utter_ok_arranging_chitchat',
+            'template': 'utter_ok_arranging_chitchat',
+            'text': None,
+        }]
 
     user_vault = UserVault()
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
@@ -381,16 +393,28 @@ async def test_action_find_partner_no_one(
         SlotSet('swiper_state', 'wants_chitchat'),
         SlotSet('partner_id', None),
     ]
-    assert dispatcher.messages == [{
-        'attachment': None,
-        'buttons': [],
-        'custom': {},
-        'elements': [],
-        'image': None,
-        'response': 'utter_no_one_was_found',
-        'template': 'utter_no_one_was_found',
-        'text': None,
-    }]
+    assert dispatcher.messages == [
+        {
+            'attachment': None,
+            'buttons': [],
+            'custom': {},
+            'elements': [],
+            'image': None,
+            'response': 'utter_ok_arranging_chitchat',
+            'template': 'utter_ok_arranging_chitchat',
+            'text': None,
+        },
+        {
+            'attachment': None,
+            'buttons': [],
+            'custom': {},
+            'elements': [],
+            'image': None,
+            'response': 'utter_no_one_was_found',
+            'template': 'utter_no_one_was_found',
+            'text': None,
+        },
+    ]
 
     assert mock_get_random_available_partner_dict.mock_calls == [
         call(('wants_chitchat',), 'unit_test_user'),
@@ -508,7 +532,7 @@ async def test_action_ask_to_join(
 @pytest.mark.usefixtures('create_user_state_machine_table')
 @patch('time.time', Mock(return_value=1619945501))  # "now"
 @patch('actions.daily_co.create_room', wraps=daily_co.create_room)
-async def test_action_create_room(
+async def test_action_try_to_create_room(
         wrap_daily_co_create_room: AsyncMock,
         mock_aioresponses: aioresponses,
         tracker: Tracker,
@@ -539,8 +563,8 @@ async def test_action_create_room(
         newbie=True,
     ))
 
-    action = actions.ActionCreateRoom()
-    assert action.name() == 'action_create_room'
+    action = actions.ActionTryToCreateRoom()
+    assert action.name() == 'action_try_to_create_room'
 
     actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == [
@@ -595,7 +619,7 @@ async def test_action_create_room(
 @pytest.mark.usefixtures('create_user_state_machine_table')
 @patch('time.time', Mock(return_value=1619945501))  # "now"
 @patch('telebot.apihelper._make_request')
-async def test_action_create_room_confirm_with_asker(
+async def test_action_try_to_create_room_confirm_with_asker(
         mock_telebot_make_request: MagicMock,
         mock_aioresponses: aioresponses,
         tracker: Tracker,
@@ -625,7 +649,7 @@ async def test_action_create_room_confirm_with_asker(
         newbie=True,
     ))
 
-    actual_events = await actions.ActionCreateRoom().run(dispatcher, tracker, domain)
+    actual_events = await actions.ActionTryToCreateRoom().run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'partner_has_been_asked'),
         SlotSet('swiper_state', 'waiting_partner_confirm'),
@@ -686,7 +710,7 @@ async def test_action_create_room_confirm_with_asker(
 ])
 @pytest.mark.usefixtures('create_user_state_machine_table')
 @patch('time.time', Mock(return_value=1619945501))
-async def test_action_create_room_partner_not_waiting(
+async def test_action_try_to_create_room_partner_not_waiting(
         mock_aioresponses: aioresponses,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
@@ -702,7 +726,7 @@ async def test_action_create_room_partner_not_waiting(
         newbie=True,
     ))
 
-    actual_events = await actions.ActionCreateRoom().run(dispatcher, tracker, domain)
+    actual_events = await actions.ActionTryToCreateRoom().run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'partner_not_waiting_anymore'),
         FollowupAction('action_find_partner'),
@@ -750,7 +774,7 @@ async def test_action_create_room_partner_not_waiting(
     ),
 ])
 @pytest.mark.usefixtures('create_user_state_machine_table')
-async def test_action_create_room_no_partner_id(
+async def test_action_try_to_create_room_no_partner_id(
         mock_aioresponses: aioresponses,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
@@ -768,7 +792,7 @@ async def test_action_create_room_no_partner_id(
 
     actions.SEND_ERROR_STACK_TRACE_TO_SLOT = False
 
-    actual_events = await actions.ActionCreateRoom().run(dispatcher, tracker, domain)
+    actual_events = await actions.ActionTryToCreateRoom().run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'error'),
         SlotSet(
@@ -825,7 +849,16 @@ async def test_action_join_room(
         SlotSet('swiper_state', 'roomed'),
         SlotSet('partner_id', 'partner_that_accepted'),
     ]
-    assert dispatcher.messages == []
+    assert dispatcher.messages == [{
+        'attachment': None,
+        'buttons': [],
+        'custom': {},
+        'elements': [],
+        'image': None,
+        'response': 'utter_partner_ready_room_url',
+        'template': 'utter_partner_ready_room_url',
+        'text': None,
+    }]
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
@@ -837,44 +870,6 @@ async def test_action_join_room(
         state_timestamp_str='2021-05-02 08:51:41 Z',
         state_timeout_ts=1619945501 + (60 * 60 * 4),
         state_timeout_ts_str='2021-05-02 12:51:41 Z',
-    )
-
-
-@pytest.mark.asyncio
-@pytest.mark.usefixtures('create_user_state_machine_table')
-@patch('time.time', Mock(return_value=1619945501))
-async def test_action_request_chitchat(
-        tracker: Tracker,
-        dispatcher: CollectingDispatcher,
-        domain: Dict[Text, Any],
-) -> None:
-    action = actions.ActionRequestChitchat()
-    assert action.name() == 'action_request_chitchat'
-
-    user_vault = UserVault()
-    user_vault.save(UserStateMachine(
-        user_id='unit_test_user',
-        state='do_not_disturb',
-        partner_id='the_asker',
-        newbie=True,
-    ))
-
-    actual_events = await action.run(dispatcher, tracker, domain)
-    assert actual_events == [
-        SlotSet('swiper_action_result', 'success'),
-        SlotSet('swiper_state', 'wants_chitchat'),
-        SlotSet('partner_id', None),
-    ]
-    assert dispatcher.messages == []
-
-    user_vault = UserVault()  # create new instance to avoid hitting cache
-    assert user_vault.get_user('unit_test_user') == UserStateMachine(
-        user_id='unit_test_user',
-        state='wants_chitchat',
-        partner_id=None,
-        newbie=True,
-        state_timestamp=1619945501,
-        state_timestamp_str='2021-05-02 08:51:41 Z',
     )
 
 
@@ -993,7 +988,16 @@ async def test_action_do_not_disturb(
         SlotSet('swiper_state', 'do_not_disturb'),
         SlotSet('partner_id', None),
     ]
-    assert dispatcher.messages == []
+    assert dispatcher.messages == [{
+        'attachment': None,
+        'buttons': [],
+        'custom': {},
+        'elements': [],
+        'image': None,
+        'response': 'utter_hope_to_see_you_later',
+        'template': 'utter_hope_to_see_you_later',
+        'text': None,
+    }]
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
@@ -1037,7 +1041,16 @@ async def test_action_reject_invitation(
         SlotSet('swiper_state', destination_swiper_state),
         SlotSet('partner_id', ''),
     ]
-    assert dispatcher.messages == []
+    assert dispatcher.messages == [{
+        'attachment': None,
+        'buttons': [],
+        'custom': {},
+        'elements': [],
+        'image': None,
+        'response': 'utter_declined',
+        'template': 'utter_declined',
+        'text': None,
+    }]
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(

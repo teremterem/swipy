@@ -169,9 +169,8 @@ actions:
 - action_offer_chitchat
 - action_find_partner
 - action_ask_to_join
-- action_create_room
+- action_try_to_create_room
 - action_join_room
-- action_request_chitchat
 - action_do_not_disturb
 - action_reject_invitation
 forms: {}

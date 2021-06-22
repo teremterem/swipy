@@ -287,7 +287,10 @@ class ActionFindPartner(BaseSwiperAction):
                     # get rid of artificial intent so it doesn't interfere with story predictions
                     UserUtteranceReverted(),
                 ]
+
         else:  # user just requested chitchat
+            dispatcher.utter_message(response='utter_ok_arranging_chitchat')
+
             # noinspection PyUnresolvedReferences
             current_user.request_chitchat()
             user_vault.save(current_user)
@@ -386,9 +389,9 @@ class ActionAskToJoin(BaseSwiperAction):
         ]
 
 
-class ActionCreateRoom(BaseSwiperAction):
+class ActionTryToCreateRoom(BaseSwiperAction):
     def name(self) -> Text:
-        return 'action_create_room'
+        return 'action_try_to_create_room'
 
     async def swipy_run(
             self, dispatcher: CollectingDispatcher,
@@ -511,32 +514,11 @@ class ActionJoinRoom(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
+        dispatcher.utter_message(response='utter_partner_ready_room_url')
+
         partner_id = tracker.get_slot(rasa_callbacks.PARTNER_ID_SLOT)
         # noinspection PyUnresolvedReferences
         current_user.join_room(partner_id)
-        user_vault.save(current_user)
-
-        return [
-            SlotSet(
-                key=SWIPER_ACTION_RESULT_SLOT,
-                value=SwiperActionResult.SUCCESS,
-            ),
-        ]
-
-
-class ActionRequestChitchat(BaseSwiperAction):
-    def name(self) -> Text:
-        return 'action_request_chitchat'
-
-    async def swipy_run(
-            self, dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any],
-            current_user: UserStateMachine,
-            user_vault: IUserVault,
-    ) -> List[Dict[Text, Any]]:
-        # noinspection PyUnresolvedReferences
-        current_user.request_chitchat()
         user_vault.save(current_user)
 
         return [
@@ -558,6 +540,8 @@ class ActionDoNotDisturb(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
+        dispatcher.utter_message(response='utter_hope_to_see_you_later')
+
         # noinspection PyUnresolvedReferences
         current_user.become_do_not_disturb()
         user_vault.save(current_user)
@@ -581,6 +565,8 @@ class ActionRejectInvitation(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
+        dispatcher.utter_message(response='utter_declined')
+
         # noinspection PyUnresolvedReferences
         current_user.reject()
         user_vault.save(current_user)
