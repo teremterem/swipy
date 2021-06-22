@@ -31,7 +31,6 @@ rules:
   steps:
   - action: action_ask_to_join
   - intent: deny
-  - action: utter_declined
   - action: action_reject_invitation
 - rule: ask next random partner
   steps:

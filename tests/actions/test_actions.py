@@ -1041,7 +1041,16 @@ async def test_action_reject_invitation(
         SlotSet('swiper_state', destination_swiper_state),
         SlotSet('partner_id', ''),
     ]
-    assert dispatcher.messages == []
+    assert dispatcher.messages == [{
+        'attachment': None,
+        'buttons': [],
+        'custom': {},
+        'elements': [],
+        'image': None,
+        'response': 'utter_declined',
+        'template': 'utter_declined',
+        'text': None,
+    }]
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(

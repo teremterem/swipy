@@ -565,6 +565,8 @@ class ActionRejectInvitation(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
+        dispatcher.utter_message(response='utter_declined')
+
         # noinspection PyUnresolvedReferences
         current_user.reject()
         user_vault.save(current_user)
