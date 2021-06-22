@@ -1,5 +1,7 @@
 import json
 import os
+from datetime import datetime
+from unittest.mock import MagicMock, patch
 
 import pytest
 from boto3.resources.base import ServiceResource
@@ -7,6 +9,24 @@ from rasa.shared.core.domain import Domain
 from rasa_sdk import Tracker
 from rasa_sdk.executor import CollectingDispatcher
 from rasa_sdk.types import DomainDict
+
+from actions.utils import datetime_now
+
+
+@pytest.fixture
+def wrap_datetime_now() -> MagicMock:
+    _original_datetime_now = datetime_now
+
+    def _wrap_datetime_now(*args, **kwargs) -> datetime:
+        # noinspection PyArgumentList
+        original_result = _original_datetime_now(*args, **kwargs)
+        assert isinstance(original_result, datetime)
+        return datetime(2021, 5, 25)
+
+    with patch('actions.actions.datetime_now') as mock_datetime_now:
+        mock_datetime_now.side_effect = _wrap_datetime_now
+
+        yield mock_datetime_now
 
 
 @pytest.fixture

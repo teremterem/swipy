@@ -1,4 +1,3 @@
-import datetime
 import re
 import traceback
 import uuid
@@ -17,7 +16,6 @@ from yarl import URL
 from actions import actions, daily_co
 from actions.user_state_machine import UserStateMachine, UserState
 from actions.user_vault import UserVault, IUserVault
-from actions.utils import datetime_now
 
 
 @pytest.mark.asyncio
@@ -234,7 +232,7 @@ async def test_action_session_start_with_slots(
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('create_user_state_machine_table')
+@pytest.mark.usefixtures('create_user_state_machine_table', 'wrap_datetime_now')
 @patch('time.time', Mock(return_value=1619945501))
 @patch.object(UserVault, '_get_random_available_partner_dict')
 @patch('telebot.apihelper._make_request')
@@ -297,18 +295,7 @@ async def test_action_find_partner(
     action = actions.ActionFindPartner()
     assert action.name() == 'action_find_partner'
 
-    _original_datetime_now = datetime_now
-
-    def _wrap_datetime_now(*args, **kwargs) -> datetime.datetime:
-        # noinspection PyArgumentList
-        original_result = _original_datetime_now(*args, **kwargs)
-        assert isinstance(original_result, datetime.datetime)
-        return datetime.datetime(2021, 5, 25)
-
-    with patch('actions.actions.datetime_now') as mock_datetime_now:
-        mock_datetime_now.side_effect = _wrap_datetime_now
-
-        actual_events = await action.run(dispatcher, tracker, domain)
+    actual_events = await action.run(dispatcher, tracker, domain)
 
     if expect_dry_run:
         assert actual_events == [
@@ -454,9 +441,6 @@ async def test_action_ask_to_join(
         set_photo_slot: bool,
         expected_response_template: Text,
 ) -> None:
-    action = actions.ActionAskToJoin()
-    assert action.name() == 'action_ask_to_join'
-
     user_vault = UserVault()
     user_vault.save(UserStateMachine(
         user_id='unit_test_user',
@@ -473,28 +457,11 @@ async def test_action_ask_to_join(
             SlotSet('partner_photo_file_id', 'some photo file id'),
         ])
 
-    _original_datetime_now = datetime_now
+    action = actions.ActionAskToJoin()
+    assert action.name() == 'action_ask_to_join'
 
-    def _wrap_datetime_now(*args, **kwargs) -> datetime.datetime:
-        # noinspection PyArgumentList
-        original_result = _original_datetime_now(*args, **kwargs)
-        assert isinstance(original_result, datetime.datetime)
-        return datetime.datetime(2021, 5, 25)
-
-    with patch('actions.actions.datetime_now') as mock_datetime_now:
-        mock_datetime_now.side_effect = _wrap_datetime_now
-
-        actual_events = await action.run(dispatcher, tracker, domain)
+    actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == [
-        {
-            'date_time': '2021-05-25T00:02:00',
-            'entities': {'partner_id_to_let_go': 'an_asker'},
-            'event': 'reminder',
-            'intent': 'EXTERNAL_let_partner_go',
-            'kill_on_user_msg': False,
-            'name': 'aaaabbbb-cccc-dddd-eeee-ffff11112222',
-            'timestamp': None,
-        },
         SlotSet('swiper_action_result', 'success'),
         SlotSet('swiper_state', destination_swiper_state),
         SlotSet('partner_id', 'an_asker'),
@@ -529,7 +496,7 @@ async def test_action_ask_to_join(
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('create_user_state_machine_table')
+@pytest.mark.usefixtures('create_user_state_machine_table', 'wrap_datetime_now')
 @patch('time.time', Mock(return_value=1619945501))  # "now"
 @patch('actions.daily_co.create_room', wraps=daily_co.create_room)
 async def test_action_try_to_create_room(
@@ -616,7 +583,7 @@ async def test_action_try_to_create_room(
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('create_user_state_machine_table')
+@pytest.mark.usefixtures('create_user_state_machine_table', 'wrap_datetime_now')
 @patch('time.time', Mock(return_value=1619945501))  # "now"
 @patch('telebot.apihelper._make_request')
 async def test_action_try_to_create_room_confirm_with_asker(
@@ -651,6 +618,15 @@ async def test_action_try_to_create_room_confirm_with_asker(
 
     actual_events = await actions.ActionTryToCreateRoom().run(dispatcher, tracker, domain)
     assert actual_events == [
+        {
+            'date_time': '2021-05-25T00:00:10',
+            'entities': None,
+            'event': 'reminder',
+            'intent': 'EXTERNAL_find_partner',
+            'kill_on_user_msg': False,
+            'name': 'EXTERNAL_find_partner',
+            'timestamp': None,
+        },
         SlotSet('swiper_action_result', 'partner_has_been_asked'),
         SlotSet('swiper_state', 'waiting_partner_confirm'),
         SlotSet('partner_id', 'an_asker'),

@@ -1,7 +1,6 @@
 import datetime
 import logging
 import os
-import uuid
 from abc import ABC, abstractmethod
 from distutils.util import strtobool
 from pprint import pformat
@@ -262,6 +261,18 @@ class ActionOfferChitchat(BaseSwiperAction):
         ]
 
 
+def schedule_find_partner_reminder() -> ReminderScheduled:
+    date = datetime_now() + datetime.timedelta(seconds=FIND_PARTNER_FREQUENCY_SEC)
+
+    reminder = ReminderScheduled(
+        EXTERNAL_FIND_PARTNER_INTENT,
+        trigger_date_time=date,
+        name=EXTERNAL_FIND_PARTNER_INTENT,
+        kill_on_user_message=False,
+    )
+    return reminder
+
+
 class ActionFindPartner(BaseSwiperAction):
     def name(self) -> Text:
         return 'action_find_partner'
@@ -307,16 +318,8 @@ class ActionFindPartner(BaseSwiperAction):
                 suppress_callback_errors=True,
             )
 
-            date = datetime_now() + datetime.timedelta(seconds=FIND_PARTNER_FREQUENCY_SEC)
+            events = [schedule_find_partner_reminder()]
 
-            events = [
-                ReminderScheduled(
-                    EXTERNAL_FIND_PARTNER_INTENT,
-                    trigger_date_time=date,
-                    name=EXTERNAL_FIND_PARTNER_INTENT,
-                    kill_on_user_message=False,
-                ),
-            ]
             if triggered_by_reminder:
                 # get rid of artificial intent so it doesn't interfere with story predictions
                 events.append(UserUtteranceReverted())
@@ -369,19 +372,7 @@ class ActionAskToJoin(BaseSwiperAction):
 
         dispatcher.utter_message(response=response_template, **response_kwargs)
 
-        date = datetime_now() + datetime.timedelta(seconds=QUESTION_TIMEOUT_SEC)
-
-        reminder = ReminderScheduled(
-            'EXTERNAL_let_partner_go',
-            trigger_date_time=date,
-            entities={
-                PARTNER_ID_TO_LET_GO_SLOT: partner_id,
-            },
-            name=str(uuid.uuid4()),
-            kill_on_user_message=False,
-        )
         return [
-            reminder,
             SlotSet(
                 key=SWIPER_ACTION_RESULT_SLOT,
                 value=SwiperActionResult.SUCCESS,
@@ -413,7 +404,7 @@ class ActionTryToCreateRoom(BaseSwiperAction):
                     key=SWIPER_ACTION_RESULT_SLOT,
                     value=SwiperActionResult.PARTNER_NOT_WAITING_ANYMORE,
                 ),
-                FollowupAction('action_find_partner'),
+                FollowupAction('action_find_partner'),  # TODO oleksandr: make sure it doesn't utter anything
             ]
 
         if current_user.state == UserState.ASKED_TO_JOIN:
@@ -454,6 +445,7 @@ class ActionTryToCreateRoom(BaseSwiperAction):
         user_vault.save(current_user)
 
         return [
+            schedule_find_partner_reminder(),
             SlotSet(
                 key=SWIPER_ACTION_RESULT_SLOT,
                 value=SwiperActionResult.PARTNER_HAS_BEEN_ASKED,
