@@ -876,44 +876,6 @@ async def test_action_join_room(
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('create_user_state_machine_table')
 @patch('time.time', Mock(return_value=1619945501))
-async def test_action_request_chitchat(
-        tracker: Tracker,
-        dispatcher: CollectingDispatcher,
-        domain: Dict[Text, Any],
-) -> None:
-    action = actions.ActionRequestChitchat()
-    assert action.name() == 'action_request_chitchat'
-
-    user_vault = UserVault()
-    user_vault.save(UserStateMachine(
-        user_id='unit_test_user',
-        state='do_not_disturb',
-        partner_id='the_asker',
-        newbie=True,
-    ))
-
-    actual_events = await action.run(dispatcher, tracker, domain)
-    assert actual_events == [
-        SlotSet('swiper_action_result', 'success'),
-        SlotSet('swiper_state', 'wants_chitchat'),
-        SlotSet('partner_id', None),
-    ]
-    assert dispatcher.messages == []
-
-    user_vault = UserVault()  # create new instance to avoid hitting cache
-    assert user_vault.get_user('unit_test_user') == UserStateMachine(
-        user_id='unit_test_user',
-        state='wants_chitchat',
-        partner_id=None,
-        newbie=True,
-        state_timestamp=1619945501,
-        state_timestamp_str='2021-05-02 08:51:41 Z',
-    )
-
-
-@pytest.mark.asyncio
-@pytest.mark.usefixtures('create_user_state_machine_table')
-@patch('time.time', Mock(return_value=1619945501))
 @pytest.mark.parametrize('latest_intent, expected_response_template, source_swiper_state, destination_swiper_state', [
     ('how_it_works', 'utter_how_it_works', 'new', 'ok_to_chitchat'),
     ('start', 'utter_greet_offer_chitchat', 'new', 'ok_to_chitchat'),

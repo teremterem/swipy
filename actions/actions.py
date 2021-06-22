@@ -529,29 +529,6 @@ class ActionJoinRoom(BaseSwiperAction):
         ]
 
 
-class ActionRequestChitchat(BaseSwiperAction):
-    def name(self) -> Text:
-        return 'action_request_chitchat'
-
-    async def swipy_run(
-            self, dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any],
-            current_user: UserStateMachine,
-            user_vault: IUserVault,
-    ) -> List[Dict[Text, Any]]:
-        # noinspection PyUnresolvedReferences
-        current_user.request_chitchat()
-        user_vault.save(current_user)
-
-        return [
-            SlotSet(
-                key=SWIPER_ACTION_RESULT_SLOT,
-                value=SwiperActionResult.SUCCESS,
-            ),
-        ]
-
-
 class ActionDoNotDisturb(BaseSwiperAction):
     def name(self) -> Text:
         return 'action_do_not_disturb'
