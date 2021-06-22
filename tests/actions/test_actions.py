@@ -363,6 +363,14 @@ async def test_action_find_partner(
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('ddb_unit_test_user')
+@pytest.mark.parametrize('latest_action_name, followup_action, expect_silence', [
+    (None, None, False),
+    ('some_other_action', None, False),
+    ('some_other_action', 'some_weird_followup', False),
+    ('action_try_to_create_room', None, False),
+    (None, 'action_find_partner', False),
+    ('action_try_to_create_room', 'action_find_partner', True),
+])
 @patch('time.time', Mock(return_value=1619945501))
 @patch.object(UserVault, '_get_random_available_partner_dict')
 async def test_action_find_partner_no_one(
@@ -371,8 +379,16 @@ async def test_action_find_partner_no_one(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
+        latest_action_name: Optional[Text],
+        followup_action: Optional[Text],
+        expect_silence: bool,
 ) -> None:
     mock_get_random_available_partner_dict.return_value = None
+
+    if latest_action_name:
+        tracker.latest_action_name = latest_action_name
+    if followup_action:
+        tracker.followup_action = followup_action
 
     actual_events = await actions.ActionFindPartner().run(dispatcher, tracker, domain)
     assert actual_events == [
@@ -380,28 +396,32 @@ async def test_action_find_partner_no_one(
         SlotSet('swiper_state', 'wants_chitchat'),
         SlotSet('partner_id', None),
     ]
-    assert dispatcher.messages == [
-        {
-            'attachment': None,
-            'buttons': [],
-            'custom': {},
-            'elements': [],
-            'image': None,
-            'response': 'utter_ok_arranging_chitchat',
-            'template': 'utter_ok_arranging_chitchat',
-            'text': None,
-        },
-        {
-            'attachment': None,
-            'buttons': [],
-            'custom': {},
-            'elements': [],
-            'image': None,
-            'response': 'utter_no_one_was_found',
-            'template': 'utter_no_one_was_found',
-            'text': None,
-        },
-    ]
+
+    if expect_silence:
+        assert dispatcher.messages == []
+    else:
+        assert dispatcher.messages == [
+            {
+                'attachment': None,
+                'buttons': [],
+                'custom': {},
+                'elements': [],
+                'image': None,
+                'response': 'utter_ok_arranging_chitchat',
+                'template': 'utter_ok_arranging_chitchat',
+                'text': None,
+            },
+            {
+                'attachment': None,
+                'buttons': [],
+                'custom': {},
+                'elements': [],
+                'image': None,
+                'response': 'utter_no_one_was_found',
+                'template': 'utter_no_one_was_found',
+                'text': None,
+            },
+        ]
 
     assert mock_get_random_available_partner_dict.mock_calls == [
         call(('wants_chitchat',), 'unit_test_user'),
