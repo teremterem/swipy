@@ -349,7 +349,19 @@ async def test_action_find_partner(
         )
         assert mock_aioresponses.requests == {expected_req_key: [expected_req_call]}
 
-    assert dispatcher.messages == []
+    if expect_as_reminder:
+        assert dispatcher.messages == []
+    else:
+        assert dispatcher.messages == [{
+            'attachment': None,
+            'buttons': [],
+            'custom': {},
+            'elements': [],
+            'image': None,
+            'response': 'utter_ok_arranging_chitchat',
+            'template': 'utter_ok_arranging_chitchat',
+            'text': None,
+        }]
 
     user_vault = UserVault()
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
@@ -381,16 +393,28 @@ async def test_action_find_partner_no_one(
         SlotSet('swiper_state', 'wants_chitchat'),
         SlotSet('partner_id', None),
     ]
-    assert dispatcher.messages == [{
-        'attachment': None,
-        'buttons': [],
-        'custom': {},
-        'elements': [],
-        'image': None,
-        'response': 'utter_no_one_was_found',
-        'template': 'utter_no_one_was_found',
-        'text': None,
-    }]
+    assert dispatcher.messages == [
+        {
+            'attachment': None,
+            'buttons': [],
+            'custom': {},
+            'elements': [],
+            'image': None,
+            'response': 'utter_ok_arranging_chitchat',
+            'template': 'utter_ok_arranging_chitchat',
+            'text': None,
+        },
+        {
+            'attachment': None,
+            'buttons': [],
+            'custom': {},
+            'elements': [],
+            'image': None,
+            'response': 'utter_no_one_was_found',
+            'template': 'utter_no_one_was_found',
+            'text': None,
+        },
+    ]
 
     assert mock_get_random_available_partner_dict.mock_calls == [
         call(('wants_chitchat',), 'unit_test_user'),

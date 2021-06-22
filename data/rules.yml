@@ -11,7 +11,6 @@ rules:
   steps:
   - action: action_offer_chitchat
   - intent: affirm
-  - action: utter_ok_arranging_chitchat
   - action: action_find_partner
 - rule: someone asks the user to join/confirm a video chat
   steps:
@@ -38,11 +37,11 @@ rules:
   steps:
   - intent: EXTERNAL_find_partner
   - action: action_find_partner
-- rule: a partner is not ready for the call anymore - we need to look for someone else to connect the user with
-  steps:
-  - intent: EXTERNAL_report_unavailable
-  - action: utter_partner_already_gone
-  - action: action_find_partner
+#- rule: a partner is not ready for the call anymore - we need to look for someone else to connect the user with
+#  steps:
+#  - intent: EXTERNAL_report_unavailable
+#  - action: utter_partner_already_gone
+#  - action: action_find_partner
 - rule: a partner confirms readiness for the video chat and the user receives the room url
   steps:
   - intent: EXTERNAL_join_room
@@ -60,5 +59,4 @@ rules:
 - rule: user asks for chitchat directly
   steps:
   - intent: want_chitchat
-  - action: utter_ok_arranging_chitchat
   - action: action_find_partner

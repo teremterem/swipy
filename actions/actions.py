@@ -287,7 +287,10 @@ class ActionFindPartner(BaseSwiperAction):
                     # get rid of artificial intent so it doesn't interfere with story predictions
                     UserUtteranceReverted(),
                 ]
+
         else:  # user just requested chitchat
+            dispatcher.utter_message(response='utter_ok_arranging_chitchat')
+
             # noinspection PyUnresolvedReferences
             current_user.request_chitchat()
             user_vault.save(current_user)
