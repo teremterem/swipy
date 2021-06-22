@@ -8,7 +8,7 @@ from typing import Any, Text, Dict, List
 
 from rasa_sdk import Action, Tracker
 from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType, ReminderScheduled, FollowupAction, \
-    UserUtteranceReverted
+    UserUtteranceReverted, ActionReverted
 from rasa_sdk.executor import CollectingDispatcher
 
 from actions import daily_co
@@ -292,7 +292,7 @@ class ActionFindPartner(BaseSwiperAction):
                 (tracker.latest_message.get('intent') or {}).get('name') == EXTERNAL_FIND_PARTNER_INTENT
         )  # TODO oleksandr: extract part of this expression to utils.py::get_intent_of_latest_message_reliably() ?
 
-        should_be_silent = (
+        triggered_as_followup = (
                 tracker.latest_action_name == ACTION_TRY_TO_CREATE_ROOM and
                 tracker.followup_action == ACTION_FIND_PARTNER
         )  # is this action invoked as a side-effect of user saying yes to an invitation?
@@ -307,7 +307,7 @@ class ActionFindPartner(BaseSwiperAction):
                 ]
 
         else:  # user just requested chitchat
-            if not should_be_silent:
+            if not triggered_as_followup:
                 dispatcher.utter_message(response='utter_ok_arranging_chitchat')
 
             # noinspection PyUnresolvedReferences
@@ -328,7 +328,11 @@ class ActionFindPartner(BaseSwiperAction):
 
             events = [schedule_find_partner_reminder()]
 
-            if triggered_by_reminder:
+            # TODO oleksandr: refactor everything in the method below this line
+
+            if triggered_as_followup:
+                events.append(ActionReverted())
+            elif triggered_by_reminder:
                 # get rid of artificial intent so it doesn't interfere with story predictions
                 events.append(UserUtteranceReverted())
             else:
@@ -338,8 +342,11 @@ class ActionFindPartner(BaseSwiperAction):
                 ))
             return events
 
-        if not should_be_silent:
-            dispatcher.utter_message(response='utter_no_one_was_found')
+        if triggered_as_followup:
+            return [
+                ActionReverted(),
+            ]
+        dispatcher.utter_message(response='utter_no_one_was_found')
 
         return [
             SlotSet(
@@ -413,7 +420,7 @@ class ActionTryToCreateRoom(BaseSwiperAction):
                     key=SWIPER_ACTION_RESULT_SLOT,
                     value=SwiperActionResult.PARTNER_NOT_WAITING_ANYMORE,
                 ),
-                FollowupAction('action_find_partner'),  # TODO oleksandr: make sure it doesn't utter anything
+                FollowupAction('action_find_partner'),
             ]
 
         if current_user.state == UserState.ASKED_TO_JOIN:
