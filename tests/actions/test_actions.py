@@ -693,7 +693,7 @@ async def test_action_try_to_create_room_confirm_with_asker(
 @pytest.mark.parametrize('partner', [
     UserStateMachine(
         user_id='an_asker',
-        state='waiting_partner_join',
+        state='waiting_partner_confirm',
         partner_id='a_completely_different_user',
         newbie=True,
     ),
@@ -878,9 +878,9 @@ async def test_action_join_room(
     ('greet', 'utter_greet_offer_chitchat', 'new', 'ok_to_chitchat'),
 
     ('greet', 'utter_greet_offer_chitchat', None, 'ok_to_chitchat'),  # user does not exist yet
+    ('greet', 'utter_greet_offer_chitchat', 'new', 'ok_to_chitchat'),
     ('greet', 'utter_greet_offer_chitchat', 'wants_chitchat', 'wants_chitchat'),
     ('greet', 'utter_greet_offer_chitchat', 'ok_to_chitchat', 'ok_to_chitchat'),
-    ('greet', 'utter_greet_offer_chitchat', 'waiting_partner_join', 'waiting_partner_join'),
     ('greet', 'utter_greet_offer_chitchat', 'waiting_partner_confirm', 'waiting_partner_confirm'),
     ('greet', 'utter_greet_offer_chitchat', 'asked_to_join', 'ok_to_chitchat'),
     ('greet', 'utter_greet_offer_chitchat', 'asked_to_confirm', 'ok_to_chitchat'),
@@ -952,7 +952,6 @@ async def test_action_offer_chitchat(
     'new',
     'wants_chitchat',
     'ok_to_chitchat',
-    'waiting_partner_join',
     'waiting_partner_confirm',
     'asked_to_join',
     'asked_to_confirm',
