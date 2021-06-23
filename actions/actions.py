@@ -298,7 +298,11 @@ class ActionFindPartner(BaseSwiperAction):
         )  # if this action was a side-effect of a user saying yes to an invitation then no messages to the user
 
         if triggered_by_reminder:
-            if current_user.state != UserState.WANTS_CHITCHAT:
+            if current_user.state not in [
+                UserState.WANTS_CHITCHAT,
+                UserState.OK_TO_CHITCHAT,
+                UserState.WAITING_PARTNER_CONFIRM,
+            ]:
                 # the search was stopped for the user one way or another (user said stop, or was asked to join etc.)
                 # => don't do any partner searching and don't schedule another reminder
                 return [
