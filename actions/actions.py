@@ -426,7 +426,8 @@ class ActionTryToCreateRoom(BaseSwiperAction):
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
         partner = user_vault.get_user(current_user.partner_id)
-        if not partner.is_waiting_for(current_user.user_id):
+
+        if False:  # TODO TODO TODO oleksandr: if not partner.is_waiting_for(current_user.user_id):
             # noinspection PyUnresolvedReferences
             current_user.request_chitchat()
             user_vault.save(current_user)
