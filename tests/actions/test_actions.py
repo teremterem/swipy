@@ -9,8 +9,7 @@ import pytest
 from aioresponses import aioresponses
 from aioresponses.core import RequestCall
 from rasa_sdk import Tracker
-from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType, FollowupAction, UserUtteranceReverted, \
-    ActionReverted
+from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType, FollowupAction, UserUtteranceReverted
 from rasa_sdk.executor import CollectingDispatcher
 from yarl import URL
 
@@ -392,21 +391,15 @@ async def test_action_find_partner_no_one(
         tracker.followup_action = followup_action
 
     actual_events = await actions.ActionFindPartner().run(dispatcher, tracker, domain)
+    assert actual_events == [
+        SlotSet('swiper_action_result', 'partner_was_not_found'),
+        SlotSet('swiper_state', 'wants_chitchat'),
+        SlotSet('partner_id', None),
+    ]
 
     if expect_silence:
-        assert actual_events == [
-            ActionReverted(),
-            SlotSet('swiper_state', 'wants_chitchat'),
-            SlotSet('partner_id', None),
-        ]
         assert dispatcher.messages == []
-
     else:
-        assert actual_events == [
-            SlotSet('swiper_action_result', 'partner_was_not_found'),
-            SlotSet('swiper_state', 'wants_chitchat'),
-            SlotSet('partner_id', None),
-        ]
         assert dispatcher.messages == [
             {
                 'attachment': None,

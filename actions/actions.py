@@ -8,7 +8,7 @@ from typing import Any, Text, Dict, List
 
 from rasa_sdk import Action, Tracker
 from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType, ReminderScheduled, FollowupAction, \
-    UserUtteranceReverted, ActionReverted
+    UserUtteranceReverted
 from rasa_sdk.executor import CollectingDispatcher
 
 from actions import daily_co
@@ -295,7 +295,7 @@ class ActionFindPartner(BaseSwiperAction):
         triggered_as_followup = (
                 tracker.latest_action_name == ACTION_TRY_TO_CREATE_ROOM and
                 tracker.followup_action == ACTION_FIND_PARTNER
-        )  # is this action invoked as a side-effect of user saying yes to an invitation?
+        )  # if this action was a side-effect of a user saying yes to an invitation then no messages to the user
 
         if triggered_by_reminder:
             if current_user.state != UserState.WANTS_CHITCHAT:
@@ -330,11 +330,11 @@ class ActionFindPartner(BaseSwiperAction):
 
             # TODO oleksandr: refactor everything in the method below this line
 
-            if triggered_as_followup:
-                events.append(ActionReverted())
-            elif triggered_by_reminder:
+            if triggered_by_reminder:
                 # get rid of artificial intent so it doesn't interfere with story predictions
                 events.append(UserUtteranceReverted())
+            # elif triggered_as_followup:
+            #     events.append(ActionReverted())
             else:
                 events.append(SlotSet(
                     key=SWIPER_ACTION_RESULT_SLOT,
@@ -343,10 +343,12 @@ class ActionFindPartner(BaseSwiperAction):
             return events
 
         if triggered_as_followup:
-            return [
-                ActionReverted(),
-            ]
-        dispatcher.utter_message(response='utter_no_one_was_found')
+            pass
+            # return [
+            #     ActionReverted(),
+            # ]
+        else:
+            dispatcher.utter_message(response='utter_no_one_was_found')
 
         return [
             SlotSet(
