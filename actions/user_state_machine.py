@@ -15,7 +15,6 @@ class UserState:
     NEW = 'new'
     WANTS_CHITCHAT = 'wants_chitchat'
     OK_TO_CHITCHAT = 'ok_to_chitchat'
-    WAITING_PARTNER_JOIN = 'waiting_partner_join'
     WAITING_PARTNER_CONFIRM = 'waiting_partner_confirm'
     ASKED_TO_JOIN = 'asked_to_join'
     ASKED_TO_CONFIRM = 'asked_to_confirm'
@@ -28,7 +27,6 @@ class UserState:
         NEW,
         WANTS_CHITCHAT,
         OK_TO_CHITCHAT,
-        WAITING_PARTNER_JOIN,  # TODO oleksandr: drop this state
         WAITING_PARTNER_CONFIRM,
         ASKED_TO_JOIN,
         ASKED_TO_CONFIRM,
@@ -37,7 +35,6 @@ class UserState:
         REJECTED_CONFIRM,
         DO_NOT_DISTURB,
     ]
-
     states_with_timeouts = [
         ASKED_TO_JOIN,
         ASKED_TO_CONFIRM,
@@ -45,16 +42,15 @@ class UserState:
         REJECTED_JOIN,
         REJECTED_CONFIRM,
     ]
+    chitchatable_states = [
+                              WANTS_CHITCHAT,
+                              OK_TO_CHITCHAT,
+                              WAITING_PARTNER_CONFIRM,
+                          ] + states_with_timeouts
 
-    can_be_offered_chitchat_states = [
-        WANTS_CHITCHAT,
-        OK_TO_CHITCHAT,
-        ROOMED,
-    ]
     chitchatable_tiers = [
-        (WANTS_CHITCHAT,),
-        (OK_TO_CHITCHAT,),
-        (ROOMED,),
+        chitchatable_states,  # everything is in one tier for now - we are differentiating only by recency of activity
+        # TODO oleksandr: think about it again
     ]
 
 
@@ -125,21 +121,7 @@ class UserStateMachine(UserModel):
 
         # noinspection PyTypeChecker
         self.machine.add_transition(
-            trigger='wait_for_partner',
-            source=[
-                UserState.WANTS_CHITCHAT,
-            ],
-            dest=UserState.WAITING_PARTNER_JOIN,
-            before=[
-                self._assert_partner_id_arg_not_empty,
-            ],
-            after=[
-                self._set_partner_id,
-            ],
-        )
-        # noinspection PyTypeChecker
-        self.machine.add_transition(
-            trigger='wait_for_partner',
+            trigger='wait_for_partner_to_confirm',
             source=[
                 UserState.ASKED_TO_JOIN,
             ],
@@ -152,21 +134,22 @@ class UserStateMachine(UserModel):
 
         # noinspection PyTypeChecker
         self.machine.add_transition(
-            trigger='become_asked',
-            source=[
-                UserState.WAITING_PARTNER_JOIN,
-            ],
-            dest=UserState.ASKED_TO_CONFIRM,
+            trigger='become_asked_to_join',
+            source=UserState.chitchatable_states,
+            dest=UserState.ASKED_TO_JOIN,
             before=[
                 self._assert_partner_id_arg_not_empty,
-                self._assert_partner_id_arg_same,
+            ],
+            after=[
+                self._set_partner_id,
             ],
         )
+
         # noinspection PyTypeChecker
         self.machine.add_transition(
-            trigger='become_asked',
-            source=UserState.can_be_offered_chitchat_states,
-            dest=UserState.ASKED_TO_JOIN,
+            trigger='become_asked_to_confirm',
+            source=UserState.chitchatable_states,
+            dest=UserState.ASKED_TO_CONFIRM,
             before=[
                 self._assert_partner_id_arg_not_empty,
             ],
