@@ -14,7 +14,9 @@ rules:
   - action: action_find_partner
 - rule: someone asks the user to join/confirm a video chat
   steps:
-  - intent: EXTERNAL_ask_to_join
+  - or:
+    - intent: EXTERNAL_ask_to_join
+    - intent: EXTERNAL_ask_to_confirm
   - action: action_ask_to_join
 #- rule: current user does not respond to invitation, hence reminder to let partner go is triggered
 #  steps:

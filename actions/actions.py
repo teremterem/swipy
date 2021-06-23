@@ -14,9 +14,11 @@ from rasa_sdk.executor import CollectingDispatcher
 from actions import daily_co
 from actions import rasa_callbacks
 from actions import telegram_helpers
+from actions.rasa_callbacks import EXTERNAL_ASK_TO_JOIN_INTENT, EXTERNAL_ASK_TO_CONFIRM_INTENT
 from actions.user_state_machine import UserStateMachine, UserState, NATIVE_UNKNOWN
 from actions.user_vault import UserVault, IUserVault
-from actions.utils import InvalidSwiperStateError, stack_trace_to_str, datetime_now
+from actions.utils import InvalidSwiperStateError, stack_trace_to_str, datetime_now, \
+    get_intent_of_latest_message_reliably, SwiperError
 
 logger = logging.getLogger(__name__)
 
@@ -286,11 +288,8 @@ class ActionFindPartner(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        # tracker.get_intent_of_latest_message() doesn't work for artificial messages because intent_ranking is absent
-        triggered_by_reminder = (
-                tracker.latest_message and
-                (tracker.latest_message.get('intent') or {}).get('name') == EXTERNAL_FIND_PARTNER_INTENT
-        )  # TODO oleksandr: extract part of this expression to utils.py::get_intent_of_latest_message_reliably() ?
+        latest_intent = get_intent_of_latest_message_reliably(tracker)
+        triggered_by_reminder = latest_intent == EXTERNAL_FIND_PARTNER_INTENT
 
         triggered_as_followup = (
                 tracker.latest_action_name == ACTION_TRY_TO_CREATE_ROOM and
@@ -373,15 +372,28 @@ class ActionAskToJoin(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        partner_id = tracker.get_slot(rasa_callbacks.PARTNER_ID_SLOT)
-        # noinspection PyUnresolvedReferences
-        current_user.become_asked(partner_id)
-        user_vault.save(current_user)
+        latest_intent = get_intent_of_latest_message_reliably(tracker)
 
-        if current_user.state == UserState.ASKED_TO_CONFIRM:
+        if latest_intent == EXTERNAL_ASK_TO_CONFIRM_INTENT:
+            asked_to_confirm = True
+        elif latest_intent == EXTERNAL_ASK_TO_JOIN_INTENT:
+            asked_to_confirm = False
+        else:
+            raise SwiperError(
+                f"{repr(self.name())} was triggered by an unexpected intent ({repr(latest_intent)}) - either "
+                f"{repr(EXTERNAL_ASK_TO_JOIN_INTENT)} or {repr(EXTERNAL_ASK_TO_CONFIRM_INTENT)} was expected"
+            )
+
+        partner_id = tracker.get_slot(rasa_callbacks.PARTNER_ID_SLOT)
+        if asked_to_confirm:
             response_template = 'utter_found_someone_check_ready'
-        else:  # current_user.state == UserState.ASKED_TO_JOIN
+            # noinspection PyUnresolvedReferences
+            current_user.become_asked_to_confirm(partner_id)
+        else:
             response_template = 'utter_someone_wants_to_chat'
+            # noinspection PyUnresolvedReferences
+            current_user.become_asked_to_join(partner_id)
+        user_vault.save(current_user)
 
         partner_photo_file_id = tracker.get_slot(rasa_callbacks.PARTNER_PHOTO_FILE_ID_SLOT)
         if partner_photo_file_id:
@@ -455,7 +467,7 @@ class ActionTryToCreateRoom(BaseSwiperAction):
 
         # noinspection PyBroadException
         try:
-            await rasa_callbacks.ask_to_join(current_user.user_id, partner.user_id, user_profile_photo_id)
+            await rasa_callbacks.ask_to_confirm(current_user.user_id, partner.user_id, user_profile_photo_id)
         except Exception:
             # noinspection PyUnresolvedReferences
             current_user.request_chitchat()
@@ -463,7 +475,7 @@ class ActionTryToCreateRoom(BaseSwiperAction):
             raise
 
         # noinspection PyUnresolvedReferences
-        current_user.wait_for_partner(partner.user_id)
+        current_user.wait_for_partner_to_confirm(partner.user_id)
         user_vault.save(current_user)
 
         return [
