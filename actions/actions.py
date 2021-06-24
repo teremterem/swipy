@@ -15,7 +15,7 @@ from actions import daily_co
 from actions import rasa_callbacks
 from actions import telegram_helpers
 from actions.rasa_callbacks import EXTERNAL_ASK_TO_JOIN_INTENT, EXTERNAL_ASK_TO_CONFIRM_INTENT
-from actions.user_state_machine import UserStateMachine, UserState, NATIVE_UNKNOWN
+from actions.user_state_machine import UserStateMachine, UserState, NATIVE_UNKNOWN, PARTNER_CONFIRMATION_TIMEOUT_SEC
 from actions.user_vault import UserVault, IUserVault
 from actions.utils import InvalidSwiperStateError, stack_trace_to_str, datetime_now, \
     get_intent_of_latest_message_reliably, SwiperError
@@ -25,7 +25,6 @@ logger = logging.getLogger(__name__)
 TELL_USER_ABOUT_ERRORS = strtobool(os.getenv('TELL_USER_ABOUT_ERRORS', 'yes'))
 SEND_ERROR_STACK_TRACE_TO_SLOT = strtobool(os.getenv('SEND_ERROR_STACK_TRACE_TO_SLOT', 'yes'))
 FIND_PARTNER_FREQUENCY_SEC = float(os.getenv('FIND_PARTNER_FREQUENCY_SEC', '10'))
-QUESTION_TIMEOUT_SEC = float(os.getenv('QUESTION_TIMEOUT_SEC', '120'))
 GREETING_MAKES_USER_OK_TO_CHITCHAT = strtobool(os.getenv('GREETING_MAKES_USER_OK_TO_CHITCHAT', 'yes'))
 
 SWIPER_STATE_SLOT = 'swiper_state'
@@ -279,7 +278,7 @@ def schedule_find_partner_reminder() -> ReminderScheduled:
 
 
 def schedule_expire_partner_confirmation() -> ReminderScheduled:
-    date = datetime_now() + datetime.timedelta(seconds=QUESTION_TIMEOUT_SEC)
+    date = datetime_now() + datetime.timedelta(seconds=PARTNER_CONFIRMATION_TIMEOUT_SEC)
 
     reminder = ReminderScheduled(
         EXTERNAL_EXPIRE_PARTNER_CONFIRMATION,
@@ -637,10 +636,6 @@ class ActionExpirePartnerConfirmation(BaseSwiperAction):
             return [
                 UserUtteranceReverted(),
             ]
-
-        # noinspection PyUnresolvedReferences
-        current_user.request_chitchat()  # TODO oleksandr: don't do this! rely on wait_partner_confirm timing instead ?
-        user_vault.save(current_user)
 
         dispatcher.utter_message(response='utter_partner_already_gone')
 

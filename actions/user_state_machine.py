@@ -6,7 +6,8 @@ from transitions import Machine, EventData
 
 from actions.utils import current_timestamp_int, SwiperStateMachineError, format_swipy_timestamp
 
-SWIPER_STATE_TIMEOUT = int(os.getenv('SWIPER_STATE_TIMEOUT', '14400'))  # 60 * 60 * 4 seconds = 4 hours
+SWIPER_STATE_TIMEOUT_SEC = int(os.getenv('SWIPER_STATE_TIMEOUT_SEC', '14400'))  # 60 * 60 * 4 seconds = 4 hours
+PARTNER_CONFIRMATION_TIMEOUT_SEC = float(os.getenv('PARTNER_CONFIRMATION_TIMEOUT_SEC', '120'))  # two minutes
 
 NATIVE_UNKNOWN = 'unknown'
 
@@ -36,6 +37,7 @@ class UserState:
         DO_NOT_DISTURB,
     ]
     states_with_timeouts = [
+        WAITING_PARTNER_CONFIRM,  # cannot be found by others until timeout (although can themselves seek others)
         ASKED_TO_JOIN,
         ASKED_TO_CONFIRM,
         ROOMED,
@@ -45,7 +47,6 @@ class UserState:
     chitchatable_states = [
                               WANTS_CHITCHAT,
                               OK_TO_CHITCHAT,
-                              WAITING_PARTNER_CONFIRM,
                           ] + states_with_timeouts
 
     chitchatable_tiers = [
@@ -233,8 +234,15 @@ class UserStateMachine(UserModel):
     # noinspection PyUnusedLocal
     def _update_state_timeout_ts(self, event: EventData) -> None:
         if event.transition.dest in UserState.states_with_timeouts:
-            self.state_timeout_ts = self.state_timestamp + SWIPER_STATE_TIMEOUT
+
+            if event.transition.dest == UserState.WAITING_PARTNER_CONFIRM:
+                timeout = PARTNER_CONFIRMATION_TIMEOUT_SEC
+            else:
+                timeout = SWIPER_STATE_TIMEOUT_SEC
+
+            self.state_timeout_ts = self.state_timestamp + timeout
             self.state_timeout_ts_str = format_swipy_timestamp(self.state_timeout_ts)
+
         else:
             self.state_timeout_ts = 0  # DDB GSI does not allow None
             self.state_timeout_ts_str = None
