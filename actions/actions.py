@@ -17,8 +17,7 @@ from actions import telegram_helpers
 from actions.rasa_callbacks import EXTERNAL_ASK_TO_JOIN_INTENT, EXTERNAL_ASK_TO_CONFIRM_INTENT
 from actions.user_state_machine import UserStateMachine, UserState, NATIVE_UNKNOWN, PARTNER_CONFIRMATION_TIMEOUT_SEC
 from actions.user_vault import UserVault, IUserVault
-from actions.utils import stack_trace_to_str, datetime_now, \
-    get_intent_of_latest_message_reliably, SwiperError
+from actions.utils import stack_trace_to_str, datetime_now, get_intent_of_latest_message_reliably, SwiperError
 
 logger = logging.getLogger(__name__)
 

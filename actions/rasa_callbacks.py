@@ -102,9 +102,8 @@ async def _trigger_external_rasa_intent(
         ) as resp:
             resp_json = await resp.json()
 
-    # TODO oleksandr: change log level back to DEBUG when you decide how to identify and react to failures
-    if logger.isEnabledFor(logging.INFO):
-        logger.info(
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug(
             'TRIGGER_INTENT %r RESULT:\n\nSENDER_ID: %r\n\nRECEIVER_ID: %r\n\nENTITIES:\n%s\n\nRESPONSE:\n%s',
             intent_name,
             sender_id,
