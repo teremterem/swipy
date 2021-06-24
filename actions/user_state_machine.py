@@ -125,7 +125,7 @@ class UserStateMachine(UserModel):
             trigger='wait_for_partner_to_confirm',
             source=[
                 UserState.ASKED_TO_JOIN,
-            ],
+            ],  # TODO oleksandr: replace with asterisk (or, at least, chitchatable_states) to be safe ?
             dest=UserState.WAITING_PARTNER_CONFIRM,
             before=[
                 self._assert_partner_id_arg_not_empty,
@@ -165,7 +165,7 @@ class UserStateMachine(UserModel):
             source=[
                 UserState.ASKED_TO_CONFIRM,
                 UserState.WAITING_PARTNER_CONFIRM,
-            ],
+            ],  # TODO oleksandr: replace with asterisk (or, at least, chitchatable_states) to be safe ?
             dest=UserState.ROOMED,
             before=[
                 self._assert_partner_id_arg_not_empty,
@@ -193,14 +193,21 @@ class UserStateMachine(UserModel):
             dest=UserState.REJECTED_CONFIRM,
         )
 
-    def is_waiting_for(self, partner_id: Optional[Text]):
+    def is_waiting_to_be_confirmed_by(self, partner_id: Text):
         if not partner_id:
             return False
 
-        return self.partner_id == partner_id and self.state in (
-            UserState.WAITING_PARTNER_JOIN,
-            UserState.WAITING_PARTNER_CONFIRM,
+        return (
+                self.state == UserState.WAITING_PARTNER_CONFIRM and
+                self.partner_id == partner_id and
+                not self.has_state_timed_out()
         )
+
+    def has_state_timed_out(self):
+        if not self.state_timeout_ts:  # 0 and None are treated equally
+            return False
+
+        return self.state_timeout_ts < current_timestamp_int()
 
     @staticmethod
     def _assert_partner_id_arg_not_empty(event: EventData) -> None:

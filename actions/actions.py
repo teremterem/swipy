@@ -17,7 +17,7 @@ from actions import telegram_helpers
 from actions.rasa_callbacks import EXTERNAL_ASK_TO_JOIN_INTENT, EXTERNAL_ASK_TO_CONFIRM_INTENT
 from actions.user_state_machine import UserStateMachine, UserState, NATIVE_UNKNOWN, PARTNER_CONFIRMATION_TIMEOUT_SEC
 from actions.user_vault import UserVault, IUserVault
-from actions.utils import InvalidSwiperStateError, stack_trace_to_str, datetime_now, \
+from actions.utils import stack_trace_to_str, datetime_now, \
     get_intent_of_latest_message_reliably, SwiperError
 
 logger = logging.getLogger(__name__)
@@ -440,7 +440,13 @@ class ActionTryToCreateRoom(BaseSwiperAction):
     ) -> List[Dict[Text, Any]]:
         partner = user_vault.get_user(current_user.partner_id)
 
-        if False:  # TODO TODO TODO oleksandr: if not partner.is_waiting_for(current_user.user_id):
+        if partner.is_waiting_to_be_confirmed_by(current_user.user_id):
+            # current user was the one asked to confirm and they just did => create the room
+            return await self.create_room(dispatcher, current_user, partner, user_vault)
+        elif partner.chitchat_can_be_offered():
+            # confirm with the partner before creating any rooms
+            return await self.confirm_with_asker(dispatcher, current_user, partner, user_vault)
+        else:
             # noinspection PyUnresolvedReferences
             current_user.request_chitchat()
             user_vault.save(current_user)
@@ -454,19 +460,6 @@ class ActionTryToCreateRoom(BaseSwiperAction):
                 ),
                 FollowupAction('action_find_partner'),
             ]
-
-        if current_user.state == UserState.ASKED_TO_JOIN:
-            # instead of creating a room, first confirm with the partner
-            return await self.confirm_with_asker(dispatcher, current_user, partner, user_vault)
-
-        elif current_user.state == UserState.ASKED_TO_CONFIRM:
-            return await self.create_room(dispatcher, current_user, partner, user_vault)
-
-        else:  # invalid state
-            raise InvalidSwiperStateError(
-                f"Room cannot be created because current user {repr(current_user.user_id)} "
-                f"is in invalid state: {repr(current_user.state)}"
-            )
 
     @staticmethod
     async def confirm_with_asker(
