@@ -40,6 +40,7 @@ SWIPER_ERROR_TRACE_SLOT = 'swiper_error_trace'
 PARTNER_ID_TO_LET_GO_SLOT = 'partner_id_to_let_go'
 
 EXTERNAL_FIND_PARTNER_INTENT = 'EXTERNAL_find_partner'
+EXTERNAL_EXPIRE_PARTNER_CONFIRMATION = 'EXTERNAL_expire_partner_confirmation'
 ACTION_FIND_PARTNER = 'action_find_partner'
 ACTION_TRY_TO_CREATE_ROOM = 'action_try_to_create_room'
 
@@ -277,6 +278,18 @@ def schedule_find_partner_reminder() -> ReminderScheduled:
     return reminder
 
 
+def schedule_expire_partner_confirmation() -> ReminderScheduled:
+    date = datetime_now() + datetime.timedelta(seconds=QUESTION_TIMEOUT_SEC)
+
+    reminder = ReminderScheduled(
+        EXTERNAL_EXPIRE_PARTNER_CONFIRMATION,
+        trigger_date_time=date,
+        name=EXTERNAL_EXPIRE_PARTNER_CONFIRMATION,
+        kill_on_user_message=False,
+    )
+    return reminder
+
+
 class ActionFindPartner(BaseSwiperAction):
     def name(self) -> Text:
         return ACTION_FIND_PARTNER
@@ -480,6 +493,7 @@ class ActionTryToCreateRoom(BaseSwiperAction):
         user_vault.save(current_user)
 
         return [
+            schedule_expire_partner_confirmation(),
             schedule_find_partner_reminder(),
             SlotSet(
                 key=SWIPER_ACTION_RESULT_SLOT,
@@ -597,6 +611,37 @@ class ActionRejectInvitation(BaseSwiperAction):
         # noinspection PyUnresolvedReferences
         current_user.reject()
         user_vault.save(current_user)
+
+        return [
+            SlotSet(
+                key=SWIPER_ACTION_RESULT_SLOT,
+                value=SwiperActionResult.SUCCESS,
+            ),
+        ]
+
+
+class ActionExpirePartnerConfirmation(BaseSwiperAction):
+    def name(self) -> Text:
+        return 'action_expire_partner_confirmation'
+
+    async def swipy_run(
+            self, dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
+            current_user: UserStateMachine,
+            user_vault: IUserVault,
+    ) -> List[Dict[Text, Any]]:
+        if current_user.state != UserState.WAITING_PARTNER_CONFIRM:
+            # user was not waiting for anybody's confirmation anymore anyway - do nothing and cover your tracks
+            return [
+                UserUtteranceReverted(),
+            ]
+
+        # noinspection PyUnresolvedReferences
+        current_user.request_chitchat()
+        user_vault.save(current_user)
+
+        dispatcher.utter_message(response='utter_partner_already_gone')
 
         return [
             SlotSet(
