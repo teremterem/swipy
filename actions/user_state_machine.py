@@ -7,7 +7,7 @@ from transitions import Machine, EventData
 from actions.utils import current_timestamp_int, SwiperStateMachineError, format_swipy_timestamp
 
 SWIPER_STATE_TIMEOUT_SEC = int(os.getenv('SWIPER_STATE_TIMEOUT_SEC', '14400'))  # 60 * 60 * 4 seconds = 4 hours
-PARTNER_CONFIRMATION_TIMEOUT_SEC = float(os.getenv('PARTNER_CONFIRMATION_TIMEOUT_SEC', '120'))  # two minutes
+PARTNER_CONFIRMATION_TIMEOUT_SEC = int(os.getenv('PARTNER_CONFIRMATION_TIMEOUT_SEC', '120'))  # two minutes
 
 NATIVE_UNKNOWN = 'unknown'
 
