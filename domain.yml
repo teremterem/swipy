@@ -141,7 +141,7 @@ responses:
       text: "Hooray! I have found someone who is willing to chitchat!\n \n<b>Are you ready for a video call?</b> \U0001F3A5 ☎️"
   utter_partner_already_gone:
   - text: |-
-      That person has become unavailable 😵
+      That person seems to have become unavailable 😵
        
       Fear not!
        

@@ -364,7 +364,8 @@ class ActionFindPartner(BaseSwiperAction):
             #     ActionReverted(),
             # ]
         else:
-            dispatcher.utter_message(response='utter_no_one_was_found')
+            pass
+            # dispatcher.utter_message(response='utter_no_one_was_found')
 
         return [
             SlotSet(
@@ -638,7 +639,7 @@ class ActionExpirePartnerConfirmation(BaseSwiperAction):
             ]
 
         # noinspection PyUnresolvedReferences
-        current_user.request_chitchat()
+        current_user.request_chitchat()  # TODO oleksandr: don't do this! rely on wait_partner_confirm timing instead ?
         user_vault.save(current_user)
 
         dispatcher.utter_message(response='utter_partner_already_gone')
