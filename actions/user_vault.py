@@ -66,7 +66,7 @@ class BaseUserVault(IUserVault, ABC):
         return user
 
     def _get_random_available_partner_from_tiers(self, current_user: UserStateMachine) -> Optional[UserStateMachine]:
-        for tier in UserState.chitchatable_tiers:
+        for tier in UserState.offerable_tiers:
             partner = self._get_random_available_partner(tier, current_user.user_id)
             if partner:
                 return partner

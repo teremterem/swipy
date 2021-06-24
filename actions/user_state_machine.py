@@ -44,14 +44,13 @@ class UserState:
         REJECTED_JOIN,
         REJECTED_CONFIRM,
     ]
-    chitchatable_states = [
-                              WANTS_CHITCHAT,
-                              OK_TO_CHITCHAT,
-                          ] + states_with_timeouts
+    offerable_states = [
+                           WANTS_CHITCHAT,
+                           OK_TO_CHITCHAT,
+                       ] + states_with_timeouts
 
-    chitchatable_tiers = [
-        chitchatable_states,  # everything is in one tier for now - we are differentiating only by recency of activity
-        # TODO oleksandr: think about it again
+    offerable_tiers = [  # TODO oleksandr: do we really need the concept of tiers ?
+        offerable_states,  # everything is in one tier for now - we are differentiating only by recency of activity
     ]
 
 
@@ -125,7 +124,7 @@ class UserStateMachine(UserModel):
             trigger='wait_for_partner_to_confirm',
             source=[
                 UserState.ASKED_TO_JOIN,
-            ],  # TODO oleksandr: replace with asterisk (or, at least, chitchatable_states) to be safe ?
+            ],  # TODO oleksandr: replace with asterisk (or, at least, offerable_states) to be safe ?
             dest=UserState.WAITING_PARTNER_CONFIRM,
             before=[
                 self._assert_partner_id_arg_not_empty,
@@ -136,7 +135,7 @@ class UserStateMachine(UserModel):
         # noinspection PyTypeChecker
         self.machine.add_transition(
             trigger='become_asked_to_join',
-            source=UserState.chitchatable_states,
+            source=UserState.offerable_states,
             dest=UserState.ASKED_TO_JOIN,
             before=[
                 self._assert_partner_id_arg_not_empty,
@@ -149,7 +148,7 @@ class UserStateMachine(UserModel):
         # noinspection PyTypeChecker
         self.machine.add_transition(
             trigger='become_asked_to_confirm',
-            source=UserState.chitchatable_states,
+            source=UserState.offerable_states,
             dest=UserState.ASKED_TO_CONFIRM,
             before=[
                 self._assert_partner_id_arg_not_empty,
@@ -165,7 +164,7 @@ class UserStateMachine(UserModel):
             source=[
                 UserState.ASKED_TO_CONFIRM,
                 UserState.WAITING_PARTNER_CONFIRM,
-            ],  # TODO oleksandr: replace with asterisk (or, at least, chitchatable_states) to be safe ?
+            ],  # TODO oleksandr: replace with asterisk (or, at least, offerable_states) to be safe ?
             dest=UserState.ROOMED,
             before=[
                 self._assert_partner_id_arg_not_empty,
@@ -200,14 +199,17 @@ class UserStateMachine(UserModel):
         return (
                 self.state == UserState.WAITING_PARTNER_CONFIRM and
                 self.partner_id == partner_id and
-                not self.has_state_timed_out()
+                not self.has_become_discoverable()  # the state hasn't timed out yet
         )
 
-    def has_state_timed_out(self):
+    def has_become_discoverable(self):  # TODO oleksandr: the meaning of this method is still somewhat unclear
         if not self.state_timeout_ts:  # 0 and None are treated equally
-            return False
+            return True  # users in states that don't support timeouts are immediately discoverable
 
         return self.state_timeout_ts < current_timestamp_int()
+
+    def chitchat_can_be_offered(self):
+        return self.state in UserState.offerable_states and self.has_become_discoverable()
 
     @staticmethod
     def _assert_partner_id_arg_not_empty(event: EventData) -> None:
