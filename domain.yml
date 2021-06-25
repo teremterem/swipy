@@ -23,6 +23,8 @@ intents:
     use_entities: true
 - EXTERNAL_ask_to_join:
     use_entities: true
+- EXTERNAL_ask_to_confirm:
+    use_entities: true
 - EXTERNAL_join_room:
     use_entities: true
 - EXTERNAL_find_partner:
@@ -30,6 +32,8 @@ intents:
 - EXTERNAL_let_partner_go:
     use_entities: true
 - EXTERNAL_report_unavailable:
+    use_entities: true
+- EXTERNAL_expire_partner_confirmation:
     use_entities: true
 entities:
 - partner_id
@@ -137,7 +141,7 @@ responses:
       text: "Hooray! I have found someone who is willing to chitchat!\n \n<b>Are you ready for a video call?</b> \U0001F3A5 ☎️"
   utter_partner_already_gone:
   - text: |-
-      That person has become unavailable 😵
+      That person seems to have become unavailable 😵
        
       Fear not!
        
@@ -173,5 +177,6 @@ actions:
 - action_join_room
 - action_do_not_disturb
 - action_reject_invitation
+- action_expire_partner_confirmation
 forms: {}
 e2e_actions: []

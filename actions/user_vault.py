@@ -1,12 +1,16 @@
+import logging
 from abc import ABC, abstractmethod
 from dataclasses import asdict
 from decimal import Decimal
+from pprint import pformat
 from typing import Text, Optional, List, Type, Dict, Any, Iterable
 
 from boto3.dynamodb.conditions import Key, Attr
 
 from actions.user_state_machine import UserStateMachine, UserState
 from actions.utils import current_timestamp_int
+
+logger = logging.getLogger(__name__)
 
 
 class IUserVault(ABC):
@@ -66,7 +70,7 @@ class BaseUserVault(IUserVault, ABC):
         return user
 
     def _get_random_available_partner_from_tiers(self, current_user: UserStateMachine) -> Optional[UserStateMachine]:
-        for tier in UserState.chitchatable_tiers:
+        for tier in UserState.offerable_tiers:
             partner = self._get_random_available_partner(tier, current_user.user_id)
             if partner:
                 return partner
@@ -114,6 +118,9 @@ class NaiveDdbUserVault(BaseUserVault):
 
         # noinspection PyDataclass
         user_dict = asdict(user)
+
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('SAVE USER:\n%s', pformat(user_dict))
         # https://stackoverflow.com/a/43672209/2040370
         user_state_machine_table.put_item(Item=user_dict)
 

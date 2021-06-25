@@ -111,7 +111,19 @@ def test_get_random_available_partner(
     actual_random_user = user_vault.get_random_available_partner(user1)
     assert actual_random_user == user2
 
-    mock_get_random_available_partner_dict.assert_called_once_with(('wants_chitchat',), 'existing_user_id1')
+    mock_get_random_available_partner_dict.assert_called_once_with(
+        [
+            'wants_chitchat',
+            'ok_to_chitchat',
+            'waiting_partner_confirm',
+            'asked_to_join',
+            'asked_to_confirm',
+            'roomed',
+            'rejected_join',
+            'rejected_confirm',
+        ],
+        'existing_user_id1',
+    )
 
     assert user_vault.get_user(actual_random_user.user_id) is actual_random_user  # make sure the user was cached
 
@@ -127,9 +139,19 @@ def test_get_random_available_partner_none(
     assert user_vault.get_random_available_partner(user1) is None
 
     assert mock_get_random_available_partner_dict.mock_calls == [
-        call(('wants_chitchat',), 'existing_user_id1'),
-        call(('ok_to_chitchat',), 'existing_user_id1'),
-        call(('roomed',), 'existing_user_id1'),
+        call(
+            [
+                'wants_chitchat',
+                'ok_to_chitchat',
+                'waiting_partner_confirm',
+                'asked_to_join',
+                'asked_to_confirm',
+                'roomed',
+                'rejected_join',
+                'rejected_confirm',
+            ],
+            'existing_user_id1',
+        ),
     ]
 
 
@@ -148,7 +170,7 @@ def test_save_new_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> None:
     assert user_state_machine_table.scan()['Items'] == [
         {
             'user_id': 'existing_user_id1',
-            'state': 'waiting_partner_join',
+            'state': 'waiting_partner_confirm',
             'partner_id': 'existing_user_id2',
             'newbie': False,
             'state_timestamp': Decimal(0),
@@ -333,7 +355,7 @@ def test_ddb_get_random_available_partner_dict(
 
 
 @pytest.mark.usefixtures('create_user_state_machine_table')
-def test_ddb_get_random_available_partner_dict_none(user_dicts: List[Dict[Text, Any]]) -> None:
+def test_ddb_get_random_available_partner_dict_none() -> None:
     from actions.aws_resources import user_state_machine_table
 
     user_state_machine_table.put_item(Item={

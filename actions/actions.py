@@ -14,16 +14,16 @@ from rasa_sdk.executor import CollectingDispatcher
 from actions import daily_co
 from actions import rasa_callbacks
 from actions import telegram_helpers
-from actions.user_state_machine import UserStateMachine, UserState, NATIVE_UNKNOWN
+from actions.rasa_callbacks import EXTERNAL_ASK_TO_JOIN_INTENT, EXTERNAL_ASK_TO_CONFIRM_INTENT
+from actions.user_state_machine import UserStateMachine, UserState, NATIVE_UNKNOWN, PARTNER_CONFIRMATION_TIMEOUT_SEC
 from actions.user_vault import UserVault, IUserVault
-from actions.utils import InvalidSwiperStateError, stack_trace_to_str, datetime_now
+from actions.utils import stack_trace_to_str, datetime_now, get_intent_of_latest_message_reliably, SwiperError
 
 logger = logging.getLogger(__name__)
 
 TELL_USER_ABOUT_ERRORS = strtobool(os.getenv('TELL_USER_ABOUT_ERRORS', 'yes'))
 SEND_ERROR_STACK_TRACE_TO_SLOT = strtobool(os.getenv('SEND_ERROR_STACK_TRACE_TO_SLOT', 'yes'))
 FIND_PARTNER_FREQUENCY_SEC = float(os.getenv('FIND_PARTNER_FREQUENCY_SEC', '10'))
-QUESTION_TIMEOUT_SEC = float(os.getenv('QUESTION_TIMEOUT_SEC', '120'))
 GREETING_MAKES_USER_OK_TO_CHITCHAT = strtobool(os.getenv('GREETING_MAKES_USER_OK_TO_CHITCHAT', 'yes'))
 
 SWIPER_STATE_SLOT = 'swiper_state'
@@ -38,6 +38,7 @@ SWIPER_ERROR_TRACE_SLOT = 'swiper_error_trace'
 PARTNER_ID_TO_LET_GO_SLOT = 'partner_id_to_let_go'
 
 EXTERNAL_FIND_PARTNER_INTENT = 'EXTERNAL_find_partner'
+EXTERNAL_EXPIRE_PARTNER_CONFIRMATION = 'EXTERNAL_expire_partner_confirmation'
 ACTION_FIND_PARTNER = 'action_find_partner'
 ACTION_TRY_TO_CREATE_ROOM = 'action_try_to_create_room'
 
@@ -275,6 +276,18 @@ def schedule_find_partner_reminder() -> ReminderScheduled:
     return reminder
 
 
+def schedule_expire_partner_confirmation() -> ReminderScheduled:
+    date = datetime_now() + datetime.timedelta(seconds=PARTNER_CONFIRMATION_TIMEOUT_SEC)
+
+    reminder = ReminderScheduled(
+        EXTERNAL_EXPIRE_PARTNER_CONFIRMATION,
+        trigger_date_time=date,
+        name=EXTERNAL_EXPIRE_PARTNER_CONFIRMATION,
+        kill_on_user_message=False,
+    )
+    return reminder
+
+
 class ActionFindPartner(BaseSwiperAction):
     def name(self) -> Text:
         return ACTION_FIND_PARTNER
@@ -286,19 +299,20 @@ class ActionFindPartner(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        # tracker.get_intent_of_latest_message() doesn't work for artificial messages because intent_ranking is absent
-        triggered_by_reminder = (
-                tracker.latest_message and
-                (tracker.latest_message.get('intent') or {}).get('name') == EXTERNAL_FIND_PARTNER_INTENT
-        )  # TODO oleksandr: extract part of this expression to utils.py::get_intent_of_latest_message_reliably() ?
+        latest_intent = get_intent_of_latest_message_reliably(tracker)
+        triggered_by_reminder = latest_intent == EXTERNAL_FIND_PARTNER_INTENT
 
-        should_be_silent = (
+        triggered_as_followup = (
                 tracker.latest_action_name == ACTION_TRY_TO_CREATE_ROOM and
                 tracker.followup_action == ACTION_FIND_PARTNER
-        )  # is this action invoked as a side-effect of user saying yes to an invitation?
+        )  # if this action was a side-effect of a user saying yes to an invitation then no messages to the user
 
         if triggered_by_reminder:
-            if current_user.state != UserState.WANTS_CHITCHAT:
+            if current_user.state not in [
+                UserState.WANTS_CHITCHAT,
+                UserState.OK_TO_CHITCHAT,
+                UserState.WAITING_PARTNER_CONFIRM,
+            ]:
                 # the search was stopped for the user one way or another (user said stop, or was asked to join etc.)
                 # => don't do any partner searching and don't schedule another reminder
                 return [
@@ -307,7 +321,7 @@ class ActionFindPartner(BaseSwiperAction):
                 ]
 
         else:  # user just requested chitchat
-            if not should_be_silent:
+            if not triggered_as_followup:
                 dispatcher.utter_message(response='utter_ok_arranging_chitchat')
 
             # noinspection PyUnresolvedReferences
@@ -328,9 +342,13 @@ class ActionFindPartner(BaseSwiperAction):
 
             events = [schedule_find_partner_reminder()]
 
+            # TODO oleksandr: refactor everything in the method below this line
+
             if triggered_by_reminder:
                 # get rid of artificial intent so it doesn't interfere with story predictions
                 events.append(UserUtteranceReverted())
+            # elif triggered_as_followup:
+            #     events.append(ActionReverted())
             else:
                 events.append(SlotSet(
                     key=SWIPER_ACTION_RESULT_SLOT,
@@ -338,8 +356,14 @@ class ActionFindPartner(BaseSwiperAction):
                 ))
             return events
 
-        if not should_be_silent:
-            dispatcher.utter_message(response='utter_no_one_was_found')
+        if triggered_as_followup:
+            pass
+            # return [
+            #     ActionReverted(),
+            # ]
+        else:
+            pass
+            # dispatcher.utter_message(response='utter_no_one_was_found')
 
         return [
             SlotSet(
@@ -360,15 +384,28 @@ class ActionAskToJoin(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        partner_id = tracker.get_slot(rasa_callbacks.PARTNER_ID_SLOT)
-        # noinspection PyUnresolvedReferences
-        current_user.become_asked(partner_id)
-        user_vault.save(current_user)
+        latest_intent = get_intent_of_latest_message_reliably(tracker)
 
-        if current_user.state == UserState.ASKED_TO_CONFIRM:
+        if latest_intent == EXTERNAL_ASK_TO_CONFIRM_INTENT:
+            asked_to_confirm = True
+        elif latest_intent == EXTERNAL_ASK_TO_JOIN_INTENT:
+            asked_to_confirm = False
+        else:
+            raise SwiperError(
+                f"{repr(self.name())} was triggered by an unexpected intent ({repr(latest_intent)}) - either "
+                f"{repr(EXTERNAL_ASK_TO_JOIN_INTENT)} or {repr(EXTERNAL_ASK_TO_CONFIRM_INTENT)} was expected"
+            )
+
+        partner_id = tracker.get_slot(rasa_callbacks.PARTNER_ID_SLOT)
+        if asked_to_confirm:
             response_template = 'utter_found_someone_check_ready'
-        else:  # current_user.state == UserState.ASKED_TO_JOIN
+            # noinspection PyUnresolvedReferences
+            current_user.become_asked_to_confirm(partner_id)
+        else:
             response_template = 'utter_someone_wants_to_chat'
+            # noinspection PyUnresolvedReferences
+            current_user.become_asked_to_join(partner_id)
+        user_vault.save(current_user)
 
         partner_photo_file_id = tracker.get_slot(rasa_callbacks.PARTNER_PHOTO_FILE_ID_SLOT)
         if partner_photo_file_id:
@@ -401,7 +438,14 @@ class ActionTryToCreateRoom(BaseSwiperAction):
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
         partner = user_vault.get_user(current_user.partner_id)
-        if not partner.is_waiting_for(current_user.user_id):
+
+        if partner.is_waiting_to_be_confirmed_by(current_user.user_id):
+            # current user was the one asked to confirm and they just did => create the room
+            return await self.create_room(dispatcher, current_user, partner, user_vault)
+        elif partner.chitchat_can_be_offered():
+            # confirm with the partner before creating any rooms
+            return await self.confirm_with_asker(dispatcher, current_user, partner, user_vault)
+        else:
             # noinspection PyUnresolvedReferences
             current_user.request_chitchat()
             user_vault.save(current_user)
@@ -413,21 +457,8 @@ class ActionTryToCreateRoom(BaseSwiperAction):
                     key=SWIPER_ACTION_RESULT_SLOT,
                     value=SwiperActionResult.PARTNER_NOT_WAITING_ANYMORE,
                 ),
-                FollowupAction('action_find_partner'),  # TODO oleksandr: make sure it doesn't utter anything
+                FollowupAction('action_find_partner'),
             ]
-
-        if current_user.state == UserState.ASKED_TO_JOIN:
-            # instead of creating a room, first confirm with the partner
-            return await self.confirm_with_asker(dispatcher, current_user, partner, user_vault)
-
-        elif current_user.state == UserState.ASKED_TO_CONFIRM:
-            return await self.create_room(dispatcher, current_user, partner, user_vault)
-
-        else:  # invalid state
-            raise InvalidSwiperStateError(
-                f"Room cannot be created because current user {repr(current_user.user_id)} "
-                f"is in invalid state: {repr(current_user.state)}"
-            )
 
     @staticmethod
     async def confirm_with_asker(
@@ -442,7 +473,7 @@ class ActionTryToCreateRoom(BaseSwiperAction):
 
         # noinspection PyBroadException
         try:
-            await rasa_callbacks.ask_to_join(current_user.user_id, partner.user_id, user_profile_photo_id)
+            await rasa_callbacks.ask_to_confirm(current_user.user_id, partner.user_id, user_profile_photo_id)
         except Exception:
             # noinspection PyUnresolvedReferences
             current_user.request_chitchat()
@@ -450,10 +481,11 @@ class ActionTryToCreateRoom(BaseSwiperAction):
             raise
 
         # noinspection PyUnresolvedReferences
-        current_user.wait_for_partner(partner.user_id)
+        current_user.wait_for_partner_to_confirm(partner.user_id)
         user_vault.save(current_user)
 
         return [
+            schedule_expire_partner_confirmation(),
             schedule_find_partner_reminder(),
             SlotSet(
                 key=SWIPER_ACTION_RESULT_SLOT,
@@ -571,6 +603,33 @@ class ActionRejectInvitation(BaseSwiperAction):
         # noinspection PyUnresolvedReferences
         current_user.reject()
         user_vault.save(current_user)
+
+        return [
+            SlotSet(
+                key=SWIPER_ACTION_RESULT_SLOT,
+                value=SwiperActionResult.SUCCESS,
+            ),
+        ]
+
+
+class ActionExpirePartnerConfirmation(BaseSwiperAction):
+    def name(self) -> Text:
+        return 'action_expire_partner_confirmation'
+
+    async def swipy_run(
+            self, dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
+            current_user: UserStateMachine,
+            user_vault: IUserVault,
+    ) -> List[Dict[Text, Any]]:
+        if current_user.state != UserState.WAITING_PARTNER_CONFIRM:
+            # user was not waiting for anybody's confirmation anymore anyway - do nothing and cover your tracks
+            return [
+                UserUtteranceReverted(),
+            ]
+
+        dispatcher.utter_message(response='utter_partner_already_gone')
 
         return [
             SlotSet(

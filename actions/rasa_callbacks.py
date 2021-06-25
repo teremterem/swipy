@@ -18,6 +18,10 @@ PARTNER_ID_SLOT = 'partner_id'
 PARTNER_PHOTO_FILE_ID_SLOT = 'partner_photo_file_id'
 ROOM_URL_SLOT = 'room_url'
 
+EXTERNAL_ASK_TO_JOIN_INTENT = 'EXTERNAL_ask_to_join'
+EXTERNAL_ASK_TO_CONFIRM_INTENT = 'EXTERNAL_ask_to_confirm'
+EXTERNAL_JOIN_ROOM_INTENT = 'EXTERNAL_join_room'
+
 
 async def ask_to_join(
         sender_id: Text,
@@ -28,7 +32,25 @@ async def ask_to_join(
     return await _trigger_external_rasa_intent(
         sender_id,
         receiver_id,
-        'EXTERNAL_ask_to_join',
+        EXTERNAL_ASK_TO_JOIN_INTENT,
+        {
+            PARTNER_ID_SLOT: sender_id,
+            PARTNER_PHOTO_FILE_ID_SLOT: photo_file_id,
+        },
+        suppress_callback_errors,
+    )
+
+
+async def ask_to_confirm(
+        sender_id: Text,
+        receiver_id: Text,
+        photo_file_id: Text,
+        suppress_callback_errors: bool = False,
+) -> Optional[Dict[Text, Any]]:
+    return await _trigger_external_rasa_intent(
+        sender_id,
+        receiver_id,
+        EXTERNAL_ASK_TO_CONFIRM_INTENT,
         {
             PARTNER_ID_SLOT: sender_id,
             PARTNER_PHOTO_FILE_ID_SLOT: photo_file_id,
@@ -46,7 +68,7 @@ async def join_room(
     return await _trigger_external_rasa_intent(
         sender_id,
         receiver_id,
-        'EXTERNAL_join_room',
+        EXTERNAL_JOIN_ROOM_INTENT,
         {
             PARTNER_ID_SLOT: sender_id,
             ROOM_URL_SLOT: room_url,
@@ -80,9 +102,8 @@ async def _trigger_external_rasa_intent(
         ) as resp:
             resp_json = await resp.json()
 
-    # TODO oleksandr: change log level back to DEBUG when you decide how to identify and react to failures
-    if logger.isEnabledFor(logging.INFO):
-        logger.info(
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug(
             'TRIGGER_INTENT %r RESULT:\n\nSENDER_ID: %r\n\nRECEIVER_ID: %r\n\nENTITIES:\n%s\n\nRESPONSE:\n%s',
             intent_name,
             sender_id,
