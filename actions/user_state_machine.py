@@ -169,6 +169,7 @@ class UserStateMachine(UserModel):
             before=[
                 self._assert_partner_id_arg_not_empty,
                 self._assert_partner_id_arg_same,
+                # TODO oleksandr: assert WAITING_PARTNER_CONFIRM has not timed out yet ? (what about ASKED_TO_CONFIRM ?)
             ],
             after=[
                 self._graduate_from_newbie,

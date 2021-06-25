@@ -29,6 +29,9 @@ def pytest_configure(*args, **kwargs) -> None:
     os.environ.pop('GREETING_MAKES_USER_OK_TO_CHITCHAT', None)
 
 
+pytest_configure()  # TODO oleksandr: is this a bad practice ? why ?
+
+
 @pytest.fixture
 def mock_aioresponses() -> aioresponses:
     with aioresponses() as m:
