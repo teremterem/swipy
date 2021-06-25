@@ -59,7 +59,7 @@ rules:
   steps:
   - intent: want_chitchat
   - action: action_find_partner
-- rule: blahblah
+- rule: it took too long for partner to confirm - we need to let the user know that pertner is likely not available
   steps:
   - intent: EXTERNAL_expire_partner_confirmation
   - action: action_expire_partner_confirmation

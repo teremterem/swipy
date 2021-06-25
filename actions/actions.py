@@ -270,7 +270,7 @@ def schedule_find_partner_reminder() -> ReminderScheduled:
     reminder = ReminderScheduled(
         EXTERNAL_FIND_PARTNER_INTENT,
         trigger_date_time=date,
-        name=EXTERNAL_FIND_PARTNER_INTENT,
+        name=EXTERNAL_FIND_PARTNER_INTENT,  # ensures rescheduling of the existing reminder
         kill_on_user_message=False,
     )
     return reminder
@@ -282,7 +282,7 @@ def schedule_expire_partner_confirmation() -> ReminderScheduled:
     reminder = ReminderScheduled(
         EXTERNAL_EXPIRE_PARTNER_CONFIRMATION,
         trigger_date_time=date,
-        name=EXTERNAL_EXPIRE_PARTNER_CONFIRMATION,
+        name=EXTERNAL_EXPIRE_PARTNER_CONFIRMATION,  # ensures rescheduling of the existing reminder
         kill_on_user_message=False,
     )
     return reminder
@@ -547,12 +547,12 @@ class ActionJoinRoom(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        dispatcher.utter_message(response='utter_partner_ready_room_url')
-
         partner_id = tracker.get_slot(rasa_callbacks.PARTNER_ID_SLOT)
         # noinspection PyUnresolvedReferences
         current_user.join_room(partner_id)
         user_vault.save(current_user)
+
+        dispatcher.utter_message(response='utter_partner_ready_room_url')
 
         return [
             SlotSet(
