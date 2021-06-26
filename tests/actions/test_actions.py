@@ -357,9 +357,9 @@ async def test_action_find_partner(
     (None, None, False),
     ('some_other_action', None, False),
     ('some_other_action', 'some_weird_followup', False),
-    ('action_try_to_create_room', None, False),
+    ('action_accept_invitation', None, False),
     (None, 'action_find_partner', False),
-    ('action_try_to_create_room', 'action_find_partner', True),
+    ('action_accept_invitation', 'action_find_partner', True),
 ])
 @patch('time.time', Mock(return_value=1619945501))
 @patch.object(UserVault, '_get_random_available_partner_dict')
@@ -556,7 +556,7 @@ async def test_action_ask_to_join(
 @pytest.mark.usefixtures('create_user_state_machine_table', 'wrap_actions_datetime_now')
 @patch('time.time', Mock(return_value=1619945501))  # "now"
 @patch('actions.daily_co.create_room', wraps=daily_co.create_room)
-async def test_action_try_to_create_room(
+async def test_action_accept_invitation(
         wrap_daily_co_create_room: AsyncMock,
         mock_aioresponses: aioresponses,
         tracker: Tracker,
@@ -588,8 +588,8 @@ async def test_action_try_to_create_room(
         newbie=True,
     ))
 
-    action = actions.ActionTryToCreateRoom()
-    assert action.name() == 'action_try_to_create_room'
+    action = actions.ActionAcceptInvitation()
+    assert action.name() == 'action_accept_invitation'
 
     actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == [
@@ -657,7 +657,7 @@ async def test_action_try_to_create_room(
 @pytest.mark.usefixtures('create_user_state_machine_table', 'wrap_actions_datetime_now')
 @patch('time.time', Mock(return_value=1619945501))  # "now"
 @patch('telebot.apihelper._make_request')
-async def test_action_try_to_create_room_confirm_with_asker(
+async def test_action_accept_invitation_confirm_with_asker(
         mock_telebot_make_request: MagicMock,
         mock_aioresponses: aioresponses,
         tracker: Tracker,
@@ -683,7 +683,7 @@ async def test_action_try_to_create_room_confirm_with_asker(
         newbie=True,
     ))
 
-    actual_events = await actions.ActionTryToCreateRoom().run(dispatcher, tracker, domain)
+    actual_events = await actions.ActionAcceptInvitation().run(dispatcher, tracker, domain)
     assert actual_events == [
         {
             'date_time': '2021-05-25T00:02:00',
@@ -762,7 +762,7 @@ async def test_action_try_to_create_room_confirm_with_asker(
 ])
 @pytest.mark.usefixtures('create_user_state_machine_table')
 @patch('time.time', Mock(return_value=1619945501))
-async def test_action_try_to_create_room_partner_not_waiting(
+async def test_action_accept_invitation_partner_not_waiting(
         mock_aioresponses: aioresponses,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
@@ -777,7 +777,7 @@ async def test_action_try_to_create_room_partner_not_waiting(
         partner_id='an_asker',
     ))
 
-    actual_events = await actions.ActionTryToCreateRoom().run(dispatcher, tracker, domain)
+    actual_events = await actions.ActionAcceptInvitation().run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'partner_not_waiting_anymore'),
         FollowupAction('action_find_partner'),
@@ -824,7 +824,7 @@ async def test_action_try_to_create_room_partner_not_waiting(
     ),
 ])
 @pytest.mark.usefixtures('create_user_state_machine_table', 'wrap_traceback_format_exception')
-async def test_action_try_to_create_room_no_partner_id(
+async def test_action_accept_invitation_no_partner_id(
         mock_aioresponses: aioresponses,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
@@ -840,7 +840,7 @@ async def test_action_try_to_create_room_no_partner_id(
     ))
     user_vault.save(current_user)
 
-    actual_events = await actions.ActionTryToCreateRoom().run(dispatcher, tracker, domain)
+    actual_events = await actions.ActionAcceptInvitation().run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'error'),
         SlotSet(

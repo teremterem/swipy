@@ -40,7 +40,7 @@ PARTNER_ID_TO_LET_GO_SLOT = 'partner_id_to_let_go'
 EXTERNAL_FIND_PARTNER_INTENT = 'EXTERNAL_find_partner'
 EXTERNAL_EXPIRE_PARTNER_CONFIRMATION = 'EXTERNAL_expire_partner_confirmation'
 ACTION_FIND_PARTNER = 'action_find_partner'
-ACTION_TRY_TO_CREATE_ROOM = 'action_try_to_create_room'
+ACTION_ACCEPT_INVITATION = 'action_accept_invitation'
 
 
 class SwiperActionResult:
@@ -303,7 +303,7 @@ class ActionFindPartner(BaseSwiperAction):
         triggered_by_reminder = latest_intent == EXTERNAL_FIND_PARTNER_INTENT
 
         triggered_as_followup = (
-                tracker.latest_action_name == ACTION_TRY_TO_CREATE_ROOM and
+                tracker.latest_action_name == ACTION_ACCEPT_INVITATION and
                 tracker.followup_action == ACTION_FIND_PARTNER
         )  # if this action was a side-effect of a user saying yes to an invitation then no messages to the user
 
@@ -426,9 +426,9 @@ class ActionAskToJoin(BaseSwiperAction):
         ]
 
 
-class ActionTryToCreateRoom(BaseSwiperAction):
+class ActionAcceptInvitation(BaseSwiperAction):
     def name(self) -> Text:
-        return ACTION_TRY_TO_CREATE_ROOM
+        return ACTION_ACCEPT_INVITATION
 
     async def swipy_run(
             self, dispatcher: CollectingDispatcher,
