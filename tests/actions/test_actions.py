@@ -1,5 +1,4 @@
 import re
-import traceback
 import uuid
 from dataclasses import asdict
 from typing import Dict, Text, Any, List, Callable, Tuple, Optional
@@ -19,7 +18,7 @@ from actions.user_vault import UserVault, IUserVault
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('ddb_unit_test_user')
+@pytest.mark.usefixtures('ddb_unit_test_user', 'wrap_traceback_format_exception')
 async def test_action_swiper_error_trace(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
@@ -38,23 +37,14 @@ async def test_action_swiper_error_trace(
         ) -> List[Dict[Text, Any]]:
             raise ValueError('something got out of hand')
 
-    _original_format_exception = traceback.format_exception
-
-    def _wrap_format_exception(*args, **kwargs) -> List[Text]:
-        _original_format_exception(*args, **kwargs)  # make sure parameters don't cause the original function to crash
-        return ['stack', 'trace', 'goes', 'here']
-
-    with patch('traceback.format_exception') as mock_traceback_format_exception:
-        mock_traceback_format_exception.side_effect = _wrap_format_exception
-
-        actual_events = await SomeSwiperAction().run(dispatcher, tracker, domain)
+    actual_events = await SomeSwiperAction().run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'error'),
         SlotSet(
             'swiper_error',
             "ValueError('something got out of hand')",
         ),
-        SlotSet('swiper_error_trace', 'stacktracegoeshere'),
+        SlotSet('swiper_error_trace', 'stack trace goes here'),
         SlotSet('swiper_state', 'new'),
         SlotSet('partner_id', None),
     ]
@@ -232,7 +222,7 @@ async def test_action_session_start_with_slots(
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('create_user_state_machine_table', 'wrap_datetime_now')
+@pytest.mark.usefixtures('create_user_state_machine_table', 'wrap_actions_datetime_now')
 @patch('time.time', Mock(return_value=1619945501))
 @patch.object(UserVault, '_get_random_available_partner_dict')
 @patch('telebot.apihelper._make_request')
@@ -442,10 +432,9 @@ async def test_action_find_partner_no_one(
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('create_user_state_machine_table')
+@pytest.mark.usefixtures('create_user_state_machine_table', 'wrap_traceback_format_exception')
 @patch('time.time', Mock(return_value=1619945501))
 @patch('uuid.uuid4', Mock(return_value=uuid.UUID('aaaabbbb-cccc-dddd-eeee-ffff11112222')))
-@patch('traceback.format_exception', Mock(return_value=['stack', 'trace', 'goes', 'here']))
 @pytest.mark.parametrize(
     'source_swiper_state, latest_intent, destination_swiper_state, set_photo_slot, expected_response_template',
     [
@@ -531,7 +520,7 @@ async def test_action_ask_to_join(
             ),
             SlotSet(
                 'swiper_error_trace',
-                'stacktracegoeshere',
+                'stack trace goes here',
             ),
             SlotSet('swiper_state', source_swiper_state),
             SlotSet('partner_id', 'previous_asker'),
@@ -564,7 +553,7 @@ async def test_action_ask_to_join(
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('create_user_state_machine_table', 'wrap_datetime_now')
+@pytest.mark.usefixtures('create_user_state_machine_table', 'wrap_actions_datetime_now')
 @patch('time.time', Mock(return_value=1619945501))  # "now"
 @patch('actions.daily_co.create_room', wraps=daily_co.create_room)
 async def test_action_try_to_create_room(
@@ -651,7 +640,7 @@ async def test_action_try_to_create_room(
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('create_user_state_machine_table', 'wrap_datetime_now')
+@pytest.mark.usefixtures('create_user_state_machine_table', 'wrap_actions_datetime_now')
 @patch('time.time', Mock(return_value=1619945501))  # "now"
 @patch('telebot.apihelper._make_request')
 async def test_action_try_to_create_room_confirm_with_asker(
@@ -817,8 +806,7 @@ async def test_action_try_to_create_room_partner_not_waiting(
         newbie=True,
     ),
 ])
-@pytest.mark.usefixtures('create_user_state_machine_table')
-@patch('traceback.format_exception', Mock(return_value=['stack', 'trace', 'goes', 'here']))
+@pytest.mark.usefixtures('create_user_state_machine_table', 'wrap_traceback_format_exception')
 async def test_action_try_to_create_room_no_partner_id(
         mock_aioresponses: aioresponses,
         tracker: Tracker,
@@ -844,7 +832,7 @@ async def test_action_try_to_create_room_no_partner_id(
         ),
         SlotSet(
             'swiper_error_trace',
-            'stacktracegoeshere',
+            'stack trace goes here',
         ),
         SlotSet('swiper_state', current_user.state),
         SlotSet('partner_id', current_user.partner_id),
