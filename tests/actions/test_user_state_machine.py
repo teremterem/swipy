@@ -6,38 +6,16 @@ import pytest
 from transitions import MachineError
 
 from actions.user_state_machine import UserStateMachine, UserState
-
-all_expected_states = [
-    'new',
-    'wants_chitchat',
-    'ok_to_chitchat',
-    'waiting_partner_confirm',
-    'asked_to_join',
-    'asked_to_confirm',
-    'roomed',
-    'rejected_join',
-    'rejected_confirm',
-    'do_not_disturb',
-]
-
-all_expected_triggers = [
-    'request_chitchat',
-    'become_ok_to_chitchat',
-    'become_do_not_disturb',
-    'wait_for_partner_to_confirm',
-    'become_asked_to_join',
-    'become_asked_to_confirm',
-    'join_room',
-    'reject',
-]
+from tests.tests_common import all_expected_user_states, all_expected_user_state_machine_triggers
 
 
 def test_all_expected_states() -> None:
-    assert list(UserStateMachine('some_user_id').machine.states.keys()) == all_expected_states
+    assert list(UserStateMachine('some_user_id').machine.states.keys()) == all_expected_user_states
 
 
 def test_all_expected_triggers() -> None:
-    assert UserStateMachine('some_user_id').machine.get_triggers(*all_expected_states) == all_expected_triggers
+    assert UserStateMachine('some_user_id').machine.get_triggers(*all_expected_user_states) == \
+           all_expected_user_state_machine_triggers
 
 
 expected_catch_all_transitions = [
@@ -50,7 +28,7 @@ expected_catch_all_transitions = [
 ]
 
 
-@pytest.mark.parametrize('source_state', all_expected_states)
+@pytest.mark.parametrize('source_state', all_expected_user_states)
 @pytest.mark.parametrize('trigger_name, destination_state, partner_id_param_used', expected_catch_all_transitions)
 def test_catch_all_transitions(
         source_state: Text,
@@ -105,8 +83,8 @@ expected_more_narrow_transitions = [
 def test_expected_more_narrow_transition_list() -> None:
     # make sure we are testing all the transition/initial_state combinations that exist
     assert len({(i[0], i[1]) for i in expected_more_narrow_transitions}) == \
-           len(set(all_expected_states)) * (len(set(all_expected_triggers)) -
-                                            len({i[0] for i in expected_catch_all_transitions}))
+           len(set(all_expected_user_states)) * (len(set(all_expected_user_state_machine_triggers)) -
+                                                 len({i[0] for i in expected_catch_all_transitions}))
 
 
 @pytest.mark.parametrize('initial_newbie_status', [True, False])
@@ -155,8 +133,8 @@ def test_more_narrow_transitions(
 
 
 @patch('time.time', Mock(return_value=1619945501))
-@pytest.mark.parametrize('source_state', all_expected_states)
-@pytest.mark.parametrize('trigger_name', all_expected_triggers)
+@pytest.mark.parametrize('source_state', all_expected_user_states)
+@pytest.mark.parametrize('trigger_name', all_expected_user_state_machine_triggers)
 def test_state_timestamps(source_state: Text, trigger_name: Text) -> None:
     user = UserStateMachine(
         user_id='some_user_id',
