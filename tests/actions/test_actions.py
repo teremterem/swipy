@@ -824,7 +824,7 @@ async def test_action_try_to_create_room_no_partner_id(
     user_vault = UserVault()
     user_vault.save(UserStateMachine(
         user_id='an_asker',
-        state='waiting_partner_join',
+        state='waiting_partner_confirm',
         partner_id='unit_test_user',
         newbie=True,
     ))
