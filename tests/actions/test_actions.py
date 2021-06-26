@@ -741,15 +741,13 @@ async def test_action_try_to_create_room_confirm_with_asker(
 @pytest.mark.parametrize('partner', [
     UserStateMachine(
         user_id='an_asker',
-        state='waiting_partner_confirm',
-        partner_id='a_completely_different_user',
-        newbie=True,
+        state='new',
+        partner_id='unit_test_user',
     ),
     UserStateMachine(
         user_id='an_asker',
-        state='ok_to_chitchat',
+        state='do_not_disturb',
         partner_id='unit_test_user',
-        newbie=True,
     ),
 ])
 @pytest.mark.usefixtures('create_user_state_machine_table')
@@ -767,7 +765,6 @@ async def test_action_try_to_create_room_partner_not_waiting(
         user_id='unit_test_user',
         state='asked_to_join',
         partner_id='an_asker',
-        newbie=True,
     ))
 
     actual_events = await actions.ActionTryToCreateRoom().run(dispatcher, tracker, domain)
@@ -796,7 +793,6 @@ async def test_action_try_to_create_room_partner_not_waiting(
         user_id='unit_test_user',
         state='wants_chitchat',
         partner_id=None,
-        newbie=True,
         state_timestamp=1619945501,
         state_timestamp_str='2021-05-02 08:51:41 Z',
     )
