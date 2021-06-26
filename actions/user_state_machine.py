@@ -169,7 +169,6 @@ class UserStateMachine(UserModel):
             before=[
                 self._assert_partner_id_arg_not_empty,
                 self._assert_partner_id_arg_same,
-                # TODO oleksandr: assert WAITING_PARTNER_CONFIRM has not timed out yet ? (what about ASKED_TO_CONFIRM ?)
             ],
             after=[
                 self._graduate_from_newbie,
@@ -203,7 +202,7 @@ class UserStateMachine(UserModel):
                 not self.has_become_discoverable()  # the state hasn't timed out yet
         )
 
-    def has_become_discoverable(self):  # TODO oleksandr: the meaning of this method is still somewhat unclear
+    def has_become_discoverable(self):
         if not self.state_timeout_ts:  # 0 and None are treated equally
             return True  # users in states that don't support timeouts are immediately discoverable
 
