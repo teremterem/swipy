@@ -579,6 +579,7 @@ async def test_action_try_to_create_room(
         state='waiting_partner_confirm',
         partner_id='unit_test_user',
         newbie=True,
+        state_timeout_ts=1619945501 + 1,  # we still have 1 second before the confirmation timeout
     ))
     user_vault.save(UserStateMachine(
         user_id='unit_test_user',
@@ -640,6 +641,19 @@ async def test_action_try_to_create_room(
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize('partner', [
+    UserStateMachine(
+        user_id='an_asker',
+        state='wants_chitchat',
+        partner_id=None,
+    ),
+    UserStateMachine(
+        user_id='an_asker',
+        state='waiting_partner_confirm',
+        partner_id='unit_test_user',
+        state_timeout_ts=1619945501 - 1,  # we are 1 second late, now we have to confirm again
+    )
+])
 @pytest.mark.usefixtures('create_user_state_machine_table', 'wrap_actions_datetime_now')
 @patch('time.time', Mock(return_value=1619945501))  # "now"
 @patch('telebot.apihelper._make_request')
@@ -655,17 +669,13 @@ async def test_action_try_to_create_room_confirm_with_asker(
             [Text, Text, Dict[Text, Any]], Tuple[Tuple[Text, URL], RequestCall]
         ],
         external_intent_response: Dict[Text, Any],
+        partner: UserStateMachine,
 ) -> None:
     mock_telebot_make_request.return_value = telegram_user_profile_photo
     mock_aioresponses.post(re.compile(r'.*'), payload=external_intent_response)
 
     user_vault = UserVault()
-    user_vault.save(UserStateMachine(
-        user_id='an_asker',
-        state='wants_chitchat',
-        partner_id=None,
-        newbie=True,
-    ))
+    user_vault.save(partner)
     user_vault.save(UserStateMachine(
         user_id='unit_test_user',
         state='asked_to_join',
