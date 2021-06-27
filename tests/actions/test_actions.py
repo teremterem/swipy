@@ -8,7 +8,7 @@ import pytest
 from aioresponses import aioresponses
 from aioresponses.core import RequestCall
 from rasa_sdk import Tracker
-from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType, FollowupAction, UserUtteranceReverted
+from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType, UserUtteranceReverted
 from rasa_sdk.executor import CollectingDispatcher
 from yarl import URL
 
@@ -760,7 +760,7 @@ async def test_action_accept_invitation_confirm_with_asker(
         partner_id='unit_test_user',
     ),
 ])
-@pytest.mark.usefixtures('create_user_state_machine_table')
+@pytest.mark.usefixtures('create_user_state_machine_table', 'wrap_actions_datetime_now')
 @patch('time.time', Mock(return_value=1619945501))
 async def test_action_accept_invitation_partner_not_waiting(
         mock_aioresponses: aioresponses,
@@ -780,7 +780,15 @@ async def test_action_accept_invitation_partner_not_waiting(
     actual_events = await actions.ActionAcceptInvitation().run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'partner_not_waiting_anymore'),
-        FollowupAction('action_find_partner'),
+        {
+            'date_time': '2021-05-25T00:00:02',
+            'entities': None,
+            'event': 'reminder',
+            'intent': 'EXTERNAL_find_partner',
+            'kill_on_user_msg': False,
+            'name': 'EXTERNAL_find_partner',
+            'timestamp': None,
+        },
         SlotSet('swiper_state', 'wants_chitchat'),
         SlotSet('partner_id', None),
     ]
