@@ -7,9 +7,9 @@ from pprint import pformat
 from typing import Any, Text, Dict, List
 
 from rasa_sdk import Action, Tracker
-from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType, ReminderScheduled, FollowupAction, \
-    UserUtteranceReverted
+from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType, ReminderScheduled, UserUtteranceReverted
 from rasa_sdk.executor import CollectingDispatcher
+from rasa_sdk.interfaces import ACTION_LISTEN_NAME
 
 from actions import daily_co
 from actions import rasa_callbacks
@@ -154,7 +154,19 @@ class BaseSwiperAction(Action, ABC):
             ),
         ])
 
-        logger.info('END ACTION RUN: %r (CURRENT USER ID = %r)', self.name(), tracker.sender_id)
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(
+                'END ACTION RUN: %r (CURRENT USER ID = %r)\n\nRETURNED EVENTS:\n\n%s\n',
+                self.name(),
+                tracker.sender_id,
+                pformat(events),
+            )
+        else:
+            logger.info(
+                'END ACTION RUN: %r (CURRENT USER ID = %r)',
+                self.name(),
+                tracker.sender_id,
+            )
         return events
 
 
@@ -208,7 +220,7 @@ class ActionSessionStart(BaseSwiperAction):
     ) -> List[Dict[Text, Any]]:
         events = list(await super().run(dispatcher, tracker, domain))
 
-        events.append(ActionExecuted('action_listen'))
+        events.append(ActionExecuted(ACTION_LISTEN_NAME))
 
         return events
 
@@ -264,30 +276,6 @@ class ActionOfferChitchat(BaseSwiperAction):
         ]
 
 
-def schedule_find_partner_reminder() -> ReminderScheduled:
-    date = datetime_now() + datetime.timedelta(seconds=FIND_PARTNER_FREQUENCY_SEC)
-
-    reminder = ReminderScheduled(
-        EXTERNAL_FIND_PARTNER_INTENT,
-        trigger_date_time=date,
-        name=EXTERNAL_FIND_PARTNER_INTENT,  # ensures rescheduling of the existing reminder
-        kill_on_user_message=False,
-    )
-    return reminder
-
-
-def schedule_expire_partner_confirmation() -> ReminderScheduled:
-    date = datetime_now() + datetime.timedelta(seconds=PARTNER_CONFIRMATION_TIMEOUT_SEC)
-
-    reminder = ReminderScheduled(
-        EXTERNAL_EXPIRE_PARTNER_CONFIRMATION,
-        trigger_date_time=date,
-        name=EXTERNAL_EXPIRE_PARTNER_CONFIRMATION,  # ensures rescheduling of the existing reminder
-        kill_on_user_message=False,
-    )
-    return reminder
-
-
 class ActionFindPartner(BaseSwiperAction):
     def name(self) -> Text:
         return ACTION_FIND_PARTNER
@@ -303,7 +291,7 @@ class ActionFindPartner(BaseSwiperAction):
         triggered_by_reminder = latest_intent == EXTERNAL_FIND_PARTNER_INTENT
 
         triggered_as_followup = (
-                tracker.latest_action_name == ACTION_ACCEPT_INVITATION and
+            # tracker.latest_action_name == ACTION_ACCEPT_INVITATION and
                 tracker.followup_action == ACTION_FIND_PARTNER
         )  # if this action was a side-effect of a user saying yes to an invitation then no messages to the user
 
@@ -349,6 +337,7 @@ class ActionFindPartner(BaseSwiperAction):
                 events.append(UserUtteranceReverted())
             # elif triggered_as_followup:
             #     events.append(ActionReverted())
+            #     events.append(ActionExecuted(ACTION_LISTEN_NAME))  # avert endless loop of action predictions
             else:
                 events.append(SlotSet(
                     key=SWIPER_ACTION_RESULT_SLOT,
@@ -356,20 +345,18 @@ class ActionFindPartner(BaseSwiperAction):
                 ))
             return events
 
-        if triggered_as_followup:
-            pass
-            # return [
-            #     ActionReverted(),
-            # ]
-        else:
-            pass
-            # dispatcher.utter_message(response='utter_no_one_was_found')
+        # if triggered_as_followup:
+        #     return [
+        #         ActionReverted(),  # undo
+        #         ActionExecuted(ACTION_LISTEN_NAME),  # avert endless loop of action predictions
+        #     ]
 
         return [
-            SlotSet(
-                key=SWIPER_ACTION_RESULT_SLOT,
-                value=SwiperActionResult.PARTNER_WAS_NOT_FOUND,
-            ),
+            UserUtteranceReverted(),
+            # SlotSet(
+            #     key=SWIPER_ACTION_RESULT_SLOT,
+            #     value=SwiperActionResult.PARTNER_WAS_NOT_FOUND,
+            # ),
         ]
 
 
@@ -457,7 +444,9 @@ class ActionAcceptInvitation(BaseSwiperAction):
                     key=SWIPER_ACTION_RESULT_SLOT,
                     value=SwiperActionResult.PARTNER_NOT_WAITING_ANYMORE,
                 ),
-                FollowupAction('action_find_partner'),
+                # ActionExecuted(ACTION_LISTEN_NAME),
+                # FollowupAction('action_find_partner'),
+                schedule_find_partner_reminder(delta_sec=0),
             ]
 
     @staticmethod
@@ -637,3 +626,33 @@ class ActionExpirePartnerConfirmation(BaseSwiperAction):
                 value=SwiperActionResult.SUCCESS,
             ),
         ]
+
+
+def schedule_find_partner_reminder(delta_sec: float = FIND_PARTNER_FREQUENCY_SEC) -> ReminderScheduled:
+    return _reschedule_reminder(
+        EXTERNAL_FIND_PARTNER_INTENT,
+        delta_sec,
+    )
+
+
+def schedule_expire_partner_confirmation(delta_sec: float = PARTNER_CONFIRMATION_TIMEOUT_SEC) -> ReminderScheduled:
+    return _reschedule_reminder(
+        EXTERNAL_EXPIRE_PARTNER_CONFIRMATION,
+        delta_sec,
+    )
+
+
+def _reschedule_reminder(
+        intent_name: Text,
+        delta_sec: float,
+        kill_on_user_message: bool = False,
+) -> ReminderScheduled:
+    date = datetime_now() + datetime.timedelta(seconds=delta_sec)
+
+    reminder = ReminderScheduled(
+        intent_name,
+        trigger_date_time=date,
+        name=intent_name,  # ensures rescheduling of the existing reminder
+        kill_on_user_message=kill_on_user_message,
+    )
+    return reminder
