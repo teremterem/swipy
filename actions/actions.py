@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 TELL_USER_ABOUT_ERRORS = strtobool(os.getenv('TELL_USER_ABOUT_ERRORS', 'yes'))
 SEND_ERROR_STACK_TRACE_TO_SLOT = strtobool(os.getenv('SEND_ERROR_STACK_TRACE_TO_SLOT', 'yes'))
 FIND_PARTNER_FREQUENCY_SEC = float(os.getenv('FIND_PARTNER_FREQUENCY_SEC', '10'))
+FIND_PARTNER_FOLLOWUP_DELAY_SEC = float(os.getenv('FIND_PARTNER_FOLLOWUP_DELAY_SEC', '2'))
 GREETING_MAKES_USER_OK_TO_CHITCHAT = strtobool(os.getenv('GREETING_MAKES_USER_OK_TO_CHITCHAT', 'yes'))
 
 SWIPER_STATE_SLOT = 'swiper_state'
@@ -444,9 +445,7 @@ class ActionAcceptInvitation(BaseSwiperAction):
                     key=SWIPER_ACTION_RESULT_SLOT,
                     value=SwiperActionResult.PARTNER_NOT_WAITING_ANYMORE,
                 ),
-                # ActionExecuted(ACTION_LISTEN_NAME),
-                # FollowupAction('action_find_partner'),
-                schedule_find_partner_reminder(delta_sec=0),
+                schedule_find_partner_reminder(delta_sec=FIND_PARTNER_FOLLOWUP_DELAY_SEC),
             ]
 
     @staticmethod
@@ -474,12 +473,12 @@ class ActionAcceptInvitation(BaseSwiperAction):
         user_vault.save(current_user)
 
         return [
-            schedule_expire_partner_confirmation(),
-            schedule_find_partner_reminder(),
             SlotSet(
                 key=SWIPER_ACTION_RESULT_SLOT,
                 value=SwiperActionResult.PARTNER_HAS_BEEN_ASKED,
             ),
+            schedule_expire_partner_confirmation(),
+            schedule_find_partner_reminder(),
         ]
 
     @staticmethod
