@@ -299,8 +299,9 @@ async def test_action_find_partner(
 
     else:
         assert actual_events == [
+            UserUtteranceReverted() if expect_as_reminder else SlotSet('swiper_action_result', 'success'),
             {
-                'date_time': '2021-05-25T00:00:10',
+                'date_time': '2021-05-25T00:00:05',
                 'entities': None,
                 'event': 'reminder',
                 'intent': 'EXTERNAL_find_partner',
@@ -308,11 +309,22 @@ async def test_action_find_partner(
                 'name': 'EXTERNAL_find_partner',
                 'timestamp': None,
             },
-            UserUtteranceReverted() if expect_as_reminder else SlotSet('swiper_action_result', 'success'),
             SlotSet('swiper_state', 'wants_chitchat'),
             SlotSet('partner_id', None),
         ]
-        mock_get_random_available_partner_dict.assert_called_once_with(('wants_chitchat',), 'unit_test_user')
+        mock_get_random_available_partner_dict.assert_called_once_with(
+            [
+                'wants_chitchat',
+                'ok_to_chitchat',
+                'waiting_partner_confirm',
+                'asked_to_join',
+                'asked_to_confirm',
+                'roomed',
+                'rejected_join',
+                'rejected_confirm',
+            ],
+            'unit_test_user',
+        )
         assert mock_telebot_make_request.mock_calls == [
             telegram_user_profile_photo_make_request_call,
         ]
