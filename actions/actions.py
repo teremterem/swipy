@@ -291,12 +291,12 @@ class ActionFindPartner(BaseSwiperAction):
         latest_intent = get_intent_of_latest_message_reliably(tracker)
         triggered_by_reminder = latest_intent == EXTERNAL_FIND_PARTNER_INTENT
 
-        triggered_as_followup = (
-            # tracker.latest_action_name == ACTION_ACCEPT_INVITATION and
-                tracker.followup_action == ACTION_FIND_PARTNER
-        )  # if this action was a side-effect of a user saying yes to an invitation then no messages to the user
-
         if triggered_by_reminder:
+            events = [
+                # get rid of artificial intent so it doesn't interfere with story predictions
+                UserUtteranceReverted(),
+            ]
+
             if current_user.state not in [
                 UserState.WANTS_CHITCHAT,
                 UserState.OK_TO_CHITCHAT,
@@ -304,18 +304,21 @@ class ActionFindPartner(BaseSwiperAction):
             ]:
                 # the search was stopped for the user one way or another (user said stop, or was asked to join etc.)
                 # => don't do any partner searching and don't schedule another reminder
-                return [
-                    # get rid of artificial intent so it doesn't interfere with story predictions
-                    UserUtteranceReverted(),
-                ]
+                return events
 
         else:  # user just requested chitchat
-            if not triggered_as_followup:
-                dispatcher.utter_message(response='utter_ok_arranging_chitchat')
+            dispatcher.utter_message(response='utter_ok_arranging_chitchat')
 
             # noinspection PyUnresolvedReferences
             current_user.request_chitchat()
             user_vault.save(current_user)
+
+            events = [
+                SlotSet(
+                    key=SWIPER_ACTION_RESULT_SLOT,
+                    value=SwiperActionResult.SUCCESS,
+                ),
+            ]
 
         partner = user_vault.get_random_available_partner(current_user)
 
@@ -329,36 +332,9 @@ class ActionFindPartner(BaseSwiperAction):
                 suppress_callback_errors=True,
             )
 
-            events = [schedule_find_partner_reminder()]
+            events.append(schedule_find_partner_reminder())
 
-            # TODO oleksandr: refactor everything in the method below this line
-
-            if triggered_by_reminder:
-                # get rid of artificial intent so it doesn't interfere with story predictions
-                events.append(UserUtteranceReverted())
-            # elif triggered_as_followup:
-            #     events.append(ActionReverted())
-            #     events.append(ActionExecuted(ACTION_LISTEN_NAME))  # avert endless loop of action predictions
-            else:
-                events.append(SlotSet(
-                    key=SWIPER_ACTION_RESULT_SLOT,
-                    value=SwiperActionResult.SUCCESS,
-                ))
-            return events
-
-        # if triggered_as_followup:
-        #     return [
-        #         ActionReverted(),  # undo
-        #         ActionExecuted(ACTION_LISTEN_NAME),  # avert endless loop of action predictions
-        #     ]
-
-        return [
-            UserUtteranceReverted(),
-            # SlotSet(
-            #     key=SWIPER_ACTION_RESULT_SLOT,
-            #     value=SwiperActionResult.PARTNER_WAS_NOT_FOUND,
-            # ),
-        ]
+        return events
 
 
 class ActionAskToJoin(BaseSwiperAction):
