@@ -44,12 +44,12 @@ slots:
     type: rasa.shared.core.slots.TextSlot
     initial_value: null
     auto_fill: false
-    influence_conversation: true
+    influence_conversation: false
   swiper_action_result:
     type: rasa.shared.core.slots.TextSlot
     initial_value: null
     auto_fill: false
-    influence_conversation: true
+    influence_conversation: false
   swiper_error:
     type: rasa.shared.core.slots.TextSlot
     initial_value: null
