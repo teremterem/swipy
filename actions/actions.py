@@ -36,8 +36,6 @@ TELEGRAM_FROM_SLOT = 'telegram_from'
 SWIPER_ERROR_SLOT = 'swiper_error'
 SWIPER_ERROR_TRACE_SLOT = 'swiper_error_trace'
 
-PARTNER_ID_TO_LET_GO_SLOT = 'partner_id_to_let_go'
-
 EXTERNAL_FIND_PARTNER_INTENT = 'EXTERNAL_find_partner'
 EXTERNAL_EXPIRE_PARTNER_CONFIRMATION = 'EXTERNAL_expire_partner_confirmation'
 ACTION_FIND_PARTNER = 'action_find_partner'
