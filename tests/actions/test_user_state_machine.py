@@ -164,8 +164,8 @@ def test_state_timestamps(source_state: Text, trigger_name: Text) -> None:
             expected_timeout_ts_str = '2021-05-02 12:51:41 Z'
         elif user.state == 'waiting_partner_confirm':
             # unlike other states with timeouts, 'waiting_partner_confirm' has a timeout of 2 minutes instead of 4 hours
-            expected_timeout_ts = 1619945501 + (60 * 2)
-            expected_timeout_ts_str = '2021-05-02 08:53:41 Z'
+            expected_timeout_ts = 1619945501 + 60
+            expected_timeout_ts_str = '2021-05-02 08:52:41 Z'
         else:
             # destination state is NOT supposed to have a timeout
             expected_timeout_ts = 0

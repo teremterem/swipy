@@ -678,7 +678,7 @@ async def test_action_accept_invitation_confirm_with_asker(
     assert actual_events == [
         SlotSet('swiper_action_result', 'partner_has_been_asked'),
         {
-            'date_time': '2021-05-25T00:02:00',
+            'date_time': '2021-05-25T00:01:00',
             'entities': None,
             'event': 'reminder',
             'intent': 'EXTERNAL_expire_partner_confirmation',
@@ -724,8 +724,8 @@ async def test_action_accept_invitation_confirm_with_asker(
         newbie=True,
         state_timestamp=1619945501,
         state_timestamp_str='2021-05-02 08:51:41 Z',
-        state_timeout_ts=1619945621,  # 'waiting_partner_confirm' times out in 2 minutes
-        state_timeout_ts_str='2021-05-02 08:53:41 Z',
+        state_timeout_ts=1619945501 + 60,  # 'waiting_partner_confirm' times out in 1 minute
+        state_timeout_ts_str='2021-05-02 08:52:41 Z',
     )
 
 
