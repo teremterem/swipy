@@ -345,28 +345,27 @@ class ActionAskToJoin(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
+        partner_id = tracker.get_slot(rasa_callbacks.PARTNER_ID_SLOT)
+
         latest_intent = get_intent_of_latest_message_reliably(tracker)
 
-        if latest_intent == EXTERNAL_ASK_TO_CONFIRM_INTENT:
-            asked_to_confirm = True
-        elif latest_intent == EXTERNAL_ASK_TO_JOIN_INTENT:
-            asked_to_confirm = False
+        if latest_intent == EXTERNAL_ASK_TO_JOIN_INTENT:
+            response_template = 'utter_someone_wants_to_chat'
+            # noinspection PyUnresolvedReferences
+            current_user.become_asked_to_join(partner_id)
+            user_vault.save(current_user)
+
+        elif latest_intent == EXTERNAL_ASK_TO_CONFIRM_INTENT:
+            response_template = 'utter_found_someone_check_ready'
+            # noinspection PyUnresolvedReferences
+            current_user.become_asked_to_confirm(partner_id)
+            user_vault.save(current_user)
+
         else:
             raise SwiperError(
                 f"{repr(self.name())} was triggered by an unexpected intent ({repr(latest_intent)}) - either "
                 f"{repr(EXTERNAL_ASK_TO_JOIN_INTENT)} or {repr(EXTERNAL_ASK_TO_CONFIRM_INTENT)} was expected"
             )
-
-        partner_id = tracker.get_slot(rasa_callbacks.PARTNER_ID_SLOT)
-        if asked_to_confirm:
-            response_template = 'utter_found_someone_check_ready'
-            # noinspection PyUnresolvedReferences
-            current_user.become_asked_to_confirm(partner_id)
-        else:
-            response_template = 'utter_someone_wants_to_chat'
-            # noinspection PyUnresolvedReferences
-            current_user.become_asked_to_join(partner_id)
-        user_vault.save(current_user)
 
         partner_photo_file_id = tracker.get_slot(rasa_callbacks.PARTNER_PHOTO_FILE_ID_SLOT)
         if partner_photo_file_id:
