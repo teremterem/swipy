@@ -15,11 +15,14 @@ RASA_TOKEN = os.getenv('RASA_TOKEN')
 OUTPUT_CHANNEL = 'telegram'  # seems to be more robust than 'latest'
 
 PARTNER_ID_SLOT = 'partner_id'
+DROP_IN_PARTNER_ID_SLOT = 'drop_in_partner_id'
 PARTNER_PHOTO_FILE_ID_SLOT = 'partner_photo_file_id'
+DROP_IN_PARTNER_PHOTO_FILE_ID_SLOT = 'drop_in_partner_photo_file_id'
 ROOM_URL_SLOT = 'room_url'
 
 EXTERNAL_ASK_TO_JOIN_INTENT = 'EXTERNAL_ask_to_join'
 EXTERNAL_ASK_TO_CONFIRM_INTENT = 'EXTERNAL_ask_to_confirm'
+EXTERNAL_ASK_TO_CONFIRM_DROP_IN_INTENT = 'EXTERNAL_ask_to_confirm_drop_in'
 EXTERNAL_JOIN_ROOM_INTENT = 'EXTERNAL_join_room'
 
 
@@ -41,7 +44,7 @@ async def ask_to_join(
     )
 
 
-async def ask_to_confirm(
+async def ask_to_confirm(  # TODO TODO TODO oleksandr
         sender_id: Text,
         receiver_id: Text,
         photo_file_id: Text,

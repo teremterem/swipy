@@ -25,20 +25,19 @@ intents:
     use_entities: true
 - EXTERNAL_ask_to_confirm:
     use_entities: true
+- EXTERNAL_ask_to_confirm_drop_in:
+    use_entities: true
 - EXTERNAL_join_room:
     use_entities: true
 - EXTERNAL_find_partner:
-    use_entities: true
-- EXTERNAL_let_partner_go:
-    use_entities: true
-- EXTERNAL_report_unavailable:
     use_entities: true
 - EXTERNAL_expire_partner_confirmation:
     use_entities: true
 entities:
 - partner_id
-- partner_id_to_let_go
+- drop_in_partner_id
 - partner_photo_file_id
+- drop_in_partner_photo_file_id
 - room_url
 slots:
   swiper_state:
@@ -81,7 +80,17 @@ slots:
     initial_value: null
     auto_fill: true
     influence_conversation: false
+  drop_in_partner_id:
+    type: rasa.shared.core.slots.TextSlot
+    initial_value: null
+    auto_fill: true
+    influence_conversation: false
   partner_photo_file_id:
+    type: rasa.shared.core.slots.TextSlot
+    initial_value: null
+    auto_fill: true
+    influence_conversation: true
+  drop_in_partner_photo_file_id:
     type: rasa.shared.core.slots.TextSlot
     initial_value: null
     auto_fill: true

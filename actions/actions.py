@@ -14,7 +14,8 @@ from rasa_sdk.interfaces import ACTION_LISTEN_NAME
 from actions import daily_co
 from actions import rasa_callbacks
 from actions import telegram_helpers
-from actions.rasa_callbacks import EXTERNAL_ASK_TO_JOIN_INTENT, EXTERNAL_ASK_TO_CONFIRM_INTENT
+from actions.rasa_callbacks import EXTERNAL_ASK_TO_JOIN_INTENT, EXTERNAL_ASK_TO_CONFIRM_INTENT, \
+    EXTERNAL_ASK_TO_CONFIRM_DROP_IN_INTENT
 from actions.user_state_machine import UserStateMachine, UserState, NATIVE_UNKNOWN, PARTNER_CONFIRMATION_TIMEOUT_SEC
 from actions.user_vault import UserVault, IUserVault
 from actions.utils import stack_trace_to_str, datetime_now, get_intent_of_latest_message_reliably, SwiperError
@@ -35,8 +36,6 @@ TELEGRAM_FROM_SLOT = 'telegram_from'
 
 SWIPER_ERROR_SLOT = 'swiper_error'
 SWIPER_ERROR_TRACE_SLOT = 'swiper_error_trace'
-
-PARTNER_ID_TO_LET_GO_SLOT = 'partner_id_to_let_go'
 
 EXTERNAL_FIND_PARTNER_INTENT = 'EXTERNAL_find_partner'
 EXTERNAL_EXPIRE_PARTNER_CONFIRMATION = 'EXTERNAL_expire_partner_confirmation'
@@ -348,28 +347,31 @@ class ActionAskToJoin(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
+        partner_id = tracker.get_slot(rasa_callbacks.PARTNER_ID_SLOT)
+
         latest_intent = get_intent_of_latest_message_reliably(tracker)
 
         if latest_intent == EXTERNAL_ASK_TO_CONFIRM_INTENT:
-            asked_to_confirm = True
+            response_template = 'utter_found_someone_check_ready'
+            # noinspection PyUnresolvedReferences
+            current_user.become_asked_to_confirm(partner_id)
+            user_vault.save(current_user)
+
+        elif latest_intent == EXTERNAL_ASK_TO_CONFIRM_DROP_IN_INTENT:
+            # TODO TODO TODO oleksandr
+            response_template = 'utter_found_drop_in_replacement_check_ready'
+
         elif latest_intent == EXTERNAL_ASK_TO_JOIN_INTENT:
-            asked_to_confirm = False
+            response_template = 'utter_someone_wants_to_chat'
+            # noinspection PyUnresolvedReferences
+            current_user.become_asked_to_join(partner_id)
+            user_vault.save(current_user)
+
         else:
             raise SwiperError(
                 f"{repr(self.name())} was triggered by an unexpected intent ({repr(latest_intent)}) - either "
                 f"{repr(EXTERNAL_ASK_TO_JOIN_INTENT)} or {repr(EXTERNAL_ASK_TO_CONFIRM_INTENT)} was expected"
             )
-
-        partner_id = tracker.get_slot(rasa_callbacks.PARTNER_ID_SLOT)
-        if asked_to_confirm:
-            response_template = 'utter_found_someone_check_ready'
-            # noinspection PyUnresolvedReferences
-            current_user.become_asked_to_confirm(partner_id)
-        else:
-            response_template = 'utter_someone_wants_to_chat'
-            # noinspection PyUnresolvedReferences
-            current_user.become_asked_to_join(partner_id)
-        user_vault.save(current_user)
 
         partner_photo_file_id = tracker.get_slot(rasa_callbacks.PARTNER_PHOTO_FILE_ID_SLOT)
         if partner_photo_file_id:
@@ -406,6 +408,9 @@ class ActionAcceptInvitation(BaseSwiperAction):
         if partner.is_waiting_to_be_confirmed_by(current_user.user_id):
             # current user was the one asked to confirm and they just did => create the room
             return await self.create_room(dispatcher, current_user, partner, user_vault)
+        elif partner.is_waiting_to_be_confirmed():
+            # partner is waiting for confirmation from someone else - let's do a "drop-in" invitation
+            return await self.confirm_with_asker(dispatcher, current_user, partner, user_vault, drop_in=True)
         elif partner.chitchat_can_be_offered():
             # confirm with the partner before creating any rooms
             return await self.confirm_with_asker(dispatcher, current_user, partner, user_vault)
@@ -430,6 +435,7 @@ class ActionAcceptInvitation(BaseSwiperAction):
             current_user: UserStateMachine,
             partner: UserStateMachine,
             user_vault: IUserVault,
+            drop_in: bool = False,
     ) -> List[Dict[Text, Any]]:
         dispatcher.utter_message(response='utter_checking_if_partner_ready_too')
 

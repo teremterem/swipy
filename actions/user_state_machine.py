@@ -196,11 +196,11 @@ class UserStateMachine(UserModel):
         if not partner_id:
             return False
 
-        return (
-                self.state == UserState.WAITING_PARTNER_CONFIRM and
-                self.partner_id == partner_id and
-                not self.has_become_discoverable()  # the state hasn't timed out yet
-        )
+        return self.is_waiting_to_be_confirmed() and self.partner_id == partner_id
+
+    def is_waiting_to_be_confirmed(self):
+        return self.state == UserState.WAITING_PARTNER_CONFIRM and \
+               not self.has_become_discoverable()  # the state hasn't timed out yet
 
     def has_become_discoverable(self):
         if not self.state_timeout_ts:  # 0 and None are treated equally
