@@ -29,10 +29,6 @@ intents:
     use_entities: true
 - EXTERNAL_find_partner:
     use_entities: true
-- EXTERNAL_let_partner_go:
-    use_entities: true
-- EXTERNAL_report_unavailable:
-    use_entities: true
 - EXTERNAL_expire_partner_confirmation:
     use_entities: true
 entities:
