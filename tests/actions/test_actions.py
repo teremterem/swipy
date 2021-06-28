@@ -686,15 +686,6 @@ async def test_action_accept_invitation_confirm_with_asker(
             'name': 'EXTERNAL_expire_partner_confirmation',
             'timestamp': None
         },
-        {
-            'date_time': '2021-05-25T00:00:05',
-            'entities': None,
-            'event': 'reminder',
-            'intent': 'EXTERNAL_find_partner',
-            'kill_on_user_msg': False,
-            'name': 'EXTERNAL_find_partner',
-            'timestamp': None,
-        },
         SlotSet('swiper_state', 'waiting_partner_confirm'),
         SlotSet('partner_id', 'an_asker'),
     ]

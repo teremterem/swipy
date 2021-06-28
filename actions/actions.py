@@ -350,7 +350,13 @@ class ActionAskToJoin(BaseSwiperAction):
 
         latest_intent = get_intent_of_latest_message_reliably(tracker)
 
-        if latest_intent == EXTERNAL_ASK_TO_CONFIRM_INTENT:
+        if latest_intent == EXTERNAL_ASK_TO_JOIN_INTENT:
+            response_template = 'utter_someone_wants_to_chat'
+            # noinspection PyUnresolvedReferences
+            current_user.become_asked_to_join(partner_id)
+            user_vault.save(current_user)
+
+        elif latest_intent == EXTERNAL_ASK_TO_CONFIRM_INTENT:
             response_template = 'utter_found_someone_check_ready'
             # noinspection PyUnresolvedReferences
             current_user.become_asked_to_confirm(partner_id)
@@ -359,12 +365,6 @@ class ActionAskToJoin(BaseSwiperAction):
         elif latest_intent == EXTERNAL_ASK_TO_CONFIRM_DROP_IN_INTENT:
             # TODO TODO TODO oleksandr
             response_template = 'utter_found_drop_in_replacement_check_ready'
-
-        elif latest_intent == EXTERNAL_ASK_TO_JOIN_INTENT:
-            response_template = 'utter_someone_wants_to_chat'
-            # noinspection PyUnresolvedReferences
-            current_user.become_asked_to_join(partner_id)
-            user_vault.save(current_user)
 
         else:
             raise SwiperError(
