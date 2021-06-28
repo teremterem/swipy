@@ -6,53 +6,35 @@ import pytest
 from transitions import MachineError
 
 from actions.user_state_machine import UserStateMachine, UserState
-
-all_expected_states = [
-    'new',
-    'wants_chitchat',
-    'ok_to_chitchat',
-    'waiting_partner_confirm',
-    'asked_to_join',
-    'asked_to_confirm',
-    'roomed',
-    'rejected_join',
-    'rejected_confirm',
-    'do_not_disturb',
-]
-
-all_expected_triggers = [
-    'request_chitchat',
-    'become_ok_to_chitchat',
-    'become_do_not_disturb',
-    'wait_for_partner_to_confirm',
-    'become_asked_to_join',
-    'become_asked_to_confirm',
-    'join_room',
-    'reject',
-]
+from tests.tests_common import all_expected_user_states, all_expected_user_state_machine_triggers
 
 
 def test_all_expected_states() -> None:
-    assert list(UserStateMachine('some_user_id').machine.states.keys()) == all_expected_states
+    assert list(UserStateMachine('some_user_id').machine.states.keys()) == all_expected_user_states
 
 
 def test_all_expected_triggers() -> None:
-    assert UserStateMachine('some_user_id').machine.get_triggers(*all_expected_states) == all_expected_triggers
+    assert UserStateMachine('some_user_id').machine.get_triggers(*all_expected_user_states) == \
+           all_expected_user_state_machine_triggers
 
 
 expected_catch_all_transitions = [
-    ('request_chitchat', 'wants_chitchat'),
-    ('become_ok_to_chitchat', 'ok_to_chitchat'),
-    ('become_do_not_disturb', 'do_not_disturb'),
+    ('request_chitchat', 'wants_chitchat', False),
+    ('become_ok_to_chitchat', 'ok_to_chitchat', False),
+    ('become_do_not_disturb', 'do_not_disturb', False),
+    ('wait_for_partner_to_confirm', 'waiting_partner_confirm', True),
+    ('become_asked_to_join', 'asked_to_join', True),
+    ('become_asked_to_confirm', 'asked_to_confirm', True),
 ]
 
 
-@pytest.mark.parametrize('source_state', all_expected_states)
-@pytest.mark.parametrize('trigger_name, destination_state', expected_catch_all_transitions)
+@pytest.mark.parametrize('source_state', all_expected_user_states)
+@pytest.mark.parametrize('trigger_name, destination_state, partner_id_param_used', expected_catch_all_transitions)
 def test_catch_all_transitions(
         source_state: Text,
         trigger_name: Text,
         destination_state: Text,
+        partner_id_param_used: bool,
 ) -> None:
     user = UserStateMachine(
         user_id='some_user_id',
@@ -63,46 +45,17 @@ def test_catch_all_transitions(
     assert user.partner_id == 'previous_partner_id'
 
     trigger = getattr(user, trigger_name)
-    trigger('new_partner_id')  # this parameter is expected to be ignored
+    trigger('new_partner_id')
 
     assert user.state == destination_state
-    assert user.partner_id is None  # previous partner is expected to be dropped
+
+    if partner_id_param_used:
+        assert user.partner_id == 'new_partner_id'
+    else:
+        assert user.partner_id is None  # previous partner is expected to be dropped
 
 
 expected_more_narrow_transitions = [
-    ('wait_for_partner_to_confirm', 'new', None, 'previous_partner_id', 'previous_partner_id'),
-    ('wait_for_partner_to_confirm', 'wants_chitchat', None, 'previous_partner_id', 'previous_partner_id'),
-    ('wait_for_partner_to_confirm', 'ok_to_chitchat', None, 'previous_partner_id', 'previous_partner_id'),
-    ('wait_for_partner_to_confirm', 'waiting_partner_confirm', None, 'previous_partner_id', 'previous_partner_id'),
-    ('wait_for_partner_to_confirm', 'asked_to_join', 'waiting_partner_confirm', 'new_partner_id', 'new_partner_id'),
-    ('wait_for_partner_to_confirm', 'asked_to_confirm', None, 'previous_partner_id', 'previous_partner_id'),
-    ('wait_for_partner_to_confirm', 'roomed', None, 'previous_partner_id', 'previous_partner_id'),
-    ('wait_for_partner_to_confirm', 'rejected_join', None, 'previous_partner_id', 'previous_partner_id'),
-    ('wait_for_partner_to_confirm', 'rejected_confirm', None, 'previous_partner_id', 'previous_partner_id'),
-    ('wait_for_partner_to_confirm', 'do_not_disturb', None, 'previous_partner_id', 'previous_partner_id'),
-
-    ('become_asked_to_join', 'new', None, 'previous_partner_id', 'previous_partner_id'),
-    ('become_asked_to_join', 'wants_chitchat', 'asked_to_join', 'previous_partner_id', 'new_partner_id'),
-    ('become_asked_to_join', 'ok_to_chitchat', 'asked_to_join', 'previous_partner_id', 'new_partner_id'),
-    ('become_asked_to_join', 'waiting_partner_confirm', 'asked_to_join', 'previous_partner_id', 'new_partner_id'),
-    ('become_asked_to_join', 'asked_to_join', 'asked_to_join', 'previous_partner_id', 'new_partner_id'),
-    ('become_asked_to_join', 'asked_to_confirm', 'asked_to_join', 'previous_partner_id', 'new_partner_id'),
-    ('become_asked_to_join', 'roomed', 'asked_to_join', 'previous_partner_id', 'new_partner_id'),
-    ('become_asked_to_join', 'rejected_join', 'asked_to_join', 'previous_partner_id', 'new_partner_id'),
-    ('become_asked_to_join', 'rejected_confirm', 'asked_to_join', 'previous_partner_id', 'new_partner_id'),
-    ('become_asked_to_join', 'do_not_disturb', None, 'previous_partner_id', 'previous_partner_id'),
-
-    ('become_asked_to_confirm', 'new', None, 'previous_partner_id', 'previous_partner_id'),
-    ('become_asked_to_confirm', 'wants_chitchat', 'asked_to_confirm', 'previous_partner_id', 'new_partner_id'),
-    ('become_asked_to_confirm', 'ok_to_chitchat', 'asked_to_confirm', 'previous_partner_id', 'new_partner_id'),
-    ('become_asked_to_confirm', 'waiting_partner_confirm', 'asked_to_confirm', 'previous_partner_id', 'new_partner_id'),
-    ('become_asked_to_confirm', 'asked_to_join', 'asked_to_confirm', 'previous_partner_id', 'new_partner_id'),
-    ('become_asked_to_confirm', 'asked_to_confirm', 'asked_to_confirm', 'previous_partner_id', 'new_partner_id'),
-    ('become_asked_to_confirm', 'roomed', 'asked_to_confirm', 'previous_partner_id', 'new_partner_id'),
-    ('become_asked_to_confirm', 'rejected_join', 'asked_to_confirm', 'previous_partner_id', 'new_partner_id'),
-    ('become_asked_to_confirm', 'rejected_confirm', 'asked_to_confirm', 'previous_partner_id', 'new_partner_id'),
-    ('become_asked_to_confirm', 'do_not_disturb', None, 'previous_partner_id', 'previous_partner_id'),
-
     ('join_room', 'new', None, 'previous_partner_id', 'previous_partner_id'),
     ('join_room', 'wants_chitchat', None, 'previous_partner_id', 'previous_partner_id'),
     ('join_room', 'ok_to_chitchat', None, 'previous_partner_id', 'previous_partner_id'),
@@ -130,8 +83,8 @@ expected_more_narrow_transitions = [
 def test_expected_more_narrow_transition_list() -> None:
     # make sure we are testing all the transition/initial_state combinations that exist
     assert len({(i[0], i[1]) for i in expected_more_narrow_transitions}) == \
-           len(set(all_expected_states)) * (len(set(all_expected_triggers)) -
-                                            len({i[0] for i in expected_catch_all_transitions}))
+           len(set(all_expected_user_states)) * (len(set(all_expected_user_state_machine_triggers)) -
+                                                 len({i[0] for i in expected_catch_all_transitions}))
 
 
 @pytest.mark.parametrize('initial_newbie_status', [True, False])
@@ -180,8 +133,8 @@ def test_more_narrow_transitions(
 
 
 @patch('time.time', Mock(return_value=1619945501))
-@pytest.mark.parametrize('source_state', all_expected_states)
-@pytest.mark.parametrize('trigger_name', all_expected_triggers)
+@pytest.mark.parametrize('source_state', all_expected_user_states)
+@pytest.mark.parametrize('trigger_name', all_expected_user_state_machine_triggers)
 def test_state_timestamps(source_state: Text, trigger_name: Text) -> None:
     user = UserStateMachine(
         user_id='some_user_id',
@@ -209,6 +162,10 @@ def test_state_timestamps(source_state: Text, trigger_name: Text) -> None:
             # destination state is supposed to have a timeout (a new one, set by transition)
             expected_timeout_ts = 1619945501 + (60 * 60 * 4)
             expected_timeout_ts_str = '2021-05-02 12:51:41 Z'
+        elif user.state == 'waiting_partner_confirm':
+            # unlike other states with timeouts, 'waiting_partner_confirm' has a timeout of 2 minutes instead of 4 hours
+            expected_timeout_ts = 1619945501 + (60 * 2)
+            expected_timeout_ts_str = '2021-05-02 08:53:41 Z'
         else:
             # destination state is NOT supposed to have a timeout
             expected_timeout_ts = 0

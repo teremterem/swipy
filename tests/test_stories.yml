@@ -85,7 +85,7 @@ stories:
   - intent: affirm
     user: |-
       Yes
-  - action: action_try_to_create_room
+  - action: action_accept_invitation
   - slot_was_set:
     - swiper_action_result: partner_has_been_asked
   - slot_was_set:
@@ -182,7 +182,7 @@ stories:
   - intent: affirm
     user: |-
       Yes
-  - action: action_try_to_create_room
+  - action: action_accept_invitation
   - slot_was_set:
     - swiper_action_result: room_url_ready
   - slot_was_set:

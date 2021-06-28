@@ -1,5 +1,4 @@
 import re
-import traceback
 import uuid
 from dataclasses import asdict
 from typing import Dict, Text, Any, List, Callable, Tuple, Optional
@@ -9,7 +8,7 @@ import pytest
 from aioresponses import aioresponses
 from aioresponses.core import RequestCall
 from rasa_sdk import Tracker
-from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType, FollowupAction, UserUtteranceReverted
+from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType, UserUtteranceReverted
 from rasa_sdk.executor import CollectingDispatcher
 from yarl import URL
 
@@ -19,7 +18,7 @@ from actions.user_vault import UserVault, IUserVault
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('ddb_unit_test_user')
+@pytest.mark.usefixtures('ddb_unit_test_user', 'wrap_traceback_format_exception')
 async def test_action_swiper_error_trace(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
@@ -38,23 +37,14 @@ async def test_action_swiper_error_trace(
         ) -> List[Dict[Text, Any]]:
             raise ValueError('something got out of hand')
 
-    _original_format_exception = traceback.format_exception
-
-    def _wrap_format_exception(*args, **kwargs) -> List[Text]:
-        _original_format_exception(*args, **kwargs)  # make sure parameters don't cause the original function to crash
-        return ['stack', 'trace', 'goes', 'here']
-
-    with patch('traceback.format_exception') as mock_traceback_format_exception:
-        mock_traceback_format_exception.side_effect = _wrap_format_exception
-
-        actual_events = await SomeSwiperAction().run(dispatcher, tracker, domain)
+    actual_events = await SomeSwiperAction().run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'error'),
         SlotSet(
             'swiper_error',
             "ValueError('something got out of hand')",
         ),
-        SlotSet('swiper_error_trace', 'stacktracegoeshere'),
+        SlotSet('swiper_error_trace', 'stack trace goes here'),
         SlotSet('swiper_state', 'new'),
         SlotSet('partner_id', None),
     ]
@@ -232,7 +222,7 @@ async def test_action_session_start_with_slots(
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('create_user_state_machine_table', 'wrap_datetime_now')
+@pytest.mark.usefixtures('create_user_state_machine_table', 'wrap_actions_datetime_now')
 @patch('time.time', Mock(return_value=1619945501))
 @patch.object(UserVault, '_get_random_available_partner_dict')
 @patch('telebot.apihelper._make_request')
@@ -309,8 +299,9 @@ async def test_action_find_partner(
 
     else:
         assert actual_events == [
+            UserUtteranceReverted() if expect_as_reminder else SlotSet('swiper_action_result', 'success'),
             {
-                'date_time': '2021-05-25T00:00:10',
+                'date_time': '2021-05-25T00:00:05',
                 'entities': None,
                 'event': 'reminder',
                 'intent': 'EXTERNAL_find_partner',
@@ -318,11 +309,22 @@ async def test_action_find_partner(
                 'name': 'EXTERNAL_find_partner',
                 'timestamp': None,
             },
-            UserUtteranceReverted() if expect_as_reminder else SlotSet('swiper_action_result', 'success'),
             SlotSet('swiper_state', 'wants_chitchat'),
             SlotSet('partner_id', None),
         ]
-        mock_get_random_available_partner_dict.assert_called_once_with(('wants_chitchat',), 'unit_test_user')
+        mock_get_random_available_partner_dict.assert_called_once_with(
+            [
+                'wants_chitchat',
+                'ok_to_chitchat',
+                'waiting_partner_confirm',
+                'asked_to_join',
+                'asked_to_confirm',
+                'roomed',
+                'rejected_join',
+                'rejected_confirm',
+            ],
+            'unit_test_user',
+        )
         assert mock_telebot_make_request.mock_calls == [
             telegram_user_profile_photo_make_request_call,
         ]
@@ -363,14 +365,6 @@ async def test_action_find_partner(
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('ddb_unit_test_user')
-@pytest.mark.parametrize('latest_action_name, followup_action, expect_silence', [
-    (None, None, False),
-    ('some_other_action', None, False),
-    ('some_other_action', 'some_weird_followup', False),
-    ('action_try_to_create_room', None, False),
-    (None, 'action_find_partner', False),
-    ('action_try_to_create_room', 'action_find_partner', True),
-])
 @patch('time.time', Mock(return_value=1619945501))
 @patch.object(UserVault, '_get_random_available_partner_dict')
 async def test_action_find_partner_no_one(
@@ -379,55 +373,42 @@ async def test_action_find_partner_no_one(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
-        latest_action_name: Optional[Text],
-        followup_action: Optional[Text],
-        expect_silence: bool,
 ) -> None:
     mock_get_random_available_partner_dict.return_value = None
 
-    if latest_action_name:
-        tracker.latest_action_name = latest_action_name
-    if followup_action:
-        tracker.followup_action = followup_action
-
     actual_events = await actions.ActionFindPartner().run(dispatcher, tracker, domain)
     assert actual_events == [
-        SlotSet('swiper_action_result', 'partner_was_not_found'),
+        SlotSet('swiper_action_result', 'success'),
         SlotSet('swiper_state', 'wants_chitchat'),
         SlotSet('partner_id', None),
     ]
 
-    if expect_silence:
-        assert dispatcher.messages == []
-    else:
-        assert dispatcher.messages == [
-            {
-                'attachment': None,
-                'buttons': [],
-                'custom': {},
-                'elements': [],
-                'image': None,
-                'response': 'utter_ok_arranging_chitchat',
-                'template': 'utter_ok_arranging_chitchat',
-                'text': None,
-            },
-            {
-                'attachment': None,
-                'buttons': [],
-                'custom': {},
-                'elements': [],
-                'image': None,
-                'response': 'utter_no_one_was_found',
-                'template': 'utter_no_one_was_found',
-                'text': None,
-            },
-        ]
-
-    assert mock_get_random_available_partner_dict.mock_calls == [
-        call(('wants_chitchat',), 'unit_test_user'),
-        call(('ok_to_chitchat',), 'unit_test_user'),
-        call(('roomed',), 'unit_test_user'),
+    assert dispatcher.messages == [
+        {
+            'attachment': None,
+            'buttons': [],
+            'custom': {},
+            'elements': [],
+            'image': None,
+            'response': 'utter_ok_arranging_chitchat',
+            'template': 'utter_ok_arranging_chitchat',
+            'text': None,
+        },
     ]
+
+    mock_get_random_available_partner_dict.assert_called_once_with(
+        [
+            'wants_chitchat',
+            'ok_to_chitchat',
+            'waiting_partner_confirm',
+            'asked_to_join',
+            'asked_to_confirm',
+            'roomed',
+            'rejected_join',
+            'rejected_confirm',
+        ],
+        'unit_test_user',
+    )
     assert mock_aioresponses.requests == {}  # rasa_callbacks.ask_to_join() not called
 
     user_vault = UserVault()
@@ -442,35 +423,53 @@ async def test_action_find_partner_no_one(
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('create_user_state_machine_table')
+@pytest.mark.usefixtures('create_user_state_machine_table', 'wrap_traceback_format_exception')
 @patch('time.time', Mock(return_value=1619945501))
 @patch('uuid.uuid4', Mock(return_value=uuid.UUID('aaaabbbb-cccc-dddd-eeee-ffff11112222')))
-@pytest.mark.parametrize('source_swiper_state, destination_swiper_state, set_photo_slot, expected_response_template', [
-    ('ok_to_chitchat', 'asked_to_join', True, 'utter_someone_wants_to_chat_photo'),
-    ('wants_chitchat', 'asked_to_join', True, 'utter_someone_wants_to_chat_photo'),
-    ('ok_to_chitchat', 'asked_to_join', False, 'utter_someone_wants_to_chat'),
-    ('waiting_partner_join', 'asked_to_confirm', True, 'utter_found_someone_check_ready_photo'),
-    ('waiting_partner_join', 'asked_to_confirm', False, 'utter_found_someone_check_ready'),
-])
+@pytest.mark.parametrize(
+    'source_swiper_state, latest_intent, destination_swiper_state, set_photo_slot, expected_response_template',
+    [
+        ('roomed', 'EXTERNAL_ask_to_join', 'asked_to_join', True, 'utter_someone_wants_to_chat_photo'),
+        ('roomed', 'EXTERNAL_ask_to_join', 'asked_to_join', False, 'utter_someone_wants_to_chat'),
+        ('roomed', 'EXTERNAL_ask_to_confirm', 'asked_to_confirm', True, 'utter_found_someone_check_ready_photo'),
+        ('roomed', 'EXTERNAL_ask_to_confirm', 'asked_to_confirm', False, 'utter_found_someone_check_ready'),
+        ('roomed', 'some_irrelevant_intent', None, True, None),
+        ('roomed', None, None, True, None),
+
+        ('new', 'EXTERNAL_ask_to_join', 'asked_to_join', False, 'utter_someone_wants_to_chat'),
+        ('wants_chitchat', 'EXTERNAL_ask_to_join', 'asked_to_join', False, 'utter_someone_wants_to_chat'),
+        ('ok_to_chitchat', 'EXTERNAL_ask_to_join', 'asked_to_join', False, 'utter_someone_wants_to_chat'),
+        ('waiting_partner_confirm', 'EXTERNAL_ask_to_join', 'asked_to_join', False, 'utter_someone_wants_to_chat'),
+        ('asked_to_join', 'EXTERNAL_ask_to_join', 'asked_to_join', False, 'utter_someone_wants_to_chat'),
+        ('asked_to_confirm', 'EXTERNAL_ask_to_join', 'asked_to_join', False, 'utter_someone_wants_to_chat'),
+        ('rejected_join', 'EXTERNAL_ask_to_join', 'asked_to_join', False, 'utter_someone_wants_to_chat'),
+        ('rejected_confirm', 'EXTERNAL_ask_to_join', 'asked_to_join', False, 'utter_someone_wants_to_chat'),
+        ('do_not_disturb', 'EXTERNAL_ask_to_join', 'asked_to_join', False, 'utter_someone_wants_to_chat'),
+    ],
+)
 async def test_action_ask_to_join(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
         source_swiper_state: Text,
-        destination_swiper_state: Text,
+        latest_intent: Text,
+        destination_swiper_state: Optional[Text],
         set_photo_slot: bool,
-        expected_response_template: Text,
+        expected_response_template: Optional[Text],
 ) -> None:
     user_vault = UserVault()
     user_vault.save(UserStateMachine(
         user_id='unit_test_user',
         state=source_swiper_state,
-        partner_id='an_asker',
+        partner_id='previous_asker',
         newbie=True,
     ))
 
+    if latest_intent:
+        tracker.latest_message = {'intent': {'name': latest_intent}}
+
     tracker.add_slots([
-        SlotSet('partner_id', 'an_asker'),
+        SlotSet('partner_id', 'new_asker'),
     ])
     if set_photo_slot:
         tracker.add_slots([
@@ -481,45 +480,74 @@ async def test_action_ask_to_join(
     assert action.name() == 'action_ask_to_join'
 
     actual_events = await action.run(dispatcher, tracker, domain)
-    assert actual_events == [
-        SlotSet('swiper_action_result', 'success'),
-        SlotSet('swiper_state', destination_swiper_state),
-        SlotSet('partner_id', 'an_asker'),
-    ]
+    if destination_swiper_state:
+        assert actual_events == [
+            SlotSet('swiper_action_result', 'success'),
+            SlotSet('swiper_state', destination_swiper_state),
+            SlotSet('partner_id', 'new_asker'),
+        ]
 
-    expected_response = {
-        'attachment': None,
-        'buttons': [],
-        'custom': {},
-        'elements': [],
-        'image': None,
-        'response': expected_response_template,
-        'template': expected_response_template,
-        'text': None,
-    }
-    if set_photo_slot:
-        expected_response['partner_photo_file_id'] = 'some photo file id'
+        expected_response = {
+            'attachment': None,
+            'buttons': [],
+            'custom': {},
+            'elements': [],
+            'image': None,
+            'response': expected_response_template,
+            'template': expected_response_template,
+            'text': None,
+        }
+        if set_photo_slot:
+            expected_response['partner_photo_file_id'] = 'some photo file id'
+
+    else:  # an error is expected (we do not expect swiper state to change)
+        assert actual_events == [
+            SlotSet('swiper_action_result', 'error'),
+            SlotSet(
+                'swiper_error',
+                f"SwiperError(\"'action_ask_to_join' was triggered by an unexpected "
+                f"intent ({repr(latest_intent)}) - either 'EXTERNAL_ask_to_join' or "
+                f"'EXTERNAL_ask_to_confirm' was expected\")",
+            ),
+            SlotSet(
+                'swiper_error_trace',
+                'stack trace goes here',
+            ),
+            SlotSet('swiper_state', source_swiper_state),
+            SlotSet('partner_id', 'previous_asker'),
+        ]
+
+        expected_response = {
+            'attachment': None,
+            'buttons': [],
+            'custom': {},
+            'elements': [],
+            'image': None,
+            'response': 'utter_error',
+            'template': 'utter_error',
+            'text': None,
+        }
 
     assert dispatcher.messages == [expected_response]
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
         user_id='unit_test_user',
-        state=destination_swiper_state,
-        partner_id='an_asker',
+        state=destination_swiper_state if destination_swiper_state else source_swiper_state,
+        partner_id='new_asker' if destination_swiper_state else 'previous_asker',
         newbie=True,
-        state_timestamp=1619945501,
-        state_timestamp_str='2021-05-02 08:51:41 Z',
-        state_timeout_ts=1619945501 + (60 * 60 * 4),
-        state_timeout_ts_str='2021-05-02 12:51:41 Z',
+        state_timestamp=1619945501 if destination_swiper_state else 0,
+        state_timestamp_str='2021-05-02 08:51:41 Z' if destination_swiper_state else None,
+        state_timeout_ts=1619945501 + (60 * 60 * 4) if destination_swiper_state else 0,
+        state_timeout_ts_str='2021-05-02 12:51:41 Z' if destination_swiper_state else None,
     )
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('create_user_state_machine_table', 'wrap_datetime_now')
+@pytest.mark.usefixtures('create_user_state_machine_table', 'wrap_actions_datetime_now')
 @patch('time.time', Mock(return_value=1619945501))  # "now"
 @patch('actions.daily_co.create_room', wraps=daily_co.create_room)
-async def test_action_try_to_create_room(
+async def test_action_accept_invitation(
         wrap_daily_co_create_room: AsyncMock,
         mock_aioresponses: aioresponses,
         tracker: Tracker,
@@ -542,6 +570,7 @@ async def test_action_try_to_create_room(
         state='waiting_partner_confirm',
         partner_id='unit_test_user',
         newbie=True,
+        state_timeout_ts=1619945501 + 1,  # we still have 1 second before the confirmation timeout
     ))
     user_vault.save(UserStateMachine(
         user_id='unit_test_user',
@@ -550,8 +579,8 @@ async def test_action_try_to_create_room(
         newbie=True,
     ))
 
-    action = actions.ActionTryToCreateRoom()
-    assert action.name() == 'action_try_to_create_room'
+    action = actions.ActionAcceptInvitation()
+    assert action.name() == 'action_accept_invitation'
 
     actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == [
@@ -603,10 +632,23 @@ async def test_action_try_to_create_room(
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('create_user_state_machine_table', 'wrap_datetime_now')
+@pytest.mark.parametrize('partner', [
+    UserStateMachine(
+        user_id='an_asker',
+        state='wants_chitchat',
+        partner_id=None,
+    ),
+    UserStateMachine(
+        user_id='an_asker',
+        state='waiting_partner_confirm',
+        partner_id='unit_test_user',
+        state_timeout_ts=1619945501 - 1,  # we are 1 second late, now we have to confirm again
+    )
+])
+@pytest.mark.usefixtures('create_user_state_machine_table', 'wrap_actions_datetime_now')
 @patch('time.time', Mock(return_value=1619945501))  # "now"
 @patch('telebot.apihelper._make_request')
-async def test_action_try_to_create_room_confirm_with_asker(
+async def test_action_accept_invitation_confirm_with_asker(
         mock_telebot_make_request: MagicMock,
         mock_aioresponses: aioresponses,
         tracker: Tracker,
@@ -618,17 +660,13 @@ async def test_action_try_to_create_room_confirm_with_asker(
             [Text, Text, Dict[Text, Any]], Tuple[Tuple[Text, URL], RequestCall]
         ],
         external_intent_response: Dict[Text, Any],
+        partner: UserStateMachine,
 ) -> None:
     mock_telebot_make_request.return_value = telegram_user_profile_photo
     mock_aioresponses.post(re.compile(r'.*'), payload=external_intent_response)
 
     user_vault = UserVault()
-    user_vault.save(UserStateMachine(
-        user_id='an_asker',
-        state='waiting_partner_join',
-        partner_id='unit_test_user',
-        newbie=True,
-    ))
+    user_vault.save(partner)
     user_vault.save(UserStateMachine(
         user_id='unit_test_user',
         state='asked_to_join',
@@ -636,10 +674,20 @@ async def test_action_try_to_create_room_confirm_with_asker(
         newbie=True,
     ))
 
-    actual_events = await actions.ActionTryToCreateRoom().run(dispatcher, tracker, domain)
+    actual_events = await actions.ActionAcceptInvitation().run(dispatcher, tracker, domain)
     assert actual_events == [
+        SlotSet('swiper_action_result', 'partner_has_been_asked'),
         {
-            'date_time': '2021-05-25T00:00:10',
+            'date_time': '2021-05-25T00:02:00',
+            'entities': None,
+            'event': 'reminder',
+            'intent': 'EXTERNAL_expire_partner_confirmation',
+            'kill_on_user_msg': False,
+            'name': 'EXTERNAL_expire_partner_confirmation',
+            'timestamp': None
+        },
+        {
+            'date_time': '2021-05-25T00:00:05',
             'entities': None,
             'event': 'reminder',
             'intent': 'EXTERNAL_find_partner',
@@ -647,7 +695,6 @@ async def test_action_try_to_create_room_confirm_with_asker(
             'name': 'EXTERNAL_find_partner',
             'timestamp': None,
         },
-        SlotSet('swiper_action_result', 'partner_has_been_asked'),
         SlotSet('swiper_state', 'waiting_partner_confirm'),
         SlotSet('partner_id', 'an_asker'),
     ]
@@ -668,7 +715,7 @@ async def test_action_try_to_create_room_confirm_with_asker(
 
     rasa_callbacks_ask_if_ready_req_key, rasa_callbacks_ask_if_ready_req_call = rasa_callbacks_expected_req_builder(
         'an_asker',
-        'EXTERNAL_ask_to_join',
+        'EXTERNAL_ask_to_confirm',
         {
             'partner_id': 'unit_test_user',
             'partner_photo_file_id': 'biggest_profile_pic_file_id',
@@ -686,6 +733,8 @@ async def test_action_try_to_create_room_confirm_with_asker(
         newbie=True,
         state_timestamp=1619945501,
         state_timestamp_str='2021-05-02 08:51:41 Z',
+        state_timeout_ts=1619945621,  # 'waiting_partner_confirm' times out in 2 minutes
+        state_timeout_ts_str='2021-05-02 08:53:41 Z',
     )
 
 
@@ -693,20 +742,18 @@ async def test_action_try_to_create_room_confirm_with_asker(
 @pytest.mark.parametrize('partner', [
     UserStateMachine(
         user_id='an_asker',
-        state='waiting_partner_confirm',
-        partner_id='a_completely_different_user',
-        newbie=True,
+        state='new',
+        partner_id='unit_test_user',
     ),
     UserStateMachine(
         user_id='an_asker',
-        state='ok_to_chitchat',
+        state='do_not_disturb',
         partner_id='unit_test_user',
-        newbie=True,
     ),
 ])
-@pytest.mark.usefixtures('create_user_state_machine_table')
+@pytest.mark.usefixtures('create_user_state_machine_table', 'wrap_actions_datetime_now')
 @patch('time.time', Mock(return_value=1619945501))
-async def test_action_try_to_create_room_partner_not_waiting(
+async def test_action_accept_invitation_partner_not_waiting(
         mock_aioresponses: aioresponses,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
@@ -719,13 +766,20 @@ async def test_action_try_to_create_room_partner_not_waiting(
         user_id='unit_test_user',
         state='asked_to_join',
         partner_id='an_asker',
-        newbie=True,
     ))
 
-    actual_events = await actions.ActionTryToCreateRoom().run(dispatcher, tracker, domain)
+    actual_events = await actions.ActionAcceptInvitation().run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'partner_not_waiting_anymore'),
-        FollowupAction('action_find_partner'),
+        {
+            'date_time': '2021-05-25T00:00:02',
+            'entities': None,
+            'event': 'reminder',
+            'intent': 'EXTERNAL_find_partner',
+            'kill_on_user_msg': False,
+            'name': 'EXTERNAL_find_partner',
+            'timestamp': None,
+        },
         SlotSet('swiper_state', 'wants_chitchat'),
         SlotSet('partner_id', None),
     ]
@@ -748,7 +802,6 @@ async def test_action_try_to_create_room_partner_not_waiting(
         user_id='unit_test_user',
         state='wants_chitchat',
         partner_id=None,
-        newbie=True,
         state_timestamp=1619945501,
         state_timestamp_str='2021-05-02 08:51:41 Z',
     )
@@ -769,8 +822,8 @@ async def test_action_try_to_create_room_partner_not_waiting(
         newbie=True,
     ),
 ])
-@pytest.mark.usefixtures('create_user_state_machine_table')
-async def test_action_try_to_create_room_no_partner_id(
+@pytest.mark.usefixtures('create_user_state_machine_table', 'wrap_traceback_format_exception')
+async def test_action_accept_invitation_no_partner_id(
         mock_aioresponses: aioresponses,
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
@@ -780,20 +833,22 @@ async def test_action_try_to_create_room_no_partner_id(
     user_vault = UserVault()
     user_vault.save(UserStateMachine(
         user_id='an_asker',
-        state='waiting_partner_join',
+        state='waiting_partner_confirm',
         partner_id='unit_test_user',
         newbie=True,
     ))
     user_vault.save(current_user)
 
-    actions.SEND_ERROR_STACK_TRACE_TO_SLOT = False
-
-    actual_events = await actions.ActionTryToCreateRoom().run(dispatcher, tracker, domain)
+    actual_events = await actions.ActionAcceptInvitation().run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'error'),
         SlotSet(
             'swiper_error',
             "ValueError('user_id cannot be empty')",
+        ),
+        SlotSet(
+            'swiper_error_trace',
+            'stack trace goes here',
         ),
         SlotSet('swiper_state', current_user.state),
         SlotSet('partner_id', current_user.partner_id),

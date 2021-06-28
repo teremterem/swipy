@@ -122,20 +122,20 @@ class UserStateMachine(UserModel):
         # noinspection PyTypeChecker
         self.machine.add_transition(
             trigger='wait_for_partner_to_confirm',
-            source=[
-                UserState.ASKED_TO_JOIN,
-            ],  # TODO oleksandr: replace with asterisk (or, at least, offerable_states) to be safe ?
+            source='*',
             dest=UserState.WAITING_PARTNER_CONFIRM,
             before=[
                 self._assert_partner_id_arg_not_empty,
-                self._assert_partner_id_arg_same,
+            ],
+            after=[
+                self._set_partner_id,
             ],
         )
 
         # noinspection PyTypeChecker
         self.machine.add_transition(
             trigger='become_asked_to_join',
-            source=UserState.offerable_states,
+            source='*',
             dest=UserState.ASKED_TO_JOIN,
             before=[
                 self._assert_partner_id_arg_not_empty,
@@ -148,7 +148,7 @@ class UserStateMachine(UserModel):
         # noinspection PyTypeChecker
         self.machine.add_transition(
             trigger='become_asked_to_confirm',
-            source=UserState.offerable_states,
+            source='*',
             dest=UserState.ASKED_TO_CONFIRM,
             before=[
                 self._assert_partner_id_arg_not_empty,
@@ -164,7 +164,7 @@ class UserStateMachine(UserModel):
             source=[
                 UserState.ASKED_TO_CONFIRM,
                 UserState.WAITING_PARTNER_CONFIRM,
-            ],  # TODO oleksandr: replace with asterisk (or, at least, offerable_states) to be safe ?
+            ],
             dest=UserState.ROOMED,
             before=[
                 self._assert_partner_id_arg_not_empty,
@@ -202,7 +202,7 @@ class UserStateMachine(UserModel):
                 not self.has_become_discoverable()  # the state hasn't timed out yet
         )
 
-    def has_become_discoverable(self):  # TODO oleksandr: the meaning of this method is still somewhat unclear
+    def has_become_discoverable(self):
         if not self.state_timeout_ts:  # 0 and None are treated equally
             return True  # users in states that don't support timeouts are immediately discoverable
 

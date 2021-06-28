@@ -7,9 +7,9 @@ from pprint import pformat
 from typing import Any, Text, Dict, List
 
 from rasa_sdk import Action, Tracker
-from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType, ReminderScheduled, FollowupAction, \
-    UserUtteranceReverted
+from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType, ReminderScheduled, UserUtteranceReverted
 from rasa_sdk.executor import CollectingDispatcher
+from rasa_sdk.interfaces import ACTION_LISTEN_NAME
 
 from actions import daily_co
 from actions import rasa_callbacks
@@ -23,7 +23,8 @@ logger = logging.getLogger(__name__)
 
 TELL_USER_ABOUT_ERRORS = strtobool(os.getenv('TELL_USER_ABOUT_ERRORS', 'yes'))
 SEND_ERROR_STACK_TRACE_TO_SLOT = strtobool(os.getenv('SEND_ERROR_STACK_TRACE_TO_SLOT', 'yes'))
-FIND_PARTNER_FREQUENCY_SEC = float(os.getenv('FIND_PARTNER_FREQUENCY_SEC', '10'))
+FIND_PARTNER_FREQUENCY_SEC = float(os.getenv('FIND_PARTNER_FREQUENCY_SEC', '5'))
+FIND_PARTNER_FOLLOWUP_DELAY_SEC = float(os.getenv('FIND_PARTNER_FOLLOWUP_DELAY_SEC', '2'))
 GREETING_MAKES_USER_OK_TO_CHITCHAT = strtobool(os.getenv('GREETING_MAKES_USER_OK_TO_CHITCHAT', 'yes'))
 
 SWIPER_STATE_SLOT = 'swiper_state'
@@ -40,7 +41,7 @@ PARTNER_ID_TO_LET_GO_SLOT = 'partner_id_to_let_go'
 EXTERNAL_FIND_PARTNER_INTENT = 'EXTERNAL_find_partner'
 EXTERNAL_EXPIRE_PARTNER_CONFIRMATION = 'EXTERNAL_expire_partner_confirmation'
 ACTION_FIND_PARTNER = 'action_find_partner'
-ACTION_TRY_TO_CREATE_ROOM = 'action_try_to_create_room'
+ACTION_ACCEPT_INVITATION = 'action_accept_invitation'
 
 
 class SwiperActionResult:
@@ -154,7 +155,19 @@ class BaseSwiperAction(Action, ABC):
             ),
         ])
 
-        logger.info('END ACTION RUN: %r (CURRENT USER ID = %r)', self.name(), tracker.sender_id)
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(
+                'END ACTION RUN: %r (CURRENT USER ID = %r)\n\nRETURNED EVENTS:\n\n%s\n',
+                self.name(),
+                tracker.sender_id,
+                pformat(events),
+            )
+        else:
+            logger.info(
+                'END ACTION RUN: %r (CURRENT USER ID = %r)',
+                self.name(),
+                tracker.sender_id,
+            )
         return events
 
 
@@ -208,7 +221,7 @@ class ActionSessionStart(BaseSwiperAction):
     ) -> List[Dict[Text, Any]]:
         events = list(await super().run(dispatcher, tracker, domain))
 
-        events.append(ActionExecuted('action_listen'))
+        events.append(ActionExecuted(ACTION_LISTEN_NAME))
 
         return events
 
@@ -264,30 +277,6 @@ class ActionOfferChitchat(BaseSwiperAction):
         ]
 
 
-def schedule_find_partner_reminder() -> ReminderScheduled:
-    date = datetime_now() + datetime.timedelta(seconds=FIND_PARTNER_FREQUENCY_SEC)
-
-    reminder = ReminderScheduled(
-        EXTERNAL_FIND_PARTNER_INTENT,
-        trigger_date_time=date,
-        name=EXTERNAL_FIND_PARTNER_INTENT,
-        kill_on_user_message=False,
-    )
-    return reminder
-
-
-def schedule_expire_partner_confirmation() -> ReminderScheduled:
-    date = datetime_now() + datetime.timedelta(seconds=PARTNER_CONFIRMATION_TIMEOUT_SEC)
-
-    reminder = ReminderScheduled(
-        EXTERNAL_EXPIRE_PARTNER_CONFIRMATION,
-        trigger_date_time=date,
-        name=EXTERNAL_EXPIRE_PARTNER_CONFIRMATION,
-        kill_on_user_message=False,
-    )
-    return reminder
-
-
 class ActionFindPartner(BaseSwiperAction):
     def name(self) -> Text:
         return ACTION_FIND_PARTNER
@@ -302,12 +291,12 @@ class ActionFindPartner(BaseSwiperAction):
         latest_intent = get_intent_of_latest_message_reliably(tracker)
         triggered_by_reminder = latest_intent == EXTERNAL_FIND_PARTNER_INTENT
 
-        triggered_as_followup = (
-                tracker.latest_action_name == ACTION_TRY_TO_CREATE_ROOM and
-                tracker.followup_action == ACTION_FIND_PARTNER
-        )  # if this action was a side-effect of a user saying yes to an invitation then no messages to the user
-
         if triggered_by_reminder:
+            events = [
+                # get rid of artificial intent so it doesn't interfere with story predictions
+                UserUtteranceReverted(),
+            ]
+
             if current_user.state not in [
                 UserState.WANTS_CHITCHAT,
                 UserState.OK_TO_CHITCHAT,
@@ -315,18 +304,21 @@ class ActionFindPartner(BaseSwiperAction):
             ]:
                 # the search was stopped for the user one way or another (user said stop, or was asked to join etc.)
                 # => don't do any partner searching and don't schedule another reminder
-                return [
-                    # get rid of artificial intent so it doesn't interfere with story predictions
-                    UserUtteranceReverted(),
-                ]
+                return events
 
         else:  # user just requested chitchat
-            if not triggered_as_followup:
-                dispatcher.utter_message(response='utter_ok_arranging_chitchat')
+            dispatcher.utter_message(response='utter_ok_arranging_chitchat')
 
             # noinspection PyUnresolvedReferences
             current_user.request_chitchat()
             user_vault.save(current_user)
+
+            events = [
+                SlotSet(
+                    key=SWIPER_ACTION_RESULT_SLOT,
+                    value=SwiperActionResult.SUCCESS,
+                ),
+            ]
 
         partner = user_vault.get_random_available_partner(current_user)
 
@@ -340,37 +332,9 @@ class ActionFindPartner(BaseSwiperAction):
                 suppress_callback_errors=True,
             )
 
-            events = [schedule_find_partner_reminder()]
+            events.append(schedule_find_partner_reminder())
 
-            # TODO oleksandr: refactor everything in the method below this line
-
-            if triggered_by_reminder:
-                # get rid of artificial intent so it doesn't interfere with story predictions
-                events.append(UserUtteranceReverted())
-            # elif triggered_as_followup:
-            #     events.append(ActionReverted())
-            else:
-                events.append(SlotSet(
-                    key=SWIPER_ACTION_RESULT_SLOT,
-                    value=SwiperActionResult.SUCCESS,
-                ))
-            return events
-
-        if triggered_as_followup:
-            pass
-            # return [
-            #     ActionReverted(),
-            # ]
-        else:
-            pass
-            # dispatcher.utter_message(response='utter_no_one_was_found')
-
-        return [
-            SlotSet(
-                key=SWIPER_ACTION_RESULT_SLOT,
-                value=SwiperActionResult.PARTNER_WAS_NOT_FOUND,
-            ),
-        ]
+        return events
 
 
 class ActionAskToJoin(BaseSwiperAction):
@@ -426,9 +390,9 @@ class ActionAskToJoin(BaseSwiperAction):
         ]
 
 
-class ActionTryToCreateRoom(BaseSwiperAction):
+class ActionAcceptInvitation(BaseSwiperAction):
     def name(self) -> Text:
-        return ACTION_TRY_TO_CREATE_ROOM
+        return ACTION_ACCEPT_INVITATION
 
     async def swipy_run(
             self, dispatcher: CollectingDispatcher,
@@ -457,7 +421,7 @@ class ActionTryToCreateRoom(BaseSwiperAction):
                     key=SWIPER_ACTION_RESULT_SLOT,
                     value=SwiperActionResult.PARTNER_NOT_WAITING_ANYMORE,
                 ),
-                FollowupAction('action_find_partner'),
+                schedule_find_partner_reminder(delta_sec=FIND_PARTNER_FOLLOWUP_DELAY_SEC),
             ]
 
     @staticmethod
@@ -485,12 +449,12 @@ class ActionTryToCreateRoom(BaseSwiperAction):
         user_vault.save(current_user)
 
         return [
-            schedule_expire_partner_confirmation(),
-            schedule_find_partner_reminder(),
             SlotSet(
                 key=SWIPER_ACTION_RESULT_SLOT,
                 value=SwiperActionResult.PARTNER_HAS_BEEN_ASKED,
             ),
+            schedule_expire_partner_confirmation(),
+            schedule_find_partner_reminder(),
         ]
 
     @staticmethod
@@ -547,12 +511,12 @@ class ActionJoinRoom(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        dispatcher.utter_message(response='utter_partner_ready_room_url')
-
         partner_id = tracker.get_slot(rasa_callbacks.PARTNER_ID_SLOT)
         # noinspection PyUnresolvedReferences
         current_user.join_room(partner_id)
         user_vault.save(current_user)
+
+        dispatcher.utter_message(response='utter_partner_ready_room_url')
 
         return [
             SlotSet(
@@ -636,4 +600,35 @@ class ActionExpirePartnerConfirmation(BaseSwiperAction):
                 key=SWIPER_ACTION_RESULT_SLOT,
                 value=SwiperActionResult.SUCCESS,
             ),
+            schedule_find_partner_reminder(delta_sec=FIND_PARTNER_FOLLOWUP_DELAY_SEC),  # reschedule just in case
         ]
+
+
+def schedule_find_partner_reminder(delta_sec: float = FIND_PARTNER_FREQUENCY_SEC) -> ReminderScheduled:
+    return _reschedule_reminder(
+        EXTERNAL_FIND_PARTNER_INTENT,
+        delta_sec,
+    )
+
+
+def schedule_expire_partner_confirmation(delta_sec: float = PARTNER_CONFIRMATION_TIMEOUT_SEC) -> ReminderScheduled:
+    return _reschedule_reminder(
+        EXTERNAL_EXPIRE_PARTNER_CONFIRMATION,
+        delta_sec,
+    )
+
+
+def _reschedule_reminder(
+        intent_name: Text,
+        delta_sec: float,
+        kill_on_user_message: bool = False,
+) -> ReminderScheduled:
+    date = datetime_now() + datetime.timedelta(seconds=delta_sec)
+
+    reminder = ReminderScheduled(
+        intent_name,
+        trigger_date_time=date,
+        name=intent_name,  # ensures rescheduling of the existing reminder
+        kill_on_user_message=kill_on_user_message,
+    )
+    return reminder

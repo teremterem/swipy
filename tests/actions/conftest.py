@@ -1,6 +1,8 @@
 import json
 import os
+import traceback
 from datetime import datetime
+from typing import List, Text
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -14,19 +16,36 @@ from actions.utils import datetime_now
 
 
 @pytest.fixture
-def wrap_datetime_now() -> MagicMock:
+def wrap_actions_datetime_now() -> MagicMock:
     _original_datetime_now = datetime_now
 
     def _wrap_datetime_now(*args, **kwargs) -> datetime:
+        # make sure parameters don't cause the original function to crash
         # noinspection PyArgumentList
         original_result = _original_datetime_now(*args, **kwargs)
         assert isinstance(original_result, datetime)
         return datetime(2021, 5, 25)
 
+    # TODO oleksandr: this fixture only works for actions/actions.py code - figure out how to make it more ubiquitous
     with patch('actions.actions.datetime_now') as mock_datetime_now:
         mock_datetime_now.side_effect = _wrap_datetime_now
 
         yield mock_datetime_now
+
+
+@pytest.fixture
+def wrap_traceback_format_exception() -> MagicMock:
+    _original_format_exception = traceback.format_exception
+
+    def _wrap_format_exception(*args, **kwargs) -> List[Text]:
+        # make sure parameters don't cause the original function to crash
+        _original_format_exception(*args, **kwargs)
+        return ['stack ', 'trace ', 'goes ', 'here']
+
+    with patch('traceback.format_exception') as mock_traceback_format_exception:
+        mock_traceback_format_exception.side_effect = _wrap_format_exception
+
+        yield mock_traceback_format_exception
 
 
 @pytest.fixture
