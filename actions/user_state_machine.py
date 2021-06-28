@@ -37,7 +37,7 @@ class UserState:
         DO_NOT_DISTURB,
     ]
     states_with_timeouts = [
-        WAITING_PARTNER_CONFIRM,  # cannot be found by others until timeout (although can themselves seek others)
+        WAITING_PARTNER_CONFIRM,
         ASKED_TO_JOIN,
         ASKED_TO_CONFIRM,
         ROOMED,

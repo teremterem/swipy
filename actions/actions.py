@@ -298,7 +298,6 @@ class ActionFindPartner(BaseSwiperAction):
             if current_user.state not in [
                 UserState.WANTS_CHITCHAT,
                 UserState.OK_TO_CHITCHAT,
-                UserState.WAITING_PARTNER_CONFIRM,
             ]:
                 # the search was stopped for the user one way or another (user said stop, or was asked to join etc.)
                 # => don't do any partner searching and don't schedule another reminder
@@ -452,7 +451,6 @@ class ActionAcceptInvitation(BaseSwiperAction):
                 value=SwiperActionResult.PARTNER_HAS_BEEN_ASKED,
             ),
             schedule_expire_partner_confirmation(),
-            schedule_find_partner_reminder(),
         ]
 
     @staticmethod
