@@ -1104,3 +1104,76 @@ async def test_action_reject_invitation(
         state_timeout_ts=1619945501 + (60 * 60 * 4),
         state_timeout_ts_str='2021-05-02 12:51:41 Z',
     )
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures('create_user_state_machine_table', 'wrap_actions_datetime_now')
+@pytest.mark.parametrize('source_swiper_state, action_has_effect', [
+    ('new', False),
+    ('wants_chitchat', False),
+    ('ok_to_chitchat', False),
+    ('waiting_partner_confirm', True),
+    ('asked_to_join', False),
+    ('asked_to_confirm', False),
+    ('roomed', False),
+    ('rejected_join', False),
+    ('rejected_confirm', False),
+    ('do_not_disturb', False),
+])
+async def test_action_expire_partner_confirmation(
+        tracker: Tracker,
+        dispatcher: CollectingDispatcher,
+        domain: Dict[Text, Any],
+        source_swiper_state: Text,
+        action_has_effect: bool,
+) -> None:
+    current_user = UserStateMachine(
+        user_id='unit_test_user',
+        state=source_swiper_state,
+        partner_id='',
+        newbie=True,
+    )
+    user_vault = UserVault()
+    user_vault.save(current_user)
+
+    action = actions.ActionExpirePartnerConfirmation()
+    assert action.name() == 'action_expire_partner_confirmation'
+
+    actual_events = await action.run(dispatcher, tracker, domain)
+
+    if action_has_effect:
+        assert actual_events == [
+            SlotSet('swiper_action_result', 'success'),
+            {
+                'date_time': '2021-05-25T00:00:02',
+                'entities': None,
+                'event': 'reminder',
+                'intent': 'EXTERNAL_find_partner',
+                'kill_on_user_msg': False,
+                'name': 'EXTERNAL_find_partner',
+                'timestamp': None,
+            },
+            SlotSet('swiper_state', source_swiper_state),
+            SlotSet('partner_id', ''),
+        ]
+        assert dispatcher.messages == [{
+            'attachment': None,
+            'buttons': [],
+            'custom': {},
+            'elements': [],
+            'image': None,
+            'response': 'utter_partner_already_gone',
+            'template': 'utter_partner_already_gone',
+            'text': None,
+        }]
+
+    else:
+        assert actual_events == [
+            UserUtteranceReverted(),
+            SlotSet('swiper_state', source_swiper_state),
+            SlotSet('partner_id', ''),
+        ]
+        assert dispatcher.messages == []
+
+    user_vault = UserVault()  # create new instance to avoid hitting cache
+    assert user_vault.get_user('unit_test_user') == current_user  # nothing has changed in current user
