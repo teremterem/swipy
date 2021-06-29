@@ -863,12 +863,30 @@ async def test_action_accept_invitation_no_partner_id(
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('create_user_state_machine_table')
+@pytest.mark.parametrize('source_swiper_state, wrong_partner, action_allowed', [
+    ('new', False, False),
+    ('wants_chitchat', False, False),
+    ('ok_to_chitchat', False, False),
+    ('waiting_partner_confirm', False, True),
+    ('asked_to_join', False, False),
+    ('asked_to_confirm', False, True),
+    ('roomed', False, False),
+    ('rejected_join', False, False),
+    ('rejected_confirm', False, False),
+    ('do_not_disturb', False, False),
+
+    ('waiting_partner_confirm', True, False),
+    ('asked_to_confirm', True, False),
+])
+@pytest.mark.usefixtures('create_user_state_machine_table', 'wrap_traceback_format_exception')
 @patch('time.time', Mock(return_value=1619945501))
 async def test_action_join_room(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
+        source_swiper_state: Text,
+        wrong_partner: bool,
+        action_allowed: bool,
 ) -> None:
     action = actions.ActionJoinRoom()
     assert action.name() == 'action_join_room'
@@ -876,43 +894,94 @@ async def test_action_join_room(
     user_vault = UserVault()
     user_vault.save(UserStateMachine(
         user_id='unit_test_user',  # the asker
-        state='waiting_partner_confirm',
-        partner_id='partner_that_accepted',
+        state=source_swiper_state,
+        partner_id='expected_partner',
         newbie=True,
     ))
 
     tracker.add_slots([
-        SlotSet('partner_id', 'partner_that_accepted'),
+        SlotSet('partner_id', 'unexpected_partner' if wrong_partner else 'expected_partner'),
     ])
 
     actual_events = await action.run(dispatcher, tracker, domain)
-    assert actual_events == [
-        SlotSet('swiper_action_result', 'success'),
-        SlotSet('swiper_state', 'roomed'),
-        SlotSet('partner_id', 'partner_that_accepted'),
-    ]
-    assert dispatcher.messages == [{
-        'attachment': None,
-        'buttons': [],
-        'custom': {},
-        'elements': [],
-        'image': None,
-        'response': 'utter_partner_ready_room_url',
-        'template': 'utter_partner_ready_room_url',
-        'text': None,
-    }]
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
-    assert user_vault.get_user('unit_test_user') == UserStateMachine(
-        user_id='unit_test_user',  # the asker
-        state='roomed',
-        partner_id='partner_that_accepted',
-        newbie=False,  # accepting the very first video chitchat graduates the user from newbie
-        state_timestamp=1619945501,
-        state_timestamp_str='2021-05-02 08:51:41 Z',
-        state_timeout_ts=1619945501 + (60 * 60 * 4),
-        state_timeout_ts_str='2021-05-02 12:51:41 Z',
-    )
+
+    if action_allowed:
+        assert actual_events == [
+            SlotSet('swiper_action_result', 'success'),
+            SlotSet('swiper_state', 'roomed'),
+            SlotSet('partner_id', 'expected_partner'),
+        ]
+        assert dispatcher.messages == [{
+            'attachment': None,
+            'buttons': [],
+            'custom': {},
+            'elements': [],
+            'image': None,
+            'response': 'utter_partner_ready_room_url',
+            'template': 'utter_partner_ready_room_url',
+            'text': None,
+        }]
+        assert user_vault.get_user('unit_test_user') == UserStateMachine(
+            user_id='unit_test_user',  # the asker
+            state='roomed',
+            partner_id='expected_partner',
+            newbie=False,  # accepting the very first video chitchat graduates the user from newbie
+            state_timestamp=1619945501,
+            state_timestamp_str='2021-05-02 08:51:41 Z',
+            state_timeout_ts=1619945501 + (60 * 60 * 4),
+            state_timeout_ts_str='2021-05-02 12:51:41 Z',
+        )
+
+    else:
+        if wrong_partner:
+            assert actual_events == [
+                SlotSet('swiper_action_result', 'error'),
+                SlotSet(
+                    'swiper_error',
+                    'SwiperStateMachineError("partner_id that was passed (\'unexpected_partner\') differs from '
+                    'partner_id that was set before (\'expected_partner\')")',
+                ),
+                SlotSet(
+                    'swiper_error_trace',
+                    'stack trace goes here',
+                ),
+                SlotSet('swiper_state', source_swiper_state),  # state has not changed
+                SlotSet('partner_id', 'expected_partner'),
+            ]
+        else:
+            assert actual_events == [
+                SlotSet('swiper_action_result', 'error'),
+                SlotSet(
+                    'swiper_error',
+                    'SwiperStateMachineError("partner_id that was passed (\'unexpected_partner\') differs from '
+                    'partner_id that was set before (\'expected_partner\')")',
+                ),
+                SlotSet(
+                    'swiper_error_trace',
+                    'stack trace goes here',
+                ),
+                SlotSet('swiper_state', source_swiper_state),  # state has not changed
+                SlotSet('partner_id', 'expected_partner'),
+            ]
+
+        assert dispatcher.messages == [{
+            'attachment': None,
+            'buttons': [],
+            'custom': {},
+            'elements': [],
+            'image': None,
+            'response': 'utter_error',
+            'template': 'utter_error',
+            'text': None,
+        }]
+        assert user_vault.get_user('unit_test_user') == UserStateMachine(  # the state of current user has not changed
+            user_id='unit_test_user',  # the asker
+            state=source_swiper_state,
+            partner_id='expected_partner',
+            newbie=True,
+        )
 
 
 @pytest.mark.asyncio
