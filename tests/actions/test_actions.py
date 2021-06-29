@@ -848,7 +848,6 @@ async def test_action_accept_invitation_partner_not_waiting(
             'timestamp': None,
         },
         SlotSet('swiper_state', 'wants_chitchat'),
-        SlotSet('partner_id', None),
     ]
     assert dispatcher.messages == [{
         'attachment': None,
