@@ -80,7 +80,7 @@ class BaseSwiperAction(Action, ABC):
         try:
             metadata = tracker.latest_message.get('metadata') or {}
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('ActionRegisterMetadata - latest_message.metadata:\n%s', pformat(metadata))
+                logger.debug('tracker.latest_message.metadata:\n%s', pformat(metadata))
 
             deeplink_data = metadata.get(DEEPLINK_DATA_SLOT)
             telegram_from = metadata.get(TELEGRAM_FROM_SLOT)
