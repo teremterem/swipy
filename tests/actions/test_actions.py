@@ -907,7 +907,7 @@ async def test_action_accept_invitation_no_partner_id(
     user_vault.save(current_user)
 
     actual_events = await actions.ActionAcceptInvitation().run(dispatcher, tracker, domain)
-    assert actual_events == [
+    expected_events = [
         SlotSet('swiper_action_result', 'error'),
         SlotSet(
             'swiper_error',
@@ -918,8 +918,13 @@ async def test_action_accept_invitation_no_partner_id(
             'stack trace goes here',
         ),
         SlotSet('swiper_state', current_user.state),
-        SlotSet('partner_id', current_user.partner_id),
     ]
+    if current_user.partner_id is not None:
+        # None is not expected to be set explicitly (None is the value that the slot had already)
+        expected_events.append(SlotSet('partner_id', current_user.partner_id))
+
+    assert actual_events == expected_events
+
     assert dispatcher.messages == [{
         'attachment': None,
         'buttons': [],
@@ -1027,7 +1032,7 @@ async def test_action_join_room(
             SlotSet('swiper_state', source_swiper_state),  # state has not changed
         ]
         if wrong_partner:
-            # "partner_id" slot was initially set to "unexpected_partner", and hence is expected to be "reverted"
+            # 'partner_id' slot was initially set to 'unexpected_partner', and hence is expected to be "reverted"
             expected_events.append(SlotSet('partner_id', 'expected_partner'))
 
         assert actual_events == expected_events
