@@ -421,38 +421,6 @@ class ActionAcceptInvitation(BaseSwiperAction):
             ]
 
     @staticmethod
-    async def confirm_with_asker(
-            dispatcher: CollectingDispatcher,
-            current_user: UserStateMachine,
-            partner: UserStateMachine,
-            user_vault: IUserVault,
-    ) -> List[Dict[Text, Any]]:
-        dispatcher.utter_message(response='utter_checking_if_partner_ready_too')
-
-        user_profile_photo_id = telegram_helpers.get_user_profile_photo_file_id(current_user.user_id)
-
-        # noinspection PyBroadException
-        try:
-            await rasa_callbacks.ask_to_confirm(current_user.user_id, partner.user_id, user_profile_photo_id)
-        except Exception:
-            # noinspection PyUnresolvedReferences
-            current_user.request_chitchat()
-            user_vault.save(current_user)
-            raise
-
-        # noinspection PyUnresolvedReferences
-        current_user.wait_for_partner_to_confirm(partner.user_id)
-        user_vault.save(current_user)
-
-        return [
-            SlotSet(
-                key=SWIPER_ACTION_RESULT_SLOT,
-                value=SwiperActionResult.PARTNER_HAS_BEEN_ASKED,
-            ),
-            schedule_expire_partner_confirmation(),
-        ]
-
-    @staticmethod
     async def create_room(
             dispatcher: CollectingDispatcher,
             current_user: UserStateMachine,
@@ -494,6 +462,38 @@ class ActionAcceptInvitation(BaseSwiperAction):
             ),
         ]
 
+    @staticmethod
+    async def confirm_with_asker(
+            dispatcher: CollectingDispatcher,
+            current_user: UserStateMachine,
+            partner: UserStateMachine,
+            user_vault: IUserVault,
+    ) -> List[Dict[Text, Any]]:
+        dispatcher.utter_message(response='utter_checking_if_partner_ready_too')
+
+        user_profile_photo_id = telegram_helpers.get_user_profile_photo_file_id(current_user.user_id)
+
+        # noinspection PyBroadException
+        try:
+            await rasa_callbacks.ask_to_confirm(current_user.user_id, partner.user_id, user_profile_photo_id)
+        except Exception:
+            # noinspection PyUnresolvedReferences
+            current_user.request_chitchat()
+            user_vault.save(current_user)
+            raise
+
+        # noinspection PyUnresolvedReferences
+        current_user.wait_for_partner_to_confirm(partner.user_id)
+        user_vault.save(current_user)
+
+        return [
+            SlotSet(
+                key=SWIPER_ACTION_RESULT_SLOT,
+                value=SwiperActionResult.PARTNER_HAS_BEEN_ASKED,
+            ),
+            schedule_expire_partner_confirmation(),
+        ]
+
 
 class ActionJoinRoom(BaseSwiperAction):
     def name(self) -> Text:
@@ -532,11 +532,11 @@ class ActionDoNotDisturb(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        dispatcher.utter_message(response='utter_hope_to_see_you_later')
-
         # noinspection PyUnresolvedReferences
         current_user.become_do_not_disturb()
         user_vault.save(current_user)
+
+        dispatcher.utter_message(response='utter_hope_to_see_you_later')
 
         return [
             SlotSet(
@@ -557,11 +557,11 @@ class ActionRejectInvitation(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        dispatcher.utter_message(response='utter_declined')
-
         # noinspection PyUnresolvedReferences
         current_user.reject()
         user_vault.save(current_user)
+
+        dispatcher.utter_message(response='utter_declined')
 
         return [
             SlotSet(
@@ -595,7 +595,7 @@ class ActionExpirePartnerConfirmation(BaseSwiperAction):
                 key=SWIPER_ACTION_RESULT_SLOT,
                 value=SwiperActionResult.SUCCESS,
             ),
-            schedule_find_partner_reminder(delta_sec=FIND_PARTNER_FOLLOWUP_DELAY_SEC),  # reschedule just in case
+            schedule_find_partner_reminder(delta_sec=FIND_PARTNER_FOLLOWUP_DELAY_SEC),
         ]
 
 
