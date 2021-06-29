@@ -623,7 +623,7 @@ async def test_action_ask_to_join(
 @pytest.mark.usefixtures('create_user_state_machine_table', 'wrap_actions_datetime_now')
 @patch('time.time', Mock(return_value=1619945501))  # "now"
 @patch('actions.daily_co.create_room', wraps=daily_co.create_room)
-async def test_action_accept_invitation(
+async def test_action_accept_invitation_create_room(
         wrap_daily_co_create_room: AsyncMock,
         mock_aioresponses: aioresponses,
         tracker: Tracker,
