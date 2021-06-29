@@ -1107,11 +1107,19 @@ async def test_action_do_not_disturb(
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('create_user_state_machine_table')
+@pytest.mark.usefixtures('create_user_state_machine_table', 'wrap_traceback_format_exception')
 @patch('time.time', Mock(return_value=1619945501))
 @pytest.mark.parametrize('source_swiper_state, destination_swiper_state', [
+    ('new', None),
+    ('wants_chitchat', None),
+    ('ok_to_chitchat', None),
+    ('waiting_partner_confirm', None),
     ('asked_to_join', 'rejected_join'),
     ('asked_to_confirm', 'rejected_confirm'),
+    ('roomed', None),
+    ('rejected_join', None),
+    ('rejected_confirm', None),
+    ('do_not_disturb', None),
 ])
 async def test_action_reject_invitation(
         tracker: Tracker,
@@ -1132,33 +1140,66 @@ async def test_action_reject_invitation(
     assert action.name() == 'action_reject_invitation'
 
     actual_events = await action.run(dispatcher, tracker, domain)
-    assert actual_events == [
-        SlotSet('swiper_action_result', 'success'),
-        SlotSet('swiper_state', destination_swiper_state),
-        SlotSet('partner_id', ''),
-    ]
-    assert dispatcher.messages == [{
-        'attachment': None,
-        'buttons': [],
-        'custom': {},
-        'elements': [],
-        'image': None,
-        'response': 'utter_declined',
-        'template': 'utter_declined',
-        'text': None,
-    }]
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
-    assert user_vault.get_user('unit_test_user') == UserStateMachine(
-        user_id='unit_test_user',
-        state=destination_swiper_state,
-        partner_id='',
-        newbie=True,
-        state_timestamp=1619945501,
-        state_timestamp_str='2021-05-02 08:51:41 Z',
-        state_timeout_ts=1619945501 + (60 * 60 * 4),
-        state_timeout_ts_str='2021-05-02 12:51:41 Z',
-    )
+
+    if destination_swiper_state:
+        assert actual_events == [
+            SlotSet('swiper_action_result', 'success'),
+            SlotSet('swiper_state', destination_swiper_state),
+            SlotSet('partner_id', ''),
+        ]
+        assert dispatcher.messages == [{
+            'attachment': None,
+            'buttons': [],
+            'custom': {},
+            'elements': [],
+            'image': None,
+            'response': 'utter_declined',
+            'template': 'utter_declined',
+            'text': None,
+        }]
+        assert user_vault.get_user('unit_test_user') == UserStateMachine(
+            user_id='unit_test_user',
+            state=destination_swiper_state,
+            partner_id='',
+            newbie=True,
+            state_timestamp=1619945501,
+            state_timestamp_str='2021-05-02 08:51:41 Z',
+            state_timeout_ts=1619945501 + (60 * 60 * 4),
+            state_timeout_ts_str='2021-05-02 12:51:41 Z',
+        )
+
+    else:  # an error is expected
+        assert actual_events == [
+            SlotSet('swiper_action_result', 'error'),
+            SlotSet(
+                'swiper_error',
+                f"MachineError(\"Can't trigger event reject from state {source_swiper_state}!\")",
+            ),
+            SlotSet(
+                'swiper_error_trace',
+                'stack trace goes here',
+            ),
+            SlotSet('swiper_state', source_swiper_state),
+            SlotSet('partner_id', ''),
+        ]
+        assert dispatcher.messages == [{
+            'attachment': None,
+            'buttons': [],
+            'custom': {},
+            'elements': [],
+            'image': None,
+            'response': 'utter_error',
+            'template': 'utter_error',
+            'text': None,
+        }]
+        assert user_vault.get_user('unit_test_user') == UserStateMachine(  # the state of current user has not changed
+            user_id='unit_test_user',
+            state=source_swiper_state,
+            partner_id='',
+            newbie=True,
+        )
 
 
 @pytest.mark.asyncio

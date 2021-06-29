@@ -532,11 +532,11 @@ class ActionDoNotDisturb(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        dispatcher.utter_message(response='utter_hope_to_see_you_later')
-
         # noinspection PyUnresolvedReferences
         current_user.become_do_not_disturb()
         user_vault.save(current_user)
+
+        dispatcher.utter_message(response='utter_hope_to_see_you_later')
 
         return [
             SlotSet(
@@ -557,11 +557,11 @@ class ActionRejectInvitation(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        dispatcher.utter_message(response='utter_declined')
-
         # noinspection PyUnresolvedReferences
         current_user.reject()
         user_vault.save(current_user)
+
+        dispatcher.utter_message(response='utter_declined')
 
         return [
             SlotSet(
