@@ -124,7 +124,7 @@ responses:
   utter_checking_if_partner_ready_too:
   - custom:
       parse_mode: html
-      text: "Just a moment, I'm checking if that person is ready too...\n \nPlease don't go anywhere - <b>this may take up to one minute</b> ⏳"
+      text: "Just a moment, I'm checking if that person is ready too...\n \nPlease don't go anywhere - <b>this may take up to a minute</b> ⏳"
   utter_found_someone_check_ready_photo:
   - custom:
       caption: "Hooray! I have found someone who is willing to chitchat!\n \n<b>Are you ready for a video call?</b> \U0001F3A5 ☎️"
