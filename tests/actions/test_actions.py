@@ -367,7 +367,6 @@ async def test_action_find_partner(
         assert actual_events == [
             UserUtteranceReverted(),
             SlotSet('swiper_state', source_swiper_state),
-            SlotSet('partner_id', None),
         ]
         mock_get_random_available_partner_dict.assert_not_called()
         mock_telebot_make_request.assert_not_called()
@@ -386,7 +385,6 @@ async def test_action_find_partner(
                 'timestamp': None,
             },
             SlotSet('swiper_state', 'wants_chitchat'),
-            SlotSet('partner_id', None),
         ]
         mock_get_random_available_partner_dict.assert_called_once_with(
             [
