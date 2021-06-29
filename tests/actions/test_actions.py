@@ -1127,14 +1127,13 @@ async def test_action_expire_partner_confirmation(
         source_swiper_state: Text,
         action_has_effect: bool,
 ) -> None:
-    current_user = UserStateMachine(
+    user_vault = UserVault()
+    user_vault.save(UserStateMachine(
         user_id='unit_test_user',
         state=source_swiper_state,
         partner_id='',
         newbie=True,
-    )
-    user_vault = UserVault()
-    user_vault.save(current_user)
+    ))
 
     action = actions.ActionExpirePartnerConfirmation()
     assert action.name() == 'action_expire_partner_confirmation'
@@ -1176,4 +1175,9 @@ async def test_action_expire_partner_confirmation(
         assert dispatcher.messages == []
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
-    assert user_vault.get_user('unit_test_user') == current_user  # nothing has changed in current user
+    assert user_vault.get_user('unit_test_user') == UserStateMachine(  # the state of current user has not changed
+        user_id='unit_test_user',
+        state=source_swiper_state,
+        partner_id='',
+        newbie=True,
+    )
