@@ -46,7 +46,6 @@ async def test_action_swiper_error_trace(
         ),
         SlotSet('swiper_error_trace', 'stack trace goes here'),
         SlotSet('swiper_state', 'new'),
-        SlotSet('partner_id', None),
     ]
     assert dispatcher.messages == [{
         'attachment': None,
@@ -155,10 +154,7 @@ async def test_action_session_start_without_slots(
     actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == [
         SessionStarted(),
-        SlotSet('swiper_error', None),  # cleared upon session start
-        SlotSet('swiper_error_trace', None),  # cleared upon session start
         SlotSet('swiper_state', 'new'),  # state taken from UserVault
-        SlotSet('partner_id', None),  # partner_id taken from UserVault
         ActionExecuted('action_listen'),
     ]
     assert dispatcher.messages == []
@@ -210,8 +206,6 @@ async def test_action_session_start_with_slots(
 
     domain['session_config']['carry_over_slots_to_new_session'] = carry_over_slots_to_new_session
     expected_events = expected_events + [
-        SlotSet('swiper_error', None),  # cleared upon session start
-        SlotSet('swiper_error_trace', None),  # cleared upon session start
         SlotSet('swiper_state', 'ok_to_chitchat'),  # state taken from UserVault rather than carried over
         SlotSet('partner_id', None),  # partner_id taken from UserVault rather than carried over
         ActionExecuted(action_name='action_listen'),
