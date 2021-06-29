@@ -987,7 +987,6 @@ async def test_action_join_room(
         assert actual_events == [
             SlotSet('swiper_action_result', 'success'),
             SlotSet('swiper_state', 'roomed'),
-            SlotSet('partner_id', 'expected_partner'),
         ]
         assert dispatcher.messages == [{
             'attachment': None,
@@ -1011,7 +1010,7 @@ async def test_action_join_room(
         )
 
     else:
-        assert actual_events == [
+        expected_events = [
             SlotSet('swiper_action_result', 'error'),
             SlotSet(
                 'swiper_error',
@@ -1026,8 +1025,13 @@ async def test_action_join_room(
                 'stack trace goes here',
             ),
             SlotSet('swiper_state', source_swiper_state),  # state has not changed
-            SlotSet('partner_id', 'expected_partner'),
         ]
+        if wrong_partner:
+            # "partner_id" slot was initially set to "unexpected_partner", and hence is expected to be "reverted"
+            expected_events.append(SlotSet('partner_id', 'expected_partner'))
+
+        assert actual_events == expected_events
+
         assert dispatcher.messages == [{
             'attachment': None,
             'buttons': [],
