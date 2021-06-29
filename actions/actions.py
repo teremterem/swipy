@@ -80,7 +80,7 @@ class BaseSwiperAction(Action, ABC):
         try:
             metadata = tracker.latest_message.get('metadata') or {}
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('ActionRegisterMetadata - latest_message.metadata:\n%s', pformat(metadata))
+                logger.debug('tracker.latest_message.metadata:\n%s', pformat(metadata))
 
             deeplink_data = metadata.get(DEEPLINK_DATA_SLOT)
             telegram_from = metadata.get(TELEGRAM_FROM_SLOT)
@@ -141,17 +141,30 @@ class BaseSwiperAction(Action, ABC):
             except Exception:
                 logger.exception('%s (less important error)', self.name())
 
+        else:
+            if tracker.get_slot(SWIPER_ERROR_SLOT) is not None:
+                events.append(SlotSet(
+                    key=SWIPER_ERROR_SLOT,
+                    value=None,
+                ))
+            if tracker.get_slot(SWIPER_ERROR_TRACE_SLOT) is not None:
+                events.append(SlotSet(
+                    key=SWIPER_ERROR_TRACE_SLOT,
+                    value=None,
+                ))
+
         current_user = user_vault.get_user(tracker.sender_id)  # invoke get_user once again (just in case)
-        events.extend([
-            SlotSet(
+
+        if tracker.get_slot(SWIPER_STATE_SLOT) != current_user.state:
+            events.append(SlotSet(
                 key=SWIPER_STATE_SLOT,
                 value=current_user.state,
-            ),
-            SlotSet(
+            ))
+        if tracker.get_slot(rasa_callbacks.PARTNER_ID_SLOT) != current_user.partner_id:
+            events.append(SlotSet(
                 key=rasa_callbacks.PARTNER_ID_SLOT,
                 value=current_user.partner_id,
-            ),
-        ])
+            ))
 
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug(
@@ -200,16 +213,6 @@ class ActionSessionStart(BaseSwiperAction):
         if domain['session_config']['carry_over_slots_to_new_session']:
             events.extend(self._slot_set_events_from_tracker(tracker))
 
-        events.extend([
-            SlotSet(
-                key=SWIPER_ERROR_SLOT,
-                value=None,
-            ),
-            SlotSet(
-                key=SWIPER_ERROR_TRACE_SLOT,
-                value=None,
-            ),
-        ])
         return events
 
     async def run(

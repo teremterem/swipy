@@ -46,7 +46,6 @@ async def test_action_swiper_error_trace(
         ),
         SlotSet('swiper_error_trace', 'stack trace goes here'),
         SlotSet('swiper_state', 'new'),
-        SlotSet('partner_id', None),
     ]
     assert dispatcher.messages == [{
         'attachment': None,
@@ -155,10 +154,7 @@ async def test_action_session_start_without_slots(
     actual_events = await action.run(dispatcher, tracker, domain)
     assert actual_events == [
         SessionStarted(),
-        SlotSet('swiper_error', None),  # cleared upon session start
-        SlotSet('swiper_error_trace', None),  # cleared upon session start
         SlotSet('swiper_state', 'new'),  # state taken from UserVault
-        SlotSet('partner_id', None),  # partner_id taken from UserVault
         ActionExecuted('action_listen'),
     ]
     assert dispatcher.messages == []
@@ -210,8 +206,6 @@ async def test_action_session_start_with_slots(
 
     domain['session_config']['carry_over_slots_to_new_session'] = carry_over_slots_to_new_session
     expected_events = expected_events + [
-        SlotSet('swiper_error', None),  # cleared upon session start
-        SlotSet('swiper_error_trace', None),  # cleared upon session start
         SlotSet('swiper_state', 'ok_to_chitchat'),  # state taken from UserVault rather than carried over
         SlotSet('partner_id', None),  # partner_id taken from UserVault rather than carried over
         ActionExecuted(action_name='action_listen'),
@@ -273,7 +267,6 @@ async def test_action_offer_chitchat(
         SlotSet('deeplink_data', ''),
         SlotSet('telegram_from', None),
         SlotSet('swiper_state', destination_swiper_state),
-        SlotSet('partner_id', None),
     ]
     assert dispatcher.messages == [{
         'attachment': None,
@@ -367,7 +360,6 @@ async def test_action_find_partner(
         assert actual_events == [
             UserUtteranceReverted(),
             SlotSet('swiper_state', source_swiper_state),
-            SlotSet('partner_id', None),
         ]
         mock_get_random_available_partner_dict.assert_not_called()
         mock_telebot_make_request.assert_not_called()
@@ -386,7 +378,6 @@ async def test_action_find_partner(
                 'timestamp': None,
             },
             SlotSet('swiper_state', 'wants_chitchat'),
-            SlotSet('partner_id', None),
         ]
         mock_get_random_available_partner_dict.assert_called_once_with(
             [
@@ -456,7 +447,6 @@ async def test_action_find_partner_no_one(
     assert actual_events == [
         SlotSet('swiper_action_result', 'success'),
         SlotSet('swiper_state', 'wants_chitchat'),
-        SlotSet('partner_id', None),
     ]
 
     assert dispatcher.messages == [
@@ -560,7 +550,6 @@ async def test_action_ask_to_join(
         assert actual_events == [
             SlotSet('swiper_action_result', 'success'),
             SlotSet('swiper_state', destination_swiper_state),
-            SlotSet('partner_id', 'new_asker'),
         ]
 
         expected_response = {
@@ -576,7 +565,7 @@ async def test_action_ask_to_join(
         if set_photo_slot:
             expected_response['partner_photo_file_id'] = 'some photo file id'
 
-    else:  # an error is expected (we do not expect swiper state to change)
+    else:  # an error is expected (and hence we do not expect swiper state to change)
         assert actual_events == [
             SlotSet('swiper_action_result', 'error'),
             SlotSet(
@@ -848,7 +837,6 @@ async def test_action_accept_invitation_partner_not_waiting(
             'timestamp': None,
         },
         SlotSet('swiper_state', 'wants_chitchat'),
-        SlotSet('partner_id', None),
     ]
     assert dispatcher.messages == [{
         'attachment': None,
@@ -907,7 +895,7 @@ async def test_action_accept_invitation_no_partner_id(
     user_vault.save(current_user)
 
     actual_events = await actions.ActionAcceptInvitation().run(dispatcher, tracker, domain)
-    assert actual_events == [
+    expected_events = [
         SlotSet('swiper_action_result', 'error'),
         SlotSet(
             'swiper_error',
@@ -918,8 +906,13 @@ async def test_action_accept_invitation_no_partner_id(
             'stack trace goes here',
         ),
         SlotSet('swiper_state', current_user.state),
-        SlotSet('partner_id', current_user.partner_id),
     ]
+    if current_user.partner_id is not None:
+        # None is not expected to be set explicitly (None is the value that the slot had already)
+        expected_events.append(SlotSet('partner_id', current_user.partner_id))
+
+    assert actual_events == expected_events
+
     assert dispatcher.messages == [{
         'attachment': None,
         'buttons': [],
@@ -987,7 +980,6 @@ async def test_action_join_room(
         assert actual_events == [
             SlotSet('swiper_action_result', 'success'),
             SlotSet('swiper_state', 'roomed'),
-            SlotSet('partner_id', 'expected_partner'),
         ]
         assert dispatcher.messages == [{
             'attachment': None,
@@ -1011,7 +1003,7 @@ async def test_action_join_room(
         )
 
     else:
-        assert actual_events == [
+        expected_events = [
             SlotSet('swiper_action_result', 'error'),
             SlotSet(
                 'swiper_error',
@@ -1026,8 +1018,13 @@ async def test_action_join_room(
                 'stack trace goes here',
             ),
             SlotSet('swiper_state', source_swiper_state),  # state has not changed
-            SlotSet('partner_id', 'expected_partner'),
         ]
+        if wrong_partner:
+            # 'partner_id' slot was initially set to 'unexpected_partner', and hence is expected to be "reverted"
+            expected_events.append(SlotSet('partner_id', 'expected_partner'))
+
+        assert actual_events == expected_events
+
         assert dispatcher.messages == [{
             'attachment': None,
             'buttons': [],
@@ -1082,7 +1079,6 @@ async def test_action_do_not_disturb(
     assert actual_events == [
         SlotSet('swiper_action_result', 'success'),
         SlotSet('swiper_state', 'do_not_disturb'),
-        SlotSet('partner_id', None),
     ]
     assert dispatcher.messages == [{
         'attachment': None,
