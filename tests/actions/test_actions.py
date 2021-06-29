@@ -935,37 +935,23 @@ async def test_action_join_room(
         )
 
     else:
-        if wrong_partner:
-            assert actual_events == [
-                SlotSet('swiper_action_result', 'error'),
-                SlotSet(
-                    'swiper_error',
-                    'SwiperStateMachineError("partner_id that was passed (\'unexpected_partner\') differs from '
-                    'partner_id that was set before (\'expected_partner\')")',
-                ),
-                SlotSet(
-                    'swiper_error_trace',
-                    'stack trace goes here',
-                ),
-                SlotSet('swiper_state', source_swiper_state),  # state has not changed
-                SlotSet('partner_id', 'expected_partner'),
-            ]
-        else:
-            assert actual_events == [
-                SlotSet('swiper_action_result', 'error'),
-                SlotSet(
-                    'swiper_error',
-                    'SwiperStateMachineError("partner_id that was passed (\'unexpected_partner\') differs from '
-                    'partner_id that was set before (\'expected_partner\')")',
-                ),
-                SlotSet(
-                    'swiper_error_trace',
-                    'stack trace goes here',
-                ),
-                SlotSet('swiper_state', source_swiper_state),  # state has not changed
-                SlotSet('partner_id', 'expected_partner'),
-            ]
+        assert actual_events == [
+            SlotSet('swiper_action_result', 'error'),
+            SlotSet(
+                'swiper_error',
 
+                'SwiperStateMachineError("partner_id that was passed (\'unexpected_partner\') differs from partner_id '
+                'that was set before (\'expected_partner\')")' if wrong_partner else
+
+                f"MachineError(\"Can't trigger event join_room from state {source_swiper_state}!\")",
+            ),
+            SlotSet(
+                'swiper_error_trace',
+                'stack trace goes here',
+            ),
+            SlotSet('swiper_state', source_swiper_state),  # state has not changed
+            SlotSet('partner_id', 'expected_partner'),
+        ]
         assert dispatcher.messages == [{
             'attachment': None,
             'buttons': [],
