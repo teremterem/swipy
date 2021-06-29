@@ -560,7 +560,6 @@ async def test_action_ask_to_join(
         assert actual_events == [
             SlotSet('swiper_action_result', 'success'),
             SlotSet('swiper_state', destination_swiper_state),
-            SlotSet('partner_id', 'new_asker'),
         ]
 
         expected_response = {
@@ -576,7 +575,7 @@ async def test_action_ask_to_join(
         if set_photo_slot:
             expected_response['partner_photo_file_id'] = 'some photo file id'
 
-    else:  # an error is expected (we do not expect swiper state to change)
+    else:  # an error is expected (and hence we do not expect swiper state to change)
         assert actual_events == [
             SlotSet('swiper_action_result', 'error'),
             SlotSet(
