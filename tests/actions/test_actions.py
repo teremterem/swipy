@@ -273,7 +273,6 @@ async def test_action_offer_chitchat(
         SlotSet('deeplink_data', ''),
         SlotSet('telegram_from', None),
         SlotSet('swiper_state', destination_swiper_state),
-        SlotSet('partner_id', None),
     ]
     assert dispatcher.messages == [{
         'attachment': None,
