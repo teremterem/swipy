@@ -454,7 +454,6 @@ async def test_action_find_partner_no_one(
     assert actual_events == [
         SlotSet('swiper_action_result', 'success'),
         SlotSet('swiper_state', 'wants_chitchat'),
-        SlotSet('partner_id', None),
     ]
 
     assert dispatcher.messages == [
