@@ -431,7 +431,7 @@ async def test_action_find_partner(
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('ddb_unit_test_user')
+@pytest.mark.usefixtures('ddb_unit_test_user', 'wrap_actions_datetime_now')
 @patch('time.time', Mock(return_value=1619945501))
 @patch.object(UserVault, '_get_random_available_partner_dict')
 async def test_action_find_partner_no_one(
@@ -446,6 +446,16 @@ async def test_action_find_partner_no_one(
     actual_events = await actions.ActionFindPartner().run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'success'),
+        SlotSet('partner_search_start_ts', '1619945501'),
+        {
+            'date_time': '2021-05-25T00:00:05',
+            'entities': None,
+            'event': 'reminder',
+            'intent': 'EXTERNAL_find_partner',
+            'kill_on_user_msg': False,
+            'name': 'EXTERNAL_find_partner',
+            'timestamp': None,
+        },
         SlotSet('swiper_state', 'wants_chitchat'),
     ]
 
