@@ -297,12 +297,10 @@ class ActionFindPartner(BaseSwiperAction):
         triggered_by_reminder = latest_intent == EXTERNAL_FIND_PARTNER_INTENT
 
         initiate_search = False
+        revert_user_utterance = False
 
         if triggered_by_reminder:
-            events = [
-                # get rid of artificial intent so it doesn't interfere with story predictions
-                UserUtteranceReverted(),
-            ]
+            revert_user_utterance = True
 
             if current_user.state not in [
                 UserState.WANTS_CHITCHAT,
@@ -310,7 +308,10 @@ class ActionFindPartner(BaseSwiperAction):
             ]:
                 # the search was stopped for the user one way or another (user said stop, or was asked to join etc.)
                 # => don't do any partner searching and don't schedule another reminder
-                return events
+                return [
+                    # get rid of the artificial reminder intent so it doesn't interfere with story predictions
+                    UserUtteranceReverted(),
+                ]
 
         else:  # user just requested chitchat
             initiate_search = True
@@ -320,13 +321,6 @@ class ActionFindPartner(BaseSwiperAction):
             # noinspection PyUnresolvedReferences
             current_user.request_chitchat()
             user_vault.save(current_user)
-
-            events = [
-                SlotSet(
-                    key=SWIPER_ACTION_RESULT_SLOT,
-                    value=SwiperActionResult.SUCCESS,
-                ),
-            ]
 
         partner = user_vault.get_random_available_partner(current_user)
 
@@ -345,11 +339,29 @@ class ActionFindPartner(BaseSwiperAction):
                 partner_search_start_ts is not None and
                 (current_timestamp_int() - partner_search_start_ts) <= PARTNER_SEARCH_TIMEOUT_SEC
         ):
-            events.extend(schedule_find_partner_reminder(initiate=initiate_search))
-        else:
-            dispatcher.utter_message(response='utter_partner_search_timed_out_try_again')
+            # we still have time to look for / ask some more people
+            return [
+                # get rid of the artificial reminder intent so it doesn't interfere with story predictions
+                UserUtteranceReverted()
 
-        return events
+                if revert_user_utterance else
+
+                SlotSet(
+                    key=SWIPER_ACTION_RESULT_SLOT,
+                    value=SwiperActionResult.SUCCESS,
+                ),
+
+                *schedule_find_partner_reminder(initiate=initiate_search),
+            ]
+
+        dispatcher.utter_message(response='utter_partner_search_timed_out_try_again')
+
+        return [
+            SlotSet(
+                key=SWIPER_ACTION_RESULT_SLOT,
+                value=SwiperActionResult.PARTNER_WAS_NOT_FOUND,
+            ),
+        ]
 
 
 class ActionAskToJoin(BaseSwiperAction):
