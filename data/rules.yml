@@ -18,9 +18,7 @@ rules:
     - swiper_action_result: partner_was_not_found
   steps:
   - action: action_find_partner
-  - or:
-    - intent: affirm
-    - intent: want_chitchat
+  - intent: affirm
   - action: action_find_partner
 - rule: someone asks the user to join/confirm a video chat
   steps:
