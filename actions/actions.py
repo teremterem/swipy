@@ -339,7 +339,7 @@ class ActionFindPartner(BaseSwiperAction):
                 partner_search_start_ts is not None and
                 (current_timestamp_int() - partner_search_start_ts) <= PARTNER_SEARCH_TIMEOUT_SEC
         ):
-            # we still have time to look for / ask some more people
+            # we still have time to look for / ask some more people => schedule another reminder
             return [
                 # get rid of the artificial reminder intent so it doesn't interfere with story predictions
                 UserUtteranceReverted()
