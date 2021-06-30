@@ -142,7 +142,7 @@ responses:
        
       Fear not!
        
-      I am already looking for someone else to connect you with... ⏳
+      I am already looking for someone else to connect you with and will get back to you within two minutes... ⏳
   utter_room_url:
   - custom:
       parse_mode: html
