@@ -351,6 +351,10 @@ async def test_action_find_partner(
 
     tracker.latest_message = tracker_latest_message
 
+    tracker.add_slots([
+        SlotSet('partner_search_start_ts', '1619945450'),
+    ])
+
     action = actions.ActionFindPartner()
     assert action.name() == 'action_find_partner'
 
@@ -368,6 +372,7 @@ async def test_action_find_partner(
     else:
         assert actual_events == [
             UserUtteranceReverted() if expect_as_reminder else SlotSet('swiper_action_result', 'success'),
+            SlotSet('partner_search_start_ts', '1619945501'),
             {
                 'date_time': '2021-05-25T00:00:05',
                 'entities': None,
