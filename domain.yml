@@ -71,6 +71,11 @@ slots:
     initial_value: null
     auto_fill: false
     influence_conversation: false
+  partner_search_start_ts:
+    type: rasa.shared.core.slots.TextSlot
+    initial_value: null
+    auto_fill: false
+    influence_conversation: false
   partner_id:
     type: rasa.shared.core.slots.TextSlot
     initial_value: null
@@ -95,7 +100,7 @@ responses:
   - text: |-
       Great! Let me find someone for you to chitchat with.
        
-      I will get back to you soon... ⏳
+      I will get back to you within two minutes... ⏳
   utter_how_it_works:
   - text: |-
       I can arrange video chitchat with another human for you 🎥 🗣 ☎️
@@ -105,22 +110,19 @@ responses:
       - I find someone who also wants to chitchat.
       - I confirm with you and them that you are both ready.
       - I send both of you a video chat link.
-  utter_no_one_was_found:
-  - text: |-
-      Unfortunately, I couldn't find anyone 😞
-       
-      I will try to get back to you when someone shows up...
-       
-      P. S. Do you have a photo in your Telegram profile? Having a photo increases chances that someone responds.
+  utter_partner_search_timed_out_try_again:
+  - custom:
+      parse_mode: html
+      text: "Unfortunately, I couldn't find anyone in two minutes \U0001F61E\n \n<b>Do you want me to try again?</b>"
   utter_someone_wants_to_chat_photo:
   - custom:
-      caption: "Hey! This person wants to chitchat \U0001F5E3\n \nWould you be willing to jump on a <b>video call?</b> \U0001F3A5 ☎️"
+      caption: "Hey! This person wants to chitchat \U0001F5E3\n \n<b>Are you ready for a video call?</b> \U0001F3A5 ☎️"
       parse_mode: html
       photo: '{partner_photo_file_id}'
   utter_someone_wants_to_chat:
   - custom:
       parse_mode: html
-      text: "Hey! There is someone who wants to chitchat \U0001F5E3\n \nWould you be willing to jump on a <b>video call?</b> \U0001F3A5 ☎️"
+      text: "Hey! There is someone who wants to chitchat \U0001F5E3\n \n<b>Are you ready for a video call?</b> \U0001F3A5 ☎️"
   utter_checking_if_partner_ready_too:
   - custom:
       parse_mode: html
@@ -140,7 +142,7 @@ responses:
        
       Fear not!
        
-      I am already looking for someone else to connect you with... ⏳
+      I am already looking for someone else to connect you with and will get back to you within two minutes... ⏳
   utter_room_url:
   - custom:
       parse_mode: html

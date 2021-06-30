@@ -17,7 +17,8 @@ from actions import telegram_helpers
 from actions.rasa_callbacks import EXTERNAL_ASK_TO_JOIN_INTENT, EXTERNAL_ASK_TO_CONFIRM_INTENT
 from actions.user_state_machine import UserStateMachine, UserState, NATIVE_UNKNOWN, PARTNER_CONFIRMATION_TIMEOUT_SEC
 from actions.user_vault import UserVault, IUserVault
-from actions.utils import stack_trace_to_str, datetime_now, get_intent_of_latest_message_reliably, SwiperError
+from actions.utils import stack_trace_to_str, datetime_now, get_intent_of_latest_message_reliably, SwiperError, \
+    current_timestamp_int
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +26,7 @@ TELL_USER_ABOUT_ERRORS = strtobool(os.getenv('TELL_USER_ABOUT_ERRORS', 'yes'))
 SEND_ERROR_STACK_TRACE_TO_SLOT = strtobool(os.getenv('SEND_ERROR_STACK_TRACE_TO_SLOT', 'yes'))
 FIND_PARTNER_FREQUENCY_SEC = float(os.getenv('FIND_PARTNER_FREQUENCY_SEC', '5'))
 FIND_PARTNER_FOLLOWUP_DELAY_SEC = float(os.getenv('FIND_PARTNER_FOLLOWUP_DELAY_SEC', '2'))
+PARTNER_SEARCH_TIMEOUT_SEC = int(os.getenv('PARTNER_SEARCH_TIMEOUT_SEC', '120'))  # 2 minutes
 GREETING_MAKES_USER_OK_TO_CHITCHAT = strtobool(os.getenv('GREETING_MAKES_USER_OK_TO_CHITCHAT', 'yes'))
 
 SWIPER_STATE_SLOT = 'swiper_state'
@@ -35,6 +37,8 @@ TELEGRAM_FROM_SLOT = 'telegram_from'
 
 SWIPER_ERROR_SLOT = 'swiper_error'
 SWIPER_ERROR_TRACE_SLOT = 'swiper_error_trace'
+
+PARTNER_SEARCH_START_TS_SLOT = 'partner_search_start_ts'
 
 EXTERNAL_FIND_PARTNER_INTENT = 'EXTERNAL_find_partner'
 EXTERNAL_EXPIRE_PARTNER_CONFIRMATION = 'EXTERNAL_expire_partner_confirmation'
@@ -292,33 +296,32 @@ class ActionFindPartner(BaseSwiperAction):
         latest_intent = get_intent_of_latest_message_reliably(tracker)
         triggered_by_reminder = latest_intent == EXTERNAL_FIND_PARTNER_INTENT
 
+        initiate_search = False
+        revert_user_utterance = False
+
         if triggered_by_reminder:
-            events = [
-                # get rid of artificial intent so it doesn't interfere with story predictions
-                UserUtteranceReverted(),
-            ]
+            revert_user_utterance = True
 
             if current_user.state not in [
                 UserState.WANTS_CHITCHAT,
                 UserState.OK_TO_CHITCHAT,
+                UserState.WAITING_PARTNER_CONFIRM,
             ]:
                 # the search was stopped for the user one way or another (user said stop, or was asked to join etc.)
                 # => don't do any partner searching and don't schedule another reminder
-                return events
+                return [
+                    # get rid of the artificial reminder intent so it doesn't interfere with story predictions
+                    UserUtteranceReverted(),
+                ]
 
         else:  # user just requested chitchat
+            initiate_search = True
+
             dispatcher.utter_message(response='utter_ok_arranging_chitchat')
 
             # noinspection PyUnresolvedReferences
             current_user.request_chitchat()
             user_vault.save(current_user)
-
-            events = [
-                SlotSet(
-                    key=SWIPER_ACTION_RESULT_SLOT,
-                    value=SwiperActionResult.SUCCESS,
-                ),
-            ]
 
         partner = user_vault.get_random_available_partner(current_user)
 
@@ -332,9 +335,34 @@ class ActionFindPartner(BaseSwiperAction):
                 suppress_callback_errors=True,
             )
 
-            events.append(schedule_find_partner_reminder())
+        partner_search_start_ts = get_partner_search_start_ts(tracker)
+        if initiate_search or (
+                partner_search_start_ts is not None and
+                (current_timestamp_int() - partner_search_start_ts) <= PARTNER_SEARCH_TIMEOUT_SEC
+        ):
+            # we still have time to look for / ask some more people => schedule another reminder
+            return [
+                # get rid of the artificial reminder intent so it doesn't interfere with story predictions
+                UserUtteranceReverted()
 
-        return events
+                if revert_user_utterance else
+
+                SlotSet(
+                    key=SWIPER_ACTION_RESULT_SLOT,
+                    value=SwiperActionResult.SUCCESS,
+                ),
+
+                *schedule_find_partner_reminder(initiate=initiate_search),
+            ]
+
+        dispatcher.utter_message(response='utter_partner_search_timed_out_try_again')
+
+        return [
+            SlotSet(
+                key=SWIPER_ACTION_RESULT_SLOT,
+                value=SwiperActionResult.PARTNER_WAS_NOT_FOUND,
+            ),
+        ]
 
 
 class ActionAskToJoin(BaseSwiperAction):
@@ -420,7 +448,7 @@ class ActionAcceptInvitation(BaseSwiperAction):
                     key=SWIPER_ACTION_RESULT_SLOT,
                     value=SwiperActionResult.PARTNER_NOT_WAITING_ANYMORE,
                 ),
-                schedule_find_partner_reminder(delta_sec=FIND_PARTNER_FOLLOWUP_DELAY_SEC),
+                *schedule_find_partner_reminder(delta_sec=FIND_PARTNER_FOLLOWUP_DELAY_SEC, initiate=True),
             ]
 
     @staticmethod
@@ -494,7 +522,7 @@ class ActionAcceptInvitation(BaseSwiperAction):
                 key=SWIPER_ACTION_RESULT_SLOT,
                 value=SwiperActionResult.PARTNER_HAS_BEEN_ASKED,
             ),
-            schedule_expire_partner_confirmation(),
+            *schedule_expire_partner_confirmation(),
         ]
 
 
@@ -598,22 +626,38 @@ class ActionExpirePartnerConfirmation(BaseSwiperAction):
                 key=SWIPER_ACTION_RESULT_SLOT,
                 value=SwiperActionResult.SUCCESS,
             ),
-            schedule_find_partner_reminder(delta_sec=FIND_PARTNER_FOLLOWUP_DELAY_SEC),
+            *schedule_find_partner_reminder(delta_sec=FIND_PARTNER_FOLLOWUP_DELAY_SEC, initiate=True),
         ]
 
 
-def schedule_find_partner_reminder(delta_sec: float = FIND_PARTNER_FREQUENCY_SEC) -> ReminderScheduled:
-    return _reschedule_reminder(
+def get_partner_search_start_ts(tracker: Tracker) -> int:
+    ts_str = tracker.get_slot(PARTNER_SEARCH_START_TS_SLOT)
+    return int(ts_str) if ts_str else None
+
+
+def schedule_find_partner_reminder(
+        delta_sec: float = FIND_PARTNER_FREQUENCY_SEC,
+        initiate: bool = False,
+) -> ReminderScheduled:
+    events = [_reschedule_reminder(
         EXTERNAL_FIND_PARTNER_INTENT,
         delta_sec,
-    )
+    )]
+    if initiate:
+        events.insert(0, SlotSet(
+            key=PARTNER_SEARCH_START_TS_SLOT,
+            value=str(current_timestamp_int()),
+        ))
+    return events
 
 
-def schedule_expire_partner_confirmation(delta_sec: float = PARTNER_CONFIRMATION_TIMEOUT_SEC) -> ReminderScheduled:
-    return _reschedule_reminder(
+def schedule_expire_partner_confirmation(
+        delta_sec: float = PARTNER_CONFIRMATION_TIMEOUT_SEC,
+) -> ReminderScheduled:
+    return [_reschedule_reminder(
         EXTERNAL_EXPIRE_PARTNER_CONFIRMATION,
         delta_sec,
-    )
+    )]
 
 
 def _reschedule_reminder(

@@ -351,6 +351,10 @@ async def test_action_find_partner(
 
     tracker.latest_message = tracker_latest_message
 
+    tracker.add_slots([
+        SlotSet('partner_search_start_ts', '1619945450'),
+    ])
+
     action = actions.ActionFindPartner()
     assert action.name() == 'action_find_partner'
 
@@ -366,8 +370,16 @@ async def test_action_find_partner(
         assert mock_aioresponses.requests == {}
 
     else:
-        assert actual_events == [
-            UserUtteranceReverted() if expect_as_reminder else SlotSet('swiper_action_result', 'success'),
+        if expect_as_reminder:
+            expected_events = [
+                UserUtteranceReverted(),
+            ]
+        else:
+            expected_events = [
+                SlotSet('swiper_action_result', 'success'),
+                SlotSet('partner_search_start_ts', '1619945501'),
+            ]
+        expected_events.extend([
             {
                 'date_time': '2021-05-25T00:00:05',
                 'entities': None,
@@ -378,7 +390,9 @@ async def test_action_find_partner(
                 'timestamp': None,
             },
             SlotSet('swiper_state', 'wants_chitchat'),
-        ]
+        ])
+        assert actual_events == expected_events
+
         mock_get_random_available_partner_dict.assert_called_once_with(
             [
                 'wants_chitchat',
@@ -431,7 +445,7 @@ async def test_action_find_partner(
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('ddb_unit_test_user')
+@pytest.mark.usefixtures('ddb_unit_test_user', 'wrap_actions_datetime_now')
 @patch('time.time', Mock(return_value=1619945501))
 @patch.object(UserVault, '_get_random_available_partner_dict')
 async def test_action_find_partner_no_one(
@@ -446,6 +460,16 @@ async def test_action_find_partner_no_one(
     actual_events = await actions.ActionFindPartner().run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'success'),
+        SlotSet('partner_search_start_ts', '1619945501'),
+        {
+            'date_time': '2021-05-25T00:00:05',
+            'entities': None,
+            'event': 'reminder',
+            'intent': 'EXTERNAL_find_partner',
+            'kill_on_user_msg': False,
+            'name': 'EXTERNAL_find_partner',
+            'timestamp': None,
+        },
         SlotSet('swiper_state', 'wants_chitchat'),
     ]
 
@@ -827,6 +851,7 @@ async def test_action_accept_invitation_partner_not_waiting(
     actual_events = await actions.ActionAcceptInvitation().run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'partner_not_waiting_anymore'),
+        SlotSet('partner_search_start_ts', '1619945501'),
         {
             'date_time': '2021-05-25T00:00:02',
             'entities': None,
@@ -1199,7 +1224,6 @@ async def test_action_reject_invitation(
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('create_user_state_machine_table', 'wrap_actions_datetime_now')
 @pytest.mark.parametrize('source_swiper_state, action_has_effect', [
     ('new', False),
     ('wants_chitchat', False),
@@ -1212,6 +1236,8 @@ async def test_action_reject_invitation(
     ('rejected_confirm', False),
     ('do_not_disturb', False),
 ])
+@pytest.mark.usefixtures('create_user_state_machine_table', 'wrap_actions_datetime_now')
+@patch('time.time', Mock(return_value=1619945501))
 async def test_action_expire_partner_confirmation(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
@@ -1235,6 +1261,7 @@ async def test_action_expire_partner_confirmation(
     if action_has_effect:
         assert actual_events == [
             SlotSet('swiper_action_result', 'success'),
+            SlotSet('partner_search_start_ts', '1619945501'),
             {
                 'date_time': '2021-05-25T00:00:02',
                 'entities': None,
