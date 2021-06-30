@@ -113,7 +113,7 @@ responses:
   utter_partner_search_timed_out_try_again:
   - custom:
       parse_mode: html
-      text: "Unfortunately, I couldn't find anyone within two minutes \U0001F61E\n \n<b>Do you want me to try again?</b>"
+      text: "Unfortunately, I couldn't find anyone in two minutes \U0001F61E\n \n<b>Do you want me to try again?</b>"
   utter_someone_wants_to_chat_photo:
   - custom:
       caption: "Hey! This person wants to chitchat \U0001F5E3\n \nWould you be willing to jump on a <b>video call?</b> \U0001F3A5 ☎️"
