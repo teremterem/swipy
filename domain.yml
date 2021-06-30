@@ -37,7 +37,10 @@ entities:
 - room_url
 slots:
   swiper_state:
-    type: categorical
+    type: rasa.shared.core.slots.CategoricalSlot
+    initial_value: null
+    auto_fill: false
+    influence_conversation: true
     values:
     - new
     - wants_chitchat
@@ -49,10 +52,11 @@ slots:
     - rejected_join
     - rejected_confirm
     - do_not_disturb
+  swiper_action_result:
+    type: rasa.shared.core.slots.CategoricalSlot
+    initial_value: null
     auto_fill: false
     influence_conversation: true
-  swiper_action_result:
-    type: categorical
     values:
     - partner_has_been_asked
     - partner_was_not_found
@@ -60,8 +64,6 @@ slots:
     - room_url_ready
     - success
     - error
-    auto_fill: false
-    influence_conversation: true
   swiper_error:
     type: rasa.shared.core.slots.TextSlot
     initial_value: null
