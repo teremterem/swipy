@@ -335,7 +335,7 @@ class ActionFindPartner(BaseSwiperAction):
             )
 
         partner_search_start_ts = get_partner_search_start_ts(tracker)
-        if (
+        if initiate_search or (
                 partner_search_start_ts is not None and
                 (current_timestamp_int() - partner_search_start_ts) <= PARTNER_SEARCH_TIMEOUT_SEC
         ):
