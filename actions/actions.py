@@ -509,7 +509,7 @@ class ActionAcceptInvitation(BaseSwiperAction):
                 key=SWIPER_ACTION_RESULT_SLOT,
                 value=SwiperActionResult.PARTNER_HAS_BEEN_ASKED,
             ),
-            schedule_expire_partner_confirmation(),
+            *schedule_expire_partner_confirmation(),
         ]
 
 
@@ -613,7 +613,7 @@ class ActionExpirePartnerConfirmation(BaseSwiperAction):
                 key=SWIPER_ACTION_RESULT_SLOT,
                 value=SwiperActionResult.SUCCESS,
             ),
-            schedule_find_partner_reminder(delta_sec=FIND_PARTNER_FOLLOWUP_DELAY_SEC),
+            *schedule_find_partner_reminder(delta_sec=FIND_PARTNER_FOLLOWUP_DELAY_SEC),
         ]
 
 
@@ -641,10 +641,10 @@ def schedule_find_partner_reminder(
 def schedule_expire_partner_confirmation(
         delta_sec: float = PARTNER_CONFIRMATION_TIMEOUT_SEC,
 ) -> ReminderScheduled:
-    return _reschedule_reminder(
+    return [_reschedule_reminder(
         EXTERNAL_EXPIRE_PARTNER_CONFIRMATION,
         delta_sec,
-    )
+    )]
 
 
 def _reschedule_reminder(
