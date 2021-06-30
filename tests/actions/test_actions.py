@@ -837,6 +837,7 @@ async def test_action_accept_invitation_partner_not_waiting(
     actual_events = await actions.ActionAcceptInvitation().run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'partner_not_waiting_anymore'),
+        SlotSet('partner_search_start_ts', '1619945501'),
         {
             'date_time': '2021-05-25T00:00:02',
             'entities': None,
