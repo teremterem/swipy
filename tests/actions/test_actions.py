@@ -1199,7 +1199,6 @@ async def test_action_reject_invitation(
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('create_user_state_machine_table', 'wrap_actions_datetime_now')
 @pytest.mark.parametrize('source_swiper_state, action_has_effect', [
     ('new', False),
     ('wants_chitchat', False),
@@ -1212,6 +1211,8 @@ async def test_action_reject_invitation(
     ('rejected_confirm', False),
     ('do_not_disturb', False),
 ])
+@pytest.mark.usefixtures('create_user_state_machine_table', 'wrap_actions_datetime_now')
+@patch('time.time', Mock(return_value=1619945501))
 async def test_action_expire_partner_confirmation(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
@@ -1235,6 +1236,7 @@ async def test_action_expire_partner_confirmation(
     if action_has_effect:
         assert actual_events == [
             SlotSet('swiper_action_result', 'success'),
+            SlotSet('partner_search_start_ts', '1619945501'),
             {
                 'date_time': '2021-05-25T00:00:02',
                 'entities': None,
