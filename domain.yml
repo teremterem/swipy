@@ -71,6 +71,11 @@ slots:
     initial_value: null
     auto_fill: false
     influence_conversation: false
+  partner_search_start_ts:
+    type: rasa.shared.core.slots.TextSlot
+    initial_value: null
+    auto_fill: false
+    influence_conversation: false
   partner_id:
     type: rasa.shared.core.slots.TextSlot
     initial_value: null
@@ -105,13 +110,13 @@ responses:
       - I find someone who also wants to chitchat.
       - I confirm with you and them that you are both ready.
       - I send both of you a video chat link.
-  utter_no_one_was_found:
-  - text: |-
-      Unfortunately, I couldn't find anyone 😞
-       
-      I will try to get back to you when someone shows up...
-       
-      P. S. Do you have a photo in your Telegram profile? Having a photo increases chances that someone responds.
+  utter_partner_search_timed_out_try_again:
+  - custom:
+      parse_mode: html
+      text: |-
+        I couldn't find anyone within two minutes 😞
+         
+        <b>Do you want me to try again?</b>
   utter_someone_wants_to_chat_photo:
   - custom:
       caption: "Hey! This person wants to chitchat \U0001F5E3\n \nWould you be willing to jump on a <b>video call?</b> \U0001F3A5 ☎️"

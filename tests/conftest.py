@@ -26,6 +26,7 @@ def pytest_configure(*args, **kwargs) -> None:
     os.environ.pop('FIND_PARTNER_FREQUENCY_SEC', None)
     os.environ.pop('FIND_PARTNER_FOLLOWUP_DELAY_SEC', None)
     os.environ.pop('PARTNER_CONFIRMATION_TIMEOUT_SEC', None)
+    os.environ.pop('PARTNER_SEARCH_TIMEOUT_SEC', None)
     os.environ.pop('SWIPER_STATE_TIMEOUT_SEC', None)
     os.environ.pop('GREETING_MAKES_USER_OK_TO_CHITCHAT', None)
 
