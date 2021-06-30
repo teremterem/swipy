@@ -20,6 +20,7 @@ rules:
   - action: action_find_partner
   - intent: affirm
   - action: action_find_partner
+  wait_for_user_input: true
 - rule: someone asks the user to join/confirm a video chat
   steps:
   - or:
