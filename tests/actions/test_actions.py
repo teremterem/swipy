@@ -370,9 +370,16 @@ async def test_action_find_partner(
         assert mock_aioresponses.requests == {}
 
     else:
-        assert actual_events == [
-            UserUtteranceReverted() if expect_as_reminder else SlotSet('swiper_action_result', 'success'),
-            SlotSet('partner_search_start_ts', '1619945501'),
+        if expect_as_reminder:
+            expected_events = [
+                UserUtteranceReverted(),
+            ]
+        else:
+            expected_events = [
+                SlotSet('swiper_action_result', 'success'),
+                SlotSet('partner_search_start_ts', '1619945501'),
+            ]
+        expected_events.extend([
             {
                 'date_time': '2021-05-25T00:00:05',
                 'entities': None,
@@ -383,7 +390,9 @@ async def test_action_find_partner(
                 'timestamp': None,
             },
             SlotSet('swiper_state', 'wants_chitchat'),
-        ]
+        ])
+        assert actual_events == expected_events
+
         mock_get_random_available_partner_dict.assert_called_once_with(
             [
                 'wants_chitchat',
