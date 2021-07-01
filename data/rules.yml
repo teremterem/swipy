@@ -22,6 +22,9 @@ rules:
   - action: action_find_partner
   - intent: affirm
   - action: action_find_partner
+- rule: action_listen after action_find_partner
+  steps:
+  - action: action_find_partner
 - rule: someone asks the user to join/confirm a video chat
   steps:
   - or:
