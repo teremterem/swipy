@@ -131,7 +131,7 @@ responses:
   utter_lost_track_of_conversation:
   - custom:
       parse_mode: html
-      text: "Please forgive me for losing track of the conversation \U0001F916\n \n<b>Are you agreeing to a video call with another person?</b>"
+      text: "Please forgive me for losing track of our conversation \U0001F916\n \n<b>Are you agreeing to a video call with another person?</b>"
   utter_partner_search_timed_out_try_again:
   - custom:
       parse_mode: html
