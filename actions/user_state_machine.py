@@ -64,6 +64,8 @@ class UserModel:
     state_timestamp_str: Optional[Text] = None
     state_timeout_ts: int = 0  # DDB GSI does not allow None
     state_timeout_ts_str: Optional[Text] = None
+    activity_timestamp: int = 0  # DDB GSI does not allow None
+    activity_timestamp_str: Optional[Text] = None
     notes: Text = ''
     deeplink_data: Text = ''
     native: Text = NATIVE_UNKNOWN
@@ -234,6 +236,10 @@ class UserStateMachine(UserModel):
     # noinspection PyUnusedLocal
     def _graduate_from_newbie(self, event: EventData) -> None:
         self.newbie = False
+
+    def update_activity_timestamp(self) -> None:
+        self.activity_timestamp = current_timestamp_int()
+        self.activity_timestamp_str = format_swipy_timestamp(self.activity_timestamp)
 
     # noinspection PyUnusedLocal
     def _update_state_timestamp(self, event: EventData) -> None:

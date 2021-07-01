@@ -132,6 +132,8 @@ class NaiveDdbUserVault(BaseUserVault):
             user.state_timestamp = int(user.state_timestamp)
         if isinstance(user.state_timeout_ts, Decimal):
             user.state_timeout_ts = int(user.state_timeout_ts)
+        if isinstance(user.activity_timestamp, Decimal):
+            user.activity_timestamp = int(user.activity_timestamp)
 
         return user
 
