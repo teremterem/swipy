@@ -128,6 +128,10 @@ responses:
       - I find someone who also wants to chitchat.
       - I confirm with you and them that you are both ready.
       - I send both of you a video chat link.
+  utter_lost_track_of_conversation:
+  - custom:
+      parse_mode: html
+      text: "I'm sorry, I've lost track of our conversation 🤖\n \n<b>Are you agreeing to join a video call with another person?</b>"
   utter_partner_search_timed_out_try_again:
   - custom:
       parse_mode: html
