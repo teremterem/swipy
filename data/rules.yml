@@ -1,8 +1,11 @@
 version: "2.0"
 rules:
-- rule: user sends /start command in Telegram
+- rule: user sends /start command in Telegram, greets the bot or asks how the bot works
   steps:
-  - intent: start
+  - or:
+    - intent: start
+    - intent: greet
+    - intent: how_it_works
   - action: action_offer_chitchat
 - rule: user says yes to "nothing" (conversation context was lost)
   conversation_start: true
