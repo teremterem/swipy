@@ -113,7 +113,7 @@ responses:
   utter_greet_offer_chitchat:
   - custom:
       parse_mode: html
-      text: "Hi, my name is Swipy\U0001F643\n \nI can connect you with a stranger in a video chat so you could practice your English speaking skills \U0001F1EC\U0001F1E7\n \n<b>Would you like to give it a try?</b>"
+      text: "Hi, my name is Swipy \U0001F642\n \nI can connect you with a stranger in a video chat so you could practice your English speaking skills \U0001F1EC\U0001F1E7\n \n<b>Would you like to give it a try?</b>"
   utter_ok_arranging_chitchat:
   - text: |-
       Great! Let me find someone for you to chitchat with.
@@ -135,7 +135,7 @@ responses:
   utter_partner_search_timed_out_try_again:
   - custom:
       parse_mode: html
-      text: "Unfortunately, I couldn't find anyone in two minutes \U0001F61E\n \n<b>Do you want me to try again?</b>"
+      text: "Unfortunately, I couldn't find anyone in two minutes \U0001F61E\n \n<b>Would you like me to try again?</b>"
   utter_someone_wants_to_chat_photo:
   - custom:
       caption: "Hey! This person wants to chitchat \U0001F5E3\n \n<b>Are you ready for a video call?</b> \U0001F3A5 ☎️"
