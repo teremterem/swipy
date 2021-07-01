@@ -61,6 +61,9 @@ class BaseSwiperAction(Action, ABC):
     def name(self) -> Text:
         raise NotImplementedError('An action must implement a name')
 
+    def should_update_user_activity(self) -> bool:
+        return False
+
     @abstractmethod
     async def swipy_run(
             self, dispatcher: CollectingDispatcher,
@@ -110,6 +113,9 @@ class BaseSwiperAction(Action, ABC):
 
                     if current_user.native == NATIVE_UNKNOWN:
                         current_user.native = teleg_lang_code
+
+            if self.should_update_user_activity():
+                current_user.update_activity_timestamp()
 
             user_vault.save(current_user)
 
