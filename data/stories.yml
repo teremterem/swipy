@@ -6,8 +6,3 @@ stories:
     - intent: greet
     - intent: how_it_works
   - action: action_offer_chitchat
-- story: user says yes to "nothing" (conversation context was lost)
-  conversation_start: true
-  steps:
-  - intent: affirm
-  - action: action_offer_chitchat
