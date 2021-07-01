@@ -259,6 +259,8 @@ class ActionOfferChitchat(BaseSwiperAction):
         latest_intent = tracker.get_intent_of_latest_message()
         if latest_intent == 'how_it_works':
             dispatcher.utter_message(response='utter_how_it_works')
+        elif latest_intent == 'affirm':
+            dispatcher.utter_message(response='utter_lost_track_of_conversation')
         else:  # 'greet'
             dispatcher.utter_message(response='utter_greet_offer_chitchat')
 

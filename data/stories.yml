@@ -1,9 +1,8 @@
 #version: "2.0"
 #stories:
-#- story: user sends /start command in Telegram or just greets the bot
+#- story: user greets the bot or asks how the bot works
 #  steps:
 #  - or:
-#    - intent: start
 #    - intent: greet
-#  - action: action_register_user
-#  - action: utter_greet_offer_chitchat
+#    - intent: how_it_works
+#  - action: action_offer_chitchat
