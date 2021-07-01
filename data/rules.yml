@@ -1,26 +1,22 @@
 version: "2.0"
 rules:
-- rule: user sends /start command in Telegram, greets the bot or asks how the bot works
+- rule: user sends /start command in Telegram
   steps:
-  - or:
-    - intent: start
-    - intent: greet
-    - intent: how_it_works
+  - intent: start
   - action: action_offer_chitchat
 - rule: the bot offers chitchat and the user agrees
   steps:
   - action: action_offer_chitchat
   - intent: affirm
   - action: action_find_partner
-- rule: bot doesn't find a partner, offers to try searching again and the user agrees
-  condition:
+- story: bot is unable to find a partner, offers to try searching again and the user agrees
+  conditions:
   - slot_was_set:
     - swiper_action_result: partner_was_not_found
   steps:
   - action: action_find_partner
   - intent: affirm
   - action: action_find_partner
-  wait_for_user_input: true
 - rule: someone asks the user to join/confirm a video chat
   steps:
   - or:
