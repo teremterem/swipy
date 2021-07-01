@@ -15,11 +15,11 @@ intents:
     use_entities: true
 - how_it_works:
     use_entities: true
-- dont_bother_me:
+- stop:
     use_entities: true
 - bot_challenge:
     use_entities: true
-- want_chitchat:
+- videochat:
     use_entities: true
 - EXTERNAL_ask_to_join:
     use_entities: true

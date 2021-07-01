@@ -91,7 +91,7 @@ nlu:
     - what do you do, specifically?
     - great, and what can you do?
     - how it works
-- intent: dont_bother_me
+- intent: stop
   examples: |
     - don't bother me
     - do not disturb me
@@ -114,7 +114,7 @@ nlu:
     - am I talking to a bot?
     - am I talking to a human?
     - are you a real person?
-- intent: want_chitchat
+- intent: videochat
   examples: |
     - I want you to connect me with somebody
     - connect me with someone
