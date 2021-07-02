@@ -85,11 +85,11 @@ def create_user_state_machine_table(mock_ddb: ServiceResource) -> None:
                 'AttributeType': 'S',
             },
             {
-                'AttributeName': 'state_timestamp',
+                'AttributeName': 'state_timeout_ts',
                 'AttributeType': 'N',
             },
             {
-                'AttributeName': 'state_timeout_ts',
+                'AttributeName': 'activity_timestamp',
                 'AttributeType': 'N',
             },
         ],
@@ -101,22 +101,6 @@ def create_user_state_machine_table(mock_ddb: ServiceResource) -> None:
         ],
         GlobalSecondaryIndexes=[
             {
-                'IndexName': 'by_state_and_timestamp',
-                'KeySchema': [
-                    {
-                        'AttributeName': 'state',
-                        'KeyType': 'HASH',
-                    },
-                    {
-                        'AttributeName': 'state_timestamp',
-                        'KeyType': 'RANGE',
-                    },
-                ],
-                'Projection': {
-                    'ProjectionType': 'ALL',
-                },
-            },
-            {
                 'IndexName': 'by_state_and_timeout_ts',
                 'KeySchema': [
                     {
@@ -125,6 +109,22 @@ def create_user_state_machine_table(mock_ddb: ServiceResource) -> None:
                     },
                     {
                         'AttributeName': 'state_timeout_ts',
+                        'KeyType': 'RANGE',
+                    },
+                ],
+                'Projection': {
+                    'ProjectionType': 'ALL',
+                },
+            },
+            {
+                'IndexName': 'by_state_and_activity_ts',
+                'KeySchema': [
+                    {
+                        'AttributeName': 'state',
+                        'KeyType': 'HASH',
+                    },
+                    {
+                        'AttributeName': 'activity_timestamp',
                         'KeyType': 'RANGE',
                     },
                 ],
