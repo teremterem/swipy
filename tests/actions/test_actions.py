@@ -29,6 +29,9 @@ async def test_action_swiper_error_trace(
         def name(self) -> Text:
             return 'some_swiper_action'
 
+        def should_update_user_activity_timestamp(self, _tracker: Tracker) -> bool:
+            return False
+
         async def swipy_run(
                 self, _dispatcher: CollectingDispatcher,
                 _tracker: Tracker,
@@ -75,6 +78,9 @@ async def test_user_vault_cache_not_reused_between_action_runs(
         def name(self) -> Text:
             return 'some_swiper_action'
 
+        def should_update_user_activity_timestamp(self, _tracker: Tracker) -> bool:
+            return False
+
         async def swipy_run(
                 self, _dispatcher: CollectingDispatcher,
                 _tracker: Tracker,
@@ -112,6 +118,9 @@ async def test_common_swiper_slots_are_set_after_action_run(
     class SomeSwiperAction(actions.BaseSwiperAction):
         def name(self) -> Text:
             return 'some_swiper_action'
+
+        def should_update_user_activity_timestamp(self, _tracker: Tracker) -> bool:
+            return False
 
         async def swipy_run(
                 self, _dispatcher: CollectingDispatcher,
