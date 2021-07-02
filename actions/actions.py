@@ -612,7 +612,7 @@ class ActionRejectInvitation(BaseSwiperAction):
         return 'action_reject_invitation'
 
     def should_update_user_activity_timestamp(self, tracker: Tracker) -> bool:
-        return True
+        return True  # TODO oleksandr: are you sure about this one ?
 
     async def swipy_run(
             self, dispatcher: CollectingDispatcher,
