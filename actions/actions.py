@@ -145,12 +145,9 @@ class BaseSwiperAction(Action, ABC):
                     key=SWIPER_ERROR_TRACE_SLOT,
                     value=stack_trace_to_str(e),
                 ))
-            # noinspection PyBroadException
-            try:
-                if TELL_USER_ABOUT_ERRORS:
-                    dispatcher.utter_message(response='utter_error')
-            except Exception:
-                logger.exception('%s (less important error)', self.name())
+
+            if TELL_USER_ABOUT_ERRORS:
+                dispatcher.utter_message(response='utter_error')
 
         else:
             if tracker.get_slot(SWIPER_ERROR_SLOT) is not None:
