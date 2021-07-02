@@ -718,6 +718,8 @@ async def test_action_accept_invitation_create_room(
         state_timestamp_str='2021-05-02 08:51:41 Z',
         state_timeout_ts=1619945501 + (60 * 60 * 4),
         state_timeout_ts_str='2021-05-02 12:51:41 Z',
+        activity_timestamp=1619945501,
+        activity_timestamp_str='2021-05-02 08:51:41 Z',
     )
 
 
