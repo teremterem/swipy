@@ -199,6 +199,9 @@ class ActionSessionStart(BaseSwiperAction):
     def name(self) -> Text:
         return 'action_session_start'
 
+    def should_update_user_activity_timestamp(self, _tracker: Tracker) -> bool:
+        return False
+
     @staticmethod
     def _slot_set_events_from_tracker(tracker: Tracker) -> List[EventType]:
         return [
