@@ -159,6 +159,7 @@ class NaiveDdbUserVault(BaseUserVault):
                     ddb_resp = user_state_machine_table.query(
                         IndexName='by_state_and_timeout_ts',
                         KeyConditionExpression=Key('state').eq(state) & Key('state_timeout_ts').lt(current_timestamp),
+                        ScanIndexForward=False,  # this should reduce the need to think about truncated DDB output
                         FilterExpression=Attr('user_id').ne(exclude_user_id),
                     )
                     items = ddb_resp.get('Items')
