@@ -298,13 +298,13 @@ class ActionFindPartner(BaseSwiperAction):
     def name(self) -> Text:
         return ACTION_FIND_PARTNER
 
+    def should_update_user_activity_timestamp(self, tracker: Tracker) -> bool:
+        return not self.is_triggered_by_reminder(tracker)
+
     @staticmethod
     def is_triggered_by_reminder(tracker: Tracker) -> bool:
         latest_intent = get_intent_of_latest_message_reliably(tracker)
         return latest_intent == EXTERNAL_FIND_PARTNER_INTENT
-
-    def should_update_user_activity_timestamp(self, tracker: Tracker) -> bool:
-        return not self.is_triggered_by_reminder(tracker)
 
     async def swipy_run(
             self, dispatcher: CollectingDispatcher,
