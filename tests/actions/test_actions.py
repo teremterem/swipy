@@ -1,5 +1,6 @@
 import re
 import uuid
+from copy import deepcopy
 from dataclasses import asdict
 from typing import Dict, Text, Any, List, Callable, Tuple, Optional
 from unittest.mock import patch, AsyncMock, MagicMock, call, Mock
@@ -903,6 +904,7 @@ async def test_action_accept_invitation_partner_not_waiting(
     ),
 ])
 @pytest.mark.usefixtures('create_user_state_machine_table', 'wrap_traceback_format_exception')
+@patch('time.time', Mock(return_value=1619945501))  # "now"
 async def test_action_accept_invitation_no_partner_id(
         mock_aioresponses: aioresponses,
         tracker: Tracker,
@@ -953,7 +955,10 @@ async def test_action_accept_invitation_no_partner_id(
     assert mock_aioresponses.requests == {}
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
-    assert user_vault.get_user('unit_test_user') == current_user  # current user should not be changed
+    new_current_user = deepcopy(current_user)  # deep-copy just in case
+    new_current_user.activity_timestamp = 1619945501
+    new_current_user.activity_timestamp_str = '2021-05-02 08:51:41 Z'
+    assert user_vault.get_user('unit_test_user') == new_current_user
 
 
 @pytest.mark.asyncio
