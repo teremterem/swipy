@@ -1189,6 +1189,8 @@ async def test_action_reject_invitation(
             state_timestamp_str='2021-05-02 08:51:41 Z',
             state_timeout_ts=1619945501 + (60 * 60 * 4),
             state_timeout_ts_str='2021-05-02 12:51:41 Z',
+            activity_timestamp=1619945501,
+            activity_timestamp_str='2021-05-02 08:51:41 Z',
         )
 
     else:  # an error is expected
@@ -1215,11 +1217,13 @@ async def test_action_reject_invitation(
             'template': 'utter_error',
             'text': None,
         }]
-        assert user_vault.get_user('unit_test_user') == UserStateMachine(  # the state of current user has not changed
+        assert user_vault.get_user('unit_test_user') == UserStateMachine(
             user_id='unit_test_user',
             state=source_swiper_state,
             partner_id='',
             newbie=True,
+            activity_timestamp=1619945501,
+            activity_timestamp_str='2021-05-02 08:51:41 Z',
         )
 
 
