@@ -510,6 +510,8 @@ async def test_action_find_partner_no_one(
         newbie=True,
         state_timestamp=1619945501,
         state_timestamp_str='2021-05-02 08:51:41 Z',
+        activity_timestamp=1619945501,
+        activity_timestamp_str='2021-05-02 08:51:41 Z',
     )
 
 
