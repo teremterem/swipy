@@ -1124,6 +1124,8 @@ async def test_action_do_not_disturb(
         newbie=True,
         state_timestamp=1619945501,
         state_timestamp_str='2021-05-02 08:51:41 Z',
+        activity_timestamp=1619945501,
+        activity_timestamp_str='2021-05-02 08:51:41 Z',
     )
 
 
