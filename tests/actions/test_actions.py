@@ -885,6 +885,8 @@ async def test_action_accept_invitation_partner_not_waiting(
         partner_id=None,
         state_timestamp=1619945501,
         state_timestamp_str='2021-05-02 08:51:41 Z',
+        activity_timestamp=1619945501,
+        activity_timestamp_str='2021-05-02 08:51:41 Z',
     )
 
 
