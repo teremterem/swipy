@@ -241,6 +241,9 @@ class ActionOfferChitchat(BaseSwiperAction):
     def name(self) -> Text:
         return 'action_offer_chitchat'
 
+    def should_update_user_activity(self) -> bool:
+        return True
+
     async def swipy_run(
             self, dispatcher: CollectingDispatcher,
             tracker: Tracker,
