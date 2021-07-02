@@ -23,9 +23,15 @@ def pytest_configure(*args, **kwargs) -> None:
     # delete these env vars to make sure default settings are tested
     os.environ.pop('TELL_USER_ABOUT_ERRORS', None)
     os.environ.pop('SEND_ERROR_STACK_TRACE_TO_SLOT', None)
-    os.environ.pop('TELEGRAM_MSG_LIMIT_SLEEP_SEC', None)
-    os.environ.pop('QUESTION_TIMEOUT_SEC', None)
+    os.environ.pop('FIND_PARTNER_FREQUENCY_SEC', None)
+    os.environ.pop('FIND_PARTNER_FOLLOWUP_DELAY_SEC', None)
+    os.environ.pop('PARTNER_CONFIRMATION_TIMEOUT_SEC', None)
+    os.environ.pop('PARTNER_SEARCH_TIMEOUT_SEC', None)
+    os.environ.pop('SWIPER_STATE_TIMEOUT_SEC', None)
     os.environ.pop('GREETING_MAKES_USER_OK_TO_CHITCHAT', None)
+
+
+pytest_configure()  # TODO oleksandr: is this a bad practice ? why ?
 
 
 @pytest.fixture

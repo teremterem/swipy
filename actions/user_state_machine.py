@@ -1,10 +1,13 @@
+import os
 from dataclasses import dataclass
-from datetime import datetime
 from typing import Text, Optional, Dict, Any
 
 from transitions import Machine, EventData
 
-from actions.utils import current_timestamp_int, SwiperStateMachineError
+from actions.utils import current_timestamp_int, SwiperStateMachineError, format_swipy_timestamp
+
+SWIPER_STATE_TIMEOUT_SEC = int(os.getenv('SWIPER_STATE_TIMEOUT_SEC', '14400'))  # 4 * 60 * 60 seconds = 4 hours
+PARTNER_CONFIRMATION_TIMEOUT_SEC = int(os.getenv('PARTNER_CONFIRMATION_TIMEOUT_SEC', '60'))  # 1 minute
 
 NATIVE_UNKNOWN = 'unknown'
 
@@ -13,42 +16,41 @@ class UserState:
     NEW = 'new'
     WANTS_CHITCHAT = 'wants_chitchat'
     OK_TO_CHITCHAT = 'ok_to_chitchat'
-    WAITING_PARTNER_JOIN = 'waiting_partner_join'
     WAITING_PARTNER_CONFIRM = 'waiting_partner_confirm'
     ASKED_TO_JOIN = 'asked_to_join'
     ASKED_TO_CONFIRM = 'asked_to_confirm'
-    ROOMED = 'roomed'  # equivalent to 'ok_to_chitchat' ('want_chitchat'?) except they may still be on a call
+    ROOMED = 'roomed'
     REJECTED_JOIN = 'rejected_join'
     REJECTED_CONFIRM = 'rejected_confirm'
-    JOIN_TIMED_OUT = 'join_timed_out'
-    CONFIRM_TIMED_OUT = 'confirm_timed_out'
     DO_NOT_DISTURB = 'do_not_disturb'
 
     all_states = [
         NEW,
         WANTS_CHITCHAT,
         OK_TO_CHITCHAT,
-        WAITING_PARTNER_JOIN,
         WAITING_PARTNER_CONFIRM,
         ASKED_TO_JOIN,
         ASKED_TO_CONFIRM,
         ROOMED,
         REJECTED_JOIN,
         REJECTED_CONFIRM,
-        JOIN_TIMED_OUT,
-        CONFIRM_TIMED_OUT,
         DO_NOT_DISTURB,
     ]
-
-    can_be_offered_chitchat_states = [
-        WANTS_CHITCHAT,
-        OK_TO_CHITCHAT,
+    states_with_timeouts = [
+        WAITING_PARTNER_CONFIRM,
+        ASKED_TO_JOIN,
+        ASKED_TO_CONFIRM,
         ROOMED,
+        REJECTED_JOIN,
+        REJECTED_CONFIRM,
     ]
-    chitchatable_tiers = [
-        (WANTS_CHITCHAT,),
-        (OK_TO_CHITCHAT,),
-        (ROOMED,),
+    offerable_states = [
+                           WANTS_CHITCHAT,
+                           OK_TO_CHITCHAT,
+                       ] + states_with_timeouts
+
+    offerable_tiers = [  # TODO oleksandr: do we really need the concept of tiers ?
+        offerable_states,  # everything is in one tier for now - we are differentiating only by recency of activity
     ]
 
 
@@ -58,8 +60,12 @@ class UserModel:
     state: Text = None  # the state machine will set it to UserState.NEW if not provided explicitly
     partner_id: Optional[Text] = None
     newbie: bool = True
-    state_timestamp: Optional[int] = None
+    state_timestamp: int = 0  # DDB GSI does not allow None
     state_timestamp_str: Optional[Text] = None
+    state_timeout_ts: int = 0  # DDB GSI does not allow None
+    state_timeout_ts_str: Optional[Text] = None
+    activity_timestamp: int = 0  # DDB GSI does not allow None
+    activity_timestamp_str: Optional[Text] = None
     notes: Text = ''
     deeplink_data: Text = ''
     native: Text = NATIVE_UNKNOWN
@@ -79,6 +85,7 @@ class UserStateMachine(UserModel):
             send_event=True,
             after_state_change=[
                 self._update_state_timestamp,
+                self._update_state_timeout_ts,
             ],
         )
         if state is not None:
@@ -116,11 +123,9 @@ class UserStateMachine(UserModel):
 
         # noinspection PyTypeChecker
         self.machine.add_transition(
-            trigger='wait_for_partner',
-            source=[
-                UserState.WANTS_CHITCHAT,
-            ],
-            dest=UserState.WAITING_PARTNER_JOIN,
+            trigger='wait_for_partner_to_confirm',
+            source='*',
+            dest=UserState.WAITING_PARTNER_CONFIRM,
             before=[
                 self._assert_partner_id_arg_not_empty,
             ],
@@ -128,36 +133,25 @@ class UserStateMachine(UserModel):
                 self._set_partner_id,
             ],
         )
+
         # noinspection PyTypeChecker
         self.machine.add_transition(
-            trigger='wait_for_partner',
-            source=[
-                UserState.ASKED_TO_JOIN,
-            ],
-            dest=UserState.WAITING_PARTNER_CONFIRM,
+            trigger='become_asked_to_join',
+            source='*',
+            dest=UserState.ASKED_TO_JOIN,
             before=[
                 self._assert_partner_id_arg_not_empty,
-                self._assert_partner_id_arg_same,
+            ],
+            after=[
+                self._set_partner_id,
             ],
         )
 
         # noinspection PyTypeChecker
         self.machine.add_transition(
-            trigger='become_asked',
-            source=[
-                UserState.WAITING_PARTNER_JOIN,
-            ],
+            trigger='become_asked_to_confirm',
+            source='*',
             dest=UserState.ASKED_TO_CONFIRM,
-            before=[
-                self._assert_partner_id_arg_not_empty,
-                self._assert_partner_id_arg_same,
-            ],
-        )
-        # noinspection PyTypeChecker
-        self.machine.add_transition(
-            trigger='become_asked',
-            source=UserState.can_be_offered_chitchat_states,
-            dest=UserState.ASKED_TO_JOIN,
             before=[
                 self._assert_partner_id_arg_not_empty,
             ],
@@ -188,7 +182,6 @@ class UserStateMachine(UserModel):
             trigger='reject',
             source=[
                 UserState.ASKED_TO_JOIN,
-                UserState.JOIN_TIMED_OUT,
             ],
             dest=UserState.REJECTED_JOIN,
         )
@@ -197,39 +190,28 @@ class UserStateMachine(UserModel):
             trigger='reject',
             source=[
                 UserState.ASKED_TO_CONFIRM,
-                UserState.CONFIRM_TIMED_OUT,
             ],
             dest=UserState.REJECTED_CONFIRM,
         )
 
-        # noinspection PyTypeChecker
-        self.machine.add_transition(
-            trigger='time_out',
-            source=[
-                UserState.ASKED_TO_JOIN,
-            ],
-            dest=UserState.JOIN_TIMED_OUT,
-        )
-        # noinspection PyTypeChecker
-        self.machine.add_transition(
-            trigger='time_out',
-            source=[
-                UserState.ASKED_TO_CONFIRM,
-            ],
-            dest=UserState.CONFIRM_TIMED_OUT,
-        )
-
-    def is_waiting_for(self, partner_id: Optional[Text]):
+    def is_waiting_to_be_confirmed_by(self, partner_id: Text):
         if not partner_id:
             return False
 
-        return self.partner_id == partner_id and self.state in (
-            UserState.WAITING_PARTNER_JOIN,
-            UserState.WAITING_PARTNER_CONFIRM,
-        )
+        return self.is_waiting_to_be_confirmed() and self.partner_id == partner_id
 
-    def can_be_offered_chitchat(self):
-        return self.state in UserState.can_be_offered_chitchat_states
+    def is_waiting_to_be_confirmed(self):
+        return self.state == UserState.WAITING_PARTNER_CONFIRM and \
+               not self.has_become_discoverable()  # the state hasn't timed out yet
+
+    def has_become_discoverable(self):
+        if not self.state_timeout_ts:  # 0 and None are treated equally
+            return True  # users in states that don't support timeouts are immediately discoverable
+
+        return self.state_timeout_ts < current_timestamp_int()
+
+    def chitchat_can_be_offered(self):
+        return self.state in UserState.offerable_states and self.has_become_discoverable()
 
     @staticmethod
     def _assert_partner_id_arg_not_empty(event: EventData) -> None:
@@ -255,11 +237,27 @@ class UserStateMachine(UserModel):
     def _graduate_from_newbie(self, event: EventData) -> None:
         self.newbie = False
 
+    def update_activity_timestamp(self) -> None:
+        self.activity_timestamp = current_timestamp_int()
+        self.activity_timestamp_str = format_swipy_timestamp(self.activity_timestamp)
+
     # noinspection PyUnusedLocal
     def _update_state_timestamp(self, event: EventData) -> None:
-        if event.transition.source == event.transition.dest:
-            # state hasn't changed => no need to update timestamp
-            return
-
         self.state_timestamp = current_timestamp_int()
-        self.state_timestamp_str = datetime.utcfromtimestamp(self.state_timestamp).strftime('%Y-%m-%d %H:%M:%S Z')
+        self.state_timestamp_str = format_swipy_timestamp(self.state_timestamp)
+
+    # noinspection PyUnusedLocal
+    def _update_state_timeout_ts(self, event: EventData) -> None:
+        if event.transition.dest in UserState.states_with_timeouts:
+
+            if event.transition.dest == UserState.WAITING_PARTNER_CONFIRM:
+                timeout = PARTNER_CONFIRMATION_TIMEOUT_SEC
+            else:
+                timeout = SWIPER_STATE_TIMEOUT_SEC
+
+            self.state_timeout_ts = self.state_timestamp + timeout
+            self.state_timeout_ts_str = format_swipy_timestamp(self.state_timeout_ts)
+
+        else:
+            self.state_timeout_ts = 0  # DDB GSI does not allow None
+            self.state_timeout_ts_str = None

@@ -39,9 +39,8 @@ async def create_room(sender_id: Text) -> Dict[Text, Any]:
         ) as resp:
             resp_json = await resp.json()
 
-    # TODO oleksandr: change log level back to DEBUG when you decide how to identify and react to failures
-    if logger.isEnabledFor(logging.INFO):
-        logger.info('NEW DAILY CO ROOM (sender_id=%r):\n%s', sender_id, pformat(resp_json))
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug('NEW DAILY CO ROOM (sender_id=%r):\n%s', sender_id, pformat(resp_json))
 
     if not resp_json.get('url'):
         raise SwiperDailyCoError(repr(resp_json))

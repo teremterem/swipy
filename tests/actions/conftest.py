@@ -1,5 +1,9 @@
 import json
 import os
+import traceback
+from datetime import datetime
+from typing import List, Text
+from unittest.mock import MagicMock, patch
 
 import pytest
 from boto3.resources.base import ServiceResource
@@ -7,6 +11,41 @@ from rasa.shared.core.domain import Domain
 from rasa_sdk import Tracker
 from rasa_sdk.executor import CollectingDispatcher
 from rasa_sdk.types import DomainDict
+
+from actions.utils import datetime_now
+
+
+@pytest.fixture
+def wrap_actions_datetime_now() -> MagicMock:
+    _original_datetime_now = datetime_now
+
+    def _wrap_datetime_now(*args, **kwargs) -> datetime:
+        # make sure parameters don't cause the original function to crash
+        # noinspection PyArgumentList
+        original_result = _original_datetime_now(*args, **kwargs)
+        assert isinstance(original_result, datetime)
+        return datetime(2021, 5, 25)
+
+    # TODO oleksandr: this fixture only works for actions/actions.py code - figure out how to make it more ubiquitous
+    with patch('actions.actions.datetime_now') as mock_datetime_now:
+        mock_datetime_now.side_effect = _wrap_datetime_now
+
+        yield mock_datetime_now
+
+
+@pytest.fixture
+def wrap_traceback_format_exception() -> MagicMock:
+    _original_format_exception = traceback.format_exception
+
+    def _wrap_format_exception(*args, **kwargs) -> List[Text]:
+        # make sure parameters don't cause the original function to crash
+        _original_format_exception(*args, **kwargs)
+        return ['stack ', 'trace ', 'goes ', 'here']
+
+    with patch('traceback.format_exception') as mock_traceback_format_exception:
+        mock_traceback_format_exception.side_effect = _wrap_format_exception
+
+        yield mock_traceback_format_exception
 
 
 @pytest.fixture
@@ -45,6 +84,14 @@ def create_user_state_machine_table(mock_ddb: ServiceResource) -> None:
                 'AttributeName': 'state',
                 'AttributeType': 'S',
             },
+            {
+                'AttributeName': 'state_timeout_ts',
+                'AttributeType': 'N',
+            },
+            {
+                'AttributeName': 'activity_timestamp',
+                'AttributeType': 'N',
+            },
         ],
         KeySchema=[
             {
@@ -54,11 +101,31 @@ def create_user_state_machine_table(mock_ddb: ServiceResource) -> None:
         ],
         GlobalSecondaryIndexes=[
             {
-                'IndexName': 'by_state',
+                'IndexName': 'by_state_and_timeout_ts',
                 'KeySchema': [
                     {
                         'AttributeName': 'state',
                         'KeyType': 'HASH',
+                    },
+                    {
+                        'AttributeName': 'state_timeout_ts',
+                        'KeyType': 'RANGE',
+                    },
+                ],
+                'Projection': {
+                    'ProjectionType': 'ALL',
+                },
+            },
+            {
+                'IndexName': 'by_state_and_activity_ts',
+                'KeySchema': [
+                    {
+                        'AttributeName': 'state',
+                        'KeyType': 'HASH',
+                    },
+                    {
+                        'AttributeName': 'activity_timestamp',
+                        'KeyType': 'RANGE',
                     },
                 ],
                 'Projection': {
