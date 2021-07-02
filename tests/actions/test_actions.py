@@ -816,6 +816,8 @@ async def test_action_accept_invitation_confirm_with_asker(
         state_timestamp_str='2021-05-02 08:51:41 Z',
         state_timeout_ts=1619945501 + 60,  # 'waiting_partner_confirm' times out in 1 minute
         state_timeout_ts_str='2021-05-02 08:52:41 Z',
+        activity_timestamp=1619945501,
+        activity_timestamp_str='2021-05-02 08:51:41 Z',
     )
 
 
