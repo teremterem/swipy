@@ -1,5 +1,6 @@
 import re
 import uuid
+from copy import deepcopy
 from dataclasses import asdict
 from typing import Dict, Text, Any, List, Callable, Tuple, Optional
 from unittest.mock import patch, AsyncMock, MagicMock, call, Mock
@@ -27,6 +28,9 @@ async def test_action_swiper_error_trace(
     class SomeSwiperAction(actions.BaseSwiperAction):
         def name(self) -> Text:
             return 'some_swiper_action'
+
+        def should_update_user_activity_timestamp(self, _tracker: Tracker) -> bool:
+            return False
 
         async def swipy_run(
                 self, _dispatcher: CollectingDispatcher,
@@ -74,6 +78,9 @@ async def test_user_vault_cache_not_reused_between_action_runs(
         def name(self) -> Text:
             return 'some_swiper_action'
 
+        def should_update_user_activity_timestamp(self, _tracker: Tracker) -> bool:
+            return False
+
         async def swipy_run(
                 self, _dispatcher: CollectingDispatcher,
                 _tracker: Tracker,
@@ -111,6 +118,9 @@ async def test_common_swiper_slots_are_set_after_action_run(
     class SomeSwiperAction(actions.BaseSwiperAction):
         def name(self) -> Text:
             return 'some_swiper_action'
+
+        def should_update_user_activity_timestamp(self, _tracker: Tracker) -> bool:
+            return False
 
         async def swipy_run(
                 self, _dispatcher: CollectingDispatcher,
@@ -287,6 +297,8 @@ async def test_action_offer_chitchat(
         newbie=True,
         state_timestamp=1619945501,
         state_timestamp_str='2021-05-02 08:51:41 Z',
+        activity_timestamp=1619945501,
+        activity_timestamp_str='2021-05-02 08:51:41 Z',
     )
 
 
@@ -441,6 +453,8 @@ async def test_action_find_partner(
         newbie=True,
         state_timestamp=0 if expect_as_reminder else 1619945501,
         state_timestamp_str=None if expect_as_reminder else '2021-05-02 08:51:41 Z',
+        activity_timestamp=0 if expect_as_reminder else 1619945501,
+        activity_timestamp_str=None if expect_as_reminder else '2021-05-02 08:51:41 Z',
     )
 
 
@@ -509,6 +523,8 @@ async def test_action_find_partner_no_one(
         newbie=True,
         state_timestamp=1619945501,
         state_timestamp_str='2021-05-02 08:51:41 Z',
+        activity_timestamp=1619945501,
+        activity_timestamp_str='2021-05-02 08:51:41 Z',
     )
 
 
@@ -717,6 +733,8 @@ async def test_action_accept_invitation_create_room(
         state_timestamp_str='2021-05-02 08:51:41 Z',
         state_timeout_ts=1619945501 + (60 * 60 * 4),
         state_timeout_ts_str='2021-05-02 12:51:41 Z',
+        activity_timestamp=1619945501,
+        activity_timestamp_str='2021-05-02 08:51:41 Z',
     )
 
 
@@ -815,6 +833,8 @@ async def test_action_accept_invitation_confirm_with_asker(
         state_timestamp_str='2021-05-02 08:51:41 Z',
         state_timeout_ts=1619945501 + 60,  # 'waiting_partner_confirm' times out in 1 minute
         state_timeout_ts_str='2021-05-02 08:52:41 Z',
+        activity_timestamp=1619945501,
+        activity_timestamp_str='2021-05-02 08:51:41 Z',
     )
 
 
@@ -884,6 +904,8 @@ async def test_action_accept_invitation_partner_not_waiting(
         partner_id=None,
         state_timestamp=1619945501,
         state_timestamp_str='2021-05-02 08:51:41 Z',
+        activity_timestamp=1619945501,
+        activity_timestamp_str='2021-05-02 08:51:41 Z',
     )
 
 
@@ -903,6 +925,7 @@ async def test_action_accept_invitation_partner_not_waiting(
     ),
 ])
 @pytest.mark.usefixtures('create_user_state_machine_table', 'wrap_traceback_format_exception')
+@patch('time.time', Mock(return_value=1619945501))  # "now"
 async def test_action_accept_invitation_no_partner_id(
         mock_aioresponses: aioresponses,
         tracker: Tracker,
@@ -953,7 +976,10 @@ async def test_action_accept_invitation_no_partner_id(
     assert mock_aioresponses.requests == {}
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
-    assert user_vault.get_user('unit_test_user') == current_user  # current user should not be changed
+    new_current_user = deepcopy(current_user)  # deep-copy just in case
+    new_current_user.activity_timestamp = 1619945501
+    new_current_user.activity_timestamp_str = '2021-05-02 08:51:41 Z'
+    assert user_vault.get_user('unit_test_user') == new_current_user
 
 
 @pytest.mark.asyncio
@@ -1124,6 +1150,8 @@ async def test_action_do_not_disturb(
         newbie=True,
         state_timestamp=1619945501,
         state_timestamp_str='2021-05-02 08:51:41 Z',
+        activity_timestamp=1619945501,
+        activity_timestamp_str='2021-05-02 08:51:41 Z',
     )
 
 
@@ -1189,6 +1217,8 @@ async def test_action_reject_invitation(
             state_timestamp_str='2021-05-02 08:51:41 Z',
             state_timeout_ts=1619945501 + (60 * 60 * 4),
             state_timeout_ts_str='2021-05-02 12:51:41 Z',
+            activity_timestamp=1619945501,
+            activity_timestamp_str='2021-05-02 08:51:41 Z',
         )
 
     else:  # an error is expected
@@ -1215,11 +1245,13 @@ async def test_action_reject_invitation(
             'template': 'utter_error',
             'text': None,
         }]
-        assert user_vault.get_user('unit_test_user') == UserStateMachine(  # the state of current user has not changed
+        assert user_vault.get_user('unit_test_user') == UserStateMachine(
             user_id='unit_test_user',
             state=source_swiper_state,
             partner_id='',
             newbie=True,
+            activity_timestamp=1619945501,
+            activity_timestamp_str='2021-05-02 08:51:41 Z',
         )
 
 

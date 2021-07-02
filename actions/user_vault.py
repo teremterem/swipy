@@ -132,6 +132,8 @@ class NaiveDdbUserVault(BaseUserVault):
             user.state_timestamp = int(user.state_timestamp)
         if isinstance(user.state_timeout_ts, Decimal):
             user.state_timeout_ts = int(user.state_timeout_ts)
+        if isinstance(user.activity_timestamp, Decimal):
+            user.activity_timestamp = int(user.activity_timestamp)
 
         return user
 
@@ -146,13 +148,14 @@ class NaiveDdbUserVault(BaseUserVault):
         current_timestamp = current_timestamp_int()
 
         def timestamp_extractor(item: Dict[Text, Any]) -> int:
-            return int(item.get('state_timestamp') or 0)
+            return int(item.get('activity_timestamp') or 0)
 
         def item_generator():
             # TODO oleksandr: parallelize ? no! we will later be switching to Redis and/or Postgres anyway
             for state in states:
                 if state in UserState.states_with_timeouts:
-                    # disregard the possibility of truncated item list - we will be replacing DDB later
+                    # TODO oleksandr: disregard the possibility of truncated item list ?
+                    #  yes, we will be replacing DDB later anyways
                     ddb_resp = user_state_machine_table.query(
                         IndexName='by_state_and_timeout_ts',
                         KeyConditionExpression=Key('state').eq(state) & Key('state_timeout_ts').lt(current_timestamp),
@@ -164,7 +167,7 @@ class NaiveDdbUserVault(BaseUserVault):
 
                 else:
                     ddb_resp = user_state_machine_table.query(
-                        IndexName='by_state_and_timestamp',
+                        IndexName='by_state_and_activity_ts',
                         KeyConditionExpression=Key('state').eq(state),
                         FilterExpression=Attr('user_id').ne(exclude_user_id),
                         ScanIndexForward=False,

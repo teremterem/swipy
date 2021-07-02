@@ -62,6 +62,10 @@ class BaseSwiperAction(Action, ABC):
         raise NotImplementedError('An action must implement a name')
 
     @abstractmethod
+    def should_update_user_activity_timestamp(self, tracker: Tracker) -> bool:
+        raise NotImplementedError('Each action should be explicit on whether to update user activity timestamp or not')
+
+    @abstractmethod
     async def swipy_run(
             self, dispatcher: CollectingDispatcher,
             tracker: Tracker,
@@ -111,6 +115,9 @@ class BaseSwiperAction(Action, ABC):
                     if current_user.native == NATIVE_UNKNOWN:
                         current_user.native = teleg_lang_code
 
+            if self.should_update_user_activity_timestamp(tracker):
+                current_user.update_activity_timestamp()
+
             user_vault.save(current_user)
 
             events = list(await self.swipy_run(
@@ -138,12 +145,9 @@ class BaseSwiperAction(Action, ABC):
                     key=SWIPER_ERROR_TRACE_SLOT,
                     value=stack_trace_to_str(e),
                 ))
-            # noinspection PyBroadException
-            try:
-                if TELL_USER_ABOUT_ERRORS:
-                    dispatcher.utter_message(response='utter_error')
-            except Exception:
-                logger.exception('%s (less important error)', self.name())
+
+            if TELL_USER_ABOUT_ERRORS:
+                dispatcher.utter_message(response='utter_error')
 
         else:
             if tracker.get_slot(SWIPER_ERROR_SLOT) is not None:
@@ -192,6 +196,9 @@ class ActionSessionStart(BaseSwiperAction):
     def name(self) -> Text:
         return 'action_session_start'
 
+    def should_update_user_activity_timestamp(self, _tracker: Tracker) -> bool:
+        return False
+
     @staticmethod
     def _slot_set_events_from_tracker(tracker: Tracker) -> List[EventType]:
         return [
@@ -234,6 +241,9 @@ class ActionSessionStart(BaseSwiperAction):
 class ActionOfferChitchat(BaseSwiperAction):
     def name(self) -> Text:
         return 'action_offer_chitchat'
+
+    def should_update_user_activity_timestamp(self, tracker: Tracker) -> bool:
+        return True
 
     async def swipy_run(
             self, dispatcher: CollectingDispatcher,
@@ -288,6 +298,14 @@ class ActionFindPartner(BaseSwiperAction):
     def name(self) -> Text:
         return ACTION_FIND_PARTNER
 
+    def should_update_user_activity_timestamp(self, tracker: Tracker) -> bool:
+        return not self.is_triggered_by_reminder(tracker)
+
+    @staticmethod
+    def is_triggered_by_reminder(tracker: Tracker) -> bool:
+        latest_intent = get_intent_of_latest_message_reliably(tracker)
+        return latest_intent == EXTERNAL_FIND_PARTNER_INTENT
+
     async def swipy_run(
             self, dispatcher: CollectingDispatcher,
             tracker: Tracker,
@@ -295,13 +313,11 @@ class ActionFindPartner(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        latest_intent = get_intent_of_latest_message_reliably(tracker)
-        triggered_by_reminder = latest_intent == EXTERNAL_FIND_PARTNER_INTENT
 
-        initiate_search = False
         revert_user_utterance = False
+        initiate_search = False
 
-        if triggered_by_reminder:
+        if self.is_triggered_by_reminder(tracker):
             revert_user_utterance = True
 
             if current_user.state not in [
@@ -371,6 +387,9 @@ class ActionAskToJoin(BaseSwiperAction):
     def name(self) -> Text:
         return 'action_ask_to_join'
 
+    def should_update_user_activity_timestamp(self, tracker: Tracker) -> bool:
+        return False
+
     async def swipy_run(
             self, dispatcher: CollectingDispatcher,
             tracker: Tracker,
@@ -422,6 +441,9 @@ class ActionAskToJoin(BaseSwiperAction):
 class ActionAcceptInvitation(BaseSwiperAction):
     def name(self) -> Text:
         return ACTION_ACCEPT_INVITATION
+
+    def should_update_user_activity_timestamp(self, tracker: Tracker) -> bool:
+        return True
 
     async def swipy_run(
             self, dispatcher: CollectingDispatcher,
@@ -532,6 +554,9 @@ class ActionJoinRoom(BaseSwiperAction):
     def name(self) -> Text:
         return 'action_join_room'
 
+    def should_update_user_activity_timestamp(self, tracker: Tracker) -> bool:
+        return False
+
     async def swipy_run(
             self, dispatcher: CollectingDispatcher,
             tracker: Tracker,
@@ -558,6 +583,9 @@ class ActionDoNotDisturb(BaseSwiperAction):
     def name(self) -> Text:
         return 'action_do_not_disturb'
 
+    def should_update_user_activity_timestamp(self, tracker: Tracker) -> bool:
+        return True  # TODO oleksandr: are you sure about this one ?
+
     async def swipy_run(
             self, dispatcher: CollectingDispatcher,
             tracker: Tracker,
@@ -583,6 +611,9 @@ class ActionRejectInvitation(BaseSwiperAction):
     def name(self) -> Text:
         return 'action_reject_invitation'
 
+    def should_update_user_activity_timestamp(self, tracker: Tracker) -> bool:
+        return True  # TODO oleksandr: are you sure about this one ?
+
     async def swipy_run(
             self, dispatcher: CollectingDispatcher,
             tracker: Tracker,
@@ -607,6 +638,9 @@ class ActionRejectInvitation(BaseSwiperAction):
 class ActionExpirePartnerConfirmation(BaseSwiperAction):
     def name(self) -> Text:
         return 'action_expire_partner_confirmation'
+
+    def should_update_user_activity_timestamp(self, tracker: Tracker) -> bool:
+        return False
 
     async def swipy_run(
             self, dispatcher: CollectingDispatcher,
