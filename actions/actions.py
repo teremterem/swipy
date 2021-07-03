@@ -265,6 +265,7 @@ class ActionOfferChitchat(BaseSwiperAction):
                     UserState.REJECTED_JOIN,
                     UserState.REJECTED_CONFIRM,
                     UserState.DO_NOT_DISTURB,
+                    UserState.BOT_BLOCKED,
             ):
                 # noinspection PyUnresolvedReferences
                 current_user.become_ok_to_chitchat()
