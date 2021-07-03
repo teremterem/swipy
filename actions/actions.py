@@ -118,7 +118,7 @@ class BaseSwiperAction(Action, ABC):
             if self.should_update_user_activity_timestamp(tracker):
                 current_user.update_activity_timestamp()
 
-            user_vault.save(current_user)
+            current_user.save()
 
             if current_user.state == UserState.USER_BANNED:
                 logger.info('IGNORING BANNED USER (ID = %r)', current_user.user_id)
@@ -268,7 +268,7 @@ class ActionOfferChitchat(BaseSwiperAction):
             ):
                 # noinspection PyUnresolvedReferences
                 current_user.become_ok_to_chitchat()
-                user_vault.save(current_user)
+                current_user.save()
 
         latest_intent = tracker.get_intent_of_latest_message()
         if latest_intent == 'how_it_works':
@@ -343,7 +343,7 @@ class ActionFindPartner(BaseSwiperAction):
 
             # noinspection PyUnresolvedReferences
             current_user.request_chitchat()
-            user_vault.save(current_user)
+            current_user.save()
 
         partner = user_vault.get_random_available_partner(current_user)
 
@@ -409,13 +409,13 @@ class ActionAskToJoin(BaseSwiperAction):
             response_template = 'utter_someone_wants_to_chat'
             # noinspection PyUnresolvedReferences
             current_user.become_asked_to_join(partner_id)
-            user_vault.save(current_user)
+            current_user.save()
 
         elif latest_intent == EXTERNAL_ASK_TO_CONFIRM_INTENT:
             response_template = 'utter_found_someone_check_ready'
             # noinspection PyUnresolvedReferences
             current_user.become_asked_to_confirm(partner_id)
-            user_vault.save(current_user)
+            current_user.save()
 
         else:
             raise SwiperError(
@@ -467,7 +467,7 @@ class ActionAcceptInvitation(BaseSwiperAction):
         else:
             # noinspection PyUnresolvedReferences
             current_user.request_chitchat()
-            user_vault.save(current_user)
+            current_user.save()
 
             dispatcher.utter_message(response='utter_partner_already_gone')
 
@@ -496,7 +496,7 @@ class ActionAcceptInvitation(BaseSwiperAction):
         except Exception:
             # noinspection PyUnresolvedReferences
             current_user.request_chitchat()
-            user_vault.save(current_user)
+            current_user.save()
             raise
 
         dispatcher.utter_message(
@@ -508,7 +508,7 @@ class ActionAcceptInvitation(BaseSwiperAction):
 
         # noinspection PyUnresolvedReferences
         current_user.join_room(partner.user_id)
-        user_vault.save(current_user)
+        current_user.save()
 
         return [
             SlotSet(
@@ -538,12 +538,12 @@ class ActionAcceptInvitation(BaseSwiperAction):
         except Exception:
             # noinspection PyUnresolvedReferences
             current_user.request_chitchat()
-            user_vault.save(current_user)
+            current_user.save()
             raise
 
         # noinspection PyUnresolvedReferences
         current_user.wait_for_partner_to_confirm(partner.user_id)
-        user_vault.save(current_user)
+        current_user.save()
 
         return [
             SlotSet(
@@ -571,7 +571,7 @@ class ActionJoinRoom(BaseSwiperAction):
         partner_id = tracker.get_slot(rasa_callbacks.PARTNER_ID_SLOT)
         # noinspection PyUnresolvedReferences
         current_user.join_room(partner_id)
-        user_vault.save(current_user)
+        current_user.save()
 
         dispatcher.utter_message(response='utter_partner_ready_room_url')
 
@@ -599,7 +599,7 @@ class ActionDoNotDisturb(BaseSwiperAction):
     ) -> List[Dict[Text, Any]]:
         # noinspection PyUnresolvedReferences
         current_user.become_do_not_disturb()
-        user_vault.save(current_user)
+        current_user.save()
 
         dispatcher.utter_message(response='utter_hope_to_see_you_later')
 
@@ -627,7 +627,7 @@ class ActionRejectInvitation(BaseSwiperAction):
     ) -> List[Dict[Text, Any]]:
         # noinspection PyUnresolvedReferences
         current_user.reject()
-        user_vault.save(current_user)
+        current_user.save()
 
         dispatcher.utter_message(response='utter_declined')
 
