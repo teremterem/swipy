@@ -76,8 +76,8 @@ expected_more_narrow_transitions = [
     ('join_room', 'rejected_join', None, 'previous_partner_id', 'previous_partner_id'),
     ('join_room', 'rejected_confirm', None, 'previous_partner_id', 'previous_partner_id'),
     ('join_room', 'do_not_disturb', None, 'previous_partner_id', 'previous_partner_id'),
-    ('join_room', 'do_not_disturb', None, 'previous_partner_id', 'previous_partner_id'),
-    ('join_room', 'do_not_disturb', None, 'previous_partner_id', 'previous_partner_id'),
+    ('join_room', 'bot_blocked', None, 'previous_partner_id', 'previous_partner_id'),
+    ('join_room', 'user_banned', None, 'previous_partner_id', 'previous_partner_id'),
 
     ('reject', 'new', None, 'previous_partner_id', 'previous_partner_id'),
     ('reject', 'wants_chitchat', None, 'previous_partner_id', 'previous_partner_id'),
@@ -89,8 +89,8 @@ expected_more_narrow_transitions = [
     ('reject', 'rejected_join', None, 'previous_partner_id', 'previous_partner_id'),
     ('reject', 'rejected_confirm', None, 'previous_partner_id', 'previous_partner_id'),
     ('reject', 'do_not_disturb', None, 'previous_partner_id', 'previous_partner_id'),
-    ('reject', 'do_not_disturb', None, 'previous_partner_id', 'previous_partner_id'),
-    ('reject', 'do_not_disturb', None, 'previous_partner_id', 'previous_partner_id'),
+    ('reject', 'bot_blocked', None, 'previous_partner_id', 'previous_partner_id'),
+    ('reject', 'user_banned', None, 'previous_partner_id', 'previous_partner_id'),
 ]
 
 
