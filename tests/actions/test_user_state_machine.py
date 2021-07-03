@@ -45,14 +45,24 @@ def test_catch_all_transitions(
     assert user.partner_id == 'previous_partner_id'
 
     trigger = getattr(user, trigger_name)
-    trigger('new_partner_id')
 
-    assert user.state == destination_state
+    if source_state == 'user_banned':
+        # transition should fail, no fields should change
+        with pytest.raises(MachineError):
+            trigger('new_partner_id')
 
-    if partner_id_param_used:
-        assert user.partner_id == 'new_partner_id'
+        assert user.state == source_state
+        assert user.partner_id == 'previous_partner_id'
+
     else:
-        assert user.partner_id is None  # previous partner is expected to be dropped
+        trigger('new_partner_id')
+
+        assert user.state == destination_state
+
+        if partner_id_param_used:
+            assert user.partner_id == 'new_partner_id'
+        else:
+            assert user.partner_id is None  # previous partner is expected to be dropped
 
 
 expected_more_narrow_transitions = [
