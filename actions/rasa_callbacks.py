@@ -114,6 +114,11 @@ async def _trigger_external_rasa_intent(
         )
 
     if not resp_json.get('tracker') or resp_json.get('status') == 'failure':
+        if 'bot was blocked' in (resp_json.get('message') or '').lower():
+            # noinspection PyUnresolvedReferences
+            receiver.mark_as_bot_blocked()
+            receiver.save()
+
         try:
             raise SwiperRasaCallbackError(repr(resp_json))
         except SwiperRasaCallbackError:

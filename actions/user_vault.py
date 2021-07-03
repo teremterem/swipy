@@ -66,8 +66,7 @@ class BaseUserVault(IUserVault, ABC):
             user = UserStateMachine(user_id)
             self._save_user(user)
 
-        self._user_cache[user_id] = user
-        return user
+        return self._cache_and_bind(user)
 
     def _get_random_available_partner_from_tiers(self, current_user: UserStateMachine) -> Optional[UserStateMachine]:
         for tier in UserState.offerable_tiers:
@@ -81,12 +80,17 @@ class BaseUserVault(IUserVault, ABC):
         if not user:
             return None
 
-        self._user_cache[user.user_id] = user
-        return user
+        return self._cache_and_bind(user)
 
     def save(self, user: UserStateMachine) -> None:
         self._save_user(user)
+
+        self._cache_and_bind(user)
+
+    def _cache_and_bind(self, user: UserStateMachine):
+        user._user_vault = self
         self._user_cache[user.user_id] = user
+        return user
 
 
 class NaiveDdbUserVault(BaseUserVault):

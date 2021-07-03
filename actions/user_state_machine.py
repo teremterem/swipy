@@ -1,10 +1,13 @@
 import os
 from dataclasses import dataclass
-from typing import Text, Optional, Dict, Any
+from typing import Text, Optional, Dict, Any, TYPE_CHECKING
 
 from transitions import Machine, EventData
 
-from actions.utils import current_timestamp_int, SwiperStateMachineError, format_swipy_timestamp
+from actions.utils import current_timestamp_int, SwiperStateMachineError, format_swipy_timestamp, SwiperError
+
+if TYPE_CHECKING:
+    from actions.user_vault import IUserVault
 
 SWIPER_STATE_TIMEOUT_SEC = int(os.getenv('SWIPER_STATE_TIMEOUT_SEC', '14400'))  # 4 * 60 * 60 seconds = 4 hours
 PARTNER_CONFIRMATION_TIMEOUT_SEC = int(os.getenv('PARTNER_CONFIRMATION_TIMEOUT_SEC', '60'))  # 1 minute
@@ -81,7 +84,7 @@ class UserModel:
 
 
 class UserStateMachine(UserModel):
-    def __init__(self, *args, state: Text = None, **kwargs) -> None:
+    def __init__(self, *args, state: Text = None, user_vault: Optional['IUserVault'] = None, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
         self.machine = Machine(
@@ -97,6 +100,8 @@ class UserStateMachine(UserModel):
         )
         if state is not None:
             self.machine.set_state(state)
+
+        self._user_vault = user_vault
 
         # noinspection PyTypeChecker
         self.machine.add_transition(
@@ -200,6 +205,18 @@ class UserStateMachine(UserModel):
             ],
             dest=UserState.REJECTED_CONFIRM,
         )
+
+        # noinspection PyTypeChecker
+        self.machine.add_transition(
+            trigger='mark_as_bot_blocked',
+            source='*',
+            dest=UserState.BOT_BLOCKED,
+        )
+
+    def save(self):
+        if not self._user_vault:
+            raise SwiperError('an attempt to save UserStateMachine that is not associated with any IUserVault instance')
+        self._user_vault.save(self)
 
     def is_waiting_to_be_confirmed_by(self, partner_id: Text):
         if not partner_id:
