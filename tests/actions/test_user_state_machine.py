@@ -44,23 +44,23 @@ def test_catch_all_transitions(
     assert user.state == source_state
     assert user.partner_id == 'previous_partner_id'
 
-    trigger = getattr(user, trigger_name)
+    trigger = partial(getattr(user, trigger_name), 'partner_id_in_trigger')
 
     if source_state == 'user_banned':
         # transition should fail, no fields should change
         with pytest.raises(MachineError):
-            trigger('new_partner_id')
+            trigger()
 
         assert user.state == source_state
         assert user.partner_id == 'previous_partner_id'
 
     else:
-        trigger('new_partner_id')
+        trigger()
 
         assert user.state == destination_state
 
         if partner_id_param_used:
-            assert user.partner_id == 'new_partner_id'
+            assert user.partner_id == 'partner_id_in_trigger'
         else:
             assert user.partner_id is None  # previous partner is expected to be dropped
 
@@ -69,12 +69,14 @@ expected_more_narrow_transitions = [
     ('join_room', 'new', None, 'previous_partner_id', 'previous_partner_id'),
     ('join_room', 'wants_chitchat', None, 'previous_partner_id', 'previous_partner_id'),
     ('join_room', 'ok_to_chitchat', None, 'previous_partner_id', 'previous_partner_id'),
-    ('join_room', 'waiting_partner_confirm', 'roomed', 'new_partner_id', 'new_partner_id'),
+    ('join_room', 'waiting_partner_confirm', 'roomed', 'partner_id_in_trigger', 'partner_id_in_trigger'),
     ('join_room', 'asked_to_join', None, 'previous_partner_id', 'previous_partner_id'),
-    ('join_room', 'asked_to_confirm', 'roomed', 'new_partner_id', 'new_partner_id'),
+    ('join_room', 'asked_to_confirm', 'roomed', 'partner_id_in_trigger', 'partner_id_in_trigger'),
     ('join_room', 'roomed', None, 'previous_partner_id', 'previous_partner_id'),
     ('join_room', 'rejected_join', None, 'previous_partner_id', 'previous_partner_id'),
     ('join_room', 'rejected_confirm', None, 'previous_partner_id', 'previous_partner_id'),
+    ('join_room', 'do_not_disturb', None, 'previous_partner_id', 'previous_partner_id'),
+    ('join_room', 'do_not_disturb', None, 'previous_partner_id', 'previous_partner_id'),
     ('join_room', 'do_not_disturb', None, 'previous_partner_id', 'previous_partner_id'),
 
     ('reject', 'new', None, 'previous_partner_id', 'previous_partner_id'),
@@ -86,6 +88,8 @@ expected_more_narrow_transitions = [
     ('reject', 'roomed', None, 'previous_partner_id', 'previous_partner_id'),
     ('reject', 'rejected_join', None, 'previous_partner_id', 'previous_partner_id'),
     ('reject', 'rejected_confirm', None, 'previous_partner_id', 'previous_partner_id'),
+    ('reject', 'do_not_disturb', None, 'previous_partner_id', 'previous_partner_id'),
+    ('reject', 'do_not_disturb', None, 'previous_partner_id', 'previous_partner_id'),
     ('reject', 'do_not_disturb', None, 'previous_partner_id', 'previous_partner_id'),
 ]
 
@@ -119,7 +123,7 @@ def test_more_narrow_transitions(
     assert user.state == source_state
     assert user.partner_id == initial_partner_id
 
-    trigger = partial(getattr(user, trigger_name), 'new_partner_id')
+    trigger = partial(getattr(user, trigger_name), 'partner_id_in_trigger')
 
     if destination_state:
         trigger()
@@ -157,10 +161,10 @@ def test_state_timestamps(source_state: Text, trigger_name: Text) -> None:
     )
     transition_is_valid = trigger_name in user.machine.get_triggers(source_state)
 
-    trigger = getattr(user, trigger_name)
+    trigger = partial(getattr(user, trigger_name), 'some_partner_id')
 
     if transition_is_valid:
-        trigger('some_partner_id')  # run trigger and pass partner_id just in case (some triggers need it)
+        trigger()  # run trigger and pass partner_id just in case (some triggers need it)
 
         if user.state in [
             'asked_to_join',
@@ -196,7 +200,7 @@ def test_state_timestamps(source_state: Text, trigger_name: Text) -> None:
     else:
         # invalid transition is expected to not go through
         with pytest.raises(MachineError):
-            trigger(partner_id='some_partner_id')
+            trigger()
 
         assert user == UserStateMachine(
             user_id=user.user_id,  # don't try to validate this
