@@ -352,7 +352,7 @@ class ActionFindPartner(BaseSwiperAction):
 
             await rasa_callbacks.ask_to_join(
                 current_user.user_id,
-                partner.user_id,
+                partner,
                 user_profile_photo_id,
                 suppress_callback_errors=True,
             )
@@ -492,7 +492,7 @@ class ActionAcceptInvitation(BaseSwiperAction):
         # noinspection PyBroadException
         try:
             # put partner into the room as well
-            await rasa_callbacks.join_room(current_user.user_id, partner.user_id, room_url)
+            await rasa_callbacks.join_room(current_user.user_id, partner, room_url)
         except Exception:
             # noinspection PyUnresolvedReferences
             current_user.request_chitchat()
@@ -534,7 +534,7 @@ class ActionAcceptInvitation(BaseSwiperAction):
 
         # noinspection PyBroadException
         try:
-            await rasa_callbacks.ask_to_confirm(current_user.user_id, partner.user_id, user_profile_photo_id)
+            await rasa_callbacks.ask_to_confirm(current_user.user_id, partner, user_profile_photo_id)
         except Exception:
             # noinspection PyUnresolvedReferences
             current_user.request_chitchat()

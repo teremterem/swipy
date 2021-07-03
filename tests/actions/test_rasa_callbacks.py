@@ -8,6 +8,7 @@ from aioresponses.core import RequestCall
 from yarl import URL
 
 from actions import rasa_callbacks
+from actions.user_state_machine import UserStateMachine
 from actions.utils import SwiperRasaCallbackError
 
 
@@ -33,14 +34,14 @@ async def test_ask_to_join(
 
     assert await rasa_callbacks.ask_to_join(
         'id_of_asker',
-        'partner_id_to_ask',
+        UserStateMachine(user_id='partner_id_to_ask'),
         'photo_of_the_asker',
     ) == external_intent_response
 
     assert mock_aioresponses.requests == {expected_req_key: [expected_req_call]}
     wrap_trigger_external_rasa_intent.assert_called_once_with(
         'id_of_asker',
-        'partner_id_to_ask',
+        UserStateMachine(user_id='partner_id_to_ask'),
         'EXTERNAL_ask_to_join',
         {
             'partner_id': 'id_of_asker',
@@ -72,14 +73,14 @@ async def test_join_room(
 
     assert await rasa_callbacks.join_room(
         'a_sending_user',
-        'a_receiving_user',
+        UserStateMachine(user_id='a_receiving_user'),
         'https://room-unittest/url',
     ) == external_intent_response
 
     assert mock_aioresponses.requests == {expected_req_key: [expected_req_call]}
     wrap_trigger_external_rasa_intent.assert_called_once_with(
         'a_sending_user',
-        'a_receiving_user',
+        UserStateMachine(user_id='a_receiving_user'),
         'EXTERNAL_join_room',
         {
             'partner_id': 'a_sending_user',
@@ -118,7 +119,7 @@ async def test_callback_unsuccessful(
     if suppress_callback_errors:
         result = await rasa_callbacks._trigger_external_rasa_intent(
             'some_sender_id',
-            'a_receiving_user',
+            UserStateMachine(user_id='a_receiving_user'),
             'EXTERNAL_intent',
             {'some_entity': 'entity_value'},
             suppress_callback_errors,
@@ -128,7 +129,7 @@ async def test_callback_unsuccessful(
         with pytest.raises(SwiperRasaCallbackError):
             await rasa_callbacks._trigger_external_rasa_intent(
                 'some_sender_id',
-                'a_receiving_user',
+                UserStateMachine(user_id='a_receiving_user'),
                 'EXTERNAL_intent',
                 {'some_entity': 'entity_value'},
                 suppress_callback_errors,
