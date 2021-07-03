@@ -9,6 +9,8 @@ all_expected_user_states = [
     'rejected_join',
     'rejected_confirm',
     'do_not_disturb',
+    'bot_blocked',
+    'user_banned',
 ]
 
 all_expected_user_state_machine_triggers = [
