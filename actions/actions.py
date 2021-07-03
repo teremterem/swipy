@@ -18,7 +18,7 @@ from actions.rasa_callbacks import EXTERNAL_ASK_TO_JOIN_INTENT, EXTERNAL_ASK_TO_
 from actions.user_state_machine import UserStateMachine, UserState, NATIVE_UNKNOWN, PARTNER_CONFIRMATION_TIMEOUT_SEC
 from actions.user_vault import UserVault, IUserVault
 from actions.utils import stack_trace_to_str, datetime_now, get_intent_of_latest_message_reliably, SwiperError, \
-    current_timestamp_int
+    current_timestamp_int, SwiperRasaCallbackError
 
 logger = logging.getLogger(__name__)
 
@@ -459,26 +459,32 @@ class ActionAcceptInvitation(BaseSwiperAction):
     ) -> List[Dict[Text, Any]]:
         partner = user_vault.get_user(current_user.partner_id)
 
-        if partner.is_waiting_to_be_confirmed_by(current_user.user_id):
-            # current user was the one asked to confirm and they just did => create the room
-            return await self.create_room(dispatcher, current_user, partner, user_vault)
-        elif partner.chitchat_can_be_offered():
-            # confirm with the partner before creating any rooms
-            return await self.confirm_with_asker(dispatcher, current_user, partner, user_vault)
-        else:
-            # noinspection PyUnresolvedReferences
-            current_user.request_chitchat()
-            current_user.save()
+        # noinspection PyBroadException
+        try:
+            if partner.is_waiting_to_be_confirmed_by(current_user.user_id):
+                # current user was the one asked to confirm and they just did => create the room
+                return await self.create_room(dispatcher, current_user, partner, user_vault)
 
-            dispatcher.utter_message(response='utter_partner_already_gone')
+            elif partner.chitchat_can_be_offered():
+                # confirm with the partner before creating any rooms
+                return await self.confirm_with_asker(dispatcher, current_user, partner, user_vault)
 
-            return [
-                SlotSet(
-                    key=SWIPER_ACTION_RESULT_SLOT,
-                    value=SwiperActionResult.PARTNER_NOT_WAITING_ANYMORE,
-                ),
-                *schedule_find_partner_reminder(delta_sec=FIND_PARTNER_FOLLOWUP_DELAY_SEC, initiate=True),
-            ]
+        except SwiperRasaCallbackError:
+            logger.exception('FAILED TO ACCEPT INVITATION')
+
+        # noinspection PyUnresolvedReferences
+        current_user.request_chitchat()
+        current_user.save()
+
+        dispatcher.utter_message(response='utter_partner_already_gone')
+
+        return [
+            SlotSet(
+                key=SWIPER_ACTION_RESULT_SLOT,
+                value=SwiperActionResult.PARTNER_NOT_WAITING_ANYMORE,
+            ),
+            *schedule_find_partner_reminder(delta_sec=FIND_PARTNER_FOLLOWUP_DELAY_SEC, initiate=True),
+        ]
 
     @staticmethod
     async def create_room(
@@ -490,15 +496,7 @@ class ActionAcceptInvitation(BaseSwiperAction):
         created_room = await daily_co.create_room(current_user.user_id)
         room_url = created_room['url']
 
-        # noinspection PyBroadException
-        try:
-            # put partner into the room as well
-            await rasa_callbacks.join_room(current_user.user_id, partner, room_url)
-        except Exception:
-            # noinspection PyUnresolvedReferences
-            current_user.request_chitchat()
-            current_user.save()
-            raise
+        await rasa_callbacks.join_room(current_user.user_id, partner, room_url)
 
         dispatcher.utter_message(
             response='utter_room_url',
@@ -533,14 +531,7 @@ class ActionAcceptInvitation(BaseSwiperAction):
 
         user_profile_photo_id = telegram_helpers.get_user_profile_photo_file_id(current_user.user_id)
 
-        # noinspection PyBroadException
-        try:
-            await rasa_callbacks.ask_to_confirm(current_user.user_id, partner, user_profile_photo_id)
-        except Exception:
-            # noinspection PyUnresolvedReferences
-            current_user.request_chitchat()
-            current_user.save()
-            raise
+        await rasa_callbacks.ask_to_confirm(current_user.user_id, partner, user_profile_photo_id)
 
         # noinspection PyUnresolvedReferences
         current_user.wait_for_partner_to_confirm(partner.user_id)
