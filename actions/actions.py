@@ -527,8 +527,6 @@ class ActionAcceptInvitation(BaseSwiperAction):
             partner: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        dispatcher.utter_message(response='utter_checking_if_partner_ready_too')
-
         user_profile_photo_id = telegram_helpers.get_user_profile_photo_file_id(current_user.user_id)
 
         await rasa_callbacks.ask_to_confirm(current_user.user_id, partner, user_profile_photo_id)
@@ -536,6 +534,8 @@ class ActionAcceptInvitation(BaseSwiperAction):
         # noinspection PyUnresolvedReferences
         current_user.wait_for_partner_to_confirm(partner.user_id)
         current_user.save()
+
+        dispatcher.utter_message(response='utter_checking_if_partner_ready_too')
 
         return [
             SlotSet(
