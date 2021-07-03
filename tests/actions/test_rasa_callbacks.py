@@ -30,7 +30,7 @@ async def test_ask_to_join_and_confirm(
 ) -> None:
     expected_req_key, expected_req_call = rasa_callbacks_expected_req_builder(
         'partner_id_to_ask',
-        'EXTERNAL_ask_to_join',
+        expected_intent,
         {
             'partner_id': 'id_of_asker',
             'partner_photo_file_id': 'photo_of_the_asker',
@@ -48,7 +48,7 @@ async def test_ask_to_join_and_confirm(
     wrap_trigger_external_rasa_intent.assert_called_once_with(
         'id_of_asker',
         UserStateMachine(user_id='partner_id_to_ask'),
-        'EXTERNAL_ask_to_join',
+        expected_intent,
         {
             'partner_id': 'id_of_asker',
             'partner_photo_file_id': 'photo_of_the_asker',
