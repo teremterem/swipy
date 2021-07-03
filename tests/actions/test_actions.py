@@ -244,6 +244,8 @@ async def test_action_session_start_with_slots(
     ('greet', 'utter_greet_offer_chitchat', 'rejected_join', 'ok_to_chitchat'),
     ('greet', 'utter_greet_offer_chitchat', 'rejected_confirm', 'ok_to_chitchat'),
     ('greet', 'utter_greet_offer_chitchat', 'do_not_disturb', 'ok_to_chitchat'),
+    ('greet', 'utter_greet_offer_chitchat', 'bot_blocked', 'ok_to_chitchat'),
+    ('greet', 'utter_greet_offer_chitchat', 'user_banned', 'user_banned'),
 ])
 async def test_action_offer_chitchat(
         tracker: Tracker,
@@ -271,23 +273,30 @@ async def test_action_offer_chitchat(
     assert action.name() == 'action_offer_chitchat'
 
     actual_events = await action.run(dispatcher, tracker, domain)
-    assert actual_events == [
-        SlotSet('swiper_action_result', 'success'),
-        SlotSet('swiper_native', 'unknown'),
-        SlotSet('deeplink_data', ''),
-        SlotSet('telegram_from', None),
-        SlotSet('swiper_state', destination_swiper_state),
-    ]
-    assert dispatcher.messages == [{
-        'attachment': None,
-        'buttons': [],
-        'custom': {},
-        'elements': [],
-        'image': None,
-        'response': expected_response_template,
-        'template': expected_response_template,
-        'text': None,
-    }]
+
+    if source_swiper_state == 'user_banned':
+        assert actual_events == [
+            SlotSet('swiper_state', destination_swiper_state),
+        ]
+        assert dispatcher.messages == []
+    else:
+        assert actual_events == [
+            SlotSet('swiper_action_result', 'success'),
+            SlotSet('swiper_native', 'unknown'),
+            SlotSet('deeplink_data', ''),
+            SlotSet('telegram_from', None),
+            SlotSet('swiper_state', destination_swiper_state),
+        ]
+        assert dispatcher.messages == [{
+            'attachment': None,
+            'buttons': [],
+            'custom': {},
+            'elements': [],
+            'image': None,
+            'response': expected_response_template,
+            'template': expected_response_template,
+            'text': None,
+        }]
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(

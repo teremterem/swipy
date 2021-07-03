@@ -52,6 +52,8 @@ slots:
     - rejected_join
     - rejected_confirm
     - do_not_disturb
+    - bot_blocked
+    - user_banned
   swiper_action_result:
     type: rasa.shared.core.slots.CategoricalSlot
     initial_value: null

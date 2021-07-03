@@ -22,6 +22,8 @@ def test_get_new_user() -> None:
     user_vault = UserVault()
     new_user = user_vault.get_user('new_user_id')
 
+    assert new_user._user_vault is user_vault
+
     assert new_user.user_id == 'new_user_id'
     assert new_user.state == 'new'
     assert new_user.partner_id is None
@@ -51,8 +53,12 @@ def test_get_existing_user(ddb_user1: UserStateMachine) -> None:
     from actions.aws_resources import user_state_machine_table
 
     assert len(user_state_machine_table.scan()['Items']) == 1
+
     user_vault = UserVault()
     fetched_user = user_vault.get_user('existing_user_id1')
+
+    assert fetched_user._user_vault is user_vault
+
     assert fetched_user == ddb_user1
     assert len(user_state_machine_table.scan()['Items']) == 1
     assert user_vault.get_user('existing_user_id1') is fetched_user  # make sure the user was cached
@@ -111,7 +117,9 @@ def test_get_random_available_partner(
 
     user_vault = UserVault()
     actual_random_user = user_vault.get_random_available_partner(user1)
+
     assert actual_random_user == user2
+    assert actual_random_user._user_vault is user_vault
 
     mock_get_random_available_partner_dict.assert_called_once_with(
         [
@@ -166,9 +174,13 @@ def test_save_new_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> None:
         notes='some other note',
     )
 
+    assert user_to_save._user_vault is None
     assert user_state_machine_table.scan()['Items'] == ddb_scan_of_three_users
+
     user_vault = UserVault()
     user_vault.save(user_to_save)
+
+    assert user_to_save._user_vault is user_vault
     assert user_state_machine_table.scan()['Items'] == [
         {
             'user_id': 'existing_user_id1',
@@ -251,9 +263,13 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
         state=UserState.DO_NOT_DISTURB,
     )
 
+    assert user_to_save._user_vault is None
     assert user_state_machine_table.scan()['Items'] == ddb_scan_of_three_users
+
     user_vault = UserVault()
     user_vault.save(user_to_save)
+
+    assert user_to_save._user_vault is user_vault
     assert user_state_machine_table.scan()['Items'] == [
         {
             'user_id': 'existing_user_id1',

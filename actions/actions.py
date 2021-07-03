@@ -18,7 +18,7 @@ from actions.rasa_callbacks import EXTERNAL_ASK_TO_JOIN_INTENT, EXTERNAL_ASK_TO_
 from actions.user_state_machine import UserStateMachine, UserState, NATIVE_UNKNOWN, PARTNER_CONFIRMATION_TIMEOUT_SEC
 from actions.user_vault import UserVault, IUserVault
 from actions.utils import stack_trace_to_str, datetime_now, get_intent_of_latest_message_reliably, SwiperError, \
-    current_timestamp_int
+    current_timestamp_int, SwiperRasaCallbackError
 
 logger = logging.getLogger(__name__)
 
@@ -118,15 +118,19 @@ class BaseSwiperAction(Action, ABC):
             if self.should_update_user_activity_timestamp(tracker):
                 current_user.update_activity_timestamp()
 
-            user_vault.save(current_user)
+            current_user.save()
 
-            events = list(await self.swipy_run(
-                dispatcher,
-                tracker,
-                domain,
-                current_user,
-                user_vault,
-            ))
+            if current_user.state == UserState.USER_BANNED:
+                logger.info('IGNORING BANNED USER (ID = %r)', current_user.user_id)
+                events = []
+            else:
+                events = list(await self.swipy_run(
+                    dispatcher,
+                    tracker,
+                    domain,
+                    current_user,
+                    user_vault,
+                ))
 
         except Exception as e:
             logger.exception(self.name())
@@ -261,10 +265,11 @@ class ActionOfferChitchat(BaseSwiperAction):
                     UserState.REJECTED_JOIN,
                     UserState.REJECTED_CONFIRM,
                     UserState.DO_NOT_DISTURB,
+                    UserState.BOT_BLOCKED,
             ):
                 # noinspection PyUnresolvedReferences
                 current_user.become_ok_to_chitchat()
-                user_vault.save(current_user)
+                current_user.save()
 
         latest_intent = tracker.get_intent_of_latest_message()
         if latest_intent == 'how_it_works':
@@ -339,7 +344,7 @@ class ActionFindPartner(BaseSwiperAction):
 
             # noinspection PyUnresolvedReferences
             current_user.request_chitchat()
-            user_vault.save(current_user)
+            current_user.save()
 
         partner = user_vault.get_random_available_partner(current_user)
 
@@ -348,7 +353,7 @@ class ActionFindPartner(BaseSwiperAction):
 
             await rasa_callbacks.ask_to_join(
                 current_user.user_id,
-                partner.user_id,
+                partner,
                 user_profile_photo_id,
                 suppress_callback_errors=True,
             )
@@ -405,13 +410,13 @@ class ActionAskToJoin(BaseSwiperAction):
             response_template = 'utter_someone_wants_to_chat'
             # noinspection PyUnresolvedReferences
             current_user.become_asked_to_join(partner_id)
-            user_vault.save(current_user)
+            current_user.save()
 
         elif latest_intent == EXTERNAL_ASK_TO_CONFIRM_INTENT:
             response_template = 'utter_found_someone_check_ready'
             # noinspection PyUnresolvedReferences
             current_user.become_asked_to_confirm(partner_id)
-            user_vault.save(current_user)
+            current_user.save()
 
         else:
             raise SwiperError(
@@ -454,26 +459,32 @@ class ActionAcceptInvitation(BaseSwiperAction):
     ) -> List[Dict[Text, Any]]:
         partner = user_vault.get_user(current_user.partner_id)
 
-        if partner.is_waiting_to_be_confirmed_by(current_user.user_id):
-            # current user was the one asked to confirm and they just did => create the room
-            return await self.create_room(dispatcher, current_user, partner, user_vault)
-        elif partner.chitchat_can_be_offered():
-            # confirm with the partner before creating any rooms
-            return await self.confirm_with_asker(dispatcher, current_user, partner, user_vault)
-        else:
-            # noinspection PyUnresolvedReferences
-            current_user.request_chitchat()
-            user_vault.save(current_user)
+        # noinspection PyBroadException
+        try:
+            if partner.is_waiting_to_be_confirmed_by(current_user.user_id):
+                # current user was the one asked to confirm and they just did => create the room
+                return await self.create_room(dispatcher, current_user, partner, user_vault)
 
-            dispatcher.utter_message(response='utter_partner_already_gone')
+            elif partner.chitchat_can_be_offered():
+                # confirm with the partner before creating any rooms
+                return await self.confirm_with_asker(dispatcher, current_user, partner, user_vault)
 
-            return [
-                SlotSet(
-                    key=SWIPER_ACTION_RESULT_SLOT,
-                    value=SwiperActionResult.PARTNER_NOT_WAITING_ANYMORE,
-                ),
-                *schedule_find_partner_reminder(delta_sec=FIND_PARTNER_FOLLOWUP_DELAY_SEC, initiate=True),
-            ]
+        except SwiperRasaCallbackError:
+            logger.exception('FAILED TO ACCEPT INVITATION')
+
+        # noinspection PyUnresolvedReferences
+        current_user.request_chitchat()
+        current_user.save()
+
+        dispatcher.utter_message(response='utter_partner_already_gone')
+
+        return [
+            SlotSet(
+                key=SWIPER_ACTION_RESULT_SLOT,
+                value=SwiperActionResult.PARTNER_NOT_WAITING_ANYMORE,
+            ),
+            *schedule_find_partner_reminder(delta_sec=FIND_PARTNER_FOLLOWUP_DELAY_SEC, initiate=True),
+        ]
 
     @staticmethod
     async def create_room(
@@ -485,15 +496,7 @@ class ActionAcceptInvitation(BaseSwiperAction):
         created_room = await daily_co.create_room(current_user.user_id)
         room_url = created_room['url']
 
-        # noinspection PyBroadException
-        try:
-            # put partner into the room as well
-            await rasa_callbacks.join_room(current_user.user_id, partner.user_id, room_url)
-        except Exception:
-            # noinspection PyUnresolvedReferences
-            current_user.request_chitchat()
-            user_vault.save(current_user)
-            raise
+        await rasa_callbacks.join_room(current_user.user_id, partner, room_url)
 
         dispatcher.utter_message(
             response='utter_room_url',
@@ -504,7 +507,7 @@ class ActionAcceptInvitation(BaseSwiperAction):
 
         # noinspection PyUnresolvedReferences
         current_user.join_room(partner.user_id)
-        user_vault.save(current_user)
+        current_user.save()
 
         return [
             SlotSet(
@@ -524,22 +527,15 @@ class ActionAcceptInvitation(BaseSwiperAction):
             partner: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        dispatcher.utter_message(response='utter_checking_if_partner_ready_too')
-
         user_profile_photo_id = telegram_helpers.get_user_profile_photo_file_id(current_user.user_id)
 
-        # noinspection PyBroadException
-        try:
-            await rasa_callbacks.ask_to_confirm(current_user.user_id, partner.user_id, user_profile_photo_id)
-        except Exception:
-            # noinspection PyUnresolvedReferences
-            current_user.request_chitchat()
-            user_vault.save(current_user)
-            raise
+        await rasa_callbacks.ask_to_confirm(current_user.user_id, partner, user_profile_photo_id)
 
         # noinspection PyUnresolvedReferences
         current_user.wait_for_partner_to_confirm(partner.user_id)
-        user_vault.save(current_user)
+        current_user.save()
+
+        dispatcher.utter_message(response='utter_checking_if_partner_ready_too')
 
         return [
             SlotSet(
@@ -567,7 +563,7 @@ class ActionJoinRoom(BaseSwiperAction):
         partner_id = tracker.get_slot(rasa_callbacks.PARTNER_ID_SLOT)
         # noinspection PyUnresolvedReferences
         current_user.join_room(partner_id)
-        user_vault.save(current_user)
+        current_user.save()
 
         dispatcher.utter_message(response='utter_partner_ready_room_url')
 
@@ -595,7 +591,7 @@ class ActionDoNotDisturb(BaseSwiperAction):
     ) -> List[Dict[Text, Any]]:
         # noinspection PyUnresolvedReferences
         current_user.become_do_not_disturb()
-        user_vault.save(current_user)
+        current_user.save()
 
         dispatcher.utter_message(response='utter_hope_to_see_you_later')
 
@@ -623,7 +619,7 @@ class ActionRejectInvitation(BaseSwiperAction):
     ) -> List[Dict[Text, Any]]:
         # noinspection PyUnresolvedReferences
         current_user.reject()
-        user_vault.save(current_user)
+        current_user.save()
 
         dispatcher.utter_message(response='utter_declined')
 

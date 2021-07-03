@@ -5,6 +5,7 @@ from typing import Text, Dict, Any, Optional
 
 import aiohttp
 
+from actions.user_state_machine import UserStateMachine
 from actions.utils import SwiperRasaCallbackError
 
 logger = logging.getLogger(__name__)
@@ -25,13 +26,13 @@ EXTERNAL_JOIN_ROOM_INTENT = 'EXTERNAL_join_room'
 
 async def ask_to_join(
         sender_id: Text,
-        receiver_id: Text,
+        receiver: UserStateMachine,
         photo_file_id: Text,
         suppress_callback_errors: bool = False,
 ) -> Optional[Dict[Text, Any]]:
     return await _trigger_external_rasa_intent(
         sender_id,
-        receiver_id,
+        receiver,
         EXTERNAL_ASK_TO_JOIN_INTENT,
         {
             PARTNER_ID_SLOT: sender_id,
@@ -43,13 +44,13 @@ async def ask_to_join(
 
 async def ask_to_confirm(
         sender_id: Text,
-        receiver_id: Text,
+        receiver: UserStateMachine,
         photo_file_id: Text,
         suppress_callback_errors: bool = False,
 ) -> Optional[Dict[Text, Any]]:
     return await _trigger_external_rasa_intent(
         sender_id,
-        receiver_id,
+        receiver,
         EXTERNAL_ASK_TO_CONFIRM_INTENT,
         {
             PARTNER_ID_SLOT: sender_id,
@@ -61,13 +62,13 @@ async def ask_to_confirm(
 
 async def join_room(
         sender_id: Text,
-        receiver_id: Text,
+        receiver: UserStateMachine,
         room_url: Text,
         suppress_callback_errors: bool = False,
 ) -> Optional[Dict[Text, Any]]:
     return await _trigger_external_rasa_intent(
         sender_id,
-        receiver_id,
+        receiver,
         EXTERNAL_JOIN_ROOM_INTENT,
         {
             PARTNER_ID_SLOT: sender_id,
@@ -79,7 +80,7 @@ async def join_room(
 
 async def _trigger_external_rasa_intent(
         sender_id: Text,
-        receiver_id: Text,
+        receiver: UserStateMachine,
         intent_name: Text,
         entities: Dict[Text, Text],
         suppress_callback_errors: bool,
@@ -93,7 +94,7 @@ async def _trigger_external_rasa_intent(
             params['token'] = RASA_TOKEN
 
         async with session.post(
-                f"{RASA_PRODUCTION_HOST}/conversations/{receiver_id}/trigger_intent",
+                f"{RASA_PRODUCTION_HOST}/conversations/{receiver.user_id}/trigger_intent",
                 params=params,
                 json={
                     'name': intent_name,
@@ -107,12 +108,17 @@ async def _trigger_external_rasa_intent(
             'TRIGGER_INTENT %r RESULT:\n\nSENDER_ID: %r\n\nRECEIVER_ID: %r\n\nENTITIES:\n%s\n\nRESPONSE:\n%s',
             intent_name,
             sender_id,
-            receiver_id,
+            receiver.user_id,
             pformat(entities),
             pformat(resp_json),
         )
 
     if not resp_json.get('tracker') or resp_json.get('status') == 'failure':
+        if 'bot was blocked' in (resp_json.get('message') or '').lower():
+            # noinspection PyUnresolvedReferences
+            receiver.mark_as_bot_blocked()
+            receiver.save()
+
         try:
             raise SwiperRasaCallbackError(repr(resp_json))
         except SwiperRasaCallbackError:
