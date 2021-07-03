@@ -125,16 +125,6 @@ class UserStateMachine(UserModel):
 
         # noinspection PyTypeChecker
         self.machine.add_transition(
-            trigger='become_do_not_disturb',
-            source=UserState.all_states_except_user_banned,
-            dest=UserState.DO_NOT_DISTURB,
-            after=[
-                self._drop_partner_id,
-            ],
-        )
-
-        # noinspection PyTypeChecker
-        self.machine.add_transition(
             trigger='wait_for_partner_to_confirm',
             source=UserState.all_states_except_user_banned,
             dest=UserState.WAITING_PARTNER_CONFIRM,
@@ -208,8 +198,18 @@ class UserStateMachine(UserModel):
 
         # noinspection PyTypeChecker
         self.machine.add_transition(
+            trigger='become_do_not_disturb',
+            source=UserState.all_states_except_user_banned,
+            dest=UserState.DO_NOT_DISTURB,
+            after=[
+                self._drop_partner_id,
+            ],
+        )
+
+        # noinspection PyTypeChecker
+        self.machine.add_transition(
             trigger='mark_as_bot_blocked',
-            source='*',
+            source=UserState.all_states_except_user_banned,
             dest=UserState.BOT_BLOCKED,
         )
 

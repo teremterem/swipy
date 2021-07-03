@@ -16,10 +16,11 @@ all_expected_user_states = [
 all_expected_user_state_machine_triggers = [
     'request_chitchat',
     'become_ok_to_chitchat',
-    'become_do_not_disturb',
     'wait_for_partner_to_confirm',
     'become_asked_to_join',
     'become_asked_to_confirm',
     'join_room',
     'reject',
+    'become_do_not_disturb',
+    'mark_as_bot_blocked',
 ]

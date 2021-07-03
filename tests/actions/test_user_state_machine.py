@@ -19,22 +19,23 @@ def test_all_expected_triggers() -> None:
 
 
 expected_catch_all_transitions = [
-    ('request_chitchat', 'wants_chitchat', False),
-    ('become_ok_to_chitchat', 'ok_to_chitchat', False),
-    ('become_do_not_disturb', 'do_not_disturb', False),
-    ('wait_for_partner_to_confirm', 'waiting_partner_confirm', True),
-    ('become_asked_to_join', 'asked_to_join', True),
-    ('become_asked_to_confirm', 'asked_to_confirm', True),
+    ('request_chitchat', 'wants_chitchat', None),
+    ('become_ok_to_chitchat', 'ok_to_chitchat', None),
+    ('become_do_not_disturb', 'do_not_disturb', None),
+    ('wait_for_partner_to_confirm', 'waiting_partner_confirm', 'partner_id_in_trigger'),
+    ('become_asked_to_join', 'asked_to_join', 'partner_id_in_trigger'),
+    ('become_asked_to_confirm', 'asked_to_confirm', 'partner_id_in_trigger'),
+    ('mark_as_bot_blocked', 'bot_blocked', 'previous_partner_id'),
 ]
 
 
 @pytest.mark.parametrize('source_state', all_expected_user_states)
-@pytest.mark.parametrize('trigger_name, destination_state, partner_id_param_used', expected_catch_all_transitions)
+@pytest.mark.parametrize('trigger_name, destination_state, expected_partner_id', expected_catch_all_transitions)
 def test_catch_all_transitions(
         source_state: Text,
         trigger_name: Text,
         destination_state: Text,
-        partner_id_param_used: bool,
+        expected_partner_id: Text,
 ) -> None:
     user = UserStateMachine(
         user_id='some_user_id',
@@ -58,11 +59,7 @@ def test_catch_all_transitions(
         trigger()
 
         assert user.state == destination_state
-
-        if partner_id_param_used:
-            assert user.partner_id == 'partner_id_in_trigger'
-        else:
-            assert user.partner_id is None  # previous partner is expected to be dropped
+        assert user.partner_id == expected_partner_id
 
 
 expected_more_narrow_transitions = [
