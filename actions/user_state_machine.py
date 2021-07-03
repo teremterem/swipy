@@ -23,8 +23,10 @@ class UserState:
     REJECTED_JOIN = 'rejected_join'
     REJECTED_CONFIRM = 'rejected_confirm'
     DO_NOT_DISTURB = 'do_not_disturb'
+    BOT_BLOCKED = 'bot_blocked'
+    USER_BANNED = 'user_banned'
 
-    all_states = [
+    all_states_except_user_banned = [
         NEW,
         WANTS_CHITCHAT,
         OK_TO_CHITCHAT,
@@ -35,7 +37,12 @@ class UserState:
         REJECTED_JOIN,
         REJECTED_CONFIRM,
         DO_NOT_DISTURB,
+        BOT_BLOCKED,
     ]
+    all_states = all_states_except_user_banned + [
+        USER_BANNED,
+    ]
+
     states_with_timeouts = [
         WAITING_PARTNER_CONFIRM,
         ASKED_TO_JOIN,
@@ -94,7 +101,7 @@ class UserStateMachine(UserModel):
         # noinspection PyTypeChecker
         self.machine.add_transition(
             trigger='request_chitchat',
-            source='*',
+            source=UserState.all_states_except_user_banned,
             dest=UserState.WANTS_CHITCHAT,
             after=[
                 self._drop_partner_id,
@@ -104,7 +111,7 @@ class UserStateMachine(UserModel):
         # noinspection PyTypeChecker
         self.machine.add_transition(
             trigger='become_ok_to_chitchat',
-            source='*',
+            source=UserState.all_states_except_user_banned,
             dest=UserState.OK_TO_CHITCHAT,
             after=[
                 self._drop_partner_id,
@@ -114,7 +121,7 @@ class UserStateMachine(UserModel):
         # noinspection PyTypeChecker
         self.machine.add_transition(
             trigger='become_do_not_disturb',
-            source='*',
+            source=UserState.all_states_except_user_banned,
             dest=UserState.DO_NOT_DISTURB,
             after=[
                 self._drop_partner_id,
@@ -124,7 +131,7 @@ class UserStateMachine(UserModel):
         # noinspection PyTypeChecker
         self.machine.add_transition(
             trigger='wait_for_partner_to_confirm',
-            source='*',
+            source=UserState.all_states_except_user_banned,
             dest=UserState.WAITING_PARTNER_CONFIRM,
             before=[
                 self._assert_partner_id_arg_not_empty,
@@ -137,7 +144,7 @@ class UserStateMachine(UserModel):
         # noinspection PyTypeChecker
         self.machine.add_transition(
             trigger='become_asked_to_join',
-            source='*',
+            source=UserState.all_states_except_user_banned,
             dest=UserState.ASKED_TO_JOIN,
             before=[
                 self._assert_partner_id_arg_not_empty,
@@ -150,7 +157,7 @@ class UserStateMachine(UserModel):
         # noinspection PyTypeChecker
         self.machine.add_transition(
             trigger='become_asked_to_confirm',
-            source='*',
+            source=UserState.all_states_except_user_banned,
             dest=UserState.ASKED_TO_CONFIRM,
             before=[
                 self._assert_partner_id_arg_not_empty,

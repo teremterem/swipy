@@ -120,13 +120,17 @@ class BaseSwiperAction(Action, ABC):
 
             user_vault.save(current_user)
 
-            events = list(await self.swipy_run(
-                dispatcher,
-                tracker,
-                domain,
-                current_user,
-                user_vault,
-            ))
+            if current_user.state == UserState.USER_BANNED:
+                logger.info('IGNORING BANNED USER (ID = %r)', current_user.user_id)
+                events = []
+            else:
+                events = list(await self.swipy_run(
+                    dispatcher,
+                    tracker,
+                    domain,
+                    current_user,
+                    user_vault,
+                ))
 
         except Exception as e:
             logger.exception(self.name())
