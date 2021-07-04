@@ -37,8 +37,8 @@ class BaseUserVault(IUserVault, ABC):
 
     @abstractmethod
     def _get_random_available_partner(
-            self, states: Iterable[Text],
-            exclude_user_id: Text,
+            self, states: List[Text],
+            exclude_user_ids: List[Text],
     ) -> Optional[UserStateMachine]:
         raise NotImplementedError()
 
@@ -69,8 +69,10 @@ class BaseUserVault(IUserVault, ABC):
         return self._cache_and_bind(user)
 
     def _get_random_available_partner_from_tiers(self, current_user: UserStateMachine) -> Optional[UserStateMachine]:
+        exclude_user_ids = [current_user.user_id] + current_user.exclude_partner_ids
+
         for tier in UserState.offerable_tiers:
-            partner = self._get_random_available_partner(tier, current_user.user_id)
+            partner = self._get_random_available_partner(tier, exclude_user_ids)
             if partner:
                 return partner
         return None
@@ -106,10 +108,10 @@ class NaiveDdbUserVault(BaseUserVault):
         return None if item is None else self._user_from_dict(item)
 
     def _get_random_available_partner(
-            self, states: Iterable[Text],
-            exclude_user_id: Text,
+            self, states: List[Text],
+            exclude_user_ids: List[Text],
     ) -> Optional[UserStateMachine]:
-        user_dict = self._get_random_available_partner_dict(states, exclude_user_id)
+        user_dict = self._get_random_available_partner_dict(states, exclude_user_ids)
         if not user_dict:
             return None
 
@@ -144,7 +146,7 @@ class NaiveDdbUserVault(BaseUserVault):
     @staticmethod
     def _get_random_available_partner_dict(
             states: Iterable[Text],
-            exclude_user_id: Text,
+            exclude_user_ids: List[Text],
     ) -> List[Dict[Text, Any]]:
         # TODO oleksandr: is there a better way to ensure that the tests have a chance to mock boto3 ?
         from actions.aws_resources import user_state_machine_table
@@ -164,7 +166,7 @@ class NaiveDdbUserVault(BaseUserVault):
                         IndexName='by_state_and_timeout_ts',
                         KeyConditionExpression=Key('state').eq(state) & Key('state_timeout_ts').lt(current_timestamp),
                         ScanIndexForward=False,  # this should reduce the need to think about truncated DDB output
-                        FilterExpression=Attr('user_id').ne(exclude_user_id),
+                        FilterExpression=~Attr('user_id').is_in(exclude_user_ids),
                     )
                     items = ddb_resp.get('Items')
                     if items:
@@ -174,9 +176,9 @@ class NaiveDdbUserVault(BaseUserVault):
                     ddb_resp = user_state_machine_table.query(
                         IndexName='by_state_and_activity_ts',
                         KeyConditionExpression=Key('state').eq(state),
-                        FilterExpression=Attr('user_id').ne(exclude_user_id),
+                        FilterExpression=~Attr('user_id').is_in(exclude_user_ids),
                         ScanIndexForward=False,
-                        Limit=2,  # exclude_user_id may be selected as well (filter expression is applied AFTER limit)
+                        Limit=len(exclude_user_ids) + 1,  # filter expression is applied AFTER limit
                     )
                     items = ddb_resp.get('Items')
                     if items:

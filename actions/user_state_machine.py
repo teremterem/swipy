@@ -1,6 +1,6 @@
 import os
-from dataclasses import dataclass
-from typing import Text, Optional, Dict, Any, TYPE_CHECKING
+from dataclasses import dataclass, field
+from typing import Text, Optional, Dict, Any, TYPE_CHECKING, List
 
 from transitions import Machine, EventData
 
@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 
 SWIPER_STATE_TIMEOUT_SEC = int(os.getenv('SWIPER_STATE_TIMEOUT_SEC', '14400'))  # 4 * 60 * 60 seconds = 4 hours
 PARTNER_CONFIRMATION_TIMEOUT_SEC = int(os.getenv('PARTNER_CONFIRMATION_TIMEOUT_SEC', '60'))  # 1 minute
+NUM_OF_EXCLUDED_PARTNERS_TO_REMEMBER = int(os.getenv('NUM_OF_EXCLUDED_PARTNERS_TO_REMEMBER', '10'))
 
 NATIVE_UNKNOWN = 'unknown'
 
@@ -69,6 +70,7 @@ class UserModel:
     user_id: Text
     state: Text = None  # the state machine will set it to UserState.NEW if not provided explicitly
     partner_id: Optional[Text] = None
+    exclude_partner_ids: List[Text] = field(default_factory=list)
     newbie: bool = True
     state_timestamp: int = 0  # DDB GSI does not allow None
     state_timestamp_str: Optional[Text] = None
@@ -175,6 +177,7 @@ class UserStateMachine(UserModel):
                 self._assert_partner_id_arg_same,
             ],
             after=[
+                self._exclude_current_partner_id,
                 self._graduate_from_newbie,
             ],
         )
@@ -256,6 +259,17 @@ class UserStateMachine(UserModel):
     # noinspection PyUnusedLocal
     def _drop_partner_id(self, event: EventData) -> None:
         self.partner_id = None
+
+    # noinspection PyUnusedLocal
+    def _exclude_current_partner_id(self, event: EventData) -> None:
+        if NUM_OF_EXCLUDED_PARTNERS_TO_REMEMBER > 1:
+            self.exclude_partner_ids = self.exclude_partner_ids[-NUM_OF_EXCLUDED_PARTNERS_TO_REMEMBER + 1:]
+            self.exclude_partner_ids.append(self.partner_id)
+
+        elif NUM_OF_EXCLUDED_PARTNERS_TO_REMEMBER == 1:
+            self.exclude_partner_ids = [self.partner_id]
+        else:
+            self.exclude_partner_ids = []
 
     # noinspection PyUnusedLocal
     def _graduate_from_newbie(self, event: EventData) -> None:

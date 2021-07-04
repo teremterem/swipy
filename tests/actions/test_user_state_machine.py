@@ -119,6 +119,8 @@ def test_more_narrow_transitions(
     )
     assert user.state == source_state
     assert user.partner_id == initial_partner_id
+    assert user.exclude_partner_ids == []
+    assert user.newbie == initial_newbie_status
 
     trigger = partial(getattr(user, trigger_name), 'partner_id_in_trigger')
 
@@ -137,9 +139,10 @@ def test_more_narrow_transitions(
     assert user.partner_id == expected_partner_id
 
     if destination_state == UserState.ROOMED:
-        # those who joined a room at least once stop being newbies
-        assert user.newbie is False
+        assert user.exclude_partner_ids == [initial_partner_id]
+        assert user.newbie is False  # those who joined a room at least once stop being newbies
     else:
+        assert user.exclude_partner_ids == []
         assert user.newbie == initial_newbie_status
 
 
@@ -186,6 +189,7 @@ def test_state_timestamps(source_state: Text, trigger_name: Text) -> None:
             user_id=user.user_id,  # don't try to validate this
             state=user.state,  # don't try to validate this
             partner_id=user.partner_id,  # don't try to validate this
+            exclude_partner_ids=user.exclude_partner_ids,  # don't try to validate this
             newbie=user.newbie,  # don't try to validate this
 
             state_timestamp=1619945501,  # new timestamp
@@ -210,3 +214,19 @@ def test_state_timestamps(source_state: Text, trigger_name: Text) -> None:
             state_timeout_ts=1619697052,  # timeout timestamp is expected to remain unchanged
             state_timeout_ts_str='2021-04-29 11:50:52 Z',  # timeout timestamp is expected to remain unchanged
         )
+
+
+def test_join_room_eleventh_partner():
+    user = UserStateMachine(
+        user_id='some_user_id',
+        state='asked_to_confirm',
+        partner_id='partner11',
+        exclude_partner_ids=[f"partner{i}" for i in range(1, 11)],
+    )
+    assert len(user.exclude_partner_ids) == 10
+
+    # noinspection PyUnresolvedReferences
+    user.join_room('partner11')
+
+    assert user.exclude_partner_ids == [f"partner{i}" for i in range(2, 11)] + ['partner11']
+    assert len(user.exclude_partner_ids) == 10

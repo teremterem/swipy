@@ -5,7 +5,10 @@ from actions.user_state_machine import UserStateMachine, UserState
 
 @pytest.fixture
 def unit_test_user() -> UserStateMachine:
-    return UserStateMachine('unit_test_user')
+    return UserStateMachine(
+        user_id='unit_test_user',
+        exclude_partner_ids=['excluded_unit_test_partner1', 'excluded_unit_test_partner2'],
+    )
 
 
 @pytest.fixture
@@ -14,6 +17,7 @@ def user1() -> UserStateMachine:
         user_id='existing_user_id1',
         state=UserState.WAITING_PARTNER_CONFIRM,
         partner_id='existing_user_id2',
+        exclude_partner_ids=['excluded_partner1', 'excluded_partner2', 'excluded_partner3'],
         newbie=False,
         notes='some note',
     )
