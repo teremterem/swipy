@@ -214,3 +214,19 @@ def test_state_timestamps(source_state: Text, trigger_name: Text) -> None:
             state_timeout_ts=1619697052,  # timeout timestamp is expected to remain unchanged
             state_timeout_ts_str='2021-04-29 11:50:52 Z',  # timeout timestamp is expected to remain unchanged
         )
+
+
+def test_join_room_eleventh_partner():
+    user = UserStateMachine(
+        user_id='some_user_id',
+        state='asked_to_confirm',
+        partner_id='partner11',
+        exclude_partner_ids=[f"partner{i}" for i in range(1, 11)],
+    )
+    assert len(user.exclude_partner_ids) == 10
+
+    # noinspection PyUnresolvedReferences
+    user.join_room('partner11')
+
+    assert user.exclude_partner_ids == [f"partner{i}" for i in range(2, 11)] + ['partner11']
+    assert len(user.exclude_partner_ids) == 10
