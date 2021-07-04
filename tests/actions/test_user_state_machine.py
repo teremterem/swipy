@@ -119,8 +119,8 @@ def test_more_narrow_transitions(
     )
     assert user.state == source_state
     assert user.partner_id == initial_partner_id
-    assert user.newbie == initial_newbie_status
     assert user.exclude_partner_ids == []
+    assert user.newbie == initial_newbie_status
 
     trigger = partial(getattr(user, trigger_name), 'partner_id_in_trigger')
 
@@ -139,12 +139,11 @@ def test_more_narrow_transitions(
     assert user.partner_id == expected_partner_id
 
     if destination_state == UserState.ROOMED:
-        # those who joined a room at least once stop being newbies
-        assert user.newbie is False
         assert user.exclude_partner_ids == [initial_partner_id]
+        assert user.newbie is False  # those who joined a room at least once stop being newbies
     else:
-        assert user.newbie == initial_newbie_status
         assert user.exclude_partner_ids == []
+        assert user.newbie == initial_newbie_status
 
 
 @patch('time.time', Mock(return_value=1619945501))
@@ -190,8 +189,8 @@ def test_state_timestamps(source_state: Text, trigger_name: Text) -> None:
             user_id=user.user_id,  # don't try to validate this
             state=user.state,  # don't try to validate this
             partner_id=user.partner_id,  # don't try to validate this
-            newbie=user.newbie,  # don't try to validate this
             exclude_partner_ids=user.exclude_partner_ids,  # don't try to validate this
+            newbie=user.newbie,  # don't try to validate this
 
             state_timestamp=1619945501,  # new timestamp
             state_timestamp_str='2021-05-02 08:51:41 Z',  # new timestamp

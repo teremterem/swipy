@@ -33,6 +33,7 @@ def test_get_new_user() -> None:
         'user_id': 'new_user_id',
         'state': 'new',
         'partner_id': None,
+        'exclude_partner_ids': [],
         'newbie': True,
         'state_timestamp': Decimal(0),
         'state_timestamp_str': None,
