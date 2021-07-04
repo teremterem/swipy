@@ -5,7 +5,10 @@ from actions.user_state_machine import UserStateMachine, UserState
 
 @pytest.fixture
 def unit_test_user() -> UserStateMachine:
-    return UserStateMachine('unit_test_user')
+    return UserStateMachine(
+        user_id='unit_test_user',
+        exclude_partner_ids=['excluded_unit_test_partner1', 'excluded_unit_test_partner2'],
+    )
 
 
 @pytest.fixture
