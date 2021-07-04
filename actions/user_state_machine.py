@@ -262,8 +262,14 @@ class UserStateMachine(UserModel):
 
     # noinspection PyUnusedLocal
     def _exclude_current_partner_id(self, event: EventData) -> None:
-        self.exclude_partner_ids = self.exclude_partner_ids[-NUM_OF_EXCLUDED_PARTNERS_TO_REMEMBER + 1:]
-        self.exclude_partner_ids.append(self.partner_id)
+        if NUM_OF_EXCLUDED_PARTNERS_TO_REMEMBER > 1:
+            self.exclude_partner_ids = self.exclude_partner_ids[-NUM_OF_EXCLUDED_PARTNERS_TO_REMEMBER + 1:]
+            self.exclude_partner_ids.append(self.partner_id)
+
+        elif NUM_OF_EXCLUDED_PARTNERS_TO_REMEMBER == 1:
+            self.exclude_partner_ids = [self.partner_id]
+        else:
+            self.exclude_partner_ids = []
 
     # noinspection PyUnusedLocal
     def _graduate_from_newbie(self, event: EventData) -> None:
