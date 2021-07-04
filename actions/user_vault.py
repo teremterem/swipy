@@ -178,7 +178,7 @@ class NaiveDdbUserVault(BaseUserVault):
                         KeyConditionExpression=Key('state').eq(state),
                         FilterExpression=~Attr('user_id').is_in(exclude_user_ids),
                         ScanIndexForward=False,
-                        Limit=2,  # exclude_user_id may be selected as well (filter expression is applied AFTER limit)
+                        Limit=len(exclude_user_ids) + 1,  # filter expression is applied AFTER limit
                     )
                     items = ddb_resp.get('Items')
                     if items:
