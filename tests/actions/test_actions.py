@@ -236,6 +236,7 @@ async def test_action_session_start_with_slots(
     ('how_it_works', 'utter_how_it_works', 'new', 'ok_to_chitchat'),
     ('start', 'utter_greet_offer_chitchat', 'new', 'ok_to_chitchat'),
     ('greet', 'utter_greet_offer_chitchat', 'new', 'ok_to_chitchat'),
+    ('affirm', 'utter_lost_track_of_conversation', 'new', 'ok_to_chitchat'),
 
     ('greet', 'utter_greet_offer_chitchat', None, 'ok_to_chitchat'),  # user does not exist yet
     ('greet', 'utter_greet_offer_chitchat', 'new', 'ok_to_chitchat'),
@@ -262,8 +263,12 @@ async def test_action_offer_chitchat(
         destination_swiper_state: Text,
 ) -> None:
     if source_swiper_state is None:
+        user_is_brand_new = True
+
         source_swiper_state = 'new'  # this is the expected default
     else:
+        user_is_brand_new = False
+
         user_vault = UserVault()
         user_vault.save(UserStateMachine(
             user_id='unit_test_user',
@@ -318,14 +323,21 @@ async def test_action_offer_chitchat(
             'text': None,
         }]
 
+    if user_is_brand_new and not greeting_makes_user_ok_to_chitchat:
+        expected_state_timestamp = 0
+        expected_state_timestamp_str = None
+    else:
+        expected_state_timestamp = 1619945501
+        expected_state_timestamp_str = '2021-05-02 08:51:41 Z'
+
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
         user_id='unit_test_user',
         state=destination_swiper_state if greeting_makes_user_ok_to_chitchat else source_swiper_state,
         partner_id=None,
         newbie=True,
-        state_timestamp=1619945501,
-        state_timestamp_str='2021-05-02 08:51:41 Z',
+        state_timestamp=expected_state_timestamp,
+        state_timestamp_str=expected_state_timestamp_str,
         activity_timestamp=1619945501,
         activity_timestamp_str='2021-05-02 08:51:41 Z',
     )
