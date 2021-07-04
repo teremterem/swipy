@@ -228,6 +228,10 @@ async def test_action_session_start_with_slots(
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('create_user_state_machine_table')
 @patch('time.time', Mock(return_value=1619945501))
+@pytest.mark.parametrize('greeting_makes_user_ok_to_chitchat', [
+    None,  # default - expected to be equivalent to False
+    True,
+])
 @pytest.mark.parametrize('latest_intent, expected_response_template, source_swiper_state, destination_swiper_state', [
     ('how_it_works', 'utter_how_it_works', 'new', 'ok_to_chitchat'),
     ('start', 'utter_greet_offer_chitchat', 'new', 'ok_to_chitchat'),
@@ -251,12 +255,15 @@ async def test_action_offer_chitchat(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
+        greeting_makes_user_ok_to_chitchat: Optional[bool],
         latest_intent: Text,
         expected_response_template: Text,
         source_swiper_state: Optional[Text],
         destination_swiper_state: Text,
 ) -> None:
-    if source_swiper_state:
+    if source_swiper_state is None:
+        source_swiper_state = 'new'  # this is the expected default
+    else:
         user_vault = UserVault()
         user_vault.save(UserStateMachine(
             user_id='unit_test_user',
@@ -272,11 +279,21 @@ async def test_action_offer_chitchat(
     action = actions.ActionOfferChitchat()
     assert action.name() == 'action_offer_chitchat'
 
-    actual_events = await action.run(dispatcher, tracker, domain)
+    if greeting_makes_user_ok_to_chitchat is None:
+        greeting_makes_user_ok_to_chitchat = False  # this is the expected default
+
+        actual_events = await action.run(dispatcher, tracker, domain)
+    else:
+        with patch.object(
+                actions,
+                'GREETING_MAKES_USER_OK_TO_CHITCHAT',
+                return_value=greeting_makes_user_ok_to_chitchat,
+        ):
+            actual_events = await action.run(dispatcher, tracker, domain)
 
     if source_swiper_state == 'user_banned':
         assert actual_events == [
-            SlotSet('swiper_state', destination_swiper_state),
+            SlotSet('swiper_state', 'user_banned'),
         ]
         assert dispatcher.messages == []
     else:
@@ -285,7 +302,10 @@ async def test_action_offer_chitchat(
             SlotSet('swiper_native', 'unknown'),
             SlotSet('deeplink_data', ''),
             SlotSet('telegram_from', None),
-            SlotSet('swiper_state', destination_swiper_state),
+            SlotSet(
+                'swiper_state',
+                destination_swiper_state if greeting_makes_user_ok_to_chitchat else source_swiper_state,
+            ),
         ]
         assert dispatcher.messages == [{
             'attachment': None,
@@ -301,7 +321,7 @@ async def test_action_offer_chitchat(
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
         user_id='unit_test_user',
-        state=destination_swiper_state,
+        state=destination_swiper_state if greeting_makes_user_ok_to_chitchat else source_swiper_state,
         partner_id=None,
         newbie=True,
         state_timestamp=1619945501,
