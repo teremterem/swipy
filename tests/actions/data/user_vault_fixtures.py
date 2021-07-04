@@ -110,7 +110,7 @@ def ddb_scan_of_three_users() -> List[Dict[Text, Any]]:
             'user_id': 'existing_user_id1',
             'state': 'waiting_partner_confirm',
             'partner_id': 'existing_user_id2',
-            'exclude_partner_ids': [],
+            'exclude_partner_ids': ['excluded_partner1', 'excluded_partner2', 'excluded_partner3'],
             'newbie': False,
             'state_timestamp': Decimal(0),
             'state_timestamp_str': None,

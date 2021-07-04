@@ -133,7 +133,7 @@ def test_get_random_available_partner(
             'rejected_join',
             'rejected_confirm',
         ],
-        ['existing_user_id1'],
+        ['existing_user_id1', 'excluded_partner1', 'excluded_partner2', 'excluded_partner3'],
     )
 
     assert user_vault.get_user(actual_random_user.user_id) is actual_random_user  # make sure the user was cached
@@ -161,7 +161,7 @@ def test_get_random_available_partner_none(
                 'rejected_join',
                 'rejected_confirm',
             ],
-            ['existing_user_id1'],
+            ['existing_user_id1', 'excluded_partner1', 'excluded_partner2', 'excluded_partner3'],
         ),
     ]
 
@@ -187,7 +187,7 @@ def test_save_new_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> None:
             'user_id': 'existing_user_id1',
             'state': 'waiting_partner_confirm',
             'partner_id': 'existing_user_id2',
-            'exclude_partner_ids': [],
+            'exclude_partner_ids': ['excluded_partner1', 'excluded_partner2', 'excluded_partner3'],
             'newbie': False,
             'state_timestamp': Decimal(0),
             'state_timestamp_str': None,
@@ -280,7 +280,7 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
             'user_id': 'existing_user_id1',
             'state': 'do_not_disturb',  # used to be 'waiting_partner_join' but we have overridden it
             'partner_id': None,  # used to be 'existing_user_id2' but we have overridden it
-            'exclude_partner_ids': [],
+            'exclude_partner_ids': [],  # used to contain 3 ids but we have overridden it
             'newbie': True,  # used to be False but we have overridden it
             'state_timestamp': Decimal(0),
             'state_timestamp_str': None,

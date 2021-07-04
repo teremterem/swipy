@@ -17,6 +17,7 @@ def user1() -> UserStateMachine:
         user_id='existing_user_id1',
         state=UserState.WAITING_PARTNER_CONFIRM,
         partner_id='existing_user_id2',
+        exclude_partner_ids=['excluded_partner1', 'excluded_partner2', 'excluded_partner3'],
         newbie=False,
         notes='some note',
     )
