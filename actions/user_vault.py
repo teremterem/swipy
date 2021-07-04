@@ -176,7 +176,7 @@ class NaiveDdbUserVault(BaseUserVault):
                     ddb_resp = user_state_machine_table.query(
                         IndexName='by_state_and_activity_ts',
                         KeyConditionExpression=Key('state').eq(state),
-                        FilterExpression=~Attr('user_id').is_in([exclude_user_ids]),
+                        FilterExpression=~Attr('user_id').is_in(exclude_user_ids),
                         ScanIndexForward=False,
                         Limit=2,  # exclude_user_id may be selected as well (filter expression is applied AFTER limit)
                     )

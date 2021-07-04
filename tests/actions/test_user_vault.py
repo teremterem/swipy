@@ -187,6 +187,7 @@ def test_save_new_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> None:
             'user_id': 'existing_user_id1',
             'state': 'waiting_partner_confirm',
             'partner_id': 'existing_user_id2',
+            'exclude_partner_ids': [],
             'newbie': False,
             'state_timestamp': Decimal(0),
             'state_timestamp_str': None,
@@ -204,6 +205,7 @@ def test_save_new_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> None:
             'user_id': 'existing_user_id2',
             'state': 'asked_to_join',
             'partner_id': 'existing_user_id1',
+            'exclude_partner_ids': [],
             'newbie': True,
             'state_timestamp': Decimal(0),
             'state_timestamp_str': None,
@@ -221,6 +223,7 @@ def test_save_new_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> None:
             'user_id': 'existing_user_id3',
             'state': 'new',
             'partner_id': None,
+            'exclude_partner_ids': [],
             'newbie': True,
             'state_timestamp': Decimal(0),
             'state_timestamp_str': None,
@@ -238,6 +241,7 @@ def test_save_new_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> None:
             'user_id': 'new_ddb_user_was_put',
             'state': 'new',
             'partner_id': None,
+            'exclude_partner_ids': [],
             'newbie': True,
             'state_timestamp': Decimal(0),
             'state_timestamp_str': None,
@@ -276,6 +280,7 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
             'user_id': 'existing_user_id1',
             'state': 'do_not_disturb',  # used to be 'waiting_partner_join' but we have overridden it
             'partner_id': None,  # used to be 'existing_user_id2' but we have overridden it
+            'exclude_partner_ids': [],
             'newbie': True,  # used to be False but we have overridden it
             'state_timestamp': Decimal(0),
             'state_timestamp_str': None,
@@ -293,6 +298,7 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
             'user_id': 'existing_user_id2',
             'state': 'asked_to_join',
             'partner_id': 'existing_user_id1',
+            'exclude_partner_ids': [],
             'newbie': True,
             'state_timestamp': Decimal(0),
             'state_timestamp_str': None,
@@ -310,6 +316,7 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
             'user_id': 'existing_user_id3',
             'state': 'new',
             'partner_id': None,
+            'exclude_partner_ids': [],
             'newbie': True,
             'state_timestamp': Decimal(0),
             'state_timestamp_str': None,
@@ -334,6 +341,7 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
                 'user_id': 'roomed_id2',
                 'state': 'roomed',
                 'partner_id': 'some_partner_id',
+                'exclude_partner_ids': [],
                 'newbie': True,
                 'state_timestamp': Decimal(0),
                 'state_timestamp_str': None,
@@ -354,6 +362,7 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
                 'user_id': 'ok_to_chitchat_id2',
                 'state': 'ok_to_chitchat',
                 'partner_id': None,
+                'exclude_partner_ids': [],
                 'newbie': False,
                 'state_timestamp': Decimal(0),
                 'state_timestamp_str': None,
@@ -385,9 +394,8 @@ def test_ddb_get_random_available_partner_dict(
     with patch('time.time', Mock(return_value=current_timestamp)):
         partner_dict = user_vault._get_random_available_partner_dict(
             ('wants_chitchat', 'ok_to_chitchat', 'fake_state', 'roomed'),  # let's forget about "tiers" here
-            exclude_user_id='ok_to_chitchat_id3',
+            exclude_user_ids=['ok_to_chitchat_id3', 'one_more_exclude_id'],
         )
-
     assert partner_dict == expected_partner_dict
 
 
@@ -415,7 +423,7 @@ def test_ddb_get_random_available_partner_dict_none() -> None:
     user_vault = UserVault()
     partner_dict = user_vault._get_random_available_partner_dict(
         ('wants_chitchat', 'ok_to_chitchat', 'fake_state', 'roomed'),  # let's forget about "tiers" here
-        exclude_user_id='ok_to_chitchat_id3',
+        exclude_user_ids=['ok_to_chitchat_id3', 'one_more_exclude_id'],
     )
     assert partner_dict is None
 
