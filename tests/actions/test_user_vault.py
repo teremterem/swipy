@@ -132,7 +132,7 @@ def test_get_random_available_partner(
             'rejected_join',
             'rejected_confirm',
         ],
-        'existing_user_id1',
+        ['existing_user_id1'],
     )
 
     assert user_vault.get_user(actual_random_user.user_id) is actual_random_user  # make sure the user was cached
