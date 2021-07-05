@@ -341,7 +341,7 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
 
 @pytest.mark.parametrize('current_timestamp, expected_partner_dict', [
     (
-            1624000000,  # "roomed" partner was active the most recently and the state has already timed out
+            1624000029,  # "roomed" partner was active the most recently and the state has already timed out
             {  # expect "roomed" partner to be returned
                 'user_id': 'roomed_id2',
                 'state': 'roomed',
@@ -362,7 +362,7 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
             },
     ),
     (
-            1623999998,  # even though "roomed" partner was active the most recently, the state hasn't timed out yet
+            1623999990,  # even though "roomed" partner was active the most recently, the state hasn't timed out yet
             {  # expect another recently active partner to be returned
                 'user_id': 'ok_to_chitchat_id2',
                 'state': 'ok_to_chitchat',
