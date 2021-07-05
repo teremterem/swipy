@@ -292,7 +292,7 @@ async def test_action_offer_chitchat(
         with patch.object(
                 actions,
                 'GREETING_MAKES_USER_OK_TO_CHITCHAT',
-                return_value=greeting_makes_user_ok_to_chitchat,
+                greeting_makes_user_ok_to_chitchat,
         ):
             actual_events = await action.run(dispatcher, tracker, domain)
 
