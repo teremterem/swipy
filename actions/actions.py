@@ -375,7 +375,10 @@ class ActionFindPartner(BaseSwiperAction):
                     value=SwiperActionResult.SUCCESS,
                 ),
 
-                *schedule_find_partner_reminder(initiate=initiate_search),
+                *schedule_find_partner_reminder(
+                    current_user.user_id,
+                    initiate=initiate_search,
+                ),
             ]
 
         dispatcher.utter_message(response='utter_partner_search_timed_out_try_again')
@@ -463,11 +466,11 @@ class ActionAcceptInvitation(BaseSwiperAction):
         try:
             if partner.is_waiting_to_be_confirmed_by(current_user.user_id):
                 # current user was the one asked to confirm and they just did => create the room
-                return await self.create_room(dispatcher, current_user, partner, user_vault)
+                return await self.create_room(dispatcher, current_user, partner)
 
             elif partner.chitchat_can_be_offered():
                 # confirm with the partner before creating any rooms
-                return await self.confirm_with_asker(dispatcher, current_user, partner, user_vault)
+                return await self.confirm_with_asker(dispatcher, current_user, partner)
 
         except SwiperRasaCallbackError:
             logger.exception('FAILED TO ACCEPT INVITATION')
@@ -483,7 +486,11 @@ class ActionAcceptInvitation(BaseSwiperAction):
                 key=SWIPER_ACTION_RESULT_SLOT,
                 value=SwiperActionResult.PARTNER_NOT_WAITING_ANYMORE,
             ),
-            *schedule_find_partner_reminder(delta_sec=FIND_PARTNER_FOLLOWUP_DELAY_SEC, initiate=True),
+            *schedule_find_partner_reminder(
+                current_user.user_id,
+                delta_sec=FIND_PARTNER_FOLLOWUP_DELAY_SEC,
+                initiate=True,
+            ),
         ]
 
     @staticmethod
@@ -491,7 +498,6 @@ class ActionAcceptInvitation(BaseSwiperAction):
             dispatcher: CollectingDispatcher,
             current_user: UserStateMachine,
             partner: UserStateMachine,
-            user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
         created_room = await daily_co.create_room(current_user.user_id)
         room_url = created_room['url']
@@ -525,7 +531,6 @@ class ActionAcceptInvitation(BaseSwiperAction):
             dispatcher: CollectingDispatcher,
             current_user: UserStateMachine,
             partner: UserStateMachine,
-            user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
         user_profile_photo_id = telegram_helpers.get_user_profile_photo_file_id(current_user.user_id)
 
@@ -542,7 +547,7 @@ class ActionAcceptInvitation(BaseSwiperAction):
                 key=SWIPER_ACTION_RESULT_SLOT,
                 value=SwiperActionResult.PARTNER_HAS_BEEN_ASKED,
             ),
-            *schedule_expire_partner_confirmation(),
+            *schedule_expire_partner_confirmation(current_user.user_id),
         ]
 
 
@@ -658,7 +663,11 @@ class ActionExpirePartnerConfirmation(BaseSwiperAction):
                 key=SWIPER_ACTION_RESULT_SLOT,
                 value=SwiperActionResult.SUCCESS,
             ),
-            *schedule_find_partner_reminder(delta_sec=FIND_PARTNER_FOLLOWUP_DELAY_SEC, initiate=True),
+            *schedule_find_partner_reminder(
+                current_user.user_id,
+                delta_sec=FIND_PARTNER_FOLLOWUP_DELAY_SEC,
+                initiate=True,
+            ),
         ]
 
 
@@ -668,10 +677,12 @@ def get_partner_search_start_ts(tracker: Tracker) -> int:
 
 
 def schedule_find_partner_reminder(
+        current_user_id: Text,
         delta_sec: float = FIND_PARTNER_FREQUENCY_SEC,
         initiate: bool = False,
 ) -> ReminderScheduled:
     events = [_reschedule_reminder(
+        current_user_id,
         EXTERNAL_FIND_PARTNER_INTENT,
         delta_sec,
     )]
@@ -684,15 +695,18 @@ def schedule_find_partner_reminder(
 
 
 def schedule_expire_partner_confirmation(
+        current_user_id: Text,
         delta_sec: float = PARTNER_CONFIRMATION_TIMEOUT_SEC,
 ) -> ReminderScheduled:
     return [_reschedule_reminder(
+        current_user_id,
         EXTERNAL_EXPIRE_PARTNER_CONFIRMATION,
         delta_sec,
     )]
 
 
 def _reschedule_reminder(
+        current_user_id: Text,
         intent_name: Text,
         delta_sec: float,
         kill_on_user_message: bool = False,
@@ -702,7 +716,7 @@ def _reschedule_reminder(
     reminder = ReminderScheduled(
         intent_name,
         trigger_date_time=date,
-        name=intent_name,  # ensures rescheduling of the existing reminder
+        name=current_user_id + intent_name,  # unique per user and and can be rescheduled for the user
         kill_on_user_message=kill_on_user_message,
     )
     return reminder
