@@ -427,7 +427,8 @@ def test_ddb_get_random_available_partner_dict_none() -> None:
     user_vault = UserVault()
     partner_dict = user_vault._get_random_available_partner_dict(
         ('wants_chitchat', 'ok_to_chitchat', 'fake_state', 'roomed'),  # let's forget about "tiers" here
-        exclude_user_ids=['ok_to_chitchat_id3', 'one_more_exclude_id'],
+        'ok_to_chitchat_id3',
+        ['ok_to_chitchat_id3', 'one_more_exclude_id'],
     )
     assert partner_dict is None
 
