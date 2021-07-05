@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from dataclasses import asdict
 from decimal import Decimal
 from pprint import pformat
-from typing import Text, Optional, List, Type, Dict, Any, Iterable, Iterator, Generator
+from typing import Text, Optional, List, Type, Dict, Any, Iterable, Iterator
 
 from boto3.dynamodb.conditions import Key, Attr
 
@@ -166,7 +166,7 @@ class NaiveDdbUserVault(BaseUserVault):
             """
             return filter(lambda i: current_user_id not in (i.get('exclude_partner_ids') or []), items)
 
-        def item_generator() -> Generator[Dict[Text, Any]]:
+        def item_generator() -> Iterator[Dict[Text, Any]]:
             # TODO oleksandr: parallelize ? no! we will later be switching to Redis and/or Postgres anyway
             for state in states:
                 if state in UserState.states_with_timeouts:
@@ -191,7 +191,7 @@ class NaiveDdbUserVault(BaseUserVault):
                         ScanIndexForward=False,
                     )
                     items = ddb_resp.get('Items') or []
-                    item = next(filter_items(items), default=None)
+                    item = next(filter_items(items), None)
                     if item:
                         yield item
 

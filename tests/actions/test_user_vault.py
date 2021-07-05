@@ -397,7 +397,8 @@ def test_ddb_get_random_available_partner_dict(
     with patch('time.time', Mock(return_value=current_timestamp)):
         partner_dict = user_vault._get_random_available_partner_dict(
             ('wants_chitchat', 'ok_to_chitchat', 'fake_state', 'roomed'),  # let's forget about "tiers" here
-            exclude_user_ids=['some_exclude_id', 'ok_to_chitchat_id3', 'another_exclude_id'],
+            'ok_to_chitchat_id3',
+            ['some_exclude_id', 'ok_to_chitchat_id3', 'another_exclude_id'],
         )
     assert partner_dict == expected_partner_dict
 
