@@ -457,6 +457,7 @@ async def test_action_find_partner(
                 'rejected_join',
                 'rejected_confirm',
             ],
+            'unit_test_user',
             ['unit_test_user'],
         )
         assert mock_telebot_make_request.mock_calls == [
@@ -552,6 +553,7 @@ async def test_action_find_partner_no_one(
             'rejected_join',
             'rejected_confirm',
         ],
+        'unit_test_user',
         ['unit_test_user', 'excluded_unit_test_partner1', 'excluded_unit_test_partner2'],
     )
     assert mock_aioresponses.requests == {}  # rasa_callbacks.ask_to_join() not called
