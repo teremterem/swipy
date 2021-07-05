@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from dataclasses import asdict
 from decimal import Decimal
 from pprint import pformat
-from typing import Text, Optional, List, Type, Dict, Any, Iterable
+from typing import Text, Optional, List, Type, Dict, Any, Iterable, Iterator
 
 from boto3.dynamodb.conditions import Key, Attr
 
@@ -38,6 +38,7 @@ class BaseUserVault(IUserVault, ABC):
     @abstractmethod
     def _get_random_available_partner(
             self, states: List[Text],
+            current_user_id: Text,
             exclude_user_ids: List[Text],
     ) -> Optional[UserStateMachine]:
         raise NotImplementedError()
@@ -72,7 +73,7 @@ class BaseUserVault(IUserVault, ABC):
         exclude_user_ids = [current_user.user_id] + current_user.exclude_partner_ids
 
         for tier in UserState.offerable_tiers:
-            partner = self._get_random_available_partner(tier, exclude_user_ids)
+            partner = self._get_random_available_partner(tier, current_user.user_id, exclude_user_ids)
             if partner:
                 return partner
         return None
@@ -109,9 +110,10 @@ class NaiveDdbUserVault(BaseUserVault):
 
     def _get_random_available_partner(
             self, states: List[Text],
+            current_user_id: Text,
             exclude_user_ids: List[Text],
     ) -> Optional[UserStateMachine]:
-        user_dict = self._get_random_available_partner_dict(states, exclude_user_ids)
+        user_dict = self._get_random_available_partner_dict(states, current_user_id, exclude_user_ids)
         if not user_dict:
             return None
 
@@ -146,8 +148,9 @@ class NaiveDdbUserVault(BaseUserVault):
     @staticmethod
     def _get_random_available_partner_dict(
             states: Iterable[Text],
+            current_user_id: Text,
             exclude_user_ids: List[Text],
-    ) -> List[Dict[Text, Any]]:
+    ) -> Optional[Dict[Text, Any]]:
         # TODO oleksandr: is there a better way to ensure that the tests have a chance to mock boto3 ?
         from actions.aws_resources import user_state_machine_table
 
@@ -156,7 +159,14 @@ class NaiveDdbUserVault(BaseUserVault):
         def timestamp_extractor(item: Dict[Text, Any]) -> int:
             return int(item.get('activity_timestamp') or 0)
 
-        def item_generator():
+        def filter_items(items: Iterable[Dict[Text, Any]]) -> Iterator[Dict[Text, Any]]:
+            """
+            while DDB FilterExpression filters by current user's excluded partners,
+            this function is used to filter by potential partner's excluded partners
+            """
+            return filter(lambda i: current_user_id not in (i.get('exclude_partner_ids') or []), items)
+
+        def item_generator() -> Iterator[Dict[Text, Any]]:
             # TODO oleksandr: parallelize ? no! we will later be switching to Redis and/or Postgres anyway
             for state in states:
                 if state in UserState.states_with_timeouts:
@@ -165,12 +175,13 @@ class NaiveDdbUserVault(BaseUserVault):
                     ddb_resp = user_state_machine_table.query(
                         IndexName='by_state_and_timeout_ts',
                         KeyConditionExpression=Key('state').eq(state) & Key('state_timeout_ts').lt(current_timestamp),
-                        ScanIndexForward=False,  # this should reduce the need to think about truncated DDB output
                         FilterExpression=~Attr('user_id').is_in(exclude_user_ids),
+                        ScanIndexForward=False,  # this should reduce the need to worry about truncated DDB output
                     )
-                    items = ddb_resp.get('Items')
-                    if items:
-                        yield max(items, key=timestamp_extractor)
+                    items = ddb_resp.get('Items') or []
+                    item = max(filter_items(items), key=timestamp_extractor, default=None)
+                    if item:
+                        yield item
 
                 else:
                     ddb_resp = user_state_machine_table.query(
@@ -178,11 +189,11 @@ class NaiveDdbUserVault(BaseUserVault):
                         KeyConditionExpression=Key('state').eq(state),
                         FilterExpression=~Attr('user_id').is_in(exclude_user_ids),
                         ScanIndexForward=False,
-                        Limit=len(exclude_user_ids) + 1,  # filter expression is applied AFTER limit
                     )
-                    items = ddb_resp.get('Items')
-                    if items:
-                        yield items[0]
+                    items = ddb_resp.get('Items') or []
+                    item = next(filter_items(items), None)
+                    if item:
+                        yield item
 
         return max(item_generator(), key=timestamp_extractor, default=None)
 

@@ -5,6 +5,7 @@ from unittest.mock import Mock, patch
 import pytest
 from transitions import MachineError
 
+from actions import user_state_machine
 from actions.user_state_machine import UserStateMachine, UserState
 from tests.tests_common import all_expected_user_states, all_expected_user_state_machine_triggers
 
@@ -216,17 +217,58 @@ def test_state_timestamps(source_state: Text, trigger_name: Text) -> None:
         )
 
 
-def test_join_room_eleventh_partner():
+@pytest.mark.parametrize('num_of_already_excluded', [
+    0,
+    1,
+    5,
+    10,
+    15,
+])
+@pytest.mark.parametrize('num_of_excluded_partners_to_remember', [
+    0,
+    1,
+    10,
+    None,  # the default (2)
+])
+def test_join_room_and_exclude_partner(
+        num_of_already_excluded: int,
+        num_of_excluded_partners_to_remember: Optional[int],
+):
     user = UserStateMachine(
         user_id='some_user_id',
         state='asked_to_confirm',
-        partner_id='partner11',
-        exclude_partner_ids=[f"partner{i}" for i in range(1, 11)],
+        partner_id='partner100500',
+        exclude_partner_ids=[f"partner{i}" for i in range(num_of_already_excluded)],
     )
-    assert len(user.exclude_partner_ids) == 10
+    assert len(user.exclude_partner_ids) == num_of_already_excluded
 
-    # noinspection PyUnresolvedReferences
-    user.join_room('partner11')
+    if num_of_excluded_partners_to_remember is None:
+        num_of_excluded_partners_to_remember = 2  # the default
 
-    assert user.exclude_partner_ids == [f"partner{i}" for i in range(2, 11)] + ['partner11']
-    assert len(user.exclude_partner_ids) == 10
+        # noinspection PyUnresolvedReferences
+        user.join_room('partner100500')
+    else:
+        with patch.object(
+                user_state_machine,
+                'NUM_OF_EXCLUDED_PARTNERS_TO_REMEMBER',
+                num_of_excluded_partners_to_remember,
+        ):
+            # noinspection PyUnresolvedReferences
+            user.join_room('partner100500')
+
+    if num_of_excluded_partners_to_remember > 0:
+        assert len(user.exclude_partner_ids) == min(num_of_excluded_partners_to_remember, num_of_already_excluded + 1)
+
+        if num_of_already_excluded < num_of_excluded_partners_to_remember:
+            assert user.exclude_partner_ids == [
+                f"partner{i}" for i in range(num_of_already_excluded)
+            ] + ['partner100500']
+        else:
+            assert user.exclude_partner_ids == [
+                f"partner{i}" for i in range(
+                    num_of_already_excluded - num_of_excluded_partners_to_remember + 1,
+                    num_of_already_excluded,
+                )
+            ] + ['partner100500']
+    else:
+        assert user.exclude_partner_ids == []

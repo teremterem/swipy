@@ -133,6 +133,7 @@ def test_get_random_available_partner(
             'rejected_join',
             'rejected_confirm',
         ],
+        'existing_user_id1',
         ['existing_user_id1', 'excluded_partner1', 'excluded_partner2', 'excluded_partner3'],
     )
 
@@ -164,6 +165,7 @@ def test_get_random_available_partner_none(
                 'rejected_join',
                 'rejected_confirm',
             ],
+            'existing_user_id1',
             ['existing_user_id1', 'excluded_partner1', 'excluded_partner2', 'excluded_partner3'],
         ),
     ]
@@ -339,7 +341,7 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
 
 @pytest.mark.parametrize('current_timestamp, expected_partner_dict', [
     (
-            1624000000,  # "roomed" partner was active the most recently and the state has already timed out
+            1624000039,  # "roomed" partner was active the most recently and the state has already timed out
             {  # expect "roomed" partner to be returned
                 'user_id': 'roomed_id2',
                 'state': 'roomed',
@@ -360,7 +362,7 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
             },
     ),
     (
-            1623999998,  # even though "roomed" partner was active the most recently, the state hasn't timed out yet
+            1623999990,  # even though "roomed" partner was active the most recently, the state hasn't timed out yet
             {  # expect another recently active partner to be returned
                 'user_id': 'ok_to_chitchat_id2',
                 'state': 'ok_to_chitchat',
@@ -397,7 +399,8 @@ def test_ddb_get_random_available_partner_dict(
     with patch('time.time', Mock(return_value=current_timestamp)):
         partner_dict = user_vault._get_random_available_partner_dict(
             ('wants_chitchat', 'ok_to_chitchat', 'fake_state', 'roomed'),  # let's forget about "tiers" here
-            exclude_user_ids=['some_exclude_id', 'ok_to_chitchat_id3', 'another_exclude_id'],
+            'ok_to_chitchat_id3',
+            ['roomed_id2_3', 'some_exclude_id', 'ok_to_chitchat_id3', 'another_exclude_id'],
         )
     assert partner_dict == expected_partner_dict
 
@@ -426,7 +429,8 @@ def test_ddb_get_random_available_partner_dict_none() -> None:
     user_vault = UserVault()
     partner_dict = user_vault._get_random_available_partner_dict(
         ('wants_chitchat', 'ok_to_chitchat', 'fake_state', 'roomed'),  # let's forget about "tiers" here
-        exclude_user_ids=['ok_to_chitchat_id3', 'one_more_exclude_id'],
+        'ok_to_chitchat_id3',
+        ['ok_to_chitchat_id3', 'one_more_exclude_id'],
     )
     assert partner_dict is None
 
