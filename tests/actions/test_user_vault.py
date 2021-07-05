@@ -435,6 +435,57 @@ def test_ddb_get_random_available_partner_dict_none() -> None:
     assert partner_dict is None
 
 
+@pytest.mark.usefixtures('create_user_state_machine_table')
+def test_ddb_get_random_available_partner_dict_current_user_excluded_by_all() -> None:
+    from actions.aws_resources import user_state_machine_table
+
+    user_state_machine_table.put_item(Item={
+        'user_id': 'roomed_id2_1',
+        'state': 'roomed',
+        'partner_id': 'some_partner_id',
+        'exclude_partner_ids': ['some_excluded_partner', 'ok_to_chitchat_id3'],
+        'newbie': True,
+        'state_timestamp': Decimal(0),
+        'state_timestamp_str': None,
+        'state_timeout_ts': Decimal(1624000009),
+        'state_timeout_ts_str': None,
+        'activity_timestamp': Decimal(1623000009),
+        'activity_timestamp_str': None,
+        'notes': '',
+        'deeplink_data': '',
+        'native': 'unknown',
+        'teleg_lang_code': None,
+        'telegram_from': None,
+    })
+    user_state_machine_table.put_item(Item={
+        'user_id': 'ok_to_chitchat_id2_1',
+        'state': 'ok_to_chitchat',
+        'partner_id': None,
+        'exclude_partner_ids': ['ok_to_chitchat_id3', 'excluded_partner1', 'excluded_partner2'],
+        'newbie': False,
+        'state_timestamp': Decimal(0),
+        'state_timestamp_str': None,
+        'state_timeout_ts': Decimal(0),
+        'state_timeout_ts_str': None,
+        'activity_timestamp': Decimal(1619901009),
+        'activity_timestamp_str': None,
+        'notes': '',
+        'deeplink_data': '',
+        'native': 'unknown',
+        'teleg_lang_code': None,
+        'telegram_from': None,
+    })
+    assert len(user_state_machine_table.scan()['Items']) == 2
+
+    user_vault = UserVault()
+    partner_dict = user_vault._get_random_available_partner_dict(
+        ('wants_chitchat', 'ok_to_chitchat', 'fake_state', 'roomed'),  # let's forget about "tiers" here
+        'ok_to_chitchat_id3',
+        ['ok_to_chitchat_id3', 'one_more_exclude_id'],
+    )
+    assert partner_dict is None
+
+
 @pytest.mark.usefixtures('ddb_user1', 'ddb_user3')
 def test_ddb_get_existing_user(ddb_user2: UserStateMachine) -> None:
     from actions.aws_resources import user_state_machine_table
