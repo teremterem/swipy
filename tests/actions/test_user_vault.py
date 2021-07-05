@@ -341,7 +341,7 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
 
 @pytest.mark.parametrize('current_timestamp, expected_partner_dict', [
     (
-            1624000029,  # "roomed" partner was active the most recently and the state has already timed out
+            1624000039,  # "roomed" partner was active the most recently and the state has already timed out
             {  # expect "roomed" partner to be returned
                 'user_id': 'roomed_id2',
                 'state': 'roomed',
@@ -400,7 +400,7 @@ def test_ddb_get_random_available_partner_dict(
         partner_dict = user_vault._get_random_available_partner_dict(
             ('wants_chitchat', 'ok_to_chitchat', 'fake_state', 'roomed'),  # let's forget about "tiers" here
             'ok_to_chitchat_id3',
-            ['some_exclude_id', 'ok_to_chitchat_id3', 'another_exclude_id'],
+            ['roomed_id2_3', 'some_exclude_id', 'ok_to_chitchat_id3', 'another_exclude_id'],
         )
     assert partner_dict == expected_partner_dict
 

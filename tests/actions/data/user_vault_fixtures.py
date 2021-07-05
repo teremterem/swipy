@@ -490,4 +490,21 @@ def user_dicts() -> List[Dict[Text, Any]]:
             'teleg_lang_code': None,
             'telegram_from': None,
         },
+        {
+            'user_id': 'roomed_id2_3',
+            'state': 'roomed',
+            'partner_id': 'some_partner_id',
+            'newbie': True,
+            'state_timestamp': Decimal(0),
+            'state_timestamp_str': None,
+            'state_timeout_ts': Decimal(1624000029),
+            'state_timeout_ts_str': None,
+            'activity_timestamp': Decimal(1623000029),  # more resent but excluded by seeker
+            'activity_timestamp_str': None,
+            'notes': '',
+            'deeplink_data': '',
+            'native': 'unknown',
+            'teleg_lang_code': None,
+            'telegram_from': None,
+        },
     ]
