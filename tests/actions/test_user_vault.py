@@ -133,6 +133,7 @@ def test_get_random_available_partner(
             'rejected_join',
             'rejected_confirm',
         ],
+        'existing_user_id1',
         ['existing_user_id1', 'excluded_partner1', 'excluded_partner2', 'excluded_partner3'],
     )
 
