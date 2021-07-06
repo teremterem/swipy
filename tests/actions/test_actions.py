@@ -601,6 +601,7 @@ async def test_action_ask_to_join(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
+        wrap_random_randint: MagicMock,
         source_swiper_state: Text,
         latest_intent: Text,
         destination_swiper_state: Optional[Text],
@@ -680,16 +681,31 @@ async def test_action_ask_to_join(
     assert dispatcher.messages == [expected_response]
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
-    assert user_vault.get_user('unit_test_user') == UserStateMachine(
-        user_id='unit_test_user',
-        state=destination_swiper_state if destination_swiper_state else source_swiper_state,
-        partner_id='new_asker' if destination_swiper_state else 'previous_asker',
-        newbie=True,
-        state_timestamp=1619945501 if destination_swiper_state else 0,
-        state_timestamp_str='2021-05-02 08:51:41 Z' if destination_swiper_state else None,
-        state_timeout_ts=1619945501 + (60 * 60 * 4) if destination_swiper_state else 0,
-        state_timeout_ts_str='2021-05-02 12:51:41 Z' if destination_swiper_state else None,
-    )
+
+    if destination_swiper_state:
+        assert user_vault.get_user('unit_test_user') == UserStateMachine(
+            user_id='unit_test_user',
+            state=destination_swiper_state,
+            partner_id='new_asker',
+            newbie=True,
+            state_timestamp=1619945501,
+            state_timestamp_str='2021-05-02 08:51:41 Z',
+            state_timeout_ts=1619945501 + (60 * 60 * 5),
+            state_timeout_ts_str='2021-05-02 13:51:41 Z',
+        )
+        wrap_random_randint.assert_called_once_with(60 * 60 * 4, 60 * 60 * 43)
+
+    else:  # an error is expected (and hence we do not expect swiper state to change)
+        assert user_vault.get_user('unit_test_user') == UserStateMachine(
+            user_id='unit_test_user',
+            state=source_swiper_state,
+            partner_id='previous_asker',
+            newbie=True,
+            state_timestamp=0,
+            state_timestamp_str=None,
+            state_timeout_ts=0,
+            state_timeout_ts_str=None,
+        )
 
 
 @pytest.mark.asyncio
@@ -776,8 +792,8 @@ async def test_action_accept_invitation_create_room(
         newbie=False,  # accepting the very first video chitchat graduates the user from newbie
         state_timestamp=1619945501,
         state_timestamp_str='2021-05-02 08:51:41 Z',
-        state_timeout_ts=1619945501 + (60 * 60 * 4),
-        state_timeout_ts_str='2021-05-02 12:51:41 Z',
+        state_timeout_ts=1619945501 + (60 * 15),
+        state_timeout_ts_str='2021-05-02 09:06:41 Z',
         activity_timestamp=1619945501,
         activity_timestamp_str='2021-05-02 08:51:41 Z',
     )
@@ -1095,8 +1111,8 @@ async def test_action_join_room(
             newbie=False,  # accepting the very first video chitchat graduates the user from newbie
             state_timestamp=1619945501,
             state_timestamp_str='2021-05-02 08:51:41 Z',
-            state_timeout_ts=1619945501 + (60 * 60 * 4),
-            state_timeout_ts_str='2021-05-02 12:51:41 Z',
+            state_timeout_ts=1619945501 + (60 * 15),
+            state_timeout_ts_str='2021-05-02 09:06:41 Z',
         )
 
     else:
@@ -1221,6 +1237,7 @@ async def test_action_reject_invitation(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
+        wrap_random_randint: MagicMock,
         source_swiper_state: Text,
         destination_swiper_state: Text,
 ) -> None:
@@ -1262,11 +1279,12 @@ async def test_action_reject_invitation(
             newbie=True,
             state_timestamp=1619945501,
             state_timestamp_str='2021-05-02 08:51:41 Z',
-            state_timeout_ts=1619945501 + (60 * 60 * 4),
-            state_timeout_ts_str='2021-05-02 12:51:41 Z',
+            state_timeout_ts=1619945501 + (60 * 60 * 5),
+            state_timeout_ts_str='2021-05-02 13:51:41 Z',
             activity_timestamp=1619945501,
             activity_timestamp_str='2021-05-02 08:51:41 Z',
         )
+        wrap_random_randint.assert_called_once_with(60 * 60 * 4, 60 * 60 * 43)
 
     else:  # an error is expected
         assert actual_events == [
