@@ -1223,6 +1223,7 @@ async def test_action_reject_invitation(
         domain: Dict[Text, Any],
         source_swiper_state: Text,
         destination_swiper_state: Text,
+        wrap_random_randint: MagicMock,
 ) -> None:
     user_vault = UserVault()
     user_vault.save(UserStateMachine(
@@ -1262,11 +1263,12 @@ async def test_action_reject_invitation(
             newbie=True,
             state_timestamp=1619945501,
             state_timestamp_str='2021-05-02 08:51:41 Z',
-            state_timeout_ts=1619945501 + (60 * 60 * 4),
-            state_timeout_ts_str='2021-05-02 12:51:41 Z',
+            state_timeout_ts=1619945501 + (60 * 60 * 5),
+            state_timeout_ts_str='2021-05-02 13:51:41 Z',
             activity_timestamp=1619945501,
             activity_timestamp_str='2021-05-02 08:51:41 Z',
         )
+        wrap_random_randint.assert_called_once_with(60 * 60 * 4, 60 * 60 * 43)
 
     else:  # an error is expected
         assert actual_events == [
