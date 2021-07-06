@@ -706,7 +706,6 @@ async def test_action_ask_to_join(
             state_timeout_ts=0,
             state_timeout_ts_str=None,
         )
-        wrap_random_randint.assert_not_called()
 
 
 @pytest.mark.asyncio
