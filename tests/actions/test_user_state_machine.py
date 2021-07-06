@@ -147,9 +147,10 @@ def test_more_narrow_transitions(
         assert user.newbie == initial_newbie_status
 
 
-@patch('time.time', Mock(return_value=1619945501))
 @pytest.mark.parametrize('source_state', all_expected_user_states)
 @pytest.mark.parametrize('trigger_name', all_expected_user_state_machine_triggers)
+@pytest.mark.usefixtures('wrap_random_randint')
+@patch('time.time', Mock(return_value=1619945501))
 def test_state_timestamps(source_state: Text, trigger_name: Text) -> None:
     user = UserStateMachine(
         user_id='some_user_id',
@@ -175,8 +176,8 @@ def test_state_timestamps(source_state: Text, trigger_name: Text) -> None:
             'rejected_confirm',
         ]:
             # destination state is supposed to have a timeout (a new one, set by transition)
-            expected_timeout_ts = 1619945501 + (60 * 60 * 4)
-            expected_timeout_ts_str = '2021-05-02 12:51:41 Z'
+            expected_timeout_ts = 1619945501 + (60 * 60 * 5)
+            expected_timeout_ts_str = '2021-05-02 13:51:41 Z'
         elif user.state == 'waiting_partner_confirm':
             # unlike other states with timeouts, 'waiting_partner_confirm' has a timeout of 2 minutes instead of 4 hours
             expected_timeout_ts = 1619945501 + 60
