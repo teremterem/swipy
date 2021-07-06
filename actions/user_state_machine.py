@@ -10,8 +10,9 @@ from actions.utils import current_timestamp_int, SwiperStateMachineError, format
 if TYPE_CHECKING:
     from actions.user_vault import IUserVault
 
-SWIPER_STATE_MIN_TIMEOUT_SEC = int(os.getenv('SWIPER_STATE_MIN_TIMEOUT_SEC', '14400'))  # 4*60*60 seconds (4 hours)
-SWIPER_STATE_MAX_TIMEOUT_SEC = int(os.getenv('SWIPER_STATE_MAX_TIMEOUT_SEC', '154800'))  # 43*60*60 seconds (43 hours)
+SWIPER_STATE_MIN_TIMEOUT_SEC = int(os.getenv('SWIPER_STATE_MIN_TIMEOUT_SEC', '14400'))  # 4 hours (4*60*60 seconds)
+SWIPER_STATE_MAX_TIMEOUT_SEC = int(os.getenv('SWIPER_STATE_MAX_TIMEOUT_SEC', '154800'))  # 43 hours (43*60*60 seconds)
+ROOMED_STATE_TIMEOUT_SEC = int(os.getenv('ROOMED_STATE_TIMEOUT_SEC', '900'))  # 15 minutes (15*60 seconds)
 PARTNER_CONFIRMATION_TIMEOUT_SEC = int(os.getenv('PARTNER_CONFIRMATION_TIMEOUT_SEC', '60'))  # 1 minute
 NUM_OF_EXCLUDED_PARTNERS_TO_REMEMBER = int(os.getenv('NUM_OF_EXCLUDED_PARTNERS_TO_REMEMBER', '2'))
 
@@ -292,6 +293,8 @@ class UserStateMachine(UserModel):
 
             if event.transition.dest == UserState.WAITING_PARTNER_CONFIRM:
                 timeout = PARTNER_CONFIRMATION_TIMEOUT_SEC
+            elif event.transition.dest == UserState.ROOMED:
+                timeout = ROOMED_STATE_TIMEOUT_SEC
             else:
                 # TODO oleksandr: care to switch to secrets ?
                 timeout = random.randint(SWIPER_STATE_MIN_TIMEOUT_SEC, SWIPER_STATE_MAX_TIMEOUT_SEC)
