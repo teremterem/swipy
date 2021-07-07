@@ -2,6 +2,7 @@ import asyncio
 import os
 import sys
 import time
+from dataclasses import asdict
 from pprint import pprint
 from typing import Text, Any
 
@@ -64,6 +65,13 @@ def make_everyone_ok_to_chitchat() -> None:
 def start_everyone() -> None:
     user_state_machine_table = _prompt_ddb_table()
 
+    class DummyUserVault:
+        def save(self, user: UserStateMachine) -> None:
+            # noinspection PyDataclass
+            user_state_machine_table.put_item(Item=asdict(user))
+
+    dummy_user_vault = DummyUserVault()
+
     os.environ['RASA_PRODUCTION_HOST'] = prompt('RASA_PRODUCTION_HOST')
     rasa_token = prompt('RASA_TOKEN (type "none" if none)')
     if rasa_token != 'none':
@@ -75,10 +83,10 @@ def start_everyone() -> None:
             print(item.get('user_id'))
             pprint(item.get('telegram_from'))
 
-            # noinspection PyProtectedMember
+            # noinspection PyProtectedMember,PyTypeChecker
             await rasa_callbacks._trigger_external_rasa_intent(
                 'script',
-                UserStateMachine(**item),
+                UserStateMachine(**item, user_vault=dummy_user_vault),
                 'start',  # TODO oleksandr: support another, special "start" intent that does not update activity_ts
                 {},
                 True,
