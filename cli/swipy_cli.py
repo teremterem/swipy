@@ -1,3 +1,4 @@
+import asyncio
 import os
 import sys
 import time
@@ -64,22 +65,25 @@ def start_everyone() -> None:
     user_state_machine_table = _prompt_ddb_table()
     os.environ['RASA_PRODUCTION_HOST'] = prompt('RASA_PRODUCTION_HOST')
 
-    counter = 0
-    for item in user_state_machine_table.scan()['Items']:
-        print(item.get('user_id'))
-        pprint(item.get('telegram_from'))
+    async def do_callbacks():
+        counter = 0
+        for item in user_state_machine_table.scan()['Items']:
+            print(item.get('user_id'))
+            pprint(item.get('telegram_from'))
 
-        # noinspection PyProtectedMember
-        rasa_callbacks._trigger_external_rasa_intent(
-            'script',
-            UserStateMachine(**item),
-            'start',
-            {},
-            False,
-        )
-        print()
-        time.sleep(1.1)
-    print('DONE FOR', counter, 'ITEMS')
+            # noinspection PyProtectedMember
+            await rasa_callbacks._trigger_external_rasa_intent(
+                'script',
+                UserStateMachine(**item),
+                'start',
+                {},
+                False,
+            )
+            print()
+            time.sleep(1.1)
+        print('DONE FOR', counter, 'ITEMS')
+
+    asyncio.run(do_callbacks())
 
 
 if __name__ == '__main__':
