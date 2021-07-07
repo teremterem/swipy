@@ -189,6 +189,10 @@ responses:
   - text: I'm an AI-powered chatbot 🤖
   utter_error:
   - text: Ouch! Something went wrong 🤖
+  utter_default:
+  - custom:
+      parse_mode: html
+      text: "Sorry, I didn't understand that 🤖\n \n<b>Would you like to have a video call with a random stranger?\n \nPlease answer yes or no.</b>"
 actions:
 - action_session_start
 - action_offer_chitchat
