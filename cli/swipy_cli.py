@@ -17,6 +17,9 @@ dynamodb = boto3.resource('dynamodb', AWS_REGION)
 
 def _set_everyones_state(state: Text) -> None:
     user_state_machine_table_name = prompt('Please enter the name of UserStateMachine DDB table')
+    if prompt('Once again please') != user_state_machine_table_name:
+        raise ValueError('DDB table name differs')
+
     user_state_machine_table = dynamodb.Table(user_state_machine_table_name)
 
     counter = 0
@@ -28,6 +31,8 @@ def _set_everyones_state(state: Text) -> None:
             ExpressionAttributeValues={':state': state},
         )
         counter += 1
+        if counter % 10 == 0:
+            print(counter)
     print('DONE FOR', counter, 'ITEMS')
 
 
