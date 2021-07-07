@@ -8,10 +8,9 @@ import boto3
 import click
 from click import prompt
 
-from actions import rasa_callbacks
-
 sys.path.insert(0, os.getcwd())
 
+from actions import rasa_callbacks
 from actions.user_state_machine import UserState, UserStateMachine
 
 AWS_REGION = os.environ['AWS_REGION']
