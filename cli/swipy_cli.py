@@ -83,6 +83,7 @@ def start_everyone() -> None:
                 {},
                 False,
             )
+            counter += 1
             print()
             time.sleep(1.1)
         print('DONE FOR', counter, 'ITEMS')
