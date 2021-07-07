@@ -29,6 +29,7 @@ class SwiperTelegramInput(TelegramInput):
     def get_metadata(self, request: Request) -> Optional[Dict[Text, Any]]:
         if request.method == "POST":
             # TODO oleksandr: go back to request.json when telebot fixes the problem they created
+            #  https://github.com/eternnoir/pyTelegramBotAPI/issues/1219
             # request_dict = request.json  # new version of telebot ruins this dict by injecting its objects into it
             request_dict = ujson.loads(request.body)
 
