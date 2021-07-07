@@ -79,9 +79,9 @@ def start_everyone() -> None:
             await rasa_callbacks._trigger_external_rasa_intent(
                 'script',
                 UserStateMachine(**item),
-                'start',
+                'start',  # TODO oleksandr: support another, special "start" intent that does not update activity_ts
                 {},
-                False,
+                True,
             )
             counter += 1
             print()
