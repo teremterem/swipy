@@ -17,9 +17,9 @@ transitions = "*"
 pytelegrambotapi = ">=3.7.3,<4.0.0"
 
 [dev-packages]
-rasa = "2.7.0"
+rasa = "2.7.1"
 rasa-sdk = "2.7.0"
-rasa-x = "0.40.1"
+rasa-x = "0.41.1"
 jupyterlab = "*"
 jupyterlab-kite = ">=2.0.2"
 pytest = "*"
