@@ -63,7 +63,11 @@ def make_everyone_ok_to_chitchat() -> None:
 @swipy.command()
 def start_everyone() -> None:
     user_state_machine_table = _prompt_ddb_table()
+
     os.environ['RASA_PRODUCTION_HOST'] = prompt('RASA_PRODUCTION_HOST')
+    rasa_token = prompt('RASA_TOKEN (type "none" if none)')
+    if rasa_token != 'none':
+        os.environ['RASA_TOKEN'] = rasa_token
 
     async def do_callbacks():
         counter = 0
