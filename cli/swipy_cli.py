@@ -31,10 +31,20 @@ def _set_everyones_state(state: Text) -> None:
     print('DONE FOR', counter, 'ITEMS')
 
 
-@click.command()
+@click.group()
+def swipy() -> None:
+    ...
+
+
+@swipy.command()
 def make_everyone_do_not_disturb() -> None:
     _set_everyones_state(UserState.DO_NOT_DISTURB)
 
 
+@swipy.command()
+def make_everyone_ok_to_chitchat() -> None:
+    _set_everyones_state(UserState.OK_TO_CHITCHAT)
+
+
 if __name__ == '__main__':
-    make_everyone_do_not_disturb()
+    swipy()
