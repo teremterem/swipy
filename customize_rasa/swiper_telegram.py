@@ -1,5 +1,6 @@
 from typing import Callable, Awaitable, Any, Optional, Dict, Text
 
+import ujson
 from rasa.core.channels import TelegramInput, UserMessage
 from sanic import Blueprint
 from sanic.request import Request
@@ -27,7 +28,9 @@ class SwiperTelegramInput(TelegramInput):
 
     def get_metadata(self, request: Request) -> Optional[Dict[Text, Any]]:
         if request.method == "POST":
-            request_dict = request.json
+            # TODO oleksandr: go back to request.json when telebot fixes the problem they created
+            # request_dict = request.json  # new version of telebot ruins this dict by injecting its objects into it
+            request_dict = ujson.loads(request.body)
 
             # TODO oleksandr: account for other types of updates too (not all of them have 'message') ?
             telegram_message = request_dict.get('message') or {}
