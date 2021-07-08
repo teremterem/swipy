@@ -3,6 +3,7 @@ import os
 import sys
 from dataclasses import asdict
 from pprint import pprint
+import time
 from typing import Text, Any
 
 import boto3
@@ -93,7 +94,7 @@ def start_everyone() -> None:
             )
             counter += 1
             print()
-            # time.sleep(1.1)
+            time.sleep(1.1)
         print('DONE FOR', counter, 'ITEMS')
 
     asyncio.run(do_callbacks())
