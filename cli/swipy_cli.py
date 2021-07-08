@@ -1,7 +1,6 @@
 import asyncio
 import os
 import sys
-import time
 from dataclasses import asdict
 from pprint import pprint
 from typing import Text, Any
@@ -12,7 +11,6 @@ from click import prompt
 
 sys.path.insert(0, os.getcwd())
 
-from actions import rasa_callbacks
 from actions.user_state_machine import UserState, UserStateMachine
 
 AWS_REGION = os.environ['AWS_REGION']
@@ -77,6 +75,8 @@ def start_everyone() -> None:
     if rasa_token != 'none':
         os.environ['RASA_TOKEN'] = rasa_token
 
+    from actions import rasa_callbacks
+
     async def do_callbacks():
         counter = 0
         for item in user_state_machine_table.scan()['Items']:
@@ -93,7 +93,7 @@ def start_everyone() -> None:
             )
             counter += 1
             print()
-            time.sleep(1.1)
+            # time.sleep(1.1)
         print('DONE FOR', counter, 'ITEMS')
 
     asyncio.run(do_callbacks())
