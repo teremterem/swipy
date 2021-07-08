@@ -161,8 +161,8 @@ class NaiveDdbUserVault(BaseUserVault):
 
         def filter_items(items: Iterable[Dict[Text, Any]]) -> Iterator[Dict[Text, Any]]:
             """
-            while DDB FilterExpression filters by current user's excluded partners,
-            this function is used to filter by potential partner's excluded partners
+            While DDB FilterExpression filters by current user's excluded partners,
+            this function is used to filter by potential partner's excluded partners.
             """
             return filter(lambda i: current_user_id not in (i.get('exclude_partner_ids') or []), items)
 
