@@ -30,7 +30,7 @@ def _prompt_ddb_table() -> Any:
 
 
 def _set_everyones_state(state: Text) -> None:
-    user_state_machine_table, _ = _prompt_ddb_table()
+    user_state_machine_table = _prompt_ddb_table()
 
     counter = 0
     for item in user_state_machine_table.scan()['Items']:
