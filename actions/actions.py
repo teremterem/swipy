@@ -610,11 +610,13 @@ class ActionJoinRoom(BaseSwiperAction):
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
         partner_id = tracker.get_slot(rasa_callbacks.PARTNER_ID_SLOT)
+        room_url = tracker.get_slot(rasa_callbacks.ROOM_URL_SLOT)
+
         # noinspection PyUnresolvedReferences
         current_user.join_room(partner_id)
         current_user.save()
 
-        utter_room_url(dispatcher, tracker.get_slot(rasa_callbacks.ROOM_URL_SLOT), after_confirming_with_partner=True)
+        utter_room_url(dispatcher, room_url, after_confirming_with_partner=True)
 
         return [
             SlotSet(
