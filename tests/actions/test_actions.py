@@ -805,13 +805,21 @@ async def test_action_accept_invitation_create_room(
     assert dispatcher.messages == [{
         'attachment': None,
         'buttons': [],
-        'custom': {},
+        'custom': {
+            'text': 'Awesome!\n'
+                    '\n'
+                    '<b>Please follow this link to join the video call:</b>\n'
+                    '\n'
+                    'https://swipy.daily.co/pytestroom',
+
+            'parse_mode': 'html',
+            'reply_markup': '{"keyboard_remove":true}',
+        },
         'elements': [],
         'image': None,
-        'response': 'utter_room_url',
-        'template': 'utter_room_url',
+        'response': None,
+        'template': None,
         'text': None,
-        'room_url': 'https://swipy.daily.co/pytestroom',
     }]
 
     rasa_callbacks_join_room_req_key, rasa_callbacks_join_room_req_call = rasa_callbacks_expected_req_builder(

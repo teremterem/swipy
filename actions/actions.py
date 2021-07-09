@@ -418,8 +418,8 @@ class ActionFindPartner(BaseSwiperAction):
 
         dispatcher.utter_message(custom={
             'text': "Unfortunately, I couldn't find anyone in two minutes 😞\n"
-                    '\n'
-                    '<b>Would you like me to try again?</b>',
+                    "\n"
+                    "<b>Would you like me to try again?</b>",
 
             'parse_mode': 'html',
             'reply_markup': '{"keyboard_remove":true}',
@@ -546,12 +546,7 @@ class ActionAcceptInvitation(BaseSwiperAction):
 
         await rasa_callbacks.join_room(current_user.user_id, partner, room_url)
 
-        dispatcher.utter_message(
-            response='utter_room_url',
-            **{
-                rasa_callbacks.ROOM_URL_SLOT: room_url,
-            },
-        )
+        utter_room_url(dispatcher, room_url)
 
         # noinspection PyUnresolvedReferences
         current_user.join_room(partner.user_id)
@@ -711,6 +706,19 @@ class ActionExpirePartnerConfirmation(BaseSwiperAction):
                 initiate=True,
             ),
         ]
+
+
+def utter_room_url(dispatcher: CollectingDispatcher, room_url: Text):
+    dispatcher.utter_message(custom={
+        'text': f"Awesome!\n"
+                f"\n"
+                f"<b>Please follow this link to join the video call:</b>\n"
+                f"\n"
+                f"{room_url}",
+
+        'parse_mode': 'html',
+        'reply_markup': '{"keyboard_remove":true}',
+    })
 
 
 def utter_partner_already_gone(dispatcher: CollectingDispatcher):
