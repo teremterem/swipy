@@ -521,7 +521,7 @@ class ActionAcceptInvitation(BaseSwiperAction):
         current_user.request_chitchat()
         current_user.save()
 
-        dispatcher.utter_message(response='utter_partner_already_gone')
+        utter_partner_already_gone(dispatcher)
 
         return [
             SlotSet(
@@ -698,7 +698,7 @@ class ActionExpirePartnerConfirmation(BaseSwiperAction):
                 UserUtteranceReverted(),
             ]
 
-        dispatcher.utter_message(response='utter_partner_already_gone')
+        utter_partner_already_gone(dispatcher)
 
         return [
             SlotSet(
@@ -711,6 +711,20 @@ class ActionExpirePartnerConfirmation(BaseSwiperAction):
                 initiate=True,
             ),
         ]
+
+
+def utter_partner_already_gone(dispatcher: CollectingDispatcher):
+    dispatcher.utter_message(custom={
+        'text': 'That person has become unavailable 😵\n'
+                '\n'
+                'Fear not !\n'
+                '\n'
+                'I am already looking for someone else to connect you with '
+                'and will get back to you within two minutes ⏳',
+
+        'parse_mode': 'html',
+        'reply_markup': '{"keyboard_remove":true}',
+    })
 
 
 def get_partner_search_start_ts(tracker: Tracker) -> int:

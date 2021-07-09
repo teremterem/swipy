@@ -134,13 +134,6 @@ responses:
   - custom:
       parse_mode: html
       text: "Hooray! I have found someone who is willing to chitchat!\n \n<b>Are you ready for a video call?</b> \U0001F3A5 ☎️"
-  utter_partner_already_gone:
-  - text: |-
-      That person has become unavailable 😵
-       
-      Fear not!
-       
-      I am already looking for someone else to connect you with and will get back to you within two minutes ⏳
   utter_room_url:
   - custom:
       parse_mode: html

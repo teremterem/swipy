@@ -45,6 +45,13 @@ UTTER_OK_ARRANGING_CHITCHAT_TEXT = (
     '\n'
     'I will get back to you within two minutes ⏳'
 )
+UTTER_PARTNER_ALREADY_GONE_TEXT = (
+    'That person has become unavailable 😵\n'
+    '\n'
+    'Fear not !\n'
+    '\n'
+    'I am already looking for someone else to connect you with and will get back to you within two minutes ⏳'
+)
 
 
 @pytest.mark.asyncio
@@ -988,11 +995,15 @@ async def test_action_accept_invitation_partner_not_waiting(
     assert dispatcher.messages == [{
         'attachment': None,
         'buttons': [],
-        'custom': {},
+        'custom': {
+            'text': UTTER_PARTNER_ALREADY_GONE_TEXT,
+            'parse_mode': 'html',
+            'reply_markup': '{"keyboard_remove":true}',
+        },
         'elements': [],
         'image': None,
-        'response': 'utter_partner_already_gone',
-        'template': 'utter_partner_already_gone',
+        'response': None,
+        'template': None,
         'text': None,
     }]
 
@@ -1415,11 +1426,15 @@ async def test_action_expire_partner_confirmation(
         assert dispatcher.messages == [{
             'attachment': None,
             'buttons': [],
-            'custom': {},
+            'custom': {
+                'text': UTTER_PARTNER_ALREADY_GONE_TEXT,
+                'parse_mode': 'html',
+                'reply_markup': '{"keyboard_remove":true}',
+            },
             'elements': [],
             'image': None,
-            'response': 'utter_partner_already_gone',
-            'template': 'utter_partner_already_gone',
+            'response': None,
+            'template': None,
             'text': None,
         }]
 
