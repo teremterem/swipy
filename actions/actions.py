@@ -368,7 +368,14 @@ class ActionFindPartner(BaseSwiperAction):
         else:  # user just requested chitchat
             initiate_search = True
 
-            dispatcher.utter_message(response='utter_ok_arranging_chitchat')
+            dispatcher.utter_message(custom={
+                'text': 'Great! Let me find someone for you to chitchat with.\n'
+                        '\n'
+                        'I will get back to you within two minutes ⏳',
+
+                'parse_mode': 'html',
+                'reply_markup': '{"keyboard_remove":true}',
+            })
 
             # noinspection PyUnresolvedReferences
             current_user.request_chitchat()
@@ -409,7 +416,14 @@ class ActionFindPartner(BaseSwiperAction):
                 ),
             ]
 
-        dispatcher.utter_message(response='utter_partner_search_timed_out_try_again')
+        dispatcher.utter_message(custom={
+            'text': "Unfortunately, I couldn't find anyone in two minutes 😞\n"
+                    '\n'
+                    '<b>Would you like me to try again?</b>',
+
+            'parse_mode': 'html',
+            'reply_markup': '{"keyboard_remove":true}',
+        })
 
         return [
             SlotSet(

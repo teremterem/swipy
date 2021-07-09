@@ -40,6 +40,11 @@ UTTER_GREET_OFFER_CHITCHAT_TEXT = (
     '\n'
     '<b>Would you like to give it a try?</b>'
 )
+UTTER_OK_ARRANGING_CHITCHAT_TEXT = (
+    'Great! Let me find someone for you to chitchat with.\n'
+    '\n'
+    'I will get back to you within two minutes ⏳'
+)
 
 
 @pytest.mark.asyncio
@@ -507,11 +512,15 @@ async def test_action_find_partner(
         assert dispatcher.messages == [{
             'attachment': None,
             'buttons': [],
-            'custom': {},
+            'custom': {
+                'text': UTTER_OK_ARRANGING_CHITCHAT_TEXT,
+                'parse_mode': 'html',
+                'reply_markup': '{"keyboard_remove":true}',
+            },
             'elements': [],
             'image': None,
-            'response': 'utter_ok_arranging_chitchat',
-            'template': 'utter_ok_arranging_chitchat',
+            'response': None,
+            'template': None,
             'text': None,
         }]
 
@@ -561,11 +570,15 @@ async def test_action_find_partner_no_one(
         {
             'attachment': None,
             'buttons': [],
-            'custom': {},
+            'custom': {
+                'text': UTTER_OK_ARRANGING_CHITCHAT_TEXT,
+                'parse_mode': 'html',
+                'reply_markup': '{"keyboard_remove":true}',
+            },
             'elements': [],
             'image': None,
-            'response': 'utter_ok_arranging_chitchat',
-            'template': 'utter_ok_arranging_chitchat',
+            'response': None,
+            'template': None,
             'text': None,
         },
     ]
