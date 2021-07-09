@@ -371,7 +371,7 @@ class ActionFindPartner(BaseSwiperAction):
             dispatcher.utter_message(custom={
                 'text': 'Great! Let me find someone for you to chitchat with.\n'
                         '\n'
-                        'I will get back to you within two minutes ⏳',
+                        'I will get back to you <b>within two minutes</b> ⏳',
 
                 'parse_mode': 'html',
                 'reply_markup': '{"keyboard_remove":true}',
@@ -751,10 +751,10 @@ def utter_partner_already_gone(dispatcher: CollectingDispatcher):
     dispatcher.utter_message(custom={
         'text': 'That person has become unavailable 😵\n'
                 '\n'
-                'Fear not !\n'
+                'Fear not!\n'
                 '\n'
                 'I am already looking for someone else to connect you with '
-                'and will get back to you within two minutes ⏳',
+                'and will get back to you <b>within two minutes</b> ⏳',
 
         'parse_mode': 'html',
         'reply_markup': '{"keyboard_remove":true}',

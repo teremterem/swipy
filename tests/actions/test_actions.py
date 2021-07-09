@@ -43,15 +43,15 @@ UTTER_GREET_OFFER_CHITCHAT_TEXT = (
 UTTER_OK_ARRANGING_CHITCHAT_TEXT = (
     'Great! Let me find someone for you to chitchat with.\n'
     '\n'
-    'I will get back to you within two minutes ⏳'
+    'I will get back to you <b>within two minutes</b> ⏳'
 )
 UTTER_PARTNER_ALREADY_GONE_TEXT = (
     'That person has become unavailable 😵\n'
     '\n'
-    'Fear not !\n'
+    'Fear not!\n'
     '\n'
     'I am already looking for someone else to connect you with '
-    'and will get back to you within two minutes ⏳'
+    'and will get back to you <b>within two minutes</b> ⏳'
 )
 UTTER_CHECKING_IF_PARTNER_READY_TOO_TEXT = (
     "Just a moment, I'm checking if that person is ready too...\n"
