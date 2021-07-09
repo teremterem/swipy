@@ -546,7 +546,7 @@ class ActionAcceptInvitation(BaseSwiperAction):
 
         await rasa_callbacks.join_room(current_user.user_id, partner, room_url)
 
-        utter_room_url(dispatcher, room_url)
+        utter_room_url(dispatcher, room_url, after_confirming_with_partner=False)
 
         # noinspection PyUnresolvedReferences
         current_user.join_room(partner.user_id)
@@ -607,7 +607,7 @@ class ActionJoinRoom(BaseSwiperAction):
         current_user.join_room(partner_id)
         current_user.save()
 
-        dispatcher.utter_message(response='utter_partner_ready_room_url')
+        utter_room_url(dispatcher, tracker.get_slot(rasa_callbacks.ROOM_URL_SLOT), after_confirming_with_partner=True)
 
         return [
             SlotSet(
@@ -708,9 +708,10 @@ class ActionExpirePartnerConfirmation(BaseSwiperAction):
         ]
 
 
-def utter_room_url(dispatcher: CollectingDispatcher, room_url: Text):
+def utter_room_url(dispatcher: CollectingDispatcher, room_url: Text, after_confirming_with_partner: bool):
+    shout = 'Done!' if after_confirming_with_partner else 'Awesome!'
     dispatcher.utter_message(custom={
-        'text': f"Awesome!\n"
+        'text': f"{shout}\n"
                 f"\n"
                 f"<b>Please follow this link to join the video call:</b>\n"
                 f"\n"

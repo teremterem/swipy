@@ -1142,6 +1142,7 @@ async def test_action_join_room(
 
     tracker.add_slots([
         SlotSet('partner_id', 'unexpected_partner' if wrong_partner else 'expected_partner'),
+        SlotSet('room_url', 'https://swipy.daily.co/anothertestroom'),
     ])
 
     actual_events = await action.run(dispatcher, tracker, domain)
@@ -1156,11 +1157,20 @@ async def test_action_join_room(
         assert dispatcher.messages == [{
             'attachment': None,
             'buttons': [],
-            'custom': {},
+            'custom': {
+                'text': 'Done!\n'
+                        '\n'
+                        '<b>Please follow this link to join the video call:</b>\n'
+                        '\n'
+                        'https://swipy.daily.co/anothertestroom',
+
+                'parse_mode': 'html',
+                'reply_markup': '{"keyboard_remove":true}',
+            },
             'elements': [],
             'image': None,
-            'response': 'utter_partner_ready_room_url',
-            'template': 'utter_partner_ready_room_url',
+            'response': None,
+            'template': None,
             'text': None,
         }]
         assert user_vault.get_user('unit_test_user') == UserStateMachine(

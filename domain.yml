@@ -134,10 +134,6 @@ responses:
   - custom:
       parse_mode: html
       text: "Hooray! I have found someone who is willing to chitchat!\n \n<b>Are you ready for a video call?</b> \U0001F3A5 ☎️"
-  utter_partner_ready_room_url:
-  - custom:
-      parse_mode: html
-      text: "Done!\n \n<b>Please follow this link to join the video call:</b>\n \n{room_url}"
   utter_declined:
   - text: |-
       Ok, declined ❌
