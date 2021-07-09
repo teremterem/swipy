@@ -577,7 +577,14 @@ class ActionAcceptInvitation(BaseSwiperAction):
         current_user.wait_for_partner_to_confirm(partner.user_id)
         current_user.save()
 
-        dispatcher.utter_message(response='utter_checking_if_partner_ready_too')
+        dispatcher.utter_message(custom={
+            'text': "Just a moment, I'm checking if that person is ready too...\n"
+                    "\n"
+                    "Please don't go anywhere - <b>this may take up to a minute</b> ⏳",
+
+            'parse_mode': 'html',
+            'reply_markup': '{"keyboard_remove":true}',
+        })
 
         return [
             SlotSet(

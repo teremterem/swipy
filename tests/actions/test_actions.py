@@ -52,6 +52,11 @@ UTTER_PARTNER_ALREADY_GONE_TEXT = (
     '\n'
     'I am already looking for someone else to connect you with and will get back to you within two minutes ⏳'
 )
+UTTER_CHECKING_IF_PARTNER_READY_TOO_TEXT = (
+    "Just a moment, I'm checking if that person is ready too...\n"
+    "\n"
+    "Please don't go anywhere - <b>this may take up to a minute</b> ⏳"
+)
 
 
 @pytest.mark.asyncio
@@ -916,11 +921,15 @@ async def test_action_accept_invitation_confirm_with_asker(
     assert dispatcher.messages == [{
         'attachment': None,
         'buttons': [],
-        'custom': {},
+        'custom': {
+            'text': UTTER_CHECKING_IF_PARTNER_READY_TOO_TEXT,
+            'parse_mode': 'html',
+            'reply_markup': '{"keyboard_remove":true}',
+        },
         'elements': [],
         'image': None,
-        'response': 'utter_checking_if_partner_ready_too',
-        'template': 'utter_checking_if_partner_ready_too',
+        'response': None,
+        'template': None,
         'text': None,
     }]
 
