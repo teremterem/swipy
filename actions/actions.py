@@ -273,11 +273,39 @@ class ActionOfferChitchat(BaseSwiperAction):
 
         latest_intent = tracker.get_intent_of_latest_message()
         if latest_intent == 'how_it_works':
-            dispatcher.utter_message(response='utter_how_it_works')
+            dispatcher.utter_message(custom={
+                'text': 'I can arrange video chitchat with another human for you 🎥 🗣 ☎️\n'
+                        '\n'
+                        'Here is how it works:\n'
+                        '\n'
+                        '- I find someone who also wants to chitchat.\n'
+                        '- I confirm with you and them that you are both ready.\n'
+                        '- I send both of you a video chat link.',
+
+                'parse_mode': 'html',
+                'reply_markup': '{"keyboard_remove":true}',
+            })
         elif latest_intent == 'affirm':
-            dispatcher.utter_message(response='utter_lost_track_of_conversation')
+            dispatcher.utter_message(custom={
+                'text': 'Please forgive me for losing track of our conversation 🤖\n'
+                        '\n'
+                        '<b>Are you agreeing to a video call with another person?</b>',
+
+                'parse_mode': 'html',
+                'reply_markup': '{"keyboard_remove":true}',
+            })
         else:  # 'greet'
-            dispatcher.utter_message(response='utter_greet_offer_chitchat')
+            dispatcher.utter_message(custom={
+                'text': 'Hi, my name is Swipy 🙂\n'
+                        '\n'
+                        'I can connect you with a stranger in a video chat '
+                        'so you could practice your English speaking skills 🇬🇧\n'
+                        '\n'
+                        '<b>Would you like to give it a try?</b>',
+
+                'parse_mode': 'html',
+                'reply_markup': '{"keyboard_remove":true}',
+            })
 
         return [
             SlotSet(
