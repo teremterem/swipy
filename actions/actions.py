@@ -678,7 +678,15 @@ class ActionRejectInvitation(BaseSwiperAction):
         current_user.reject()
         current_user.save()
 
-        dispatcher.utter_message(response='utter_declined')
+        dispatcher.utter_message(custom={
+            'text': 'Ok, declined ❌\n'
+                    '\n'
+                    'May I ask you if there is any specific time or times of day (maybe days of week) '
+                    'when you are more likely to join someone for chitchat over a video call?',
+
+            'parse_mode': 'html',
+            'reply_markup': '{"keyboard_remove":true}',
+        })
 
         return [
             SlotSet(

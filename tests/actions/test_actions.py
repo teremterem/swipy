@@ -64,6 +64,12 @@ UTTER_HOPE_TO_SEE_YOU_LATER_TEXT = (
     'Should you change your mind and decide that you want to chitchat with someone, '
     'just let me know - I will set up a video call 😉'
 )
+UTTER_DECLINED_TEXT = (
+    'Ok, declined ❌\n'
+    '\n'
+    'May I ask you if there is any specific time or times of day (maybe days of week) '
+    'when you are more likely to join someone for chitchat over a video call?'
+)
 
 
 @pytest.mark.asyncio
@@ -1355,11 +1361,15 @@ async def test_action_reject_invitation(
         assert dispatcher.messages == [{
             'attachment': None,
             'buttons': [],
-            'custom': {},
+            'custom': {
+                'text': UTTER_DECLINED_TEXT,
+                'parse_mode': 'html',
+                'reply_markup': '{"keyboard_remove":true}',
+            },
             'elements': [],
             'image': None,
-            'response': 'utter_declined',
-            'template': 'utter_declined',
+            'response': None,
+            'template': None,
             'text': None,
         }]
         assert user_vault.get_user('unit_test_user') == UserStateMachine(

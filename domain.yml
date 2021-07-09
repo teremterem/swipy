@@ -130,11 +130,6 @@ responses:
   - custom:
       parse_mode: html
       text: "Hooray! I have found someone who is willing to chitchat!\n \n<b>Are you ready for a video call?</b> \U0001F3A5 ☎️"
-  utter_declined:
-  - text: |-
-      Ok, declined ❌
-       
-      May I ask you if there is any specific time or times of day (maybe days of week) when you are more likely to join someone for chitchat over a video call?
   utter_iamabot:
   - text: I'm an AI-powered chatbot 🤖
 actions:
