@@ -50,12 +50,19 @@ UTTER_PARTNER_ALREADY_GONE_TEXT = (
     '\n'
     'Fear not !\n'
     '\n'
-    'I am already looking for someone else to connect you with and will get back to you within two minutes ⏳'
+    'I am already looking for someone else to connect you with '
+    'and will get back to you within two minutes ⏳'
 )
 UTTER_CHECKING_IF_PARTNER_READY_TOO_TEXT = (
     "Just a moment, I'm checking if that person is ready too...\n"
     "\n"
     "Please don't go anywhere - <b>this may take up to a minute</b> ⏳"
+)
+UTTER_HOPE_TO_SEE_YOU_LATER_TEXT = (
+    'Ok, I will not bother you 🛑\n'
+    '\n'
+    'Should you change your mind and decide that you want to chitchat with someone, '
+    'just let me know - I will set up a video call 😉'
 )
 
 
@@ -1276,11 +1283,15 @@ async def test_action_do_not_disturb(
     assert dispatcher.messages == [{
         'attachment': None,
         'buttons': [],
-        'custom': {},
+        'custom': {
+            'text': UTTER_HOPE_TO_SEE_YOU_LATER_TEXT,
+            'parse_mode': 'html',
+            'reply_markup': '{"keyboard_remove":true}',
+        },
         'elements': [],
         'image': None,
-        'response': 'utter_hope_to_see_you_later',
-        'template': 'utter_hope_to_see_you_later',
+        'response': None,
+        'template': None,
         'text': None,
     }]
 

@@ -121,10 +121,6 @@ responses:
   - custom:
       parse_mode: html
       text: "Hey! There is someone who wants to chitchat \U0001F5E3\n \n<b>Are you ready for a video call?</b> \U0001F3A5 ☎️"
-  utter_checking_if_partner_ready_too:
-  - custom:
-      parse_mode: html
-      text: "Just a moment, I'm checking if that person is ready too...\n \nPlease don't go anywhere - <b>this may take up to a minute</b> ⏳"
   utter_found_someone_check_ready_photo:
   - custom:
       caption: "Hooray! I have found someone who is willing to chitchat!\n \n<b>Are you ready for a video call?</b> \U0001F3A5 ☎️"
@@ -139,11 +135,6 @@ responses:
       Ok, declined ❌
        
       May I ask you if there is any specific time or times of day (maybe days of week) when you are more likely to join someone for chitchat over a video call?
-  utter_hope_to_see_you_later:
-  - text: |-
-      Ok, I will not bother you 🛑
-       
-      Should you change your mind and decide that you want to chitchat with someone, just let me know - I will set up a video call 😉
   utter_iamabot:
   - text: I'm an AI-powered chatbot 🤖
 actions:

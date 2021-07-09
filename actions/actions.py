@@ -642,7 +642,15 @@ class ActionDoNotDisturb(BaseSwiperAction):
         current_user.become_do_not_disturb()
         current_user.save()
 
-        dispatcher.utter_message(response='utter_hope_to_see_you_later')
+        dispatcher.utter_message(custom={
+            'text': 'Ok, I will not bother you 🛑\n'
+                    '\n'
+                    'Should you change your mind and decide that you want to chitchat with someone, '
+                    'just let me know - I will set up a video call 😉',
+
+            'parse_mode': 'html',
+            'reply_markup': '{"keyboard_remove":true}',
+        })
 
         return [
             SlotSet(
