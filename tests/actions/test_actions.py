@@ -17,6 +17,8 @@ from actions import actions, daily_co
 from actions.user_state_machine import UserStateMachine, UserState
 from actions.user_vault import UserVault, IUserVault
 
+UTTER_ERROR_TEXT = 'Ouch! Something went wrong 🤖'
+
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('ddb_unit_test_user', 'wrap_traceback_format_exception')
@@ -57,9 +59,9 @@ async def test_action_swiper_error_trace(
         'custom': {},
         'elements': [],
         'image': None,
-        'response': 'utter_error',
-        'template': 'utter_error',
-        'text': None,
+        'response': None,
+        'template': None,
+        'text': UTTER_ERROR_TEXT,
     }]
 
 
@@ -673,9 +675,9 @@ async def test_action_ask_to_join(
             'custom': {},
             'elements': [],
             'image': None,
-            'response': 'utter_error',
-            'template': 'utter_error',
-            'text': None,
+            'response': None,
+            'template': None,
+            'text': UTTER_ERROR_TEXT,
         }
 
     assert dispatcher.messages == [expected_response]
@@ -1028,9 +1030,9 @@ async def test_action_accept_invitation_no_partner_id(
         'custom': {},
         'elements': [],
         'image': None,
-        'response': 'utter_error',
-        'template': 'utter_error',
-        'text': None,
+        'response': None,
+        'template': None,
+        'text': UTTER_ERROR_TEXT,
     }]
 
     # neither daily_co.create_room() nor rasa_callbacks.join_room() are called
@@ -1144,9 +1146,9 @@ async def test_action_join_room(
             'custom': {},
             'elements': [],
             'image': None,
-            'response': 'utter_error',
-            'template': 'utter_error',
-            'text': None,
+            'response': None,
+            'template': None,
+            'text': UTTER_ERROR_TEXT,
         }]
         assert user_vault.get_user('unit_test_user') == UserStateMachine(  # the state of current user has not changed
             user_id='unit_test_user',  # the asker
@@ -1306,9 +1308,9 @@ async def test_action_reject_invitation(
             'custom': {},
             'elements': [],
             'image': None,
-            'response': 'utter_error',
-            'template': 'utter_error',
-            'text': None,
+            'response': None,
+            'template': None,
+            'text': UTTER_ERROR_TEXT,
         }]
         assert user_vault.get_user('unit_test_user') == UserStateMachine(
             user_id='unit_test_user',

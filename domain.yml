@@ -187,8 +187,6 @@ responses:
       Should you change your mind and decide that you want to chitchat with someone, just let me know - I will set up a video call 😉
   utter_iamabot:
   - text: I'm an AI-powered chatbot 🤖
-  utter_error:
-  - text: Ouch! Something went wrong 🤖
 actions:
 - action_session_start
 - action_offer_chitchat

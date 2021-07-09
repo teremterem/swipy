@@ -151,7 +151,7 @@ class BaseSwiperAction(Action, ABC):
                 ))
 
             if TELL_USER_ABOUT_ERRORS:
-                dispatcher.utter_message(response='utter_error')
+                dispatcher.utter_message(text='Ouch! Something went wrong 🤖')
 
         else:
             if tracker.get_slot(SWIPER_ERROR_SLOT) is not None:
