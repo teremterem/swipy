@@ -18,6 +18,28 @@ from actions.user_state_machine import UserStateMachine, UserState
 from actions.user_vault import UserVault, IUserVault
 
 UTTER_ERROR_TEXT = 'Ouch! Something went wrong 🤖'
+UTTER_HOW_IT_WORKS_TEXT = (
+    'I can arrange video chitchat with another human for you 🎥 🗣 ☎️\n'
+    '\n'
+    'Here is how it works:\n'
+    '\n'
+    '- I find someone who also wants to chitchat.\n'
+    '- I confirm with you and them that you are both ready.\n'
+    '- I send both of you a video chat link.'
+)
+UTTER_LOST_TRACK_OF_CONVERSATION_TEXT = (
+    'Please forgive me for losing track of our conversation 🤖\n'
+    '\n'
+    '<b>Are you agreeing to a video call with another person?</b>'
+)
+UTTER_GREET_OFFER_CHITCHAT_TEXT = (
+    'Hi, my name is Swipy 🙂\n'
+    '\n'
+    'I can connect you with a stranger in a video chat '
+    'so you could practice your English speaking skills 🇬🇧\n'
+    '\n'
+    '<b>Would you like to give it a try?</b>'
+)
 
 
 @pytest.mark.asyncio
@@ -234,25 +256,25 @@ async def test_action_session_start_with_slots(
     None,  # default - expected to be equivalent to False
     True,
 ])
-@pytest.mark.parametrize('latest_intent, expected_response_template, source_swiper_state, destination_swiper_state', [
-    ('how_it_works', 'utter_how_it_works', 'new', 'ok_to_chitchat'),
-    ('start', 'utter_greet_offer_chitchat', 'new', 'ok_to_chitchat'),
-    ('greet', 'utter_greet_offer_chitchat', 'new', 'ok_to_chitchat'),
-    ('affirm', 'utter_lost_track_of_conversation', 'new', 'ok_to_chitchat'),
+@pytest.mark.parametrize('latest_intent, source_swiper_state, destination_swiper_state, expected_response_text', [
+    ('how_it_works', 'new', 'ok_to_chitchat', UTTER_HOW_IT_WORKS_TEXT),
+    ('start', 'new', 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),
+    ('greet', 'new', 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),
+    ('affirm', 'new', 'ok_to_chitchat', UTTER_LOST_TRACK_OF_CONVERSATION_TEXT),
 
-    ('greet', 'utter_greet_offer_chitchat', None, 'ok_to_chitchat'),  # user does not exist yet
-    ('greet', 'utter_greet_offer_chitchat', 'new', 'ok_to_chitchat'),
-    ('greet', 'utter_greet_offer_chitchat', 'wants_chitchat', 'wants_chitchat'),
-    ('greet', 'utter_greet_offer_chitchat', 'ok_to_chitchat', 'ok_to_chitchat'),
-    ('greet', 'utter_greet_offer_chitchat', 'waiting_partner_confirm', 'waiting_partner_confirm'),
-    ('greet', 'utter_greet_offer_chitchat', 'asked_to_join', 'ok_to_chitchat'),
-    ('greet', 'utter_greet_offer_chitchat', 'asked_to_confirm', 'ok_to_chitchat'),
-    ('greet', 'utter_greet_offer_chitchat', 'roomed', 'ok_to_chitchat'),
-    ('greet', 'utter_greet_offer_chitchat', 'rejected_join', 'ok_to_chitchat'),
-    ('greet', 'utter_greet_offer_chitchat', 'rejected_confirm', 'ok_to_chitchat'),
-    ('greet', 'utter_greet_offer_chitchat', 'do_not_disturb', 'ok_to_chitchat'),
-    ('greet', 'utter_greet_offer_chitchat', 'bot_blocked', 'ok_to_chitchat'),
-    ('greet', 'utter_greet_offer_chitchat', 'user_banned', 'user_banned'),
+    ('greet', None, 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),  # user does not exist yet
+    ('greet', 'new', 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),
+    ('greet', 'wants_chitchat', 'wants_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),
+    ('greet', 'ok_to_chitchat', 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),
+    ('greet', 'waiting_partner_confirm', 'waiting_partner_confirm', UTTER_GREET_OFFER_CHITCHAT_TEXT),
+    ('greet', 'asked_to_join', 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),
+    ('greet', 'asked_to_confirm', 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),
+    ('greet', 'roomed', 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),
+    ('greet', 'rejected_join', 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),
+    ('greet', 'rejected_confirm', 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),
+    ('greet', 'do_not_disturb', 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),
+    ('greet', 'bot_blocked', 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),
+    ('greet', 'user_banned', 'user_banned', UTTER_GREET_OFFER_CHITCHAT_TEXT),
 ])
 async def test_action_offer_chitchat(
         tracker: Tracker,
@@ -260,9 +282,9 @@ async def test_action_offer_chitchat(
         domain: Dict[Text, Any],
         greeting_makes_user_ok_to_chitchat: Optional[bool],
         latest_intent: Text,
-        expected_response_template: Text,
         source_swiper_state: Optional[Text],
         destination_swiper_state: Text,
+        expected_response_text: Text,
 ) -> None:
     if source_swiper_state is None:
         user_is_brand_new = True
@@ -317,11 +339,15 @@ async def test_action_offer_chitchat(
         assert dispatcher.messages == [{
             'attachment': None,
             'buttons': [],
-            'custom': {},
+            'custom': {
+                'text': expected_response_text,
+                'parse_mode': 'html',
+                'reply_markup': '{"keyboard_remove":true}',
+            },
             'elements': [],
             'image': None,
-            'response': expected_response_template,
-            'template': expected_response_template,
+            'response': None,
+            'template': None,
             'text': None,
         }]
 
