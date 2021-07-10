@@ -454,11 +454,6 @@ class ActionAskToJoin(BaseSwiperAction):
         partner_photo_file_id = tracker.get_slot(rasa_callbacks.PARTNER_PHOTO_FILE_ID_SLOT)
         partner_first_name = tracker.get_slot(rasa_callbacks.PARTNER_FIRST_NAME)
 
-        if partner_first_name:
-            partner_first_name = f"<i>{html.escape(partner_first_name)}</i>"
-        else:
-            partner_first_name = 'Someone'
-
         latest_intent = get_intent_of_latest_message_reliably(tracker)
 
         if latest_intent == EXTERNAL_ASK_TO_JOIN_INTENT:
@@ -469,7 +464,7 @@ class ActionAskToJoin(BaseSwiperAction):
             if partner_photo_file_id:
                 dispatcher.utter_message(custom={
                     'photo': partner_photo_file_id,
-                    'caption': f"Hey! {partner_first_name} wants to chitchat 🗣\n"
+                    'caption': f"Hey! {present_partner_name(partner_first_name, 'Someone')} wants to chitchat 🗣\n"
                                f"\n"
                                f"<b>Are you ready for a video call?</b> 🎥 ☎️",
 
@@ -479,7 +474,8 @@ class ActionAskToJoin(BaseSwiperAction):
 
             else:
                 dispatcher.utter_message(custom={
-                    'text': f"Hey! There is {partner_first_name} who wants to chitchat 🗣\n"
+                    'text': f"Hey! There is {present_partner_name(partner_first_name, 'someone')} "
+                            f"who wants to chitchat 🗣\n"
                             f"\n"
                             f"<b>Are you ready for a video call?</b> 🎥 ☎️",
 
@@ -495,7 +491,8 @@ class ActionAskToJoin(BaseSwiperAction):
             if partner_photo_file_id:
                 dispatcher.utter_message(custom={
                     'photo': partner_photo_file_id,
-                    'caption': f"Hooray! I have found {partner_first_name} who is willing to chitchat!\n"
+                    'caption': f"Hooray! I have found {present_partner_name(partner_first_name, 'someone')} "
+                               f"who is willing to chitchat!\n"
                                f"\n"
                                f"<b>Are you ready for a video call?</b> 🎥 ☎️",
 
@@ -505,7 +502,8 @@ class ActionAskToJoin(BaseSwiperAction):
 
             else:
                 dispatcher.utter_message(custom={
-                    'text': f"Hooray! I have found {partner_first_name} who is willing to chitchat!\n"
+                    'text': f"Hooray! I have found {present_partner_name(partner_first_name, 'someone')} "
+                            f"who is willing to chitchat!\n"
                             f"\n"
                             f"<b>Are you ready for a video call?</b> 🎥 ☎️",
 
@@ -551,7 +549,7 @@ class ActionAcceptInvitation(BaseSwiperAction):
 
             elif partner.chitchat_can_be_offered():
                 # confirm with the partner before creating any rooms
-                return await self.confirm_with_asker(dispatcher, current_user, partner)
+                return await self.confirm_with_asker(dispatcher, tracker, current_user, partner)
 
         except SwiperRasaCallbackError:
             logger.exception('FAILED TO ACCEPT INVITATION')
@@ -605,9 +603,16 @@ class ActionAcceptInvitation(BaseSwiperAction):
     @staticmethod
     async def confirm_with_asker(
             dispatcher: CollectingDispatcher,
+            tracker: Tracker,
             current_user: UserStateMachine,
             partner: UserStateMachine,
     ) -> List[Dict[Text, Any]]:
+        partner_first_name = tracker.get_slot(rasa_callbacks.PARTNER_FIRST_NAME)
+        # TODO oleksandr: should I read partner.get_first_name() instead ?
+        #  probably not - partner may change it on the fly...
+        #  yeah, but why partner_id is taken from current_user.partner_id instead of the slot then ?
+        #  smells like some kind of inconsistency...
+
         user_profile_photo_id = telegram_helpers.get_user_profile_photo_file_id(current_user.user_id)
         user_first_name = current_user.get_first_name()
 
@@ -623,9 +628,10 @@ class ActionAcceptInvitation(BaseSwiperAction):
         current_user.save()
 
         dispatcher.utter_message(custom={
-            'text': "Just a moment, I'm checking if that person is ready too...\n"
-                    "\n"
-                    "Please don't go anywhere - <b>this may take up to a minute</b> ⏳",
+            'text': f"Just a moment, I'm checking if {present_partner_name(partner_first_name, 'that person')} "
+                    f"is ready too...\n"
+                    f"\n"
+                    f"Please don't go anywhere - <b>this may take up to a minute</b> ⏳",
 
             'parse_mode': 'html',
             'reply_markup': '{"keyboard_remove":true}',
@@ -776,6 +782,12 @@ class ActionExpirePartnerConfirmation(BaseSwiperAction):
                 initiate=True,
             ),
         ]
+
+
+def present_partner_name(first_name: Text, placeholder: Text) -> Text:
+    if first_name:
+        return f"<i>{html.escape(first_name)}</i>"
+    return placeholder
 
 
 def utter_room_url(dispatcher: CollectingDispatcher, room_url: Text, after_confirming_with_partner: bool):
