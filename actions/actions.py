@@ -455,7 +455,7 @@ class ActionAskToJoin(BaseSwiperAction):
         partner_first_name = tracker.get_slot(rasa_callbacks.PARTNER_FIRST_NAME)
 
         if partner_first_name:
-            partner_first_name = f"<b><i>{html.escape(partner_first_name)}</i></b>"
+            partner_first_name = f"<i>{html.escape(partner_first_name)}</i>"
         else:
             partner_first_name = 'Someone'
 
