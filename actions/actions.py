@@ -1,4 +1,5 @@
 import datetime
+import html
 import logging
 import os
 from abc import ABC, abstractmethod
@@ -451,6 +452,12 @@ class ActionAskToJoin(BaseSwiperAction):
     ) -> List[Dict[Text, Any]]:
         partner_id = tracker.get_slot(rasa_callbacks.PARTNER_ID_SLOT)
         partner_photo_file_id = tracker.get_slot(rasa_callbacks.PARTNER_PHOTO_FILE_ID_SLOT)
+        partner_first_name = tracker.get_slot(rasa_callbacks.PARTNER_FIRST_NAME)
+
+        if partner_first_name:
+            partner_first_name = f"<b><i>{html.escape(partner_first_name)}</i></b>"
+        else:
+            partner_first_name = 'Someone'
 
         latest_intent = get_intent_of_latest_message_reliably(tracker)
 
@@ -462,9 +469,9 @@ class ActionAskToJoin(BaseSwiperAction):
             if partner_photo_file_id:
                 dispatcher.utter_message(custom={
                     'photo': partner_photo_file_id,
-                    'caption': 'Hey! This person wants to chitchat 🗣\n'
-                               '\n'
-                               '<b>Are you ready for a video call?</b> 🎥 ☎️',
+                    'caption': f"Hey! {partner_first_name} wants to chitchat 🗣\n"
+                               f"\n"
+                               f"<b>Are you ready for a video call?</b> 🎥 ☎️",
 
                     'parse_mode': 'html',
                     'reply_markup': '{"keyboard_remove":true}',
@@ -472,9 +479,9 @@ class ActionAskToJoin(BaseSwiperAction):
 
             else:
                 dispatcher.utter_message(custom={
-                    'text': 'Hey! There is someone who wants to chitchat 🗣\n'
-                            '\n'
-                            '<b>Are you ready for a video call?</b> 🎥 ☎️',
+                    'text': f"Hey! There is {partner_first_name} who wants to chitchat 🗣\n"
+                            f"\n"
+                            f"<b>Are you ready for a video call?</b> 🎥 ☎️",
 
                     'parse_mode': 'html',
                     'reply_markup': '{"keyboard_remove":true}',
@@ -488,9 +495,9 @@ class ActionAskToJoin(BaseSwiperAction):
             if partner_photo_file_id:
                 dispatcher.utter_message(custom={
                     'photo': partner_photo_file_id,
-                    'caption': 'Hooray! I have found someone who is willing to chitchat!\n'
-                               '\n'
-                               '<b>Are you ready for a video call?</b> 🎥 ☎️',
+                    'caption': f"Hooray! I have found {partner_first_name} who is willing to chitchat!\n"
+                               f"\n"
+                               f"<b>Are you ready for a video call?</b> 🎥 ☎️",
 
                     'parse_mode': 'html',
                     'reply_markup': '{"keyboard_remove":true}',
@@ -498,9 +505,9 @@ class ActionAskToJoin(BaseSwiperAction):
 
             else:
                 dispatcher.utter_message(custom={
-                    'text': 'Hooray! I have found someone who is willing to chitchat!\n'
-                            '\n'
-                            '<b>Are you ready for a video call?</b> 🎥 ☎️',
+                    'text': f"Hooray! I have found {partner_first_name} who is willing to chitchat!\n"
+                            f"\n"
+                            f"<b>Are you ready for a video call?</b> 🎥 ☎️",
 
                     'parse_mode': 'html',
                     'reply_markup': '{"keyboard_remove":true}',
