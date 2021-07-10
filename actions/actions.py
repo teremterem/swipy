@@ -549,7 +549,7 @@ class ActionAcceptInvitation(BaseSwiperAction):
 
             elif partner.chitchat_can_be_offered():
                 # confirm with the partner before creating any rooms
-                return await self.confirm_with_asker(dispatcher, tracker, current_user, partner)
+                return await self.confirm_with_asker(dispatcher, current_user, partner)
 
         except SwiperRasaCallbackError:
             logger.exception('FAILED TO ACCEPT INVITATION')
@@ -558,7 +558,7 @@ class ActionAcceptInvitation(BaseSwiperAction):
         current_user.request_chitchat()
         current_user.save()
 
-        utter_partner_already_gone(dispatcher)
+        utter_partner_already_gone(dispatcher, partner.get_first_name())
 
         return [
             SlotSet(
@@ -603,16 +603,9 @@ class ActionAcceptInvitation(BaseSwiperAction):
     @staticmethod
     async def confirm_with_asker(
             dispatcher: CollectingDispatcher,
-            tracker: Tracker,
             current_user: UserStateMachine,
             partner: UserStateMachine,
     ) -> List[Dict[Text, Any]]:
-        partner_first_name = tracker.get_slot(rasa_callbacks.PARTNER_FIRST_NAME)
-        # TODO oleksandr: should I read partner.get_first_name() instead ?
-        #  probably not - partner may change it on the fly...
-        #  yeah, but why partner_id is taken from current_user.partner_id instead of the slot then ?
-        #  smells like some kind of inconsistency...
-
         user_profile_photo_id = telegram_helpers.get_user_profile_photo_file_id(current_user.user_id)
         user_first_name = current_user.get_first_name()
 
@@ -628,7 +621,7 @@ class ActionAcceptInvitation(BaseSwiperAction):
         current_user.save()
 
         dispatcher.utter_message(custom={
-            'text': f"Just a moment, I'm checking if {present_partner_name(partner_first_name, 'that person')} "
+            'text': f"Just a moment, I'm checking if {present_partner_name(partner.get_first_name(), 'that person')} "
                     f"is ready too...\n"
                     f"\n"
                     f"Please don't go anywhere - <b>this may take up to a minute</b> ⏳",
@@ -769,7 +762,9 @@ class ActionExpirePartnerConfirmation(BaseSwiperAction):
                 UserUtteranceReverted(),
             ]
 
-        utter_partner_already_gone(dispatcher)
+        partner = user_vault.get_user(current_user.partner_id)
+
+        utter_partner_already_gone(dispatcher, partner.get_first_name())
 
         return [
             SlotSet(
@@ -804,14 +799,14 @@ def utter_room_url(dispatcher: CollectingDispatcher, room_url: Text, after_confi
     })
 
 
-def utter_partner_already_gone(dispatcher: CollectingDispatcher):
+def utter_partner_already_gone(dispatcher: CollectingDispatcher, partner_first_name: Text):
     dispatcher.utter_message(custom={
-        'text': 'That person has become unavailable 😵\n'
-                '\n'
-                'Fear not!\n'
-                '\n'
-                'I am already looking for someone else to connect you with '
-                'and will get back to you <b>within two minutes</b> ⏳',
+        'text': f"{present_partner_name(partner_first_name, 'That person')} has become unavailable 😵\n"
+                f"\n"
+                f"Fear not!\n"
+                f"\n"
+                f"I am already looking for someone else to connect you with "
+                f"and will get back to you <b>within two minutes</b> ⏳",
 
         'parse_mode': 'html',
         'reply_markup': '{"keyboard_remove":true}',
