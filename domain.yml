@@ -131,7 +131,10 @@ responses:
       parse_mode: html
       text: "Hooray! I have found someone who is willing to chitchat!\n \n<b>Are you ready for a video call?</b> \U0001F3A5 ☎️"
   utter_iamabot:
-  - text: I'm an AI-powered chatbot 🤖
+  - custom:
+      parse_mode: html
+      reply_markup: '{"keyboard_remove":true}'
+      text: I'm an AI-powered chatbot 🤖
 actions:
 - action_session_start
 - action_offer_chitchat

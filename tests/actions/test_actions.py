@@ -18,58 +18,72 @@ from actions.user_state_machine import UserStateMachine, UserState
 from actions.user_vault import UserVault, IUserVault
 
 UTTER_ERROR_TEXT = 'Ouch! Something went wrong 🤖'
-UTTER_HOW_IT_WORKS_TEXT = (
-    'I can arrange video chitchat with another human for you 🎥 🗣 ☎️\n'
-    '\n'
-    'Here is how it works:\n'
-    '\n'
-    '- I find someone who also wants to chitchat.\n'
-    '- I confirm with you and them that you are both ready.\n'
-    '- I send both of you a video chat link.'
-)
-UTTER_LOST_TRACK_OF_CONVERSATION_TEXT = (
-    'Please forgive me for losing track of our conversation 🤖\n'
-    '\n'
-    '<b>Are you agreeing to a video call with another person?</b>'
-)
-UTTER_GREET_OFFER_CHITCHAT_TEXT = (
-    'Hi, my name is Swipy 🙂\n'
-    '\n'
-    'I can connect you with a stranger in a video chat '
-    'so you could practice your English speaking skills 🇬🇧\n'
-    '\n'
-    '<b>Would you like to give it a try?</b>'
-)
-UTTER_OK_ARRANGING_CHITCHAT_TEXT = (
-    'Great! Let me find someone for you to chitchat with.\n'
-    '\n'
-    'I will get back to you <b>within two minutes</b> ⏳'
-)
-UTTER_PARTNER_ALREADY_GONE_TEXT = (
-    'That person has become unavailable 😵\n'
-    '\n'
-    'Fear not!\n'
-    '\n'
-    'I am already looking for someone else to connect you with '
-    'and will get back to you <b>within two minutes</b> ⏳'
-)
-UTTER_CHECKING_IF_PARTNER_READY_TOO_TEXT = (
-    "Just a moment, I'm checking if that person is ready too...\n"
-    "\n"
-    "Please don't go anywhere - <b>this may take up to a minute</b> ⏳"
-)
-UTTER_HOPE_TO_SEE_YOU_LATER_TEXT = (
-    'Ok, I will not bother you 🛑\n'
-    '\n'
-    'Should you change your mind and decide that you want to chitchat with someone, '
-    'just let me know - I will set up a video call 😉'
-)
-UTTER_DECLINED_TEXT = (
-    'Ok, declined ❌\n'
-    '\n'
-    'May I ask you if there is any specific time or times of day (maybe days of week) '
-    'when you are more likely to join someone for chitchat over a video call?'
-)
+
+UTTER_HOW_IT_WORKS_TEXT = """\
+I can arrange video chitchat with another human for you 🎥 🗣 ☎️
+
+Here is how it works:
+
+- I find someone who also wants to chitchat.
+- I confirm with you and them that you are both ready.
+- I send both of you a video chat link."""
+
+UTTER_LOST_TRACK_OF_CONVERSATION_TEXT = """\
+Please forgive me for losing track of our conversation 🤖
+
+<b>Are you agreeing to a video call with another person?</b>"""
+
+UTTER_GREET_OFFER_CHITCHAT_TEXT = """\
+Hi, my name is Swipy 🙂
+
+I can connect you with a stranger in a video chat \
+so you could practice your English speaking skills 🇬🇧
+
+<b>Would you like to give it a try?</b>"""
+
+UTTER_OK_ARRANGING_CHITCHAT_TEXT = """\
+Great! Let me find someone for you to chitchat with.
+
+I will get back to you <b>within two minutes</b> ⏳"""
+
+UTTER_ROOM_URL_TEXT = """\
+Awesome!
+
+<b>Please follow this link to join the video call:</b>
+
+https://swipy.daily.co/pytestroom"""
+
+UTTER_PARTNER_READY_ROOM_URL_TEXT = """\
+Done!
+
+<b>Please follow this link to join the video call:</b>
+
+https://swipy.daily.co/anothertestroom"""
+
+UTTER_PARTNER_ALREADY_GONE_TEXT = """\
+That person has become unavailable 😵
+
+Fear not!
+
+I am already looking for someone else to connect you with \
+and will get back to you <b>within two minutes</b> ⏳"""
+
+UTTER_CHECKING_IF_PARTNER_READY_TOO_TEXT = """\
+Just a moment, I'm checking if that person is ready too...
+
+Please don't go anywhere - <b>this may take up to a minute</b> ⏳"""
+
+UTTER_HOPE_TO_SEE_YOU_LATER_TEXT = """\
+Ok, I will not bother you 🛑
+
+Should you change your mind and decide that you want to chitchat with someone, \
+just let me know - I will set up a video call 😉"""
+
+UTTER_DECLINED_TEXT = """\
+Ok, declined ❌
+
+May I ask you if there is any specific time or times of day (maybe days of week) \
+when you are more likely to join someone for chitchat over a video call?"""
 
 
 @pytest.mark.asyncio
@@ -824,12 +838,7 @@ async def test_action_accept_invitation_create_room(
         'attachment': None,
         'buttons': [],
         'custom': {
-            'text': 'Awesome!\n'
-                    '\n'
-                    '<b>Please follow this link to join the video call:</b>\n'
-                    '\n'
-                    'https://swipy.daily.co/pytestroom',
-
+            'text': UTTER_ROOM_URL_TEXT,
             'parse_mode': 'html',
             'reply_markup': '{"keyboard_remove":true}',
         },
@@ -1180,12 +1189,7 @@ async def test_action_join_room(
             'attachment': None,
             'buttons': [],
             'custom': {
-                'text': 'Done!\n'
-                        '\n'
-                        '<b>Please follow this link to join the video call:</b>\n'
-                        '\n'
-                        'https://swipy.daily.co/anothertestroom',
-
+                'text': UTTER_PARTNER_READY_ROOM_URL_TEXT,
                 'parse_mode': 'html',
                 'reply_markup': '{"keyboard_remove":true}',
             },
