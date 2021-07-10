@@ -448,37 +448,67 @@ class ActionAskToJoin(BaseSwiperAction):
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
         partner_id = tracker.get_slot(rasa_callbacks.PARTNER_ID_SLOT)
+        partner_photo_file_id = tracker.get_slot(rasa_callbacks.PARTNER_PHOTO_FILE_ID_SLOT)
 
         latest_intent = get_intent_of_latest_message_reliably(tracker)
 
         if latest_intent == EXTERNAL_ASK_TO_JOIN_INTENT:
-            response_template = 'utter_someone_wants_to_chat'
             # noinspection PyUnresolvedReferences
             current_user.become_asked_to_join(partner_id)
             current_user.save()
 
+            if partner_photo_file_id:
+                dispatcher.utter_message(custom={
+                    'photo': partner_photo_file_id,
+                    'caption': 'Hey! This person wants to chitchat 🗣\n'
+                               '\n'
+                               '<b>Are you ready for a video call?</b> 🎥 ☎️',
+
+                    'parse_mode': 'html',
+                    'reply_markup': '{"keyboard_remove":true}',
+                })
+
+            else:
+                dispatcher.utter_message(custom={
+                    'text': 'Hey! There is someone who wants to chitchat 🗣\n'
+                            '\n'
+                            '<b>Are you ready for a video call?</b> 🎥 ☎️',
+
+                    'parse_mode': 'html',
+                    'reply_markup': '{"keyboard_remove":true}',
+                })
+
         elif latest_intent == EXTERNAL_ASK_TO_CONFIRM_INTENT:
-            response_template = 'utter_found_someone_check_ready'
             # noinspection PyUnresolvedReferences
             current_user.become_asked_to_confirm(partner_id)
             current_user.save()
+
+            if partner_photo_file_id:
+                dispatcher.utter_message(custom={
+                    'photo': partner_photo_file_id,
+                    'caption': 'Hooray! I have found someone who is willing to chitchat!\n'
+                               '\n'
+                               '<b>Are you ready for a video call?</b> 🎥 ☎️',
+
+                    'parse_mode': 'html',
+                    'reply_markup': '{"keyboard_remove":true}',
+                })
+
+            else:
+                dispatcher.utter_message(custom={
+                    'text': 'Hooray! I have found someone who is willing to chitchat!\n'
+                            '\n'
+                            '<b>Are you ready for a video call?</b> 🎥 ☎️',
+
+                    'parse_mode': 'html',
+                    'reply_markup': '{"keyboard_remove":true}',
+                })
 
         else:
             raise SwiperError(
                 f"{repr(self.name())} was triggered by an unexpected intent ({repr(latest_intent)}) - either "
                 f"{repr(EXTERNAL_ASK_TO_JOIN_INTENT)} or {repr(EXTERNAL_ASK_TO_CONFIRM_INTENT)} was expected"
             )
-
-        partner_photo_file_id = tracker.get_slot(rasa_callbacks.PARTNER_PHOTO_FILE_ID_SLOT)
-        if partner_photo_file_id:
-            response_template += '_photo'
-            response_kwargs = {
-                rasa_callbacks.PARTNER_PHOTO_FILE_ID_SLOT: partner_photo_file_id,
-            }
-        else:
-            response_kwargs = {}
-
-        dispatcher.utter_message(response=response_template, **response_kwargs)
 
         return [
             SlotSet(

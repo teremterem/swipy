@@ -112,24 +112,6 @@ slots:
     auto_fill: true
     influence_conversation: false
 responses:
-  utter_someone_wants_to_chat_photo:
-  - custom:
-      caption: "Hey! This person wants to chitchat \U0001F5E3\n \n<b>Are you ready for a video call?</b> \U0001F3A5 ☎️"
-      parse_mode: html
-      photo: '{partner_photo_file_id}'
-  utter_someone_wants_to_chat:
-  - custom:
-      parse_mode: html
-      text: "Hey! There is someone who wants to chitchat \U0001F5E3\n \n<b>Are you ready for a video call?</b> \U0001F3A5 ☎️"
-  utter_found_someone_check_ready_photo:
-  - custom:
-      caption: "Hooray! I have found someone who is willing to chitchat!\n \n<b>Are you ready for a video call?</b> \U0001F3A5 ☎️"
-      parse_mode: html
-      photo: '{partner_photo_file_id}'
-  utter_found_someone_check_ready:
-  - custom:
-      parse_mode: html
-      text: "Hooray! I have found someone who is willing to chitchat!\n \n<b>Are you ready for a video call?</b> \U0001F3A5 ☎️"
   utter_iamabot:
   - custom:
       parse_mode: html
