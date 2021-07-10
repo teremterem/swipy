@@ -34,6 +34,7 @@ intents:
 entities:
 - partner_id
 - partner_photo_file_id
+- partner_first_name
 - room_url
 slots:
   swiper_state:
@@ -102,6 +103,11 @@ slots:
     auto_fill: true
     influence_conversation: false
   partner_photo_file_id:
+    type: rasa.shared.core.slots.TextSlot
+    initial_value: null
+    auto_fill: true
+    influence_conversation: true
+  partner_first_name:
     type: rasa.shared.core.slots.TextSlot
     initial_value: null
     auto_fill: true

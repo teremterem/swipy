@@ -385,11 +385,13 @@ class ActionFindPartner(BaseSwiperAction):
 
         if partner:
             user_profile_photo_id = telegram_helpers.get_user_profile_photo_file_id(current_user.user_id)
+            user_first_name = current_user.get_first_name()
 
             await rasa_callbacks.ask_to_join(
                 current_user.user_id,
                 partner,
                 user_profile_photo_id,
+                user_first_name,
                 suppress_callback_errors=True,
             )
 
@@ -600,8 +602,14 @@ class ActionAcceptInvitation(BaseSwiperAction):
             partner: UserStateMachine,
     ) -> List[Dict[Text, Any]]:
         user_profile_photo_id = telegram_helpers.get_user_profile_photo_file_id(current_user.user_id)
+        user_first_name = current_user.get_first_name()
 
-        await rasa_callbacks.ask_to_confirm(current_user.user_id, partner, user_profile_photo_id)
+        await rasa_callbacks.ask_to_confirm(
+            current_user.user_id,
+            partner,
+            user_profile_photo_id,
+            user_first_name,
+        )
 
         # noinspection PyUnresolvedReferences
         current_user.wait_for_partner_to_confirm(partner.user_id)

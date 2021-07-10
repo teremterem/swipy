@@ -219,6 +219,10 @@ class UserStateMachine(UserModel):
             dest=UserState.BOT_BLOCKED,
         )
 
+    def get_first_name(self):
+        first_name = (self.telegram_from or {}).get('first_name') or None
+        return first_name
+
     def save(self):
         if not self._user_vault:
             raise SwiperError('an attempt to save UserStateMachine that is not associated with any IUserVault instance')

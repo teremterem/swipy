@@ -17,6 +17,7 @@ OUTPUT_CHANNEL = 'telegram'  # seems to be more robust than 'latest'
 
 PARTNER_ID_SLOT = 'partner_id'
 PARTNER_PHOTO_FILE_ID_SLOT = 'partner_photo_file_id'
+PARTNER_FIRST_NAME = 'partner_first_name'
 ROOM_URL_SLOT = 'room_url'
 
 EXTERNAL_ASK_TO_JOIN_INTENT = 'EXTERNAL_ask_to_join'
@@ -27,7 +28,8 @@ EXTERNAL_JOIN_ROOM_INTENT = 'EXTERNAL_join_room'
 async def ask_to_join(
         sender_id: Text,
         receiver: UserStateMachine,
-        photo_file_id: Text,
+        sender_photo_file_id: Optional[Text],
+        sender_first_name: Optional[Text],
         suppress_callback_errors: bool = False,
 ) -> Optional[Dict[Text, Any]]:
     return await _trigger_external_rasa_intent(
@@ -36,7 +38,8 @@ async def ask_to_join(
         EXTERNAL_ASK_TO_JOIN_INTENT,
         {
             PARTNER_ID_SLOT: sender_id,
-            PARTNER_PHOTO_FILE_ID_SLOT: photo_file_id,
+            PARTNER_PHOTO_FILE_ID_SLOT: sender_photo_file_id,
+            PARTNER_FIRST_NAME: sender_first_name,
         },
         suppress_callback_errors,
     )
@@ -45,7 +48,8 @@ async def ask_to_join(
 async def ask_to_confirm(
         sender_id: Text,
         receiver: UserStateMachine,
-        photo_file_id: Text,
+        sender_photo_file_id: Optional[Text],
+        sender_first_name: Optional[Text],
         suppress_callback_errors: bool = False,
 ) -> Optional[Dict[Text, Any]]:
     return await _trigger_external_rasa_intent(
@@ -54,7 +58,8 @@ async def ask_to_confirm(
         EXTERNAL_ASK_TO_CONFIRM_INTENT,
         {
             PARTNER_ID_SLOT: sender_id,
-            PARTNER_PHOTO_FILE_ID_SLOT: photo_file_id,
+            PARTNER_PHOTO_FILE_ID_SLOT: sender_photo_file_id,
+            PARTNER_FIRST_NAME: sender_first_name,
         },
         suppress_callback_errors,
     )
