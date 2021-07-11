@@ -484,12 +484,12 @@ class ActionAskToJoin(BaseSwiperAction):
             if partner_photo_file_id:
                 utter_text = (
                     f"Hey! {present_partner_name(partner_first_name, 'This person')} "
-                    f"is willing to chitchat <i>with you</i> 👈"
+                    f"is willing to chitchat <b><i>with you</i></b> 👈"
                 )
             else:
                 utter_text = (
                     f"Hey! {present_partner_name(partner_first_name, 'Someone')} "
-                    f"is willing to chitchat <i>with you</i> 👈"
+                    f"is willing to chitchat <b><i>with you</i></b> 👈"
                 )
 
         else:
@@ -799,7 +799,7 @@ class ActionExpirePartnerConfirmation(BaseSwiperAction):
 
 def present_partner_name(first_name: Text, placeholder: Text) -> Text:
     if first_name:
-        return f"<i>{html.escape(first_name)}</i>"
+        return f"<b><i>{html.escape(first_name)}</i></b>"
     return placeholder
 
 
