@@ -511,7 +511,15 @@ class ActionAskToJoin(BaseSwiperAction):
             }
 
         custom_dict['parse_mode'] = 'html'
-        custom_dict['reply_markup'] = '{"keyboard_remove":true}'
+        custom_dict['reply_markup'] = (
+            '{"keyboard":['
+
+            '["text":"Yes, connect me"],'
+            '["text":"No"],'
+            '["text":"Someone else"]'
+
+            '],"one_time_keyboard":true}'
+        )
 
         dispatcher.utter_message(custom=custom_dict)
 
