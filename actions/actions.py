@@ -57,10 +57,10 @@ class SwiperActionResult:
     ERROR = 'error'
 
 
-OK_IM_WAITING_CANCEL_MARKUP = (
+OK_WAITING_CANCEL_MARKUP = (
     '{"keyboard":['
 
-    '[{"text":"Ok, I\'m waiting"}],'
+    '[{"text":"Ok, waiting"}],'
     '[{"text":"Cancel"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
@@ -385,7 +385,7 @@ class ActionFindPartner(BaseSwiperAction):
                         'I will get back to you within two minutes ⏳',
 
                 'parse_mode': 'html',
-                'reply_markup': OK_IM_WAITING_CANCEL_MARKUP,
+                'reply_markup': OK_WAITING_CANCEL_MARKUP,
             })
 
             # noinspection PyUnresolvedReferences
@@ -616,7 +616,7 @@ class ActionAcceptInvitation(BaseSwiperAction):
                     f"Please don't go anywhere - <b>this may take up to a minute</b> ⏳",
 
             'parse_mode': 'html',
-            'reply_markup': OK_IM_WAITING_CANCEL_MARKUP,
+            'reply_markup': OK_WAITING_CANCEL_MARKUP,
         })
 
         return [
@@ -828,7 +828,7 @@ def utter_partner_already_gone(dispatcher: CollectingDispatcher, partner_first_n
                 f"and will get back to you within two minutes ⏳",
 
         'parse_mode': 'html',
-        'reply_markup': OK_IM_WAITING_CANCEL_MARKUP,
+        'reply_markup': OK_WAITING_CANCEL_MARKUP,
     })
 
 
