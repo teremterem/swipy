@@ -57,6 +57,16 @@ class SwiperActionResult:
     ERROR = 'error'
 
 
+OK_CANCEL_MARKUP = (
+    '{"keyboard":['
+
+    '[{"text":"Ok"}],'
+    '[{"text":"Cancel"}]'
+
+    '],"one_time_keyboard":true,"resize_keyboard":true}'
+)
+
+
 class BaseSwiperAction(Action, ABC):
     @abstractmethod
     def name(self) -> Text:
@@ -372,10 +382,10 @@ class ActionFindPartner(BaseSwiperAction):
             dispatcher.utter_message(custom={
                 'text': 'Great! Let me find someone for you to chitchat with.\n'
                         '\n'
-                        'I will get back to you <b>within two minutes</b> ⏳',
+                        'I will get back to you within two minutes ⏳',
 
                 'parse_mode': 'html',
-                'reply_markup': '{"remove_keyboard":true}',
+                'reply_markup': OK_CANCEL_MARKUP,
             })
 
             # noinspection PyUnresolvedReferences
@@ -484,12 +494,12 @@ class ActionAskToJoin(BaseSwiperAction):
             if partner_photo_file_id:
                 utter_text = (
                     f"Hey! {present_partner_name(partner_first_name, 'This person')} "
-                    f"is willing to chitchat <b><i>with you</i></b> 👈"
+                    f"is willing to chitchat <i>with you</i> 👈"
                 )
             else:
                 utter_text = (
                     f"Hey! {present_partner_name(partner_first_name, 'Someone')} "
-                    f"is willing to chitchat <b><i>with you</i></b> 👈"
+                    f"is willing to chitchat <i>with you</i> 👈"
                 )
 
         else:
@@ -518,8 +528,8 @@ class ActionAskToJoin(BaseSwiperAction):
         custom_dict['reply_markup'] = (
             '{"keyboard":['
 
-            '[{"text":"Yes, connect me"}],'
-            '[{"text":"No, not now"}],'
+            '[{"text":"Yes"}],'
+            '[{"text":"No"}],'
             '[{"text":"Someone else"}]'
 
             '],"one_time_keyboard":true}'
@@ -824,10 +834,10 @@ def utter_partner_already_gone(dispatcher: CollectingDispatcher, partner_first_n
                 f"Fear not!\n"
                 f"\n"
                 f"I am already looking for someone else to connect you with "
-                f"and will get back to you <b>within two minutes</b> ⏳",
+                f"and will get back to you within two minutes ⏳",
 
         'parse_mode': 'html',
-        'reply_markup': '{"remove_keyboard":true}',
+        'reply_markup': OK_CANCEL_MARKUP,
     })
 
 
