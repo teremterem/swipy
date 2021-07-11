@@ -463,12 +463,13 @@ class ActionAskToJoin(BaseSwiperAction):
 
             if partner_photo_file_id:
                 utter_text = (
-                    f"Hey! {present_partner_name(partner_first_name, 'Someone')} wants to chitchat 🗣"
+                    f"Hey! {present_partner_name(partner_first_name, 'This person')} "
+                    f"is looking to chitchat 🗣"
                 )
             else:
                 utter_text = (
-                    f"Hey! There is {present_partner_name(partner_first_name, 'someone')} "
-                    f"who wants to chitchat 🗣"
+                    f"Hey! {present_partner_name(partner_first_name, 'There is someone who')} "
+                    f"is looking to chitchat 🗣"
                 )
 
         elif latest_intent == EXTERNAL_ASK_TO_CONFIRM_INTENT:
@@ -478,13 +479,13 @@ class ActionAskToJoin(BaseSwiperAction):
 
             if partner_photo_file_id:
                 utter_text = (
-                    f"Hooray! I have found {present_partner_name(partner_first_name, 'someone')} "
-                    f"who is willing to chitchat!"
+                    f"Hey! {present_partner_name(partner_first_name, 'This person')} "
+                    f"wants to chitchat <b>with you</b> 👈"
                 )
             else:
                 utter_text = (
-                    f"Hooray! I have found {present_partner_name(partner_first_name, 'someone')} "
-                    f"who is willing to chitchat!"
+                    f"Hey! {present_partner_name(partner_first_name, 'Someone')} "
+                    f"wants to chitchat <b>with you</b> 👈"
                 )
 
         else:
