@@ -466,45 +466,32 @@ class ActionAskToJoin(BaseSwiperAction):
 
         latest_intent = get_intent_of_latest_message_reliably(tracker)
 
+        presented_partner = present_partner_name(
+            partner_first_name,
+            'This person' if partner_photo_file_id else 'Someone',
+        )
+
         if latest_intent == EXTERNAL_ASK_TO_JOIN_INTENT:
             # noinspection PyUnresolvedReferences
             current_user.become_asked_to_join(partner_id)
             current_user.save()
 
-            if partner_photo_file_id:
-                utter_text = (
-                    f"{present_partner_name(partner_first_name, 'This person')} "
-                    f"is looking to chitchat 🗣\n"
-                    f"\n"
-                    f"<b>Would you like to join a video call?</b> 🎥 ☎️"
-                )
-            else:
-                utter_text = (
-                    f"{present_partner_name(partner_first_name, 'Someone')} "
-                    f"is looking to chitchat 🗣\n"
-                    f"\n"
-                    f"<b>Would you like to join a video call?</b> 🎥 ☎️"
-                )
+            utter_text = (
+                f"Hey! {presented_partner} is looking to chitchat 🗣\n"
+                f"\n"
+                f"<b>Would you like to join a video call?</b> 🎥 ☎️"
+            )
 
         elif latest_intent == EXTERNAL_ASK_TO_CONFIRM_INTENT:
             # noinspection PyUnresolvedReferences
             current_user.become_asked_to_confirm(partner_id)
             current_user.save()
 
-            if partner_photo_file_id:
-                utter_text = (
-                    f"Hey! {present_partner_name(partner_first_name, 'This person')} "
-                    f"wants to chitchat with you 👈\n"
-                    f"\n"
-                    f"<b>Are you ready for a video call?</b> 🎥 ☎️"
-                )
-            else:
-                utter_text = (
-                    f"Hey! {present_partner_name(partner_first_name, 'Someone')} "
-                    f"wants to chitchat with you 👈\n"
-                    f"\n"
-                    f"<b>Are you ready for a video call?</b> 🎥 ☎️"
-                )
+            utter_text = (
+                f"Hey! {presented_partner} wants to chitchat with <b>you</b> 👈\n"
+                f"\n"
+                f"<b>Are you ready for a video call?</b> 🎥 ☎️"
+            )
 
         else:
             raise SwiperError(
