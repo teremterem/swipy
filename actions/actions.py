@@ -811,7 +811,7 @@ def utter_room_url(dispatcher: CollectingDispatcher, room_url: Text, after_confi
         'reply_markup': (
             '{"keyboard":['
 
-            '[{"text":"❌ Stop the call"}]'
+            '[{"text":"Cancel"}]'
 
             '],"resize_keyboard":true,"one_time_keyboard":true}'
         ),
