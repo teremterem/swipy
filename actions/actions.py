@@ -432,7 +432,7 @@ class ActionFindPartner(BaseSwiperAction):
         dispatcher.utter_message(custom={
             'text': "Unfortunately, I couldn't find anyone in two minutes 😞\n"
                     "\n"
-                    "<b>Would you like me to try again?</b>",
+                    "<b>Would you like me to try searching again?</b>",
 
             'parse_mode': 'html',
             'reply_markup': '{"remove_keyboard":true}',
@@ -473,17 +473,17 @@ class ActionAskToJoin(BaseSwiperAction):
 
             if partner_photo_file_id:
                 utter_text = (
-                    f"Hey! {present_partner_name(partner_first_name, 'This person')} "
-                    f"is looking to chitchat with someone 🗣"
-                )
-            elif partner_first_name:
-                utter_text = (
-                    f"Hey! {present_partner_name(partner_first_name, 'Someone')} "  # the word 'Someone' won't be used
-                    f"is looking to chitchat with someone 🗣"
+                    f"{present_partner_name(partner_first_name, 'This person')} "
+                    f"is looking to chitchat 🗣\n"
+                    f"\n"
+                    f"<b>Would you like to join a video call?</b> 🎥 ☎️"
                 )
             else:
                 utter_text = (
-                    f"Hey! Someone is looking to chitchat 🗣"
+                    f"{present_partner_name(partner_first_name, 'Someone')} "
+                    f"is looking to chitchat 🗣\n"
+                    f"\n"
+                    f"<b>Would you like to join a video call?</b> 🎥 ☎️"
                 )
 
         elif latest_intent == EXTERNAL_ASK_TO_CONFIRM_INTENT:
@@ -494,12 +494,16 @@ class ActionAskToJoin(BaseSwiperAction):
             if partner_photo_file_id:
                 utter_text = (
                     f"Hey! {present_partner_name(partner_first_name, 'This person')} "
-                    f"is willing to chitchat <i>with you</i> 👈"
+                    f"wants to chitchat with you 👈\n"
+                    f"\n"
+                    f"<b>Are you ready for a video call?</b> 🎥 ☎️"
                 )
             else:
                 utter_text = (
                     f"Hey! {present_partner_name(partner_first_name, 'Someone')} "
-                    f"is willing to chitchat <i>with you</i> 👈"
+                    f"wants to chitchat with you 👈\n"
+                    f"\n"
+                    f"<b>Are you ready for a video call?</b> 🎥 ☎️"
                 )
 
         else:
@@ -507,12 +511,6 @@ class ActionAskToJoin(BaseSwiperAction):
                 f"{repr(self.name())} was triggered by an unexpected intent ({repr(latest_intent)}) - either "
                 f"{repr(EXTERNAL_ASK_TO_JOIN_INTENT)} or {repr(EXTERNAL_ASK_TO_CONFIRM_INTENT)} was expected"
             )
-
-        utter_text += (
-            '\n'
-            '\n'
-            '<b>Are you ready for a video call?</b> 🎥 ☎️'
-        )
 
         if partner_photo_file_id:
             custom_dict = {
@@ -529,8 +527,8 @@ class ActionAskToJoin(BaseSwiperAction):
             '{"keyboard":['
 
             '[{"text":"Yes"}],'
-            '[{"text":"No"}],'
-            '[{"text":"Someone else"}]'
+            '[{"text":"Not now"}],'
+            '[{"text":"Next person"}]'
 
             '],"resize_keyboard":true,"one_time_keyboard":true}'
         )
@@ -823,7 +821,13 @@ def utter_room_url(dispatcher: CollectingDispatcher, room_url: Text, after_confi
                 f"{room_url}",
 
         'parse_mode': 'html',
-        'reply_markup': '{"remove_keyboard":true}',
+        'reply_markup': (
+            '{"keyboard":['
+
+            '[{"text":"Stop the call"}]'
+
+            '],"resize_keyboard":true,"one_time_keyboard":true}'
+        ),
     })
 
 
