@@ -380,7 +380,7 @@ class ActionFindPartner(BaseSwiperAction):
             initiate_search = True
 
             dispatcher.utter_message(custom={
-                'text': 'Great! Let me find someone for you to chitchat with.\n'
+                'text': 'Great! Let me find someone for you to chitchat with 🗣\n'
                         '\n'
                         'I will get back to you within two minutes ⏳',
 
