@@ -514,9 +514,9 @@ class ActionAskToJoin(BaseSwiperAction):
         custom_dict['reply_markup'] = (
             '{"keyboard":['
 
-            '["text":"Yes, connect me"],'
-            '["text":"No"],'
-            '["text":"Someone else"]'
+            '[{"text":"Yes, connect me"}],'
+            '[{"text":"No"}],'
+            '[{"text":"Someone else"}]'
 
             '],"one_time_keyboard":true}'
         )
