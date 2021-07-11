@@ -462,26 +462,14 @@ class ActionAskToJoin(BaseSwiperAction):
             current_user.save()
 
             if partner_photo_file_id:
-                dispatcher.utter_message(custom={
-                    'photo': partner_photo_file_id,
-                    'caption': f"Hey! {present_partner_name(partner_first_name, 'Someone')} wants to chitchat 🗣\n"
-                               f"\n"
-                               f"<b>Are you ready for a video call?</b> 🎥 ☎️",
-
-                    'parse_mode': 'html',
-                    'reply_markup': '{"keyboard_remove":true}',
-                })
-
+                utter_text = (
+                    f"Hey! {present_partner_name(partner_first_name, 'Someone')} wants to chitchat 🗣"
+                )
             else:
-                dispatcher.utter_message(custom={
-                    'text': f"Hey! There is {present_partner_name(partner_first_name, 'someone')} "
-                            f"who wants to chitchat 🗣\n"
-                            f"\n"
-                            f"<b>Are you ready for a video call?</b> 🎥 ☎️",
-
-                    'parse_mode': 'html',
-                    'reply_markup': '{"keyboard_remove":true}',
-                })
+                utter_text = (
+                    f"Hey! There is {present_partner_name(partner_first_name, 'someone')} "
+                    f"who wants to chitchat 🗣"
+                )
 
         elif latest_intent == EXTERNAL_ASK_TO_CONFIRM_INTENT:
             # noinspection PyUnresolvedReferences
@@ -489,33 +477,42 @@ class ActionAskToJoin(BaseSwiperAction):
             current_user.save()
 
             if partner_photo_file_id:
-                dispatcher.utter_message(custom={
-                    'photo': partner_photo_file_id,
-                    'caption': f"Hooray! I have found {present_partner_name(partner_first_name, 'someone')} "
-                               f"who is willing to chitchat!\n"
-                               f"\n"
-                               f"<b>Are you ready for a video call?</b> 🎥 ☎️",
-
-                    'parse_mode': 'html',
-                    'reply_markup': '{"keyboard_remove":true}',
-                })
-
+                utter_text = (
+                    f"Hooray! I have found {present_partner_name(partner_first_name, 'someone')} "
+                    f"who is willing to chitchat!"
+                )
             else:
-                dispatcher.utter_message(custom={
-                    'text': f"Hooray! I have found {present_partner_name(partner_first_name, 'someone')} "
-                            f"who is willing to chitchat!\n"
-                            f"\n"
-                            f"<b>Are you ready for a video call?</b> 🎥 ☎️",
-
-                    'parse_mode': 'html',
-                    'reply_markup': '{"keyboard_remove":true}',
-                })
+                utter_text = (
+                    f"Hooray! I have found {present_partner_name(partner_first_name, 'someone')} "
+                    f"who is willing to chitchat!"
+                )
 
         else:
             raise SwiperError(
                 f"{repr(self.name())} was triggered by an unexpected intent ({repr(latest_intent)}) - either "
                 f"{repr(EXTERNAL_ASK_TO_JOIN_INTENT)} or {repr(EXTERNAL_ASK_TO_CONFIRM_INTENT)} was expected"
             )
+
+        utter_text += (
+            '\n'
+            '\n'
+            '<b>Are you ready for a video call?</b> 🎥 ☎️'
+        )
+
+        if partner_photo_file_id:
+            custom_dict = {
+                'photo': partner_photo_file_id,
+                'caption': utter_text,
+            }
+        else:
+            custom_dict = {
+                'text': utter_text,
+            }
+
+        custom_dict['parse_mode'] = 'html'
+        custom_dict['reply_markup'] = '{"keyboard_remove":true}'
+
+        dispatcher.utter_message(custom=custom_dict)
 
         return [
             SlotSet(
