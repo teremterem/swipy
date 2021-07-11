@@ -386,7 +386,7 @@ async def test_action_offer_chitchat(
             'custom': {
                 'text': expected_response_text,
                 'parse_mode': 'html',
-                'reply_markup': '{"keyboard_remove":true}',
+                'reply_markup': '{"remove_keyboard":true}',
             },
             'elements': [],
             'image': None,
@@ -554,7 +554,7 @@ async def test_action_find_partner(
             'custom': {
                 'text': UTTER_OK_ARRANGING_CHITCHAT_TEXT,
                 'parse_mode': 'html',
-                'reply_markup': '{"keyboard_remove":true}',
+                'reply_markup': '{"remove_keyboard":true}',
             },
             'elements': [],
             'image': None,
@@ -612,7 +612,7 @@ async def test_action_find_partner_no_one(
             'custom': {
                 'text': UTTER_OK_ARRANGING_CHITCHAT_TEXT,
                 'parse_mode': 'html',
-                'reply_markup': '{"keyboard_remove":true}',
+                'reply_markup': '{"remove_keyboard":true}',
             },
             'elements': [],
             'image': None,
@@ -840,7 +840,7 @@ async def test_action_accept_invitation_create_room(
         'custom': {
             'text': UTTER_ROOM_URL_TEXT,
             'parse_mode': 'html',
-            'reply_markup': '{"keyboard_remove":true}',
+            'reply_markup': '{"remove_keyboard":true}',
         },
         'elements': [],
         'image': None,
@@ -946,7 +946,7 @@ async def test_action_accept_invitation_confirm_with_asker(
         'custom': {
             'text': UTTER_CHECKING_IF_PARTNER_READY_TOO_TEXT,
             'parse_mode': 'html',
-            'reply_markup': '{"keyboard_remove":true}',
+            'reply_markup': '{"remove_keyboard":true}',
         },
         'elements': [],
         'image': None,
@@ -1037,7 +1037,7 @@ async def test_action_accept_invitation_partner_not_waiting(
         'custom': {
             'text': UTTER_PARTNER_ALREADY_GONE_TEXT,
             'parse_mode': 'html',
-            'reply_markup': '{"keyboard_remove":true}',
+            'reply_markup': '{"remove_keyboard":true}',
         },
         'elements': [],
         'image': None,
@@ -1191,7 +1191,7 @@ async def test_action_join_room(
             'custom': {
                 'text': UTTER_PARTNER_READY_ROOM_URL_TEXT,
                 'parse_mode': 'html',
-                'reply_markup': '{"keyboard_remove":true}',
+                'reply_markup': '{"remove_keyboard":true}',
             },
             'elements': [],
             'image': None,
@@ -1296,7 +1296,7 @@ async def test_action_do_not_disturb(
         'custom': {
             'text': UTTER_HOPE_TO_SEE_YOU_LATER_TEXT,
             'parse_mode': 'html',
-            'reply_markup': '{"keyboard_remove":true}',
+            'reply_markup': '{"remove_keyboard":true}',
         },
         'elements': [],
         'image': None,
@@ -1368,7 +1368,7 @@ async def test_action_reject_invitation(
             'custom': {
                 'text': UTTER_DECLINED_TEXT,
                 'parse_mode': 'html',
-                'reply_markup': '{"keyboard_remove":true}',
+                'reply_markup': '{"remove_keyboard":true}',
             },
             'elements': [],
             'image': None,
@@ -1481,7 +1481,7 @@ async def test_action_expire_partner_confirmation(
             'custom': {
                 'text': UTTER_PARTNER_ALREADY_GONE_TEXT,
                 'parse_mode': 'html',
-                'reply_markup': '{"keyboard_remove":true}',
+                'reply_markup': '{"remove_keyboard":true}',
             },
             'elements': [],
             'image': None,

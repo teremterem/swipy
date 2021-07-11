@@ -284,7 +284,7 @@ class ActionOfferChitchat(BaseSwiperAction):
                         '- I send both of you a video chat link.',
 
                 'parse_mode': 'html',
-                'reply_markup': '{"keyboard_remove":true}',
+                'reply_markup': '{"remove_keyboard":true}',
             })
         elif latest_intent == 'affirm':
             dispatcher.utter_message(custom={
@@ -293,7 +293,7 @@ class ActionOfferChitchat(BaseSwiperAction):
                         '<b>Are you agreeing to a video call with another person?</b>',
 
                 'parse_mode': 'html',
-                'reply_markup': '{"keyboard_remove":true}',
+                'reply_markup': '{"remove_keyboard":true}',
             })
         else:  # 'greet'
             dispatcher.utter_message(custom={
@@ -305,7 +305,7 @@ class ActionOfferChitchat(BaseSwiperAction):
                         '<b>Would you like to give it a try?</b>',
 
                 'parse_mode': 'html',
-                'reply_markup': '{"keyboard_remove":true}',
+                'reply_markup': '{"remove_keyboard":true}',
             })
 
         return [
@@ -375,7 +375,7 @@ class ActionFindPartner(BaseSwiperAction):
                         'I will get back to you <b>within two minutes</b> ⏳',
 
                 'parse_mode': 'html',
-                'reply_markup': '{"keyboard_remove":true}',
+                'reply_markup': '{"remove_keyboard":true}',
             })
 
             # noinspection PyUnresolvedReferences
@@ -425,7 +425,7 @@ class ActionFindPartner(BaseSwiperAction):
                     "<b>Would you like me to try again?</b>",
 
             'parse_mode': 'html',
-            'reply_markup': '{"keyboard_remove":true}',
+            'reply_markup': '{"remove_keyboard":true}',
         })
 
         return [
@@ -515,7 +515,7 @@ class ActionAskToJoin(BaseSwiperAction):
             '{"keyboard":['
 
             '[{"text":"Yes, connect me"}],'
-            '[{"text":"No"}],'
+            '[{"text":"No, not now"}],'
             '[{"text":"Someone else"}]'
 
             '],"one_time_keyboard":true}'
@@ -617,7 +617,7 @@ class ActionAcceptInvitation(BaseSwiperAction):
                     f"Please don't go anywhere - <b>this may take up to a minute</b> ⏳",
 
             'parse_mode': 'html',
-            'reply_markup': '{"keyboard_remove":true}',
+            'reply_markup': '{"remove_keyboard":true}',
         })
 
         return [
@@ -709,7 +709,7 @@ class ActionDoNotDisturb(BaseSwiperAction):
                     'just let me know - I will set up a video call 😉',
 
             'parse_mode': 'html',
-            'reply_markup': '{"keyboard_remove":true}',
+            'reply_markup': '{"remove_keyboard":true}',
         })
 
         return [
@@ -745,7 +745,7 @@ class ActionRejectInvitation(BaseSwiperAction):
                     'when you are more likely to join someone for chitchat over a video call?',
 
             'parse_mode': 'html',
-            'reply_markup': '{"keyboard_remove":true}',
+            'reply_markup': '{"remove_keyboard":true}',
         })
 
         return [
@@ -809,7 +809,7 @@ def utter_room_url(dispatcher: CollectingDispatcher, room_url: Text, after_confi
                 f"{room_url}",
 
         'parse_mode': 'html',
-        'reply_markup': '{"keyboard_remove":true}',
+        'reply_markup': '{"remove_keyboard":true}',
     })
 
 
@@ -823,7 +823,7 @@ def utter_partner_already_gone(dispatcher: CollectingDispatcher, partner_first_n
                 f"and will get back to you <b>within two minutes</b> ⏳",
 
         'parse_mode': 'html',
-        'reply_markup': '{"keyboard_remove":true}',
+        'reply_markup': '{"remove_keyboard":true}',
     })
 
 

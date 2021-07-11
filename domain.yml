@@ -121,7 +121,7 @@ responses:
   utter_iamabot:
   - custom:
       parse_mode: html
-      reply_markup: '{"keyboard_remove":true}'
+      reply_markup: '{"remove_keyboard":true}'
       text: I'm an AI-powered chatbot 🤖
 actions:
 - action_session_start
