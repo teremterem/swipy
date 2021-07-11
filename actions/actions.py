@@ -63,7 +63,7 @@ OK_CANCEL_MARKUP = (
     '[{"text":"Ok"}],'
     '[{"text":"Cancel"}]'
 
-    '],"one_time_keyboard":true,"resize_keyboard":true}'
+    '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
 
 
@@ -532,7 +532,7 @@ class ActionAskToJoin(BaseSwiperAction):
             '[{"text":"No"}],'
             '[{"text":"Someone else"}]'
 
-            '],"one_time_keyboard":true}'
+            '],"resize_keyboard":true,"one_time_keyboard":true}'
         )
 
         dispatcher.utter_message(custom=custom_dict)
@@ -631,7 +631,7 @@ class ActionAcceptInvitation(BaseSwiperAction):
                     f"Please don't go anywhere - <b>this may take up to a minute</b> ⏳",
 
             'parse_mode': 'html',
-            'reply_markup': '{"remove_keyboard":true}',
+            'reply_markup': OK_CANCEL_MARKUP,
         })
 
         return [
