@@ -546,28 +546,12 @@ class ActionAcceptInvitation(BaseSwiperAction):
 
             elif partner.chitchat_can_be_offered():
                 # confirm with the partner before creating any rooms
-                return await self.confirm_with_asker(dispatcher, current_user, partner)
+                return await self.confirm_with_partner(dispatcher, current_user, partner)
 
         except SwiperRasaCallbackError:
             logger.exception('FAILED TO ACCEPT INVITATION')
 
-        # noinspection PyUnresolvedReferences
-        current_user.request_chitchat()
-        current_user.save()
-
-        utter_partner_already_gone(dispatcher, partner.get_first_name())
-
-        return [
-            SlotSet(
-                key=SWIPER_ACTION_RESULT_SLOT,
-                value=SwiperActionResult.PARTNER_NOT_WAITING_ANYMORE,
-            ),
-            *schedule_find_partner_reminder(
-                current_user.user_id,
-                delta_sec=FIND_PARTNER_FOLLOWUP_DELAY_SEC,
-                initiate=True,
-            ),
-        ]
+        return self.partner_gone_start_search(dispatcher, current_user, partner)
 
     @staticmethod
     async def create_room(
@@ -598,7 +582,7 @@ class ActionAcceptInvitation(BaseSwiperAction):
         ]
 
     @staticmethod
-    async def confirm_with_asker(
+    async def confirm_with_partner(
             dispatcher: CollectingDispatcher,
             current_user: UserStateMachine,
             partner: UserStateMachine,
@@ -633,6 +617,30 @@ class ActionAcceptInvitation(BaseSwiperAction):
                 value=SwiperActionResult.PARTNER_HAS_BEEN_ASKED,
             ),
             *schedule_expire_partner_confirmation(current_user.user_id),
+        ]
+
+    @staticmethod
+    def partner_gone_start_search(
+            dispatcher: CollectingDispatcher,
+            current_user: UserStateMachine,
+            partner: UserStateMachine,
+    ) -> List[Dict[Text, Any]]:
+        # noinspection PyUnresolvedReferences
+        current_user.request_chitchat()
+        current_user.save()
+
+        utter_partner_already_gone(dispatcher, partner.get_first_name())
+
+        return [
+            SlotSet(
+                key=SWIPER_ACTION_RESULT_SLOT,
+                value=SwiperActionResult.PARTNER_NOT_WAITING_ANYMORE,
+            ),
+            *schedule_find_partner_reminder(
+                current_user.user_id,
+                delta_sec=FIND_PARTNER_FOLLOWUP_DELAY_SEC,
+                initiate=True,
+            ),
         ]
 
 
