@@ -69,7 +69,7 @@ I am already looking for someone else to connect you with \
 and will get back to you within two minutes ⏳"""
 
 UTTER_FIRST_NAME_ALREADY_GONE_TEXT = """\
-<b><i>unitTest firstName</i></b> has become unavailable 😵
+<b><i>unitTest firstName10</i></b> has become unavailable 😵
 
 Fear not!
 
@@ -82,7 +82,7 @@ Just a moment, I'm checking if that person is ready too...
 Please don't go anywhere - <b>this may take up to a minute</b> ⏳"""
 
 UTTER_CHECKING_IF_FIRST_NAME_READY_TOO_TEXT = """\
-Just a moment, I'm checking if <b><i>unitTest firstName</i></b> is ready too...
+Just a moment, I'm checking if <b><i>unitTest firstName20</i></b> is ready too...
 
 Please don't go anywhere - <b>this may take up to a minute</b> ⏳"""
 
@@ -97,7 +97,7 @@ Hey! This person is looking to chitchat 🗣
 <b>Would you like to join a video call?</b> 🎥 ☎️"""
 
 UTTER_ASK_TO_JOIN_FIRST_NAME_TEXT = """\
-Hey! <b><i>unitTest firstName</i></b> is looking to chitchat 🗣
+Hey! <b><i>unitTest firstName30</i></b> is looking to chitchat 🗣
 
 <b>Would you like to join a video call?</b> 🎥 ☎️"""
 
@@ -112,7 +112,7 @@ Hey! This person wants to chitchat with <b>you</b> 👈
 <b>Are you ready for a video call?</b> 🎥 ☎️"""
 
 UTTER_ASK_TO_CONFIRM_FIRST_NAME_TEXT = """\
-Hey! <b><i>unitTest firstName</i></b> wants to chitchat with <b>you</b> 👈
+Hey! <b><i>unitTest firstName30</i></b> wants to chitchat with <b>you</b> 👈
 
 <b>Are you ready for a video call?</b> 🎥 ☎️"""
 
@@ -790,7 +790,7 @@ async def test_action_ask_to_join(
         ])
     if set_name_slot:
         tracker.add_slots([
-            SlotSet('partner_first_name', 'unitTest firstName'),
+            SlotSet('partner_first_name', 'unitTest firstName30'),
         ])
 
     action = actions.ActionAskToJoin()
@@ -986,7 +986,7 @@ async def test_action_accept_invitation_create_room(
                 user_id='an_asker',
                 state='wants_chitchat',
                 partner_id=None,
-                telegram_from={'first_name': 'unitTest firstName'},
+                telegram_from={'first_name': 'unitTest firstName20'},
             ),
             UTTER_CHECKING_IF_FIRST_NAME_READY_TOO_TEXT,
     ),
@@ -1108,7 +1108,7 @@ async def test_action_accept_invitation_confirm_with_asker(
                 user_id='an_asker',
                 state='new',
                 partner_id='unit_test_user',
-                telegram_from={'first_name': 'unitTest firstName'},
+                telegram_from={'first_name': 'unitTest firstName10'},
             ),
             UTTER_FIRST_NAME_ALREADY_GONE_TEXT,
     ),
@@ -1591,7 +1591,7 @@ async def test_action_expire_partner_confirmation(
     ))
     user_vault.save(UserStateMachine(
         user_id='some_partner_id',
-        telegram_from={'first_name': 'unitTest firstName'} if partner_has_name else {},
+        telegram_from={'first_name': 'unitTest firstName10'} if partner_has_name else {},
     ))
 
     action = actions.ActionExpirePartnerConfirmation()
