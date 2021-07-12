@@ -83,6 +83,11 @@ Hey! This person is looking to chitchat 🗣
 
 <b>Would you like to join a video call?</b> 🎥 ☎️"""
 
+UTTER_ASK_TO_JOIN_FIRST_NAME_TEXT = """\
+Hey! <b><i>UnitTest FirstName</i></b> is looking to chitchat 🗣
+
+<b>Would you like to join a video call?</b> 🎥 ☎️"""
+
 UTTER_ASK_TO_CONFIRM_SOMEONE_TEXT = """\
 Hey! Someone wants to chitchat with <b>you</b> 👈
 
@@ -90,6 +95,11 @@ Hey! Someone wants to chitchat with <b>you</b> 👈
 
 UTTER_ASK_TO_CONFIRM_THIS_PERSON_TEXT = """\
 Hey! This person wants to chitchat with <b>you</b> 👈
+
+<b>Are you ready for a video call?</b> 🎥 ☎️"""
+
+UTTER_ASK_TO_CONFIRM_FIRST_NAME_TEXT = """\
+Hey! <b><i>UnitTest FirstName</i></b> wants to chitchat with <b>you</b> 👈
 
 <b>Are you ready for a video call?</b> 🎥 ☎️"""
 
@@ -709,24 +719,30 @@ async def test_action_find_partner_no_one(
 @patch('time.time', Mock(return_value=1619945501))
 @patch('uuid.uuid4', Mock(return_value=uuid.UUID('aaaabbbb-cccc-dddd-eeee-ffff11112222')))
 @pytest.mark.parametrize(
-    'source_swiper_state, latest_intent, destination_swiper_state, set_photo_slot, expected_response_text',
+    'source_swiper_state, latest_intent, destination_swiper_state, set_photo_slot, set_name_slot, '
+    'expected_response_text',
     [
-        ('roomed', 'EXTERNAL_ask_to_join', 'asked_to_join', True, UTTER_ASK_TO_JOIN_THIS_PERSON_TEXT),
-        ('roomed', 'EXTERNAL_ask_to_join', 'asked_to_join', False, UTTER_ASK_TO_JOIN_SOMEONE_TEXT),
-        ('roomed', 'EXTERNAL_ask_to_confirm', 'asked_to_confirm', True, UTTER_ASK_TO_CONFIRM_THIS_PERSON_TEXT),
-        ('roomed', 'EXTERNAL_ask_to_confirm', 'asked_to_confirm', False, UTTER_ASK_TO_CONFIRM_SOMEONE_TEXT),
-        ('roomed', 'some_irrelevant_intent', None, True, None),
-        ('roomed', None, None, True, None),
+        ('roomed', 'EXTERNAL_ask_to_join', 'asked_to_join', True, True, UTTER_ASK_TO_JOIN_FIRST_NAME_TEXT),
+        ('roomed', 'EXTERNAL_ask_to_join', 'asked_to_join', False, True, UTTER_ASK_TO_JOIN_FIRST_NAME_TEXT),
+        ('roomed', 'EXTERNAL_ask_to_join', 'asked_to_join', True, False, UTTER_ASK_TO_JOIN_THIS_PERSON_TEXT),
+        ('roomed', 'EXTERNAL_ask_to_join', 'asked_to_join', False, False, UTTER_ASK_TO_JOIN_SOMEONE_TEXT),
+        ('roomed', 'EXTERNAL_ask_to_confirm', 'asked_to_confirm', True, True, UTTER_ASK_TO_CONFIRM_FIRST_NAME_TEXT),
+        ('roomed', 'EXTERNAL_ask_to_confirm', 'asked_to_confirm', False, True, UTTER_ASK_TO_CONFIRM_FIRST_NAME_TEXT),
+        ('roomed', 'EXTERNAL_ask_to_confirm', 'asked_to_confirm', True, False, UTTER_ASK_TO_CONFIRM_THIS_PERSON_TEXT),
+        ('roomed', 'EXTERNAL_ask_to_confirm', 'asked_to_confirm', False, False, UTTER_ASK_TO_CONFIRM_SOMEONE_TEXT),
+        ('roomed', 'some_irrelevant_intent', None, True, True, None),
+        ('roomed', None, None, True, True, None),
 
-        ('new', 'EXTERNAL_ask_to_join', 'asked_to_join', False, UTTER_ASK_TO_JOIN_SOMEONE_TEXT),
-        ('wants_chitchat', 'EXTERNAL_ask_to_join', 'asked_to_join', False, UTTER_ASK_TO_JOIN_SOMEONE_TEXT),
-        ('ok_to_chitchat', 'EXTERNAL_ask_to_join', 'asked_to_join', False, UTTER_ASK_TO_JOIN_SOMEONE_TEXT),
-        ('waiting_partner_confirm', 'EXTERNAL_ask_to_join', 'asked_to_join', False, UTTER_ASK_TO_JOIN_SOMEONE_TEXT),
-        ('asked_to_join', 'EXTERNAL_ask_to_join', 'asked_to_join', False, UTTER_ASK_TO_JOIN_SOMEONE_TEXT),
-        ('asked_to_confirm', 'EXTERNAL_ask_to_join', 'asked_to_join', False, UTTER_ASK_TO_JOIN_SOMEONE_TEXT),
-        ('rejected_join', 'EXTERNAL_ask_to_join', 'asked_to_join', False, UTTER_ASK_TO_JOIN_SOMEONE_TEXT),
-        ('rejected_confirm', 'EXTERNAL_ask_to_join', 'asked_to_join', False, UTTER_ASK_TO_JOIN_SOMEONE_TEXT),
-        ('do_not_disturb', 'EXTERNAL_ask_to_join', 'asked_to_join', False, UTTER_ASK_TO_JOIN_SOMEONE_TEXT),
+        ('new', 'EXTERNAL_ask_to_join', 'asked_to_join', False, False, UTTER_ASK_TO_JOIN_SOMEONE_TEXT),
+        ('wants_chitchat', 'EXTERNAL_ask_to_join', 'asked_to_join', False, False, UTTER_ASK_TO_JOIN_SOMEONE_TEXT),
+        ('ok_to_chitchat', 'EXTERNAL_ask_to_join', 'asked_to_join', False, False, UTTER_ASK_TO_JOIN_SOMEONE_TEXT),
+        ('waiting_partner_confirm', 'EXTERNAL_ask_to_join', 'asked_to_join', False, False,
+         UTTER_ASK_TO_JOIN_SOMEONE_TEXT),
+        ('asked_to_join', 'EXTERNAL_ask_to_join', 'asked_to_join', False, False, UTTER_ASK_TO_JOIN_SOMEONE_TEXT),
+        ('asked_to_confirm', 'EXTERNAL_ask_to_join', 'asked_to_join', False, False, UTTER_ASK_TO_JOIN_SOMEONE_TEXT),
+        ('rejected_join', 'EXTERNAL_ask_to_join', 'asked_to_join', False, False, UTTER_ASK_TO_JOIN_SOMEONE_TEXT),
+        ('rejected_confirm', 'EXTERNAL_ask_to_join', 'asked_to_join', False, False, UTTER_ASK_TO_JOIN_SOMEONE_TEXT),
+        ('do_not_disturb', 'EXTERNAL_ask_to_join', 'asked_to_join', False, False, UTTER_ASK_TO_JOIN_SOMEONE_TEXT),
     ],
 )
 async def test_action_ask_to_join(
@@ -738,6 +754,7 @@ async def test_action_ask_to_join(
         latest_intent: Text,
         destination_swiper_state: Optional[Text],
         set_photo_slot: bool,
+        set_name_slot: bool,
         expected_response_text: Optional[Text],
 ) -> None:
     user_vault = UserVault()
@@ -757,6 +774,10 @@ async def test_action_ask_to_join(
     if set_photo_slot:
         tracker.add_slots([
             SlotSet('partner_photo_file_id', 'some photo file id'),
+        ])
+    if set_name_slot:
+        tracker.add_slots([
+            SlotSet('partner_first_name', 'UnitTest FirstName'),
         ])
 
     action = actions.ActionAskToJoin()
