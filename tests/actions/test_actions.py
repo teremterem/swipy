@@ -66,7 +66,7 @@ That person has become unavailable 😵
 Fear not!
 
 I am already looking for someone else to connect you with \
-and will get back to you <b>within two minutes</b> ⏳"""
+and will get back to you within two minutes ⏳"""
 
 UTTER_CHECKING_IF_PARTNER_READY_TOO_TEXT = """\
 Just a moment, I'm checking if that person is ready too...
@@ -1470,7 +1470,7 @@ async def test_action_expire_partner_confirmation(
     user_vault.save(UserStateMachine(
         user_id='unit_test_user',
         state=source_swiper_state,
-        partner_id='',
+        partner_id='some_partner_id',
         newbie=True,
     ))
 
@@ -1493,7 +1493,7 @@ async def test_action_expire_partner_confirmation(
                 'timestamp': None,
             },
             SlotSet('swiper_state', source_swiper_state),
-            SlotSet('partner_id', ''),
+            SlotSet('partner_id', 'some_partner_id'),
         ]
         assert dispatcher.messages == [{
             'attachment': None,
@@ -1501,7 +1501,7 @@ async def test_action_expire_partner_confirmation(
             'custom': {
                 'text': UTTER_PARTNER_ALREADY_GONE_TEXT,
                 'parse_mode': 'html',
-                'reply_markup': REMOVE_KEYBOARD_MARKUP,
+                'reply_markup': OK_WAITING_CANCEL_MARKUP,
             },
             'elements': [],
             'image': None,
@@ -1514,7 +1514,7 @@ async def test_action_expire_partner_confirmation(
         assert actual_events == [
             UserUtteranceReverted(),
             SlotSet('swiper_state', source_swiper_state),
-            SlotSet('partner_id', ''),
+            SlotSet('partner_id', 'some_partner_id'),
         ]
         assert dispatcher.messages == []
 
@@ -1522,6 +1522,6 @@ async def test_action_expire_partner_confirmation(
     assert user_vault.get_user('unit_test_user') == UserStateMachine(  # the state of current user has not changed
         user_id='unit_test_user',
         state=source_swiper_state,
-        partner_id='',
+        partner_id='some_partner_id',
         newbie=True,
     )
