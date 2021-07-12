@@ -60,8 +60,16 @@ Done!
 
 https://swipy.daily.co/anothertestroom"""
 
-UTTER_PARTNER_ALREADY_GONE_TEXT = """\
+UTTER_THAT_PERSON_ALREADY_GONE_TEXT = """\
 That person has become unavailable 😵
+
+Fear not!
+
+I am already looking for someone else to connect you with \
+and will get back to you within two minutes ⏳"""
+
+UTTER_FIRST_NAME_ALREADY_GONE_TEXT = """\
+<b><i>unitTest firstName</i></b> has become unavailable 😵
 
 Fear not!
 
@@ -74,7 +82,7 @@ Just a moment, I'm checking if that person is ready too...
 Please don't go anywhere - <b>this may take up to a minute</b> ⏳"""
 
 UTTER_CHECKING_IF_FIRST_NAME_READY_TOO_TEXT = """\
-Just a moment, I'm checking if <b><i>UnitTest FirstName</i></b> is ready too...
+Just a moment, I'm checking if <b><i>unitTest firstName</i></b> is ready too...
 
 Please don't go anywhere - <b>this may take up to a minute</b> ⏳"""
 
@@ -89,7 +97,7 @@ Hey! This person is looking to chitchat 🗣
 <b>Would you like to join a video call?</b> 🎥 ☎️"""
 
 UTTER_ASK_TO_JOIN_FIRST_NAME_TEXT = """\
-Hey! <b><i>UnitTest FirstName</i></b> is looking to chitchat 🗣
+Hey! <b><i>unitTest firstName</i></b> is looking to chitchat 🗣
 
 <b>Would you like to join a video call?</b> 🎥 ☎️"""
 
@@ -104,7 +112,7 @@ Hey! This person wants to chitchat with <b>you</b> 👈
 <b>Are you ready for a video call?</b> 🎥 ☎️"""
 
 UTTER_ASK_TO_CONFIRM_FIRST_NAME_TEXT = """\
-Hey! <b><i>UnitTest FirstName</i></b> wants to chitchat with <b>you</b> 👈
+Hey! <b><i>unitTest firstName</i></b> wants to chitchat with <b>you</b> 👈
 
 <b>Are you ready for a video call?</b> 🎥 ☎️"""
 
@@ -782,7 +790,7 @@ async def test_action_ask_to_join(
         ])
     if set_name_slot:
         tracker.add_slots([
-            SlotSet('partner_first_name', 'UnitTest FirstName'),
+            SlotSet('partner_first_name', 'unitTest firstName'),
         ])
 
     action = actions.ActionAskToJoin()
@@ -978,7 +986,7 @@ async def test_action_accept_invitation_create_room(
                 user_id='an_asker',
                 state='wants_chitchat',
                 partner_id=None,
-                telegram_from={'first_name': 'UnitTest FirstName'},
+                telegram_from={'first_name': 'unitTest firstName'},
             ),
             UTTER_CHECKING_IF_FIRST_NAME_READY_TOO_TEXT,
     ),
@@ -1094,16 +1102,32 @@ async def test_action_accept_invitation_confirm_with_asker(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize('partner', [
-    UserStateMachine(
-        user_id='an_asker',
-        state='new',
-        partner_id='unit_test_user',
+@pytest.mark.parametrize('partner, expected_response_text', [
+    (
+            UserStateMachine(
+                user_id='an_asker',
+                state='new',
+                partner_id='unit_test_user',
+                telegram_from={'first_name': 'unitTest firstName'},
+            ),
+            UTTER_FIRST_NAME_ALREADY_GONE_TEXT,
     ),
-    UserStateMachine(
-        user_id='an_asker',
-        state='do_not_disturb',
-        partner_id='unit_test_user',
+    (
+            UserStateMachine(
+                user_id='an_asker',
+                state='new',
+                partner_id='unit_test_user',
+                telegram_from={'first_name': ''},
+            ),
+            UTTER_THAT_PERSON_ALREADY_GONE_TEXT,
+    ),
+    (
+            UserStateMachine(
+                user_id='an_asker',
+                state='do_not_disturb',
+                partner_id='unit_test_user',
+            ),
+            UTTER_THAT_PERSON_ALREADY_GONE_TEXT,
     ),
 ])
 @pytest.mark.usefixtures('create_user_state_machine_table', 'wrap_actions_datetime_now')
@@ -1114,6 +1138,7 @@ async def test_action_accept_invitation_partner_not_waiting(
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
         partner: UserStateMachine,
+        expected_response_text: Text,
 ) -> None:
     user_vault = UserVault()
     user_vault.save(partner)
@@ -1142,7 +1167,7 @@ async def test_action_accept_invitation_partner_not_waiting(
         'attachment': None,
         'buttons': [],
         'custom': {
-            'text': UTTER_PARTNER_ALREADY_GONE_TEXT,
+            'text': expected_response_text,
             'parse_mode': 'html',
             'reply_markup': OK_WAITING_CANCEL_MARKUP,
         },
