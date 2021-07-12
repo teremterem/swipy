@@ -73,6 +73,26 @@ Just a moment, I'm checking if that person is ready too...
 
 Please don't go anywhere - <b>this may take up to a minute</b> ⏳"""
 
+UTTER_ASK_TO_JOIN_SOMEONE_TEXT = """\
+Hey! Someone is looking to chitchat 🗣
+
+<b>Would you like to join a video call?</b> 🎥 ☎️"""
+
+UTTER_ASK_TO_JOIN_THIS_PERSON_TEXT = """\
+Hey! This person is looking to chitchat 🗣
+
+<b>Would you like to join a video call?</b> 🎥 ☎️"""
+
+UTTER_ASK_TO_CONFIRM_SOMEONE_TEXT = """\
+Hey! Someone wants to chitchat with <b>you</b> 👈
+
+<b>Are you ready for a video call?</b> 🎥 ☎️"""
+
+UTTER_ASK_TO_CONFIRM_THIS_PERSON_TEXT = """\
+Hey! This person wants to chitchat with <b>you</b> 👈
+
+<b>Are you ready for a video call?</b> 🎥 ☎️"""
+
 UTTER_HOPE_TO_SEE_YOU_LATER_TEXT = """\
 Ok, I will not bother you 🛑
 
@@ -86,6 +106,7 @@ May I ask you if there is any specific time or times of day (maybe days of week)
 when you are more likely to join someone for chitchat over a video call?"""
 
 REMOVE_KEYBOARD_MARKUP = '{"remove_keyboard":true}'
+
 OK_WAITING_CANCEL_MARKUP = (
     '{"keyboard":['
 
@@ -95,6 +116,16 @@ OK_WAITING_CANCEL_MARKUP = (
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
 CANCEL_MARKUP = '{"keyboard":[[{"text":"Cancel"}]],"resize_keyboard":true,"one_time_keyboard":true}'
+
+YES_NOT_NOW_NEXT_PERSON_MARKUP = (
+    '{"keyboard":['
+
+    '[{"text":"Yes"}],'
+    '[{"text":"Not now"}],'
+    '[{"text":"Next person"}]'
+
+    '],"resize_keyboard":true,"one_time_keyboard":true}'
+)
 
 
 @pytest.mark.asyncio
@@ -678,24 +709,24 @@ async def test_action_find_partner_no_one(
 @patch('time.time', Mock(return_value=1619945501))
 @patch('uuid.uuid4', Mock(return_value=uuid.UUID('aaaabbbb-cccc-dddd-eeee-ffff11112222')))
 @pytest.mark.parametrize(
-    'source_swiper_state, latest_intent, destination_swiper_state, set_photo_slot, expected_response_template',
+    'source_swiper_state, latest_intent, destination_swiper_state, set_photo_slot, expected_response_text',
     [
-        ('roomed', 'EXTERNAL_ask_to_join', 'asked_to_join', True, 'utter_someone_wants_to_chat_photo'),
-        ('roomed', 'EXTERNAL_ask_to_join', 'asked_to_join', False, 'utter_someone_wants_to_chat'),
-        ('roomed', 'EXTERNAL_ask_to_confirm', 'asked_to_confirm', True, 'utter_found_someone_check_ready_photo'),
-        ('roomed', 'EXTERNAL_ask_to_confirm', 'asked_to_confirm', False, 'utter_found_someone_check_ready'),
+        ('roomed', 'EXTERNAL_ask_to_join', 'asked_to_join', True, UTTER_ASK_TO_JOIN_THIS_PERSON_TEXT),
+        ('roomed', 'EXTERNAL_ask_to_join', 'asked_to_join', False, UTTER_ASK_TO_JOIN_SOMEONE_TEXT),
+        ('roomed', 'EXTERNAL_ask_to_confirm', 'asked_to_confirm', True, UTTER_ASK_TO_CONFIRM_THIS_PERSON_TEXT),
+        ('roomed', 'EXTERNAL_ask_to_confirm', 'asked_to_confirm', False, UTTER_ASK_TO_CONFIRM_SOMEONE_TEXT),
         ('roomed', 'some_irrelevant_intent', None, True, None),
         ('roomed', None, None, True, None),
 
-        ('new', 'EXTERNAL_ask_to_join', 'asked_to_join', False, 'utter_someone_wants_to_chat'),
-        ('wants_chitchat', 'EXTERNAL_ask_to_join', 'asked_to_join', False, 'utter_someone_wants_to_chat'),
-        ('ok_to_chitchat', 'EXTERNAL_ask_to_join', 'asked_to_join', False, 'utter_someone_wants_to_chat'),
-        ('waiting_partner_confirm', 'EXTERNAL_ask_to_join', 'asked_to_join', False, 'utter_someone_wants_to_chat'),
-        ('asked_to_join', 'EXTERNAL_ask_to_join', 'asked_to_join', False, 'utter_someone_wants_to_chat'),
-        ('asked_to_confirm', 'EXTERNAL_ask_to_join', 'asked_to_join', False, 'utter_someone_wants_to_chat'),
-        ('rejected_join', 'EXTERNAL_ask_to_join', 'asked_to_join', False, 'utter_someone_wants_to_chat'),
-        ('rejected_confirm', 'EXTERNAL_ask_to_join', 'asked_to_join', False, 'utter_someone_wants_to_chat'),
-        ('do_not_disturb', 'EXTERNAL_ask_to_join', 'asked_to_join', False, 'utter_someone_wants_to_chat'),
+        ('new', 'EXTERNAL_ask_to_join', 'asked_to_join', False, UTTER_ASK_TO_JOIN_SOMEONE_TEXT),
+        ('wants_chitchat', 'EXTERNAL_ask_to_join', 'asked_to_join', False, UTTER_ASK_TO_JOIN_SOMEONE_TEXT),
+        ('ok_to_chitchat', 'EXTERNAL_ask_to_join', 'asked_to_join', False, UTTER_ASK_TO_JOIN_SOMEONE_TEXT),
+        ('waiting_partner_confirm', 'EXTERNAL_ask_to_join', 'asked_to_join', False, UTTER_ASK_TO_JOIN_SOMEONE_TEXT),
+        ('asked_to_join', 'EXTERNAL_ask_to_join', 'asked_to_join', False, UTTER_ASK_TO_JOIN_SOMEONE_TEXT),
+        ('asked_to_confirm', 'EXTERNAL_ask_to_join', 'asked_to_join', False, UTTER_ASK_TO_JOIN_SOMEONE_TEXT),
+        ('rejected_join', 'EXTERNAL_ask_to_join', 'asked_to_join', False, UTTER_ASK_TO_JOIN_SOMEONE_TEXT),
+        ('rejected_confirm', 'EXTERNAL_ask_to_join', 'asked_to_join', False, UTTER_ASK_TO_JOIN_SOMEONE_TEXT),
+        ('do_not_disturb', 'EXTERNAL_ask_to_join', 'asked_to_join', False, UTTER_ASK_TO_JOIN_SOMEONE_TEXT),
     ],
 )
 async def test_action_ask_to_join(
@@ -707,7 +738,7 @@ async def test_action_ask_to_join(
         latest_intent: Text,
         destination_swiper_state: Optional[Text],
         set_photo_slot: bool,
-        expected_response_template: Optional[Text],
+        expected_response_text: Optional[Text],
 ) -> None:
     user_vault = UserVault()
     user_vault.save(UserStateMachine(
@@ -738,18 +769,29 @@ async def test_action_ask_to_join(
             SlotSet('swiper_state', destination_swiper_state),
         ]
 
+        if set_photo_slot:
+            custom_dict = {
+                'photo': 'some photo file id',
+                'caption': expected_response_text,
+                'parse_mode': 'html',
+                'reply_markup': YES_NOT_NOW_NEXT_PERSON_MARKUP,
+            }
+        else:
+            custom_dict = {
+                'text': expected_response_text,
+                'parse_mode': 'html',
+                'reply_markup': YES_NOT_NOW_NEXT_PERSON_MARKUP,
+            }
         expected_response = {
             'attachment': None,
             'buttons': [],
-            'custom': {},
+            'custom': custom_dict,
             'elements': [],
             'image': None,
-            'response': expected_response_template,
-            'template': expected_response_template,
+            'response': None,
+            'template': None,
             'text': None,
         }
-        if set_photo_slot:
-            expected_response['partner_photo_file_id'] = 'some photo file id'
 
     else:  # an error is expected (and hence we do not expect swiper state to change)
         assert actual_events == [
@@ -794,7 +836,7 @@ async def test_action_ask_to_join(
             state_timeout_ts=1619945501 + (60 * 60 * 5),
             state_timeout_ts_str='2021-05-02 13:51:41 Z',
         )
-        wrap_random_randint.assert_called_once_with(60 * 60 * 4, 60 * 60 * (24 * 2 - 5))
+        wrap_random_randint.assert_called_once_with(60 * 60 * 4, 60 * 60 * (24 * 3 - 5))
 
     else:  # an error is expected (and hence we do not expect swiper state to change)
         assert user_vault.get_user('unit_test_user') == UserStateMachine(
