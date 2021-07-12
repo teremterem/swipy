@@ -1,4 +1,5 @@
 import datetime
+import html
 import logging
 import os
 from abc import ABC, abstractmethod
@@ -26,7 +27,7 @@ TELL_USER_ABOUT_ERRORS = strtobool(os.getenv('TELL_USER_ABOUT_ERRORS', 'yes'))
 SEND_ERROR_STACK_TRACE_TO_SLOT = strtobool(os.getenv('SEND_ERROR_STACK_TRACE_TO_SLOT', 'yes'))
 FIND_PARTNER_FREQUENCY_SEC = float(os.getenv('FIND_PARTNER_FREQUENCY_SEC', '5'))
 FIND_PARTNER_FOLLOWUP_DELAY_SEC = float(os.getenv('FIND_PARTNER_FOLLOWUP_DELAY_SEC', '2'))
-PARTNER_SEARCH_TIMEOUT_SEC = int(os.getenv('PARTNER_SEARCH_TIMEOUT_SEC', '120'))  # 2 minutes
+PARTNER_SEARCH_TIMEOUT_SEC = int(os.getenv('PARTNER_SEARCH_TIMEOUT_SEC', '112'))  # 1 minute 52 seconds
 GREETING_MAKES_USER_OK_TO_CHITCHAT = strtobool(os.getenv('GREETING_MAKES_USER_OK_TO_CHITCHAT', 'no'))
 
 SWIPER_STATE_SLOT = 'swiper_state'
@@ -54,6 +55,17 @@ class SwiperActionResult:
 
     SUCCESS = 'success'
     ERROR = 'error'
+
+
+REMOVE_KEYBOARD_MARKUP = '{"remove_keyboard":true}'
+OK_WAITING_CANCEL_MARKUP = (
+    '{"keyboard":['
+
+    '[{"text":"Ok, waiting"}],'
+    '[{"text":"Cancel"}]'
+
+    '],"resize_keyboard":true,"one_time_keyboard":true}'
+)
 
 
 class BaseSwiperAction(Action, ABC):
@@ -151,7 +163,7 @@ class BaseSwiperAction(Action, ABC):
                 ))
 
             if TELL_USER_ABOUT_ERRORS:
-                dispatcher.utter_message(response='utter_error')
+                dispatcher.utter_message(text='Ouch! Something went wrong 🤖')
 
         else:
             if tracker.get_slot(SWIPER_ERROR_SLOT) is not None:
@@ -273,11 +285,39 @@ class ActionOfferChitchat(BaseSwiperAction):
 
         latest_intent = tracker.get_intent_of_latest_message()
         if latest_intent == 'how_it_works':
-            dispatcher.utter_message(response='utter_how_it_works')
+            dispatcher.utter_message(custom={
+                'text': 'I can arrange video chitchat with another human for you 🎥 🗣 ☎️\n'
+                        '\n'
+                        'Here is how it works:\n'
+                        '\n'
+                        '- I find someone who also wants to chitchat.\n'
+                        '- I confirm with you and them that you are both ready.\n'
+                        '- I send both of you a video chat link.',
+
+                'parse_mode': 'html',
+                'reply_markup': REMOVE_KEYBOARD_MARKUP,
+            })
         elif latest_intent == 'affirm':
-            dispatcher.utter_message(response='utter_lost_track_of_conversation')
+            dispatcher.utter_message(custom={
+                'text': 'Please forgive me for losing track of our conversation 🤖\n'
+                        '\n'
+                        '<b>Are you agreeing to a video call with another person?</b>',
+
+                'parse_mode': 'html',
+                'reply_markup': REMOVE_KEYBOARD_MARKUP,
+            })
         else:  # 'greet'
-            dispatcher.utter_message(response='utter_greet_offer_chitchat')
+            dispatcher.utter_message(custom={
+                'text': 'Hi, my name is Swipy 🙂\n'
+                        '\n'
+                        'I can connect you with a stranger in a video chat '
+                        'so you could practice your English speaking skills 🇬🇧\n'
+                        '\n'
+                        '<b>Would you like to give it a try?</b>',
+
+                'parse_mode': 'html',
+                'reply_markup': REMOVE_KEYBOARD_MARKUP,
+            })
 
         return [
             SlotSet(
@@ -340,7 +380,14 @@ class ActionFindPartner(BaseSwiperAction):
         else:  # user just requested chitchat
             initiate_search = True
 
-            dispatcher.utter_message(response='utter_ok_arranging_chitchat')
+            dispatcher.utter_message(custom={
+                'text': 'Great! Let me find someone for you to chitchat with 🗣\n'
+                        '\n'
+                        'I will get back to you within two minutes ⏳',
+
+                'parse_mode': 'html',
+                'reply_markup': OK_WAITING_CANCEL_MARKUP,
+            })
 
             # noinspection PyUnresolvedReferences
             current_user.request_chitchat()
@@ -350,11 +397,13 @@ class ActionFindPartner(BaseSwiperAction):
 
         if partner:
             user_profile_photo_id = telegram_helpers.get_user_profile_photo_file_id(current_user.user_id)
+            user_first_name = current_user.get_first_name()
 
             await rasa_callbacks.ask_to_join(
                 current_user.user_id,
                 partner,
                 user_profile_photo_id,
+                user_first_name,
                 suppress_callback_errors=True,
             )
 
@@ -381,7 +430,14 @@ class ActionFindPartner(BaseSwiperAction):
                 ),
             ]
 
-        dispatcher.utter_message(response='utter_partner_search_timed_out_try_again')
+        dispatcher.utter_message(custom={
+            'text': "Unfortunately, I couldn't find anyone in two minutes 😞\n"
+                    "\n"
+                    "<b>Would you like me to try searching again?</b>",
+
+            'parse_mode': 'html',
+            'reply_markup': REMOVE_KEYBOARD_MARKUP,
+        })
 
         return [
             SlotSet(
@@ -406,20 +462,37 @@ class ActionAskToJoin(BaseSwiperAction):
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
         partner_id = tracker.get_slot(rasa_callbacks.PARTNER_ID_SLOT)
+        partner_photo_file_id = tracker.get_slot(rasa_callbacks.PARTNER_PHOTO_FILE_ID_SLOT)
+        partner_first_name = tracker.get_slot(rasa_callbacks.PARTNER_FIRST_NAME)
 
         latest_intent = get_intent_of_latest_message_reliably(tracker)
 
+        presented_partner = present_partner_name(
+            partner_first_name,
+            'This person' if partner_photo_file_id else 'Someone',
+        )
+
         if latest_intent == EXTERNAL_ASK_TO_JOIN_INTENT:
-            response_template = 'utter_someone_wants_to_chat'
             # noinspection PyUnresolvedReferences
             current_user.become_asked_to_join(partner_id)
             current_user.save()
 
+            utter_text = (
+                f"Hey! {presented_partner} is looking to chitchat 🗣\n"
+                f"\n"
+                f"<b>Would you like to join a video call?</b> 🎥 ☎️"
+            )
+
         elif latest_intent == EXTERNAL_ASK_TO_CONFIRM_INTENT:
-            response_template = 'utter_found_someone_check_ready'
             # noinspection PyUnresolvedReferences
             current_user.become_asked_to_confirm(partner_id)
             current_user.save()
+
+            utter_text = (
+                f"Hey! {presented_partner} wants to chitchat with <b>you</b> 👈\n"
+                f"\n"
+                f"<b>Are you ready for a video call?</b> 🎥 ☎️"
+            )
 
         else:
             raise SwiperError(
@@ -427,16 +500,28 @@ class ActionAskToJoin(BaseSwiperAction):
                 f"{repr(EXTERNAL_ASK_TO_JOIN_INTENT)} or {repr(EXTERNAL_ASK_TO_CONFIRM_INTENT)} was expected"
             )
 
-        partner_photo_file_id = tracker.get_slot(rasa_callbacks.PARTNER_PHOTO_FILE_ID_SLOT)
         if partner_photo_file_id:
-            response_template += '_photo'
-            response_kwargs = {
-                rasa_callbacks.PARTNER_PHOTO_FILE_ID_SLOT: partner_photo_file_id,
+            custom_dict = {
+                'photo': partner_photo_file_id,
+                'caption': utter_text,
             }
         else:
-            response_kwargs = {}
+            custom_dict = {
+                'text': utter_text,
+            }
 
-        dispatcher.utter_message(response=response_template, **response_kwargs)
+        custom_dict['parse_mode'] = 'html'
+        custom_dict['reply_markup'] = (
+            '{"keyboard":['
+
+            '[{"text":"Yes"}],'
+            '[{"text":"Not now"}],'
+            '[{"text":"Next person"}]'
+
+            '],"resize_keyboard":true,"one_time_keyboard":true}'
+        )
+
+        dispatcher.utter_message(custom=custom_dict)
 
         return [
             SlotSet(
@@ -470,28 +555,12 @@ class ActionAcceptInvitation(BaseSwiperAction):
 
             elif partner.chitchat_can_be_offered():
                 # confirm with the partner before creating any rooms
-                return await self.confirm_with_asker(dispatcher, current_user, partner)
+                return await self.confirm_with_partner(dispatcher, current_user, partner)
 
         except SwiperRasaCallbackError:
             logger.exception('FAILED TO ACCEPT INVITATION')
 
-        # noinspection PyUnresolvedReferences
-        current_user.request_chitchat()
-        current_user.save()
-
-        dispatcher.utter_message(response='utter_partner_already_gone')
-
-        return [
-            SlotSet(
-                key=SWIPER_ACTION_RESULT_SLOT,
-                value=SwiperActionResult.PARTNER_NOT_WAITING_ANYMORE,
-            ),
-            *schedule_find_partner_reminder(
-                current_user.user_id,
-                delta_sec=FIND_PARTNER_FOLLOWUP_DELAY_SEC,
-                initiate=True,
-            ),
-        ]
+        return self.partner_gone_start_search(dispatcher, current_user, partner)
 
     @staticmethod
     async def create_room(
@@ -504,12 +573,7 @@ class ActionAcceptInvitation(BaseSwiperAction):
 
         await rasa_callbacks.join_room(current_user.user_id, partner, room_url)
 
-        dispatcher.utter_message(
-            response='utter_room_url',
-            **{
-                rasa_callbacks.ROOM_URL_SLOT: room_url,
-            },
-        )
+        utter_room_url(dispatcher, room_url, after_confirming_with_partner=False)
 
         # noinspection PyUnresolvedReferences
         current_user.join_room(partner.user_id)
@@ -527,20 +591,34 @@ class ActionAcceptInvitation(BaseSwiperAction):
         ]
 
     @staticmethod
-    async def confirm_with_asker(
+    async def confirm_with_partner(
             dispatcher: CollectingDispatcher,
             current_user: UserStateMachine,
             partner: UserStateMachine,
     ) -> List[Dict[Text, Any]]:
         user_profile_photo_id = telegram_helpers.get_user_profile_photo_file_id(current_user.user_id)
+        user_first_name = current_user.get_first_name()
 
-        await rasa_callbacks.ask_to_confirm(current_user.user_id, partner, user_profile_photo_id)
+        await rasa_callbacks.ask_to_confirm(
+            current_user.user_id,
+            partner,
+            user_profile_photo_id,
+            user_first_name,
+        )
 
         # noinspection PyUnresolvedReferences
         current_user.wait_for_partner_to_confirm(partner.user_id)
         current_user.save()
 
-        dispatcher.utter_message(response='utter_checking_if_partner_ready_too')
+        dispatcher.utter_message(custom={
+            'text': f"Just a moment, I'm checking if {present_partner_name(partner.get_first_name(), 'that person')} "
+                    f"is ready too...\n"
+                    f"\n"
+                    f"Please don't go anywhere - <b>this may take up to a minute</b> ⏳",
+
+            'parse_mode': 'html',
+            'reply_markup': OK_WAITING_CANCEL_MARKUP,
+        })
 
         return [
             SlotSet(
@@ -548,6 +626,30 @@ class ActionAcceptInvitation(BaseSwiperAction):
                 value=SwiperActionResult.PARTNER_HAS_BEEN_ASKED,
             ),
             *schedule_expire_partner_confirmation(current_user.user_id),
+        ]
+
+    @staticmethod
+    def partner_gone_start_search(
+            dispatcher: CollectingDispatcher,
+            current_user: UserStateMachine,
+            partner: UserStateMachine,
+    ) -> List[Dict[Text, Any]]:
+        # noinspection PyUnresolvedReferences
+        current_user.request_chitchat()
+        current_user.save()
+
+        utter_partner_already_gone(dispatcher, partner.get_first_name())
+
+        return [
+            SlotSet(
+                key=SWIPER_ACTION_RESULT_SLOT,
+                value=SwiperActionResult.PARTNER_NOT_WAITING_ANYMORE,
+            ),
+            *schedule_find_partner_reminder(
+                current_user.user_id,
+                delta_sec=FIND_PARTNER_FOLLOWUP_DELAY_SEC,
+                initiate=True,
+            ),
         ]
 
 
@@ -566,11 +668,13 @@ class ActionJoinRoom(BaseSwiperAction):
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
         partner_id = tracker.get_slot(rasa_callbacks.PARTNER_ID_SLOT)
+        room_url = tracker.get_slot(rasa_callbacks.ROOM_URL_SLOT)
+
         # noinspection PyUnresolvedReferences
         current_user.join_room(partner_id)
         current_user.save()
 
-        dispatcher.utter_message(response='utter_partner_ready_room_url')
+        utter_room_url(dispatcher, room_url, after_confirming_with_partner=True)
 
         return [
             SlotSet(
@@ -598,7 +702,15 @@ class ActionDoNotDisturb(BaseSwiperAction):
         current_user.become_do_not_disturb()
         current_user.save()
 
-        dispatcher.utter_message(response='utter_hope_to_see_you_later')
+        dispatcher.utter_message(custom={
+            'text': 'Ok, I will not bother you 🛑\n'
+                    '\n'
+                    'Should you change your mind and decide that you want to chitchat with someone, '
+                    'just let me know - I will set up a video call 😉',
+
+            'parse_mode': 'html',
+            'reply_markup': REMOVE_KEYBOARD_MARKUP,
+        })
 
         return [
             SlotSet(
@@ -626,7 +738,15 @@ class ActionRejectInvitation(BaseSwiperAction):
         current_user.reject()
         current_user.save()
 
-        dispatcher.utter_message(response='utter_declined')
+        dispatcher.utter_message(custom={
+            'text': 'Ok, declined ❌\n'
+                    '\n'
+                    'May I ask you if there is any specific time or times of day (maybe days of week) '
+                    'when you are more likely to join someone for chitchat over a video call?',
+
+            'parse_mode': 'html',
+            'reply_markup': REMOVE_KEYBOARD_MARKUP,
+        })
 
         return [
             SlotSet(
@@ -656,7 +776,9 @@ class ActionExpirePartnerConfirmation(BaseSwiperAction):
                 UserUtteranceReverted(),
             ]
 
-        dispatcher.utter_message(response='utter_partner_already_gone')
+        partner = user_vault.get_user(current_user.partner_id)
+
+        utter_partner_already_gone(dispatcher, partner.get_first_name())
 
         return [
             SlotSet(
@@ -669,6 +791,46 @@ class ActionExpirePartnerConfirmation(BaseSwiperAction):
                 initiate=True,
             ),
         ]
+
+
+def present_partner_name(first_name: Text, placeholder: Text) -> Text:
+    if first_name:
+        return f"<b><i>{html.escape(first_name)}</i></b>"
+    return placeholder
+
+
+def utter_room_url(dispatcher: CollectingDispatcher, room_url: Text, after_confirming_with_partner: bool):
+    shout = 'Done!' if after_confirming_with_partner else 'Awesome!'
+    dispatcher.utter_message(custom={
+        'text': f"{shout}\n"
+                f"\n"
+                f"<b>Please follow this link to join the video call:</b>\n"
+                f"\n"
+                f"{room_url}",
+
+        'parse_mode': 'html',
+        'reply_markup': (
+            '{"keyboard":['
+
+            '[{"text":"Cancel"}]'
+
+            '],"resize_keyboard":true,"one_time_keyboard":true}'
+        ),
+    })
+
+
+def utter_partner_already_gone(dispatcher: CollectingDispatcher, partner_first_name: Text):
+    dispatcher.utter_message(custom={
+        'text': f"{present_partner_name(partner_first_name, 'That person')} has become unavailable 😵\n"
+                f"\n"
+                f"Fear not!\n"
+                f"\n"
+                f"I am already looking for someone else to connect you with "
+                f"and will get back to you within two minutes ⏳",
+
+        'parse_mode': 'html',
+        'reply_markup': OK_WAITING_CANCEL_MARKUP,
+    })
 
 
 def get_partner_search_start_ts(tracker: Tracker) -> int:

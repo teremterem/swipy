@@ -17,6 +17,139 @@ from actions import actions, daily_co
 from actions.user_state_machine import UserStateMachine, UserState
 from actions.user_vault import UserVault, IUserVault
 
+UTTER_ERROR_TEXT = 'Ouch! Something went wrong 🤖'
+
+UTTER_HOW_IT_WORKS_TEXT = """\
+I can arrange video chitchat with another human for you 🎥 🗣 ☎️
+
+Here is how it works:
+
+- I find someone who also wants to chitchat.
+- I confirm with you and them that you are both ready.
+- I send both of you a video chat link."""
+
+UTTER_LOST_TRACK_OF_CONVERSATION_TEXT = """\
+Please forgive me for losing track of our conversation 🤖
+
+<b>Are you agreeing to a video call with another person?</b>"""
+
+UTTER_GREET_OFFER_CHITCHAT_TEXT = """\
+Hi, my name is Swipy 🙂
+
+I can connect you with a stranger in a video chat \
+so you could practice your English speaking skills 🇬🇧
+
+<b>Would you like to give it a try?</b>"""
+
+UTTER_OK_ARRANGING_CHITCHAT_TEXT = """\
+Great! Let me find someone for you to chitchat with 🗣
+
+I will get back to you within two minutes ⏳"""
+
+UTTER_ROOM_URL_TEXT = """\
+Awesome!
+
+<b>Please follow this link to join the video call:</b>
+
+https://swipy.daily.co/pytestroom"""
+
+UTTER_PARTNER_READY_ROOM_URL_TEXT = """\
+Done!
+
+<b>Please follow this link to join the video call:</b>
+
+https://swipy.daily.co/anothertestroom"""
+
+UTTER_THAT_PERSON_ALREADY_GONE_TEXT = """\
+That person has become unavailable 😵
+
+Fear not!
+
+I am already looking for someone else to connect you with \
+and will get back to you within two minutes ⏳"""
+
+UTTER_FIRST_NAME_ALREADY_GONE_TEXT = """\
+<b><i>unitTest firstName10</i></b> has become unavailable 😵
+
+Fear not!
+
+I am already looking for someone else to connect you with \
+and will get back to you within two minutes ⏳"""
+
+UTTER_CHECKING_IF_THAT_PERSON_READY_TOO_TEXT = """\
+Just a moment, I'm checking if that person is ready too...
+
+Please don't go anywhere - <b>this may take up to a minute</b> ⏳"""
+
+UTTER_CHECKING_IF_FIRST_NAME_READY_TOO_TEXT = """\
+Just a moment, I'm checking if <b><i>unitTest firstName20</i></b> is ready too...
+
+Please don't go anywhere - <b>this may take up to a minute</b> ⏳"""
+
+UTTER_ASK_TO_JOIN_SOMEONE_TEXT = """\
+Hey! Someone is looking to chitchat 🗣
+
+<b>Would you like to join a video call?</b> 🎥 ☎️"""
+
+UTTER_ASK_TO_JOIN_THIS_PERSON_TEXT = """\
+Hey! This person is looking to chitchat 🗣
+
+<b>Would you like to join a video call?</b> 🎥 ☎️"""
+
+UTTER_ASK_TO_JOIN_FIRST_NAME_TEXT = """\
+Hey! <b><i>unitTest firstName30</i></b> is looking to chitchat 🗣
+
+<b>Would you like to join a video call?</b> 🎥 ☎️"""
+
+UTTER_ASK_TO_CONFIRM_SOMEONE_TEXT = """\
+Hey! Someone wants to chitchat with <b>you</b> 👈
+
+<b>Are you ready for a video call?</b> 🎥 ☎️"""
+
+UTTER_ASK_TO_CONFIRM_THIS_PERSON_TEXT = """\
+Hey! This person wants to chitchat with <b>you</b> 👈
+
+<b>Are you ready for a video call?</b> 🎥 ☎️"""
+
+UTTER_ASK_TO_CONFIRM_FIRST_NAME_TEXT = """\
+Hey! <b><i>unitTest firstName30</i></b> wants to chitchat with <b>you</b> 👈
+
+<b>Are you ready for a video call?</b> 🎥 ☎️"""
+
+UTTER_HOPE_TO_SEE_YOU_LATER_TEXT = """\
+Ok, I will not bother you 🛑
+
+Should you change your mind and decide that you want to chitchat with someone, \
+just let me know - I will set up a video call 😉"""
+
+UTTER_DECLINED_TEXT = """\
+Ok, declined ❌
+
+May I ask you if there is any specific time or times of day (maybe days of week) \
+when you are more likely to join someone for chitchat over a video call?"""
+
+REMOVE_KEYBOARD_MARKUP = '{"remove_keyboard":true}'
+
+OK_WAITING_CANCEL_MARKUP = (
+    '{"keyboard":['
+
+    '[{"text":"Ok, waiting"}],'
+    '[{"text":"Cancel"}]'
+
+    '],"resize_keyboard":true,"one_time_keyboard":true}'
+)
+CANCEL_MARKUP = '{"keyboard":[[{"text":"Cancel"}]],"resize_keyboard":true,"one_time_keyboard":true}'
+
+YES_NOT_NOW_NEXT_PERSON_MARKUP = (
+    '{"keyboard":['
+
+    '[{"text":"Yes"}],'
+    '[{"text":"Not now"}],'
+    '[{"text":"Next person"}]'
+
+    '],"resize_keyboard":true,"one_time_keyboard":true}'
+)
+
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('ddb_unit_test_user', 'wrap_traceback_format_exception')
@@ -57,9 +190,9 @@ async def test_action_swiper_error_trace(
         'custom': {},
         'elements': [],
         'image': None,
-        'response': 'utter_error',
-        'template': 'utter_error',
-        'text': None,
+        'response': None,
+        'template': None,
+        'text': UTTER_ERROR_TEXT,
     }]
 
 
@@ -232,25 +365,25 @@ async def test_action_session_start_with_slots(
     None,  # default - expected to be equivalent to False
     True,
 ])
-@pytest.mark.parametrize('latest_intent, expected_response_template, source_swiper_state, destination_swiper_state', [
-    ('how_it_works', 'utter_how_it_works', 'new', 'ok_to_chitchat'),
-    ('start', 'utter_greet_offer_chitchat', 'new', 'ok_to_chitchat'),
-    ('greet', 'utter_greet_offer_chitchat', 'new', 'ok_to_chitchat'),
-    ('affirm', 'utter_lost_track_of_conversation', 'new', 'ok_to_chitchat'),
+@pytest.mark.parametrize('latest_intent, source_swiper_state, destination_swiper_state, expected_response_text', [
+    ('how_it_works', 'new', 'ok_to_chitchat', UTTER_HOW_IT_WORKS_TEXT),
+    ('start', 'new', 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),
+    ('greet', 'new', 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),
+    ('affirm', 'new', 'ok_to_chitchat', UTTER_LOST_TRACK_OF_CONVERSATION_TEXT),
 
-    ('greet', 'utter_greet_offer_chitchat', None, 'ok_to_chitchat'),  # user does not exist yet
-    ('greet', 'utter_greet_offer_chitchat', 'new', 'ok_to_chitchat'),
-    ('greet', 'utter_greet_offer_chitchat', 'wants_chitchat', 'wants_chitchat'),
-    ('greet', 'utter_greet_offer_chitchat', 'ok_to_chitchat', 'ok_to_chitchat'),
-    ('greet', 'utter_greet_offer_chitchat', 'waiting_partner_confirm', 'waiting_partner_confirm'),
-    ('greet', 'utter_greet_offer_chitchat', 'asked_to_join', 'ok_to_chitchat'),
-    ('greet', 'utter_greet_offer_chitchat', 'asked_to_confirm', 'ok_to_chitchat'),
-    ('greet', 'utter_greet_offer_chitchat', 'roomed', 'ok_to_chitchat'),
-    ('greet', 'utter_greet_offer_chitchat', 'rejected_join', 'ok_to_chitchat'),
-    ('greet', 'utter_greet_offer_chitchat', 'rejected_confirm', 'ok_to_chitchat'),
-    ('greet', 'utter_greet_offer_chitchat', 'do_not_disturb', 'ok_to_chitchat'),
-    ('greet', 'utter_greet_offer_chitchat', 'bot_blocked', 'ok_to_chitchat'),
-    ('greet', 'utter_greet_offer_chitchat', 'user_banned', 'user_banned'),
+    ('greet', None, 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),  # user does not exist yet
+    ('greet', 'new', 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),
+    ('greet', 'wants_chitchat', 'wants_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),
+    ('greet', 'ok_to_chitchat', 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),
+    ('greet', 'waiting_partner_confirm', 'waiting_partner_confirm', UTTER_GREET_OFFER_CHITCHAT_TEXT),
+    ('greet', 'asked_to_join', 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),
+    ('greet', 'asked_to_confirm', 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),
+    ('greet', 'roomed', 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),
+    ('greet', 'rejected_join', 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),
+    ('greet', 'rejected_confirm', 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),
+    ('greet', 'do_not_disturb', 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),
+    ('greet', 'bot_blocked', 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),
+    ('greet', 'user_banned', 'user_banned', UTTER_GREET_OFFER_CHITCHAT_TEXT),
 ])
 async def test_action_offer_chitchat(
         tracker: Tracker,
@@ -258,9 +391,9 @@ async def test_action_offer_chitchat(
         domain: Dict[Text, Any],
         greeting_makes_user_ok_to_chitchat: Optional[bool],
         latest_intent: Text,
-        expected_response_template: Text,
         source_swiper_state: Optional[Text],
         destination_swiper_state: Text,
+        expected_response_text: Text,
 ) -> None:
     if source_swiper_state is None:
         user_is_brand_new = True
@@ -315,11 +448,15 @@ async def test_action_offer_chitchat(
         assert dispatcher.messages == [{
             'attachment': None,
             'buttons': [],
-            'custom': {},
+            'custom': {
+                'text': expected_response_text,
+                'parse_mode': 'html',
+                'reply_markup': REMOVE_KEYBOARD_MARKUP,
+            },
             'elements': [],
             'image': None,
-            'response': expected_response_template,
-            'template': expected_response_template,
+            'response': None,
+            'template': None,
             'text': None,
         }]
 
@@ -349,16 +486,16 @@ async def test_action_offer_chitchat(
 @patch.object(UserVault, '_get_random_available_partner_dict')
 @patch('telebot.apihelper._make_request')
 @pytest.mark.parametrize(
-    'user_has_photo, tracker_latest_message, expect_as_reminder, source_swiper_state, expect_dry_run, '
+    'user_has_photo, user_has_name, tracker_latest_message, expect_as_reminder, source_swiper_state, expect_dry_run, '
     'partner_blocked_bot',
     [
-        (True, {}, False, 'new', False, True),
-        (False, {'intent': None}, False, 'new', False, False),
-        (True, {'intent': {'name': None}}, False, 'new', False, False),
-        (False, {'intent': {'name': 'videochat'}}, False, 'new', False, False),
-        (True, {'intent': {'name': 'videochat'}}, False, 'wants_chitchat', False, False),
-        (False, {'intent': {'name': 'EXTERNAL_find_partner'}}, True, 'wants_chitchat', False, False),
-        (True, {'intent': {'name': 'EXTERNAL_find_partner'}}, True, 'asked_to_join', True, False),
+        (True, True, {}, False, 'new', False, True),
+        (False, True, {'intent': None}, False, 'new', False, False),
+        (True, False, {'intent': {'name': None}}, False, 'new', False, False),
+        (False, False, {'intent': {'name': 'videochat'}}, False, 'new', False, False),
+        (True, None, {'intent': {'name': 'videochat'}}, False, 'wants_chitchat', False, False),
+        (False, None, {'intent': {'name': 'EXTERNAL_find_partner'}}, True, 'wants_chitchat', False, False),
+        (True, True, {'intent': {'name': 'EXTERNAL_find_partner'}}, True, 'asked_to_join', True, False),
     ],
 )
 async def test_action_find_partner(
@@ -376,17 +513,25 @@ async def test_action_find_partner(
         ],
         external_intent_response: Dict[Text, Any],
         user_has_photo: bool,
+        user_has_name: Optional[bool],
         tracker_latest_message: Dict[Text, Any],
         expect_as_reminder: bool,
         source_swiper_state: Text,
         expect_dry_run: bool,
         partner_blocked_bot: bool,
 ) -> None:
-    user_vault = UserVault()
-    user_vault.save(UserStateMachine(
+    current_user = UserStateMachine(
         user_id='unit_test_user',
         state=source_swiper_state,
-    ))
+    )
+    if user_has_name:
+        current_user.telegram_from = {'first_name': 'unit_test_first_name'}
+    elif user_has_name is False:
+        current_user.telegram_from = {'first_name': ''}
+    # else (user_has_name is None) => we are not setting telegram_from at all
+
+    user_vault = UserVault()
+    user_vault.save(current_user)
 
     # noinspection PyDataclass
     mock_get_random_available_partner_dict.return_value = asdict(available_newbie1)
@@ -469,6 +614,7 @@ async def test_action_find_partner(
             {
                 'partner_id': 'unit_test_user',
                 'partner_photo_file_id': 'biggest_profile_pic_file_id' if user_has_photo else None,
+                'partner_first_name': 'unit_test_first_name' if user_has_name else None,
             },
         )
         assert mock_aioresponses.requests == {expected_req_key: [expected_req_call]}
@@ -479,11 +625,15 @@ async def test_action_find_partner(
         assert dispatcher.messages == [{
             'attachment': None,
             'buttons': [],
-            'custom': {},
+            'custom': {
+                'text': UTTER_OK_ARRANGING_CHITCHAT_TEXT,
+                'parse_mode': 'html',
+                'reply_markup': OK_WAITING_CANCEL_MARKUP,
+            },
             'elements': [],
             'image': None,
-            'response': 'utter_ok_arranging_chitchat',
-            'template': 'utter_ok_arranging_chitchat',
+            'response': None,
+            'template': None,
             'text': None,
         }]
 
@@ -497,6 +647,7 @@ async def test_action_find_partner(
         state_timestamp_str=None if expect_as_reminder else '2021-05-02 08:51:41 Z',
         activity_timestamp=0 if expect_as_reminder else 1619945501,
         activity_timestamp_str=None if expect_as_reminder else '2021-05-02 08:51:41 Z',
+        telegram_from=current_user.telegram_from,
     )
 
 
@@ -533,11 +684,15 @@ async def test_action_find_partner_no_one(
         {
             'attachment': None,
             'buttons': [],
-            'custom': {},
+            'custom': {
+                'text': UTTER_OK_ARRANGING_CHITCHAT_TEXT,
+                'parse_mode': 'html',
+                'reply_markup': OK_WAITING_CANCEL_MARKUP,
+            },
             'elements': [],
             'image': None,
-            'response': 'utter_ok_arranging_chitchat',
-            'template': 'utter_ok_arranging_chitchat',
+            'response': None,
+            'template': None,
             'text': None,
         },
     ]
@@ -577,24 +732,30 @@ async def test_action_find_partner_no_one(
 @patch('time.time', Mock(return_value=1619945501))
 @patch('uuid.uuid4', Mock(return_value=uuid.UUID('aaaabbbb-cccc-dddd-eeee-ffff11112222')))
 @pytest.mark.parametrize(
-    'source_swiper_state, latest_intent, destination_swiper_state, set_photo_slot, expected_response_template',
+    'source_swiper_state, latest_intent, destination_swiper_state, set_photo_slot, set_name_slot, '
+    'expected_response_text',
     [
-        ('roomed', 'EXTERNAL_ask_to_join', 'asked_to_join', True, 'utter_someone_wants_to_chat_photo'),
-        ('roomed', 'EXTERNAL_ask_to_join', 'asked_to_join', False, 'utter_someone_wants_to_chat'),
-        ('roomed', 'EXTERNAL_ask_to_confirm', 'asked_to_confirm', True, 'utter_found_someone_check_ready_photo'),
-        ('roomed', 'EXTERNAL_ask_to_confirm', 'asked_to_confirm', False, 'utter_found_someone_check_ready'),
-        ('roomed', 'some_irrelevant_intent', None, True, None),
-        ('roomed', None, None, True, None),
+        ('roomed', 'EXTERNAL_ask_to_join', 'asked_to_join', True, True, UTTER_ASK_TO_JOIN_FIRST_NAME_TEXT),
+        ('roomed', 'EXTERNAL_ask_to_join', 'asked_to_join', False, True, UTTER_ASK_TO_JOIN_FIRST_NAME_TEXT),
+        ('roomed', 'EXTERNAL_ask_to_join', 'asked_to_join', True, False, UTTER_ASK_TO_JOIN_THIS_PERSON_TEXT),
+        ('roomed', 'EXTERNAL_ask_to_join', 'asked_to_join', False, False, UTTER_ASK_TO_JOIN_SOMEONE_TEXT),
+        ('roomed', 'EXTERNAL_ask_to_confirm', 'asked_to_confirm', True, True, UTTER_ASK_TO_CONFIRM_FIRST_NAME_TEXT),
+        ('roomed', 'EXTERNAL_ask_to_confirm', 'asked_to_confirm', False, True, UTTER_ASK_TO_CONFIRM_FIRST_NAME_TEXT),
+        ('roomed', 'EXTERNAL_ask_to_confirm', 'asked_to_confirm', True, False, UTTER_ASK_TO_CONFIRM_THIS_PERSON_TEXT),
+        ('roomed', 'EXTERNAL_ask_to_confirm', 'asked_to_confirm', False, False, UTTER_ASK_TO_CONFIRM_SOMEONE_TEXT),
+        ('roomed', 'some_irrelevant_intent', None, True, True, None),
+        ('roomed', None, None, True, True, None),
 
-        ('new', 'EXTERNAL_ask_to_join', 'asked_to_join', False, 'utter_someone_wants_to_chat'),
-        ('wants_chitchat', 'EXTERNAL_ask_to_join', 'asked_to_join', False, 'utter_someone_wants_to_chat'),
-        ('ok_to_chitchat', 'EXTERNAL_ask_to_join', 'asked_to_join', False, 'utter_someone_wants_to_chat'),
-        ('waiting_partner_confirm', 'EXTERNAL_ask_to_join', 'asked_to_join', False, 'utter_someone_wants_to_chat'),
-        ('asked_to_join', 'EXTERNAL_ask_to_join', 'asked_to_join', False, 'utter_someone_wants_to_chat'),
-        ('asked_to_confirm', 'EXTERNAL_ask_to_join', 'asked_to_join', False, 'utter_someone_wants_to_chat'),
-        ('rejected_join', 'EXTERNAL_ask_to_join', 'asked_to_join', False, 'utter_someone_wants_to_chat'),
-        ('rejected_confirm', 'EXTERNAL_ask_to_join', 'asked_to_join', False, 'utter_someone_wants_to_chat'),
-        ('do_not_disturb', 'EXTERNAL_ask_to_join', 'asked_to_join', False, 'utter_someone_wants_to_chat'),
+        ('new', 'EXTERNAL_ask_to_join', 'asked_to_join', False, False, UTTER_ASK_TO_JOIN_SOMEONE_TEXT),
+        ('wants_chitchat', 'EXTERNAL_ask_to_join', 'asked_to_join', False, False, UTTER_ASK_TO_JOIN_SOMEONE_TEXT),
+        ('ok_to_chitchat', 'EXTERNAL_ask_to_join', 'asked_to_join', False, False, UTTER_ASK_TO_JOIN_SOMEONE_TEXT),
+        ('waiting_partner_confirm', 'EXTERNAL_ask_to_join', 'asked_to_join', False, False,
+         UTTER_ASK_TO_JOIN_SOMEONE_TEXT),
+        ('asked_to_join', 'EXTERNAL_ask_to_join', 'asked_to_join', False, False, UTTER_ASK_TO_JOIN_SOMEONE_TEXT),
+        ('asked_to_confirm', 'EXTERNAL_ask_to_join', 'asked_to_join', False, False, UTTER_ASK_TO_JOIN_SOMEONE_TEXT),
+        ('rejected_join', 'EXTERNAL_ask_to_join', 'asked_to_join', False, False, UTTER_ASK_TO_JOIN_SOMEONE_TEXT),
+        ('rejected_confirm', 'EXTERNAL_ask_to_join', 'asked_to_join', False, False, UTTER_ASK_TO_JOIN_SOMEONE_TEXT),
+        ('do_not_disturb', 'EXTERNAL_ask_to_join', 'asked_to_join', False, False, UTTER_ASK_TO_JOIN_SOMEONE_TEXT),
     ],
 )
 async def test_action_ask_to_join(
@@ -606,7 +767,8 @@ async def test_action_ask_to_join(
         latest_intent: Text,
         destination_swiper_state: Optional[Text],
         set_photo_slot: bool,
-        expected_response_template: Optional[Text],
+        set_name_slot: bool,
+        expected_response_text: Optional[Text],
 ) -> None:
     user_vault = UserVault()
     user_vault.save(UserStateMachine(
@@ -626,6 +788,10 @@ async def test_action_ask_to_join(
         tracker.add_slots([
             SlotSet('partner_photo_file_id', 'some photo file id'),
         ])
+    if set_name_slot:
+        tracker.add_slots([
+            SlotSet('partner_first_name', 'unitTest firstName30'),
+        ])
 
     action = actions.ActionAskToJoin()
     assert action.name() == 'action_ask_to_join'
@@ -637,18 +803,29 @@ async def test_action_ask_to_join(
             SlotSet('swiper_state', destination_swiper_state),
         ]
 
+        if set_photo_slot:
+            custom_dict = {
+                'photo': 'some photo file id',
+                'caption': expected_response_text,
+                'parse_mode': 'html',
+                'reply_markup': YES_NOT_NOW_NEXT_PERSON_MARKUP,
+            }
+        else:
+            custom_dict = {
+                'text': expected_response_text,
+                'parse_mode': 'html',
+                'reply_markup': YES_NOT_NOW_NEXT_PERSON_MARKUP,
+            }
         expected_response = {
             'attachment': None,
             'buttons': [],
-            'custom': {},
+            'custom': custom_dict,
             'elements': [],
             'image': None,
-            'response': expected_response_template,
-            'template': expected_response_template,
+            'response': None,
+            'template': None,
             'text': None,
         }
-        if set_photo_slot:
-            expected_response['partner_photo_file_id'] = 'some photo file id'
 
     else:  # an error is expected (and hence we do not expect swiper state to change)
         assert actual_events == [
@@ -673,9 +850,9 @@ async def test_action_ask_to_join(
             'custom': {},
             'elements': [],
             'image': None,
-            'response': 'utter_error',
-            'template': 'utter_error',
-            'text': None,
+            'response': None,
+            'template': None,
+            'text': UTTER_ERROR_TEXT,
         }
 
     assert dispatcher.messages == [expected_response]
@@ -693,7 +870,7 @@ async def test_action_ask_to_join(
             state_timeout_ts=1619945501 + (60 * 60 * 5),
             state_timeout_ts_str='2021-05-02 13:51:41 Z',
         )
-        wrap_random_randint.assert_called_once_with(60 * 60 * 4, 60 * 60 * (24 * 2 - 5))
+        wrap_random_randint.assert_called_once_with(60 * 60 * 4, 60 * 60 * (24 * 3 - 5))
 
     else:  # an error is expected (and hence we do not expect swiper state to change)
         assert user_vault.get_user('unit_test_user') == UserStateMachine(
@@ -757,13 +934,16 @@ async def test_action_accept_invitation_create_room(
     assert dispatcher.messages == [{
         'attachment': None,
         'buttons': [],
-        'custom': {},
+        'custom': {
+            'text': UTTER_ROOM_URL_TEXT,
+            'parse_mode': 'html',
+            'reply_markup': CANCEL_MARKUP,
+        },
         'elements': [],
         'image': None,
-        'response': 'utter_room_url',
-        'template': 'utter_room_url',
+        'response': None,
+        'template': None,
         'text': None,
-        'room_url': 'https://swipy.daily.co/pytestroom',
     }]
 
     rasa_callbacks_join_room_req_key, rasa_callbacks_join_room_req_call = rasa_callbacks_expected_req_builder(
@@ -800,18 +980,34 @@ async def test_action_accept_invitation_create_room(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize('partner', [
-    UserStateMachine(
-        user_id='an_asker',
-        state='wants_chitchat',
-        partner_id=None,
+@pytest.mark.parametrize('partner, expected_response_text', [
+    (
+            UserStateMachine(
+                user_id='an_asker',
+                state='wants_chitchat',
+                partner_id=None,
+                telegram_from={'first_name': 'unitTest firstName20'},
+            ),
+            UTTER_CHECKING_IF_FIRST_NAME_READY_TOO_TEXT,
     ),
-    UserStateMachine(
-        user_id='an_asker',
-        state='waiting_partner_confirm',
-        partner_id='unit_test_user',
-        state_timeout_ts=1619945501 - 1,  # we are 1 second late, now we have to confirm again
-    )
+    (
+            UserStateMachine(
+                user_id='an_asker',
+                state='wants_chitchat',
+                partner_id=None,
+                telegram_from={'first_name': ''},
+            ),
+            UTTER_CHECKING_IF_THAT_PERSON_READY_TOO_TEXT,
+    ),
+    (
+            UserStateMachine(
+                user_id='an_asker',
+                state='waiting_partner_confirm',
+                partner_id='unit_test_user',
+                state_timeout_ts=1619945501 - 1,  # we are 1 second late, now we have to confirm again
+            ),
+            UTTER_CHECKING_IF_THAT_PERSON_READY_TOO_TEXT,
+    ),
 ])
 @pytest.mark.usefixtures('create_user_state_machine_table', 'wrap_actions_datetime_now')
 @patch('time.time', Mock(return_value=1619945501))  # "now"
@@ -829,6 +1025,7 @@ async def test_action_accept_invitation_confirm_with_asker(
         ],
         external_intent_response: Dict[Text, Any],
         partner: UserStateMachine,
+        expected_response_text: Text,
 ) -> None:
     mock_telebot_make_request.return_value = telegram_user_profile_photo
     mock_aioresponses.post(re.compile(r'.*'), payload=external_intent_response)
@@ -860,11 +1057,15 @@ async def test_action_accept_invitation_confirm_with_asker(
     assert dispatcher.messages == [{
         'attachment': None,
         'buttons': [],
-        'custom': {},
+        'custom': {
+            'text': expected_response_text,
+            'parse_mode': 'html',
+            'reply_markup': OK_WAITING_CANCEL_MARKUP,
+        },
         'elements': [],
         'image': None,
-        'response': 'utter_checking_if_partner_ready_too',
-        'template': 'utter_checking_if_partner_ready_too',
+        'response': None,
+        'template': None,
         'text': None,
     }]
 
@@ -878,6 +1079,7 @@ async def test_action_accept_invitation_confirm_with_asker(
         {
             'partner_id': 'unit_test_user',
             'partner_photo_file_id': 'biggest_profile_pic_file_id',
+            'partner_first_name': None,
         },
     )
     assert mock_aioresponses.requests == {
@@ -900,16 +1102,32 @@ async def test_action_accept_invitation_confirm_with_asker(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize('partner', [
-    UserStateMachine(
-        user_id='an_asker',
-        state='new',
-        partner_id='unit_test_user',
+@pytest.mark.parametrize('partner, expected_response_text', [
+    (
+            UserStateMachine(
+                user_id='an_asker',
+                state='new',
+                partner_id='unit_test_user',
+                telegram_from={'first_name': 'unitTest firstName10'},
+            ),
+            UTTER_FIRST_NAME_ALREADY_GONE_TEXT,
     ),
-    UserStateMachine(
-        user_id='an_asker',
-        state='do_not_disturb',
-        partner_id='unit_test_user',
+    (
+            UserStateMachine(
+                user_id='an_asker',
+                state='new',
+                partner_id='unit_test_user',
+                telegram_from={'first_name': ''},
+            ),
+            UTTER_THAT_PERSON_ALREADY_GONE_TEXT,
+    ),
+    (
+            UserStateMachine(
+                user_id='an_asker',
+                state='do_not_disturb',
+                partner_id='unit_test_user',
+            ),
+            UTTER_THAT_PERSON_ALREADY_GONE_TEXT,
     ),
 ])
 @pytest.mark.usefixtures('create_user_state_machine_table', 'wrap_actions_datetime_now')
@@ -920,6 +1138,7 @@ async def test_action_accept_invitation_partner_not_waiting(
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
         partner: UserStateMachine,
+        expected_response_text: Text,
 ) -> None:
     user_vault = UserVault()
     user_vault.save(partner)
@@ -947,11 +1166,15 @@ async def test_action_accept_invitation_partner_not_waiting(
     assert dispatcher.messages == [{
         'attachment': None,
         'buttons': [],
-        'custom': {},
+        'custom': {
+            'text': expected_response_text,
+            'parse_mode': 'html',
+            'reply_markup': OK_WAITING_CANCEL_MARKUP,
+        },
         'elements': [],
         'image': None,
-        'response': 'utter_partner_already_gone',
-        'template': 'utter_partner_already_gone',
+        'response': None,
+        'template': None,
         'text': None,
     }]
 
@@ -1028,9 +1251,9 @@ async def test_action_accept_invitation_no_partner_id(
         'custom': {},
         'elements': [],
         'image': None,
-        'response': 'utter_error',
-        'template': 'utter_error',
-        'text': None,
+        'response': None,
+        'template': None,
+        'text': UTTER_ERROR_TEXT,
     }]
 
     # neither daily_co.create_room() nor rasa_callbacks.join_room() are called
@@ -1082,6 +1305,7 @@ async def test_action_join_room(
 
     tracker.add_slots([
         SlotSet('partner_id', 'unexpected_partner' if wrong_partner else 'expected_partner'),
+        SlotSet('room_url', 'https://swipy.daily.co/anothertestroom'),
     ])
 
     actual_events = await action.run(dispatcher, tracker, domain)
@@ -1096,11 +1320,15 @@ async def test_action_join_room(
         assert dispatcher.messages == [{
             'attachment': None,
             'buttons': [],
-            'custom': {},
+            'custom': {
+                'text': UTTER_PARTNER_READY_ROOM_URL_TEXT,
+                'parse_mode': 'html',
+                'reply_markup': CANCEL_MARKUP,
+            },
             'elements': [],
             'image': None,
-            'response': 'utter_partner_ready_room_url',
-            'template': 'utter_partner_ready_room_url',
+            'response': None,
+            'template': None,
             'text': None,
         }]
         assert user_vault.get_user('unit_test_user') == UserStateMachine(
@@ -1144,9 +1372,9 @@ async def test_action_join_room(
             'custom': {},
             'elements': [],
             'image': None,
-            'response': 'utter_error',
-            'template': 'utter_error',
-            'text': None,
+            'response': None,
+            'template': None,
+            'text': UTTER_ERROR_TEXT,
         }]
         assert user_vault.get_user('unit_test_user') == UserStateMachine(  # the state of current user has not changed
             user_id='unit_test_user',  # the asker
@@ -1197,11 +1425,15 @@ async def test_action_do_not_disturb(
     assert dispatcher.messages == [{
         'attachment': None,
         'buttons': [],
-        'custom': {},
+        'custom': {
+            'text': UTTER_HOPE_TO_SEE_YOU_LATER_TEXT,
+            'parse_mode': 'html',
+            'reply_markup': REMOVE_KEYBOARD_MARKUP,
+        },
         'elements': [],
         'image': None,
-        'response': 'utter_hope_to_see_you_later',
-        'template': 'utter_hope_to_see_you_later',
+        'response': None,
+        'template': None,
         'text': None,
     }]
 
@@ -1265,11 +1497,15 @@ async def test_action_reject_invitation(
         assert dispatcher.messages == [{
             'attachment': None,
             'buttons': [],
-            'custom': {},
+            'custom': {
+                'text': UTTER_DECLINED_TEXT,
+                'parse_mode': 'html',
+                'reply_markup': REMOVE_KEYBOARD_MARKUP,
+            },
             'elements': [],
             'image': None,
-            'response': 'utter_declined',
-            'template': 'utter_declined',
+            'response': None,
+            'template': None,
             'text': None,
         }]
         assert user_vault.get_user('unit_test_user') == UserStateMachine(
@@ -1284,7 +1520,7 @@ async def test_action_reject_invitation(
             activity_timestamp=1619945501,
             activity_timestamp_str='2021-05-02 08:51:41 Z',
         )
-        wrap_random_randint.assert_called_once_with(60 * 60 * 4, 60 * 60 * (24 * 2 - 5))
+        wrap_random_randint.assert_called_once_with(60 * 60 * 4, 60 * 60 * (24 * 3 - 5))
 
     else:  # an error is expected
         assert actual_events == [
@@ -1306,9 +1542,9 @@ async def test_action_reject_invitation(
             'custom': {},
             'elements': [],
             'image': None,
-            'response': 'utter_error',
-            'template': 'utter_error',
-            'text': None,
+            'response': None,
+            'template': None,
+            'text': UTTER_ERROR_TEXT,
         }]
         assert user_vault.get_user('unit_test_user') == UserStateMachine(
             user_id='unit_test_user',
@@ -1321,17 +1557,20 @@ async def test_action_reject_invitation(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize('source_swiper_state, action_has_effect', [
-    ('new', False),
-    ('wants_chitchat', False),
-    ('ok_to_chitchat', False),
-    ('waiting_partner_confirm', True),
-    ('asked_to_join', False),
-    ('asked_to_confirm', False),
-    ('roomed', False),
-    ('rejected_join', False),
-    ('rejected_confirm', False),
-    ('do_not_disturb', False),
+@pytest.mark.parametrize('source_swiper_state, partner_has_name, expected_response_text', [
+    ('new', True, None),
+    ('wants_chitchat', False, None),
+    ('ok_to_chitchat', True, None),
+
+    ('waiting_partner_confirm', False, UTTER_THAT_PERSON_ALREADY_GONE_TEXT),
+    ('waiting_partner_confirm', True, UTTER_FIRST_NAME_ALREADY_GONE_TEXT),
+
+    ('asked_to_join', False, None),
+    ('asked_to_confirm', True, None),
+    ('roomed', False, None),
+    ('rejected_join', True, None),
+    ('rejected_confirm', False, None),
+    ('do_not_disturb', True, None),
 ])
 @pytest.mark.usefixtures('create_user_state_machine_table', 'wrap_actions_datetime_now')
 @patch('time.time', Mock(return_value=1619945501))
@@ -1340,14 +1579,19 @@ async def test_action_expire_partner_confirmation(
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
         source_swiper_state: Text,
-        action_has_effect: bool,
+        partner_has_name: bool,
+        expected_response_text: Optional[Text],
 ) -> None:
     user_vault = UserVault()
     user_vault.save(UserStateMachine(
         user_id='unit_test_user',
         state=source_swiper_state,
-        partner_id='',
+        partner_id='some_partner_id',
         newbie=True,
+    ))
+    user_vault.save(UserStateMachine(
+        user_id='some_partner_id',
+        telegram_from={'first_name': 'unitTest firstName10'} if partner_has_name else {},
     ))
 
     action = actions.ActionExpirePartnerConfirmation()
@@ -1355,7 +1599,8 @@ async def test_action_expire_partner_confirmation(
 
     actual_events = await action.run(dispatcher, tracker, domain)
 
-    if action_has_effect:
+    if expected_response_text:
+        # action is expected to have had an effect
         assert actual_events == [
             SlotSet('swiper_action_result', 'success'),
             SlotSet('partner_search_start_ts', '1619945501'),
@@ -1369,24 +1614,29 @@ async def test_action_expire_partner_confirmation(
                 'timestamp': None,
             },
             SlotSet('swiper_state', source_swiper_state),
-            SlotSet('partner_id', ''),
+            SlotSet('partner_id', 'some_partner_id'),
         ]
         assert dispatcher.messages == [{
             'attachment': None,
             'buttons': [],
-            'custom': {},
+            'custom': {
+                'text': expected_response_text,
+                'parse_mode': 'html',
+                'reply_markup': OK_WAITING_CANCEL_MARKUP,
+            },
             'elements': [],
             'image': None,
-            'response': 'utter_partner_already_gone',
-            'template': 'utter_partner_already_gone',
+            'response': None,
+            'template': None,
             'text': None,
         }]
 
     else:
+        # action is NOT expected to have had an effect
         assert actual_events == [
             UserUtteranceReverted(),
             SlotSet('swiper_state', source_swiper_state),
-            SlotSet('partner_id', ''),
+            SlotSet('partner_id', 'some_partner_id'),
         ]
         assert dispatcher.messages == []
 
@@ -1394,6 +1644,6 @@ async def test_action_expire_partner_confirmation(
     assert user_vault.get_user('unit_test_user') == UserStateMachine(  # the state of current user has not changed
         user_id='unit_test_user',
         state=source_swiper_state,
-        partner_id='',
+        partner_id='some_partner_id',
         newbie=True,
     )

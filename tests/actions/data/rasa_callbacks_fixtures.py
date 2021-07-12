@@ -70,7 +70,7 @@ def external_intent_response() -> Dict[Text, Any]:
                 {
                     "event": "action",
                     "timestamp": 1621177678.0746088,
-                    "name": "utter_greet_offer_chitchat",
+                    "name": "utter_something",
                     "policy": "policy_2_RulePolicy",
                     "confidence": 1.0,
                     "action_text": None,
@@ -80,7 +80,7 @@ def external_intent_response() -> Dict[Text, Any]:
                     "event": "bot",
                     "timestamp": 1621177678.0746486,
                     "metadata": {
-                        "utter_action": "utter_greet_offer_chitchat"
+                        "utter_action": "utter_something"
                     },
                     "text": "Hi, do you want to chitchat?",
                     "data": {

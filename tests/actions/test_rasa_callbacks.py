@@ -1,5 +1,5 @@
 import re
-from typing import Dict, Text, Any, Callable, Tuple, Awaitable
+from typing import Dict, Text, Any, Callable, Tuple, Awaitable, Optional
 from unittest.mock import patch, AsyncMock
 
 import pytest
@@ -13,6 +13,10 @@ from actions.utils import SwiperRasaCallbackError
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize('partner_photo_file_id, partner_first_name', [
+    ('photo_of_the_asker', 'asker_first_name'),
+    (None, None),
+])
 @pytest.mark.parametrize('function_to_test, expected_intent', [
     (rasa_callbacks.ask_to_join, 'EXTERNAL_ask_to_join'),
     (rasa_callbacks.ask_to_confirm, 'EXTERNAL_ask_to_confirm'),
@@ -25,7 +29,9 @@ async def test_ask_to_join_and_confirm(
         ],
         mock_aioresponses: aioresponses,
         external_intent_response: Dict[Text, Any],
-        function_to_test: Callable[[Text, UserStateMachine, Text], Awaitable[Dict[Text, Any]]],
+        function_to_test: Callable[[Text, UserStateMachine, Text, Text], Awaitable[Dict[Text, Any]]],
+        partner_photo_file_id: Optional[Text],
+        partner_first_name: Optional[Text],
         expected_intent: Text,
 ) -> None:
     expected_req_key, expected_req_call = rasa_callbacks_expected_req_builder(
@@ -33,7 +39,8 @@ async def test_ask_to_join_and_confirm(
         expected_intent,
         {
             'partner_id': 'id_of_asker',
-            'partner_photo_file_id': 'photo_of_the_asker',
+            'partner_photo_file_id': partner_photo_file_id,
+            'partner_first_name': partner_first_name,
         },
     )
     mock_aioresponses.post(re.compile(r'.*'), payload=external_intent_response)
@@ -41,7 +48,8 @@ async def test_ask_to_join_and_confirm(
     assert await function_to_test(
         'id_of_asker',
         UserStateMachine(user_id='partner_id_to_ask'),
-        'photo_of_the_asker',
+        partner_photo_file_id,
+        partner_first_name,
     ) == external_intent_response
 
     assert mock_aioresponses.requests == {expected_req_key: [expected_req_call]}
@@ -51,7 +59,8 @@ async def test_ask_to_join_and_confirm(
         expected_intent,
         {
             'partner_id': 'id_of_asker',
-            'partner_photo_file_id': 'photo_of_the_asker',
+            'partner_photo_file_id': partner_photo_file_id,
+            'partner_first_name': partner_first_name,
         },
         False,  # make sure errors are not suppressed by default
     )

@@ -34,6 +34,7 @@ intents:
 entities:
 - partner_id
 - partner_photo_file_id
+- partner_first_name
 - room_url
 slots:
   swiper_state:
@@ -106,89 +107,22 @@ slots:
     initial_value: null
     auto_fill: true
     influence_conversation: true
+  partner_first_name:
+    type: rasa.shared.core.slots.TextSlot
+    initial_value: null
+    auto_fill: true
+    influence_conversation: true
   room_url:
     type: rasa.shared.core.slots.TextSlot
     initial_value: null
     auto_fill: true
     influence_conversation: false
 responses:
-  utter_greet_offer_chitchat:
-  - custom:
-      parse_mode: html
-      text: "Hi, my name is Swipy \U0001F642\n \nI can connect you with a stranger in a video chat so you could practice your English speaking skills \U0001F1EC\U0001F1E7\n \n<b>Would you like to give it a try?</b>"
-  utter_ok_arranging_chitchat:
-  - text: |-
-      Great! Let me find someone for you to chitchat with.
-       
-      I will get back to you within two minutes ⏳
-  utter_how_it_works:
-  - text: |-
-      I can arrange video chitchat with another human for you 🎥 🗣 ☎️
-       
-      Here is how it works:
-       
-      - I find someone who also wants to chitchat.
-      - I confirm with you and them that you are both ready.
-      - I send both of you a video chat link.
-  utter_lost_track_of_conversation:
-  - custom:
-      parse_mode: html
-      text: "Please forgive me for losing track of our conversation \U0001F916\n \n<b>Are you agreeing to a video call with another person?</b>"
-  utter_partner_search_timed_out_try_again:
-  - custom:
-      parse_mode: html
-      text: "Unfortunately, I couldn't find anyone in two minutes \U0001F61E\n \n<b>Would you like me to try again?</b>"
-  utter_someone_wants_to_chat_photo:
-  - custom:
-      caption: "Hey! This person wants to chitchat \U0001F5E3\n \n<b>Are you ready for a video call?</b> \U0001F3A5 ☎️"
-      parse_mode: html
-      photo: '{partner_photo_file_id}'
-  utter_someone_wants_to_chat:
-  - custom:
-      parse_mode: html
-      text: "Hey! There is someone who wants to chitchat \U0001F5E3\n \n<b>Are you ready for a video call?</b> \U0001F3A5 ☎️"
-  utter_checking_if_partner_ready_too:
-  - custom:
-      parse_mode: html
-      text: "Just a moment, I'm checking if that person is ready too...\n \nPlease don't go anywhere - <b>this may take up to a minute</b> ⏳"
-  utter_found_someone_check_ready_photo:
-  - custom:
-      caption: "Hooray! I have found someone who is willing to chitchat!\n \n<b>Are you ready for a video call?</b> \U0001F3A5 ☎️"
-      parse_mode: html
-      photo: '{partner_photo_file_id}'
-  utter_found_someone_check_ready:
-  - custom:
-      parse_mode: html
-      text: "Hooray! I have found someone who is willing to chitchat!\n \n<b>Are you ready for a video call?</b> \U0001F3A5 ☎️"
-  utter_partner_already_gone:
-  - text: |-
-      That person has become unavailable 😵
-       
-      Fear not!
-       
-      I am already looking for someone else to connect you with and will get back to you within two minutes ⏳
-  utter_room_url:
-  - custom:
-      parse_mode: html
-      text: "Awesome!\n \n<b>Please follow this link to join the video call:</b>\n \n{room_url}"
-  utter_partner_ready_room_url:
-  - custom:
-      parse_mode: html
-      text: "Done!\n \n<b>Please follow this link to join the video call:</b>\n \n{room_url}"
-  utter_declined:
-  - text: |-
-      Ok, declined ❌
-       
-      May I ask you if there is any specific time or times of day (maybe days of week) when you are more likely to join someone for chitchat over a video call?
-  utter_hope_to_see_you_later:
-  - text: |-
-      Ok, I will not bother you 🛑
-       
-      Should you change your mind and decide that you want to chitchat with someone, just let me know - I will set up a video call 😉
   utter_iamabot:
-  - text: I'm an AI-powered chatbot 🤖
-  utter_error:
-  - text: Ouch! Something went wrong 🤖
+  - custom:
+      parse_mode: html
+      reply_markup: '{"remove_keyboard":true}'
+      text: I'm an AI-powered chatbot 🤖
 actions:
 - action_session_start
 - action_offer_chitchat
