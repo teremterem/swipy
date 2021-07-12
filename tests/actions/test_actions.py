@@ -1408,7 +1408,7 @@ async def test_action_reject_invitation(
             activity_timestamp=1619945501,
             activity_timestamp_str='2021-05-02 08:51:41 Z',
         )
-        wrap_random_randint.assert_called_once_with(60 * 60 * 4, 60 * 60 * (24 * 2 - 5))
+        wrap_random_randint.assert_called_once_with(60 * 60 * 4, 60 * 60 * (24 * 3 - 5))
 
     else:  # an error is expected
         assert actual_events == [
