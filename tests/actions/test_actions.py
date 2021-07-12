@@ -632,7 +632,7 @@ async def test_action_find_partner_no_one(
             'custom': {
                 'text': UTTER_OK_ARRANGING_CHITCHAT_TEXT,
                 'parse_mode': 'html',
-                'reply_markup': REMOVE_KEYBOARD_MARKUP,
+                'reply_markup': OK_WAITING_CANCEL_MARKUP,
             },
             'elements': [],
             'image': None,
