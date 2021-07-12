@@ -42,9 +42,9 @@ so you could practice your English speaking skills 🇬🇧
 <b>Would you like to give it a try?</b>"""
 
 UTTER_OK_ARRANGING_CHITCHAT_TEXT = """\
-Great! Let me find someone for you to chitchat with.
+Great! Let me find someone for you to chitchat with 🗣
 
-I will get back to you <b>within two minutes</b> ⏳"""
+I will get back to you within two minutes ⏳"""
 
 UTTER_ROOM_URL_TEXT = """\
 Awesome!
@@ -84,6 +84,15 @@ Ok, declined ❌
 
 May I ask you if there is any specific time or times of day (maybe days of week) \
 when you are more likely to join someone for chitchat over a video call?"""
+
+OK_WAITING_CANCEL_MARKUP = (
+    '{"keyboard":['
+
+    '[{"text":"Ok, waiting"}],'
+    '[{"text":"Cancel"}]'
+
+    '],"resize_keyboard":true,"one_time_keyboard":true}'
+)
 
 
 @pytest.mark.asyncio
@@ -563,7 +572,7 @@ async def test_action_find_partner(
             'custom': {
                 'text': UTTER_OK_ARRANGING_CHITCHAT_TEXT,
                 'parse_mode': 'html',
-                'reply_markup': '{"remove_keyboard":true}',
+                'reply_markup': OK_WAITING_CANCEL_MARKUP,
             },
             'elements': [],
             'image': None,
