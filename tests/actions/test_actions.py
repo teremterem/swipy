@@ -1057,7 +1057,7 @@ async def test_action_accept_invitation_partner_not_waiting(
         'custom': {
             'text': UTTER_PARTNER_ALREADY_GONE_TEXT,
             'parse_mode': 'html',
-            'reply_markup': REMOVE_KEYBOARD_MARKUP,
+            'reply_markup': OK_WAITING_CANCEL_MARKUP,
         },
         'elements': [],
         'image': None,
