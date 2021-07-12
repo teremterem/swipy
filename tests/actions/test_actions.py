@@ -68,8 +68,13 @@ Fear not!
 I am already looking for someone else to connect you with \
 and will get back to you within two minutes ⏳"""
 
-UTTER_CHECKING_IF_PARTNER_READY_TOO_TEXT = """\
+UTTER_CHECKING_IF_THAT_PERSON_READY_TOO_TEXT = """\
 Just a moment, I'm checking if that person is ready too...
+
+Please don't go anywhere - <b>this may take up to a minute</b> ⏳"""
+
+UTTER_CHECKING_IF_FIRST_NAME_READY_TOO_TEXT = """\
+Just a moment, I'm checking if <b><i>UnitTest FirstName</i></b> is ready too...
 
 Please don't go anywhere - <b>this may take up to a minute</b> ⏳"""
 
@@ -967,18 +972,34 @@ async def test_action_accept_invitation_create_room(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize('partner', [
-    UserStateMachine(
-        user_id='an_asker',
-        state='wants_chitchat',
-        partner_id=None,
+@pytest.mark.parametrize('partner, expected_response_text', [
+    (
+            UserStateMachine(
+                user_id='an_asker',
+                state='wants_chitchat',
+                partner_id=None,
+                telegram_from={'first_name': 'UnitTest FirstName'},
+            ),
+            UTTER_CHECKING_IF_FIRST_NAME_READY_TOO_TEXT,
     ),
-    UserStateMachine(
-        user_id='an_asker',
-        state='waiting_partner_confirm',
-        partner_id='unit_test_user',
-        state_timeout_ts=1619945501 - 1,  # we are 1 second late, now we have to confirm again
-    )
+    (
+            UserStateMachine(
+                user_id='an_asker',
+                state='wants_chitchat',
+                partner_id=None,
+                telegram_from={'first_name': ''},
+            ),
+            UTTER_CHECKING_IF_THAT_PERSON_READY_TOO_TEXT,
+    ),
+    (
+            UserStateMachine(
+                user_id='an_asker',
+                state='waiting_partner_confirm',
+                partner_id='unit_test_user',
+                state_timeout_ts=1619945501 - 1,  # we are 1 second late, now we have to confirm again
+            ),
+            UTTER_CHECKING_IF_THAT_PERSON_READY_TOO_TEXT,
+    ),
 ])
 @pytest.mark.usefixtures('create_user_state_machine_table', 'wrap_actions_datetime_now')
 @patch('time.time', Mock(return_value=1619945501))  # "now"
@@ -996,6 +1017,7 @@ async def test_action_accept_invitation_confirm_with_asker(
         ],
         external_intent_response: Dict[Text, Any],
         partner: UserStateMachine,
+        expected_response_text: Text,
 ) -> None:
     mock_telebot_make_request.return_value = telegram_user_profile_photo
     mock_aioresponses.post(re.compile(r'.*'), payload=external_intent_response)
@@ -1028,7 +1050,7 @@ async def test_action_accept_invitation_confirm_with_asker(
         'attachment': None,
         'buttons': [],
         'custom': {
-            'text': UTTER_CHECKING_IF_PARTNER_READY_TOO_TEXT,
+            'text': expected_response_text,
             'parse_mode': 'html',
             'reply_markup': OK_WAITING_CANCEL_MARKUP,
         },
