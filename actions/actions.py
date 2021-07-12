@@ -57,6 +57,7 @@ class SwiperActionResult:
     ERROR = 'error'
 
 
+REMOVE_KEYBOARD_MARKUP = '{"remove_keyboard":true}'
 OK_WAITING_CANCEL_MARKUP = (
     '{"keyboard":['
 
@@ -294,7 +295,7 @@ class ActionOfferChitchat(BaseSwiperAction):
                         '- I send both of you a video chat link.',
 
                 'parse_mode': 'html',
-                'reply_markup': '{"remove_keyboard":true}',
+                'reply_markup': REMOVE_KEYBOARD_MARKUP,
             })
         elif latest_intent == 'affirm':
             dispatcher.utter_message(custom={
@@ -303,7 +304,7 @@ class ActionOfferChitchat(BaseSwiperAction):
                         '<b>Are you agreeing to a video call with another person?</b>',
 
                 'parse_mode': 'html',
-                'reply_markup': '{"remove_keyboard":true}',
+                'reply_markup': REMOVE_KEYBOARD_MARKUP,
             })
         else:  # 'greet'
             dispatcher.utter_message(custom={
@@ -315,7 +316,7 @@ class ActionOfferChitchat(BaseSwiperAction):
                         '<b>Would you like to give it a try?</b>',
 
                 'parse_mode': 'html',
-                'reply_markup': '{"remove_keyboard":true}',
+                'reply_markup': REMOVE_KEYBOARD_MARKUP,
             })
 
         return [
@@ -435,7 +436,7 @@ class ActionFindPartner(BaseSwiperAction):
                     "<b>Would you like me to try searching again?</b>",
 
             'parse_mode': 'html',
-            'reply_markup': '{"remove_keyboard":true}',
+            'reply_markup': REMOVE_KEYBOARD_MARKUP,
         })
 
         return [
@@ -708,7 +709,7 @@ class ActionDoNotDisturb(BaseSwiperAction):
                     'just let me know - I will set up a video call 😉',
 
             'parse_mode': 'html',
-            'reply_markup': '{"remove_keyboard":true}',
+            'reply_markup': REMOVE_KEYBOARD_MARKUP,
         })
 
         return [
@@ -744,7 +745,7 @@ class ActionRejectInvitation(BaseSwiperAction):
                     'when you are more likely to join someone for chitchat over a video call?',
 
             'parse_mode': 'html',
-            'reply_markup': '{"remove_keyboard":true}',
+            'reply_markup': REMOVE_KEYBOARD_MARKUP,
         })
 
         return [
