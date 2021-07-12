@@ -861,7 +861,7 @@ async def test_action_accept_invitation_create_room(
         'custom': {
             'text': UTTER_ROOM_URL_TEXT,
             'parse_mode': 'html',
-            'reply_markup': REMOVE_KEYBOARD_MARKUP,
+            'reply_markup': CANCEL_MARKUP,
         },
         'elements': [],
         'image': None,
@@ -967,7 +967,7 @@ async def test_action_accept_invitation_confirm_with_asker(
         'custom': {
             'text': UTTER_CHECKING_IF_PARTNER_READY_TOO_TEXT,
             'parse_mode': 'html',
-            'reply_markup': REMOVE_KEYBOARD_MARKUP,
+            'reply_markup': OK_WAITING_CANCEL_MARKUP,
         },
         'elements': [],
         'image': None,
@@ -986,6 +986,7 @@ async def test_action_accept_invitation_confirm_with_asker(
         {
             'partner_id': 'unit_test_user',
             'partner_photo_file_id': 'biggest_profile_pic_file_id',
+            'partner_first_name': None,
         },
     )
     assert mock_aioresponses.requests == {
