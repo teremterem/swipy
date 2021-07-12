@@ -102,17 +102,17 @@ Hey! <b><i>unitTest firstName30</i></b> is looking to chitchat 🗣
 <b>Would you like to join a video call?</b> 🎥 ☎️"""
 
 UTTER_ASK_TO_CONFIRM_SOMEONE_TEXT = """\
-Hey! Someone wants to chitchat with <b>you</b> 👈
+Hey! Someone wants to chitchat with 👉 you 👈
 
 <b>Are you ready for a video call?</b> 🎥 ☎️"""
 
 UTTER_ASK_TO_CONFIRM_THIS_PERSON_TEXT = """\
-Hey! This person wants to chitchat with <b>you</b> 👈
+Hey! This person wants to chitchat with 👉 you 👈
 
 <b>Are you ready for a video call?</b> 🎥 ☎️"""
 
 UTTER_ASK_TO_CONFIRM_FIRST_NAME_TEXT = """\
-Hey! <b><i>unitTest firstName30</i></b> wants to chitchat with <b>you</b> 👈
+Hey! <b><i>unitTest firstName30</i></b> wants to chitchat with 👉 you 👈
 
 <b>Are you ready for a video call?</b> 🎥 ☎️"""
 
@@ -140,12 +140,12 @@ OK_WAITING_CANCEL_MARKUP = (
 )
 CANCEL_MARKUP = '{"keyboard":[[{"text":"Cancel"}]],"resize_keyboard":true,"one_time_keyboard":true}'
 
-YES_NOT_NOW_NEXT_PERSON_MARKUP = (
+YES_NO_SOMEONE_ELSE_MARKUP = (
     '{"keyboard":['
 
     '[{"text":"Yes"}],'
-    '[{"text":"Not now"}],'
-    '[{"text":"Next person"}]'
+    '[{"text":"No"}],'
+    '[{"text":"Someone else"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
@@ -808,13 +808,13 @@ async def test_action_ask_to_join(
                 'photo': 'some photo file id',
                 'caption': expected_response_text,
                 'parse_mode': 'html',
-                'reply_markup': YES_NOT_NOW_NEXT_PERSON_MARKUP,
+                'reply_markup': YES_NO_SOMEONE_ELSE_MARKUP,
             }
         else:
             custom_dict = {
                 'text': expected_response_text,
                 'parse_mode': 'html',
-                'reply_markup': YES_NOT_NOW_NEXT_PERSON_MARKUP,
+                'reply_markup': YES_NO_SOMEONE_ELSE_MARKUP,
             }
         expected_response = {
             'attachment': None,
