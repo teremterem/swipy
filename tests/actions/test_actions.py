@@ -1557,17 +1557,20 @@ async def test_action_reject_invitation(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize('source_swiper_state, action_has_effect', [
-    ('new', False),
-    ('wants_chitchat', False),
-    ('ok_to_chitchat', False),
-    ('waiting_partner_confirm', True),
-    ('asked_to_join', False),
-    ('asked_to_confirm', False),
-    ('roomed', False),
-    ('rejected_join', False),
-    ('rejected_confirm', False),
-    ('do_not_disturb', False),
+@pytest.mark.parametrize('source_swiper_state, partner_has_name, expected_response_text', [
+    ('new', True, None),
+    ('wants_chitchat', False, None),
+    ('ok_to_chitchat', True, None),
+
+    ('waiting_partner_confirm', False, UTTER_THAT_PERSON_ALREADY_GONE_TEXT),
+    ('waiting_partner_confirm', True, UTTER_FIRST_NAME_ALREADY_GONE_TEXT),
+
+    ('asked_to_join', False, None),
+    ('asked_to_confirm', True, None),
+    ('roomed', False, None),
+    ('rejected_join', True, None),
+    ('rejected_confirm', False, None),
+    ('do_not_disturb', True, None),
 ])
 @pytest.mark.usefixtures('create_user_state_machine_table', 'wrap_actions_datetime_now')
 @patch('time.time', Mock(return_value=1619945501))
@@ -1576,7 +1579,8 @@ async def test_action_expire_partner_confirmation(
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
         source_swiper_state: Text,
-        action_has_effect: bool,
+        partner_has_name: bool,
+        expected_response_text: Optional[Text],
 ) -> None:
     user_vault = UserVault()
     user_vault.save(UserStateMachine(
@@ -1585,13 +1589,18 @@ async def test_action_expire_partner_confirmation(
         partner_id='some_partner_id',
         newbie=True,
     ))
+    user_vault.save(UserStateMachine(
+        user_id='some_partner_id',
+        telegram_from={'first_name': 'unitTest firstName'} if partner_has_name else {},
+    ))
 
     action = actions.ActionExpirePartnerConfirmation()
     assert action.name() == 'action_expire_partner_confirmation'
 
     actual_events = await action.run(dispatcher, tracker, domain)
 
-    if action_has_effect:
+    if expected_response_text:
+        # action is expected to have had an effect
         assert actual_events == [
             SlotSet('swiper_action_result', 'success'),
             SlotSet('partner_search_start_ts', '1619945501'),
@@ -1611,7 +1620,7 @@ async def test_action_expire_partner_confirmation(
             'attachment': None,
             'buttons': [],
             'custom': {
-                'text': UTTER_PARTNER_ALREADY_GONE_TEXT,
+                'text': expected_response_text,
                 'parse_mode': 'html',
                 'reply_markup': OK_WAITING_CANCEL_MARKUP,
             },
@@ -1623,6 +1632,7 @@ async def test_action_expire_partner_confirmation(
         }]
 
     else:
+        # action is NOT expected to have had an effect
         assert actual_events == [
             UserUtteranceReverted(),
             SlotSet('swiper_state', source_swiper_state),
