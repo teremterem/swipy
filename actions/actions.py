@@ -489,7 +489,7 @@ class ActionAskToJoin(BaseSwiperAction):
             current_user.save()
 
             utter_text = (
-                f"Hey! {presented_partner} wants to chitchat with 👉 you 👈\n"
+                f"Hey! {presented_partner} is willing to chitchat with 👉 you 👈\n"
                 f"\n"
                 f"<b>Are you ready for a video call?</b> 🎥 ☎️"
             )

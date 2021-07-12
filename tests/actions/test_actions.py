@@ -102,17 +102,17 @@ Hey! <b><i>unitTest firstName30</i></b> is looking to chitchat 🗣
 <b>Would you like to join a video call?</b> 🎥 ☎️"""
 
 UTTER_ASK_TO_CONFIRM_SOMEONE_TEXT = """\
-Hey! Someone wants to chitchat with 👉 you 👈
+Hey! Someone is willing to chitchat with 👉 you 👈
 
 <b>Are you ready for a video call?</b> 🎥 ☎️"""
 
 UTTER_ASK_TO_CONFIRM_THIS_PERSON_TEXT = """\
-Hey! This person wants to chitchat with 👉 you 👈
+Hey! This person is willing to chitchat with 👉 you 👈
 
 <b>Are you ready for a video call?</b> 🎥 ☎️"""
 
 UTTER_ASK_TO_CONFIRM_FIRST_NAME_TEXT = """\
-Hey! <b><i>unitTest firstName30</i></b> wants to chitchat with 👉 you 👈
+Hey! <b><i>unitTest firstName30</i></b> is willing to chitchat with 👉 you 👈
 
 <b>Are you ready for a video call?</b> 🎥 ☎️"""
 
