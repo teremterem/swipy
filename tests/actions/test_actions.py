@@ -421,16 +421,16 @@ async def test_action_offer_chitchat(
 @patch.object(UserVault, '_get_random_available_partner_dict')
 @patch('telebot.apihelper._make_request')
 @pytest.mark.parametrize(
-    'user_has_photo, tracker_latest_message, expect_as_reminder, source_swiper_state, expect_dry_run, '
+    'user_has_photo, user_has_name, tracker_latest_message, expect_as_reminder, source_swiper_state, expect_dry_run, '
     'partner_blocked_bot',
     [
-        (True, {}, False, 'new', False, True),
-        (False, {'intent': None}, False, 'new', False, False),
-        (True, {'intent': {'name': None}}, False, 'new', False, False),
-        (False, {'intent': {'name': 'videochat'}}, False, 'new', False, False),
-        (True, {'intent': {'name': 'videochat'}}, False, 'wants_chitchat', False, False),
-        (False, {'intent': {'name': 'EXTERNAL_find_partner'}}, True, 'wants_chitchat', False, False),
-        (True, {'intent': {'name': 'EXTERNAL_find_partner'}}, True, 'asked_to_join', True, False),
+        (True, True, {}, False, 'new', False, True),
+        (False, True, {'intent': None}, False, 'new', False, False),
+        (True, False, {'intent': {'name': None}}, False, 'new', False, False),
+        (False, False, {'intent': {'name': 'videochat'}}, False, 'new', False, False),
+        (True, None, {'intent': {'name': 'videochat'}}, False, 'wants_chitchat', False, False),
+        (False, None, {'intent': {'name': 'EXTERNAL_find_partner'}}, True, 'wants_chitchat', False, False),
+        (True, True, {'intent': {'name': 'EXTERNAL_find_partner'}}, True, 'asked_to_join', True, False),
     ],
 )
 async def test_action_find_partner(
@@ -448,17 +448,25 @@ async def test_action_find_partner(
         ],
         external_intent_response: Dict[Text, Any],
         user_has_photo: bool,
+        user_has_name: Optional[bool],
         tracker_latest_message: Dict[Text, Any],
         expect_as_reminder: bool,
         source_swiper_state: Text,
         expect_dry_run: bool,
         partner_blocked_bot: bool,
 ) -> None:
-    user_vault = UserVault()
-    user_vault.save(UserStateMachine(
+    current_user = UserStateMachine(
         user_id='unit_test_user',
         state=source_swiper_state,
-    ))
+    )
+    if user_has_name:
+        current_user.telegram_from = {'first_name': 'unit_test_first_name'}
+    elif user_has_name is False:
+        current_user.telegram_from = {'first_name': ''}
+    # else (user_has_name is None) => we are not setting telegram_from at all
+
+    user_vault = UserVault()
+    user_vault.save(current_user)
 
     # noinspection PyDataclass
     mock_get_random_available_partner_dict.return_value = asdict(available_newbie1)
@@ -541,6 +549,7 @@ async def test_action_find_partner(
             {
                 'partner_id': 'unit_test_user',
                 'partner_photo_file_id': 'biggest_profile_pic_file_id' if user_has_photo else None,
+                'partner_first_name': 'unit_test_first_name' if user_has_name else None,
             },
         )
         assert mock_aioresponses.requests == {expected_req_key: [expected_req_call]}
@@ -573,6 +582,7 @@ async def test_action_find_partner(
         state_timestamp_str=None if expect_as_reminder else '2021-05-02 08:51:41 Z',
         activity_timestamp=0 if expect_as_reminder else 1619945501,
         activity_timestamp_str=None if expect_as_reminder else '2021-05-02 08:51:41 Z',
+        telegram_from=current_user.telegram_from,
     )
 
 
