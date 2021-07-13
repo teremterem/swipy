@@ -32,3 +32,10 @@ nlu:
   examples: |
     - nope
     - n
+- intent: buttons
+  examples: |
+    - Ok, waiting
+    - Cancel
+    - Yes
+    - No
+    - Someone else
