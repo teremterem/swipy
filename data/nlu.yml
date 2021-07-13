@@ -41,12 +41,10 @@ nlu:
     - Ok waiting
     - Quickly
     - Any time
+    - Great!
 - intent: cancel
   examples: |
     - Cancel
-- intent: someone_else
-  examples: |
-    - Someone else
 - intent: start
   examples: |
     - Start
@@ -56,10 +54,8 @@ nlu:
     - now
 - intent: try_again
   examples: |
+    - Someone else
     - one more
-- intent: good
-  examples: |
-    - Great!
 - intent: help
   examples: |
     - What should I do?
