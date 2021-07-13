@@ -3,3 +3,41 @@ nlu:
 - intent: affirm
   examples: |
     - Yes
+    - yes
+    - ok
+    - yes please
+    - ok sir
+    - Yep
+    - Yes please
+    - Oo yes
+    - Ok
+    - Ok 👍
+    - Yes 🙌
+    - k
+    - Yeah
+    - y
+    - Yes,of course
+    - sure
+    - Ja
+    - Yes , I want
+    - +
+    - yes i do
+- intent: EXTERNAL_expire_partner_confirmation
+  examples: |
+    - EXTERNAL: EXTERNAL_expire_partner_confirmation
+- intent: EXTERNAL_find_partner
+  examples: |
+    - EXTERNAL: EXTERNAL_find_partner
+- intent: greet
+  examples: |
+    - Hello
+    - Hey
+    - hello
+    - h
+- intent: start
+  examples: |
+    - EXTERNAL: start
+- intent: deny
+  examples: |
+    - nope
+    - n
