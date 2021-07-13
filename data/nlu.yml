@@ -1,5 +1,8 @@
 version: "2.0"
 nlu:
+- intent: start
+  examples: |
+    - Start
 - intent: greet
   examples: |
     - Hello
@@ -9,6 +12,14 @@ nlu:
     - here
     - Hi
     - Hey hi
+- intent: videochat
+  examples: |
+    - run
+    - now
+- intent: try_again
+  examples: |
+    - Someone else
+    - one more
 - intent: affirm
   examples: |
     - Yes
@@ -38,39 +49,22 @@ nlu:
     - Yes, please
     - That would be great
     - Ok, cool
-- intent: deny
-  examples: |
-    - No
-    - nope
-    - n
 - intent: waiting
   examples: |
     - Ok, waiting
     - just waiting someone
     - Ok waiting
-    - Quickly
     - Any time
     - Great!
-- intent: cancel
+- intent: impatient
   examples: |
-    - Cancel
-- intent: start
+    - Quickly
+    - Any updates?
+- intent: deny
   examples: |
-    - Start
-- intent: videochat
-  examples: |
-    - run
-    - now
-- intent: try_again
-  examples: |
-    - Someone else
-    - one more
-- intent: help
-  examples: |
-    - What should I do?
-    - Ok where is the link?
-    - Ok. How to call you?
-    - Why?
+    - No
+    - nope
+    - n
 - intent: another_time
   examples:
   - text: |
@@ -93,6 +87,22 @@ nlu:
       Hard to say, it depends
 
       Maybe weekends will be more talkative
+- intent: cancel
+  examples: |
+    - Cancel
+- intent: stop
+  examples: |
+    - Stop
+- intent: help
+  examples: |
+    - What should I do?
+    - Ok where is the link?
+    - Ok. How to call you?
+    - Why?
+- intent: gratitude
+  examples: |
+    - Thanks
+    - Was nice chatting
 - intent: out_of_scope
   examples: |
     - г
@@ -103,13 +113,3 @@ nlu:
     - упс, не туда)
     - упс
     - https://www.screencast.com/t/pWdPt5UIE
-- intent: stop
-  examples: |
-    - Stop
-- intent: impatient
-  examples: |
-    - Any updates?
-- intent: gratitude
-  examples: |
-    - Thanks
-    - Was nice chatting
