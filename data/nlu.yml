@@ -30,12 +30,15 @@ nlu:
     - yes i do
 - intent: deny
   examples: |
+    - No
     - nope
     - n
-- intent: buttons
+- intent: waiting
   examples: |
     - Ok, waiting
+- intent: cancel
+  examples: |
     - Cancel
-    - Yes
-    - No
+- intent: someone_else
+  examples: |
     - Someone else
