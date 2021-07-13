@@ -6,6 +6,7 @@ nlu:
     - Hey
     - hello
     - h
+    - here
 - intent: affirm
   examples: |
     - Yes
@@ -36,9 +37,46 @@ nlu:
 - intent: waiting
   examples: |
     - Ok, waiting
+    - just waiting someone
+    - Ok waiting
+    - Quickly
+    - Any time
 - intent: cancel
   examples: |
     - Cancel
 - intent: someone_else
   examples: |
     - Someone else
+- intent: start
+  examples: |
+    - Start
+- intent: videochat
+  examples: |
+    - run
+    - now
+- intent: try_again
+  examples: |
+    - one more
+- intent: good
+  examples: |
+    - Great!
+- intent: help
+  examples: |
+    - What should I do?
+    - Ok where is the link?
+    - Ok. How to call you?
+    - Why?
+- intent: another_time
+  examples: |
+    - Maybe tomorrow
+    - Not yet
+    - After two hours
+    - today at 14.00
+    - Hi. I will be free after 2 hours
+- intent: out_of_scope
+  examples: |
+    - г
+    - I have a photo
+    - I have a photo. Can’t you see him
+    - Dear Admin, please advise me how I can add such  English Speaking aspirants. I have so many friends who are interested to join such a language-bot )
+    - who exactly?
