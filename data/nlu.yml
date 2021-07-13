@@ -7,6 +7,8 @@ nlu:
     - hello
     - h
     - here
+    - Hi
+    - Hey hi
 - intent: affirm
   examples: |
     - Yes
@@ -29,6 +31,13 @@ nlu:
     - Yes , I want
     - +
     - yes i do
+    - Yeap
+    - yes, sure
+    - yes, plaese
+    - yes, please
+    - Yes, please
+    - That would be great
+    - Ok, cool
 - intent: deny
   examples: |
     - No
@@ -63,12 +72,27 @@ nlu:
     - Ok. How to call you?
     - Why?
 - intent: another_time
-  examples: |
-    - Maybe tomorrow
-    - Not yet
-    - After two hours
-    - today at 14.00
-    - Hi. I will be free after 2 hours
+  examples:
+  - text: |
+      Maybe tomorrow
+  - text: |
+      Not yet
+  - text: |
+      After two hours
+  - text: |
+      today at 14.00
+  - text: |
+      Hi. I will be free after 2 hours
+  - text: |
+      Not at the moment, thanks
+  - text: |
+      Maybe later, thanks
+  - text: |
+      Thanks, not at the moment, I have a lot of stuff to do
+  - text: |
+      Hard to say, it depends
+
+      Maybe weekends will be more talkative
 - intent: out_of_scope
   examples: |
     - г
@@ -76,3 +100,16 @@ nlu:
     - I have a photo. Can’t you see him
     - Dear Admin, please advise me how I can add such  English Speaking aspirants. I have so many friends who are interested to join such a language-bot )
     - who exactly?
+    - упс, не туда)
+    - упс
+    - https://www.screencast.com/t/pWdPt5UIE
+- intent: stop
+  examples: |
+    - Stop
+- intent: impatient
+  examples: |
+    - Any updates?
+- intent: gratitude
+  examples: |
+    - Thanks
+    - Was nice chatting
