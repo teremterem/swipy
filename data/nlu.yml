@@ -12,6 +12,7 @@ nlu:
     - here
     - Hi
     - Hey hi
+    - hi
 - intent: videochat
   examples: |
     - run
@@ -65,6 +66,7 @@ nlu:
     - No
     - nope
     - n
+    - no
 - intent: another_time
   examples:
   - text: |
