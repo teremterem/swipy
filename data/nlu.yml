@@ -1,5 +1,11 @@
 version: "2.0"
 nlu:
+- intent: greet
+  examples: |
+    - Hello
+    - Hey
+    - hello
+    - h
 - intent: affirm
   examples: |
     - Yes
@@ -22,21 +28,6 @@ nlu:
     - Yes , I want
     - +
     - yes i do
-- intent: EXTERNAL_expire_partner_confirmation
-  examples: |
-    - EXTERNAL: EXTERNAL_expire_partner_confirmation
-- intent: EXTERNAL_find_partner
-  examples: |
-    - EXTERNAL: EXTERNAL_find_partner
-- intent: greet
-  examples: |
-    - Hello
-    - Hey
-    - hello
-    - h
-- intent: start
-  examples: |
-    - EXTERNAL: start
 - intent: deny
   examples: |
     - nope
