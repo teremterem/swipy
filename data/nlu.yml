@@ -66,6 +66,7 @@ nlu:
     - No
     - nope
     - n
+    - -
     - no
 - intent: another_time
   examples:
