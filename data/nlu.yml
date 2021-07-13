@@ -1,143 +1,118 @@
 version: "2.0"
 nlu:
+- intent: start
+  examples: |
+    - Start
 - intent: greet
   examples: |
-    - hey
-    - hello
-    - hi
-    - hello there
-    - good morning
-    - good evening
-    - moin
-    - hey there
-    - hey dude
-    - goodmorning
-    - goodevening
-    - good afternoon
-    - hey, what's up?
-    - good time of day
-    - Hi
     - Hello
-    - Hey hi
-    - here
     - Hey
+    - hello
     - h
+    - here
+    - Hi
+    - Hey hi
+    - hi
+- intent: videochat
+  examples: |
+    - run
+    - now
+- intent: try_again
+  examples: |
+    - Someone else
+    - one more
 - intent: affirm
   examples: |
-    - yes, please
-    - yes please
-    - yes pls
-    - let's try that
-    - let's go
-    - ok, I'm in
-    - yes
-    - y
-    - indeed
-    - of course
-    - that sounds good
-    - correct
-    - perfect
-    - great
-    - amazing
-    - wonderful
-    - I would love that
-    - that's fine
-    - sure
-    - I am ready
-    - yes, I'm ready
-    - ready
-    - please do
-    - yes i am
-    - +
-    - Ok
     - Yes
-    - Ok where is the link?
-    - Ok. How to call you?
-    - yes i do
-    - Ja
+    - yes
+    - ok
+    - yes please
+    - ok sir
+    - Yep
+    - Yes please
+    - Oo yes
+    - Ok
+    - Ok 👍
+    - Yes 🙌
+    - k
     - Yeah
+    - y
+    - Yes,of course
+    - sure
+    - Ja
     - Yes , I want
-    - yeas
-    - let’s try that
+    - +
+    - yes i do
+    - Yeap
     - yes, sure
     - yes, plaese
+    - yes, please
     - Yes, please
     - That would be great
     - Ok, cool
-    - Yes,of course
-    - Yeap
+- intent: waiting
+  examples: |
+    - Ok, waiting
+    - just waiting someone
+    - Ok waiting
+    - Any time
+    - Great!
+- intent: impatient
+  examples: |
+    - Quickly
+    - Any updates?
 - intent: deny
   examples: |
-    - no, thanks
-    - no
-    - n
-    - never
-    - I don't think so
-    - don't like that
-    - no way
-    - not really
-    - no thanks
-    - -
-    - nope
     - No
-    - Thanks, not at the moment, I have a lot of stuff to do
-    - Maybe later, thanks
-- intent: how_it_works
+    - nope
+    - n
+    - -
+    - no
+- intent: another_time
+  examples:
+  - text: |
+      Maybe tomorrow
+  - text: |
+      Not yet
+  - text: |
+      After two hours
+  - text: |
+      today at 14.00
+  - text: |
+      Hi. I will be free after 2 hours
+  - text: |
+      Not at the moment, thanks
+  - text: |
+      Maybe later, thanks
+  - text: |
+      Thanks, not at the moment, I have a lot of stuff to do
+  - text: |
+      Hard to say, it depends
+
+      Maybe weekends will be more talkative
+- intent: cancel
   examples: |
-    - how does it work?
-    - how?
-    - tell me more
-    - how will you do that?
-    - what do you do, specifically?
-    - great, and what can you do?
-    - how it works
+    - Cancel
 - intent: stop
   examples: |
-    - don't bother me
-    - do not disturb me
-    - dont bother me with that
-    - don't bother me till evening
-    - I'm busy till evening
-    - I am busy until evening
-    - busy
-    - sry busy now
-    - cancel
-    - stop
-    - Cancel
-    - dont bother me
-    - do not disturb
     - Stop
-- intent: bot_challenge
+- intent: help
   examples: |
-    - are you a bot?
-    - are you a human?
-    - am I talking to a bot?
-    - am I talking to a human?
-    - are you a real person?
-- intent: videochat
+    - What should I do?
+    - Ok where is the link?
+    - Ok. How to call you?
+    - Why?
+- intent: gratitude
   examples: |
-    - I want you to connect me with somebody
-    - connect me with someone
-    - I want to have a chitchat
-    - chitchat
-    - chit chat
-    - I want to talk to somebody
-    - I want someone to talk to
-    - smalltalk
-    - small talk
-    - let me talk to someone
-    - let me talk to that person
-    - hey let me talk to smbdy
-    - I want chitchat
-    - yes, connect me
-    - video call
-    - video chitchat
-    - video chit chat
-    - call
-    - now
-    - Chat
-    - Any time
-    - chat
-    - chit-chat
-    - english
-    - run
+    - Thanks
+    - Was nice chatting
+- intent: out_of_scope
+  examples: |
+    - г
+    - I have a photo
+    - I have a photo. Can’t you see him
+    - Dear Admin, please advise me how I can add such  English Speaking aspirants. I have so many friends who are interested to join such a language-bot )
+    - who exactly?
+    - упс, не туда)
+    - упс
+    - https://www.screencast.com/t/pWdPt5UIE

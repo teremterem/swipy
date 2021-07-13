@@ -489,7 +489,7 @@ class ActionAskToJoin(BaseSwiperAction):
             current_user.save()
 
             utter_text = (
-                f"Hey! {presented_partner} wants to chitchat with <b>you</b> 👈\n"
+                f"Hey! {presented_partner} is willing to chitchat with 👉 you 👈\n"
                 f"\n"
                 f"<b>Are you ready for a video call?</b> 🎥 ☎️"
             )
@@ -515,8 +515,8 @@ class ActionAskToJoin(BaseSwiperAction):
             '{"keyboard":['
 
             '[{"text":"Yes"}],'
-            '[{"text":"Not now"}],'
-            '[{"text":"Next person"}]'
+            '[{"text":"No"}],'
+            '[{"text":"Someone else"}]'
 
             '],"resize_keyboard":true,"one_time_keyboard":true}'
         )
