@@ -10,7 +10,11 @@ rules:
 - rule: user says yes to "nothing" (conversation context was lost)
   conversation_start: true
   steps:
-  - intent: affirm
+  - or:
+    - intent: affirm
+    - intent: waiting
+    - intent: impatient
+    - intent: try_again
   - action: action_offer_chitchat
 - rule: the bot offers chitchat and the user agrees
   steps:

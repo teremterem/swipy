@@ -370,6 +370,9 @@ async def test_action_session_start_with_slots(
     ('start', 'new', 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),
     ('greet', 'new', 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),
     ('affirm', 'new', 'ok_to_chitchat', UTTER_LOST_TRACK_OF_CONVERSATION_TEXT),
+    ('waiting', 'new', 'ok_to_chitchat', UTTER_LOST_TRACK_OF_CONVERSATION_TEXT),
+    ('impatient', 'new', 'ok_to_chitchat', UTTER_LOST_TRACK_OF_CONVERSATION_TEXT),
+    ('try_again', 'new', 'ok_to_chitchat', UTTER_LOST_TRACK_OF_CONVERSATION_TEXT),
 
     ('greet', None, 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),  # user does not exist yet
     ('greet', 'new', 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),

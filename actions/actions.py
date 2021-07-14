@@ -284,8 +284,9 @@ class ActionOfferChitchat(BaseSwiperAction):
                 current_user.save()
 
         latest_intent = tracker.get_intent_of_latest_message()
+
         if latest_intent == 'help':
-            dispatcher.utter_message(custom={
+            dispatcher.utter_message(custom={  # TODO oleksandr: rewrite this text !
                 'text': 'I can arrange video chitchat with another human for you 🎥 🗣 ☎️\n'
                         '\n'
                         'Here is how it works:\n'
@@ -297,7 +298,13 @@ class ActionOfferChitchat(BaseSwiperAction):
                 'parse_mode': 'html',
                 'reply_markup': REMOVE_KEYBOARD_MARKUP,
             })
-        elif latest_intent == 'affirm':
+            
+        elif latest_intent in [
+            'affirm',
+            'waiting',
+            'impatient',
+            'try_again',
+        ]:
             dispatcher.utter_message(custom={
                 'text': 'Please forgive me for losing track of our conversation 🤖\n'
                         '\n'
@@ -306,6 +313,7 @@ class ActionOfferChitchat(BaseSwiperAction):
                 'parse_mode': 'html',
                 'reply_markup': REMOVE_KEYBOARD_MARKUP,
             })
+
         else:  # 'greet'
             dispatcher.utter_message(custom={
                 'text': 'Hi, my name is Swipy 🙂\n'
