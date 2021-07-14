@@ -1,6 +1,9 @@
-#version: "2.0"
-#stories:
-#- story: user asks for chitchat directly
-#  steps:
-#  - intent: videochat
-#  - action: action_find_partner
+version: "2.0"
+stories:
+- story: user says yes to something (rules did not catch it)
+  steps:
+  - or:
+    - intent: affirm
+    - intent: waiting
+    - intent: impatient
+  - action: action_offer_chitchat

@@ -7,14 +7,6 @@ rules:
     - intent: greet
     - intent: help
   - action: action_offer_chitchat
-- rule: user says yes to "nothing" (conversation context was lost)
-  conversation_start: true
-  steps:
-  - or:
-    - intent: affirm
-    - intent: waiting
-    - intent: impatient
-  - action: action_offer_chitchat
 - rule: the bot offers chitchat and the user agrees
   steps:
   - action: action_offer_chitchat
@@ -63,11 +55,12 @@ rules:
   steps:
   - intent: stop
   - action: action_do_not_disturb
-- rule: user asks for chitchat directly
-  steps:
-  - intent: videochat
-  - action: action_find_partner
 - rule: it took too long for partner to confirm - we need to let the user know that partner is likely not available
   steps:
   - intent: EXTERNAL_expire_partner_confirmation
   - action: action_expire_partner_confirmation
+
+- rule: user asks for video chat directly
+  steps:
+  - intent: videochat
+  - action: action_find_partner
