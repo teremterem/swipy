@@ -11,8 +11,6 @@ intents:
     use_entities: true
 - videochat:
     use_entities: true
-- try_again:
-    use_entities: true
 - affirm:
     use_entities: true
 - waiting:

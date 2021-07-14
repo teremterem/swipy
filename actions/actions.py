@@ -303,7 +303,6 @@ class ActionOfferChitchat(BaseSwiperAction):
             'affirm',
             'waiting',
             'impatient',
-            'try_again',
         ]:
             dispatcher.utter_message(custom={
                 'text': 'Please forgive me for losing track of our conversation 🤖\n'

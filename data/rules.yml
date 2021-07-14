@@ -14,7 +14,6 @@ rules:
     - intent: affirm
     - intent: waiting
     - intent: impatient
-    - intent: try_again
   - action: action_offer_chitchat
 - rule: the bot offers chitchat and the user agrees
   steps:
@@ -27,11 +26,7 @@ rules:
     - swiper_action_result: partner_was_not_found
   steps:
   - action: action_find_partner
-  - or:
-    - intent: affirm
-    - intent: waiting
-    - intent: impatient
-    - intent: try_again
+  - intent: affirm
   - action: action_find_partner
 - rule: action_listen after action_find_partner
   steps:

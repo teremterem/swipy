@@ -15,11 +15,9 @@ nlu:
     - hi
 - intent: videochat
   examples: |
+    - Someone else
     - run
     - now
-- intent: try_again
-  examples: |
-    - Someone else
     - one more
 - intent: affirm
   examples: |
