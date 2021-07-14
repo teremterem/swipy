@@ -9,17 +9,33 @@ intents:
     use_entities: true
 - greet:
     use_entities: true
+- videochat:
+    use_entities: true
+- try_again:
+    use_entities: true
 - affirm:
+    use_entities: true
+- waiting:
+    use_entities: true
+- impatient:
     use_entities: true
 - deny:
     use_entities: true
-- how_it_works:
+- another_time:
+    use_entities: true
+- cancel:
     use_entities: true
 - stop:
     use_entities: true
-- bot_challenge:
+- help:
     use_entities: true
-- videochat:
+- gratitude:
+    use_entities: true
+- out_of_scope:
+    use_entities: true
+- how_it_works:
+    use_entities: true
+- bot_challenge:
     use_entities: true
 - EXTERNAL_ask_to_join:
     use_entities: true
@@ -30,22 +46,6 @@ intents:
 - EXTERNAL_find_partner:
     use_entities: true
 - EXTERNAL_expire_partner_confirmation:
-    use_entities: true
-- gratitude:
-    use_entities: true
-- waiting:
-    use_entities: true
-- out_of_scope:
-    use_entities: true
-- try_again:
-    use_entities: true
-- another_time:
-    use_entities: true
-- cancel:
-    use_entities: true
-- help:
-    use_entities: true
-- impatient:
     use_entities: true
 entities:
 - partner_id
