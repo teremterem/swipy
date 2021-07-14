@@ -5,7 +5,7 @@ rules:
   - or:
     - intent: start
     - intent: greet
-    - intent: how_it_works
+    - intent: help
   - action: action_offer_chitchat
 - rule: user says yes to "nothing" (conversation context was lost)
   conversation_start: true

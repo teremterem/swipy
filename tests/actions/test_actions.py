@@ -366,7 +366,7 @@ async def test_action_session_start_with_slots(
     True,
 ])
 @pytest.mark.parametrize('latest_intent, source_swiper_state, destination_swiper_state, expected_response_text', [
-    ('how_it_works', 'new', 'ok_to_chitchat', UTTER_HOW_IT_WORKS_TEXT),
+    ('help', 'new', 'ok_to_chitchat', UTTER_HOW_IT_WORKS_TEXT),
     ('start', 'new', 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),
     ('greet', 'new', 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),
     ('affirm', 'new', 'ok_to_chitchat', UTTER_LOST_TRACK_OF_CONVERSATION_TEXT),

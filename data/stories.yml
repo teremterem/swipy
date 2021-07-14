@@ -2,7 +2,5 @@
 #stories:
 #- story: user greets the bot or asks how the bot works
 #  steps:
-#  - or:
-#    - intent: greet
-#    - intent: how_it_works
-#  - action: action_offer_chitchat
+#  - intent: videochat
+#  - action: action_find_partner

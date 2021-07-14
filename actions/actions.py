@@ -284,7 +284,7 @@ class ActionOfferChitchat(BaseSwiperAction):
                 current_user.save()
 
         latest_intent = tracker.get_intent_of_latest_message()
-        if latest_intent == 'how_it_works':
+        if latest_intent == 'help':
             dispatcher.utter_message(custom={
                 'text': 'I can arrange video chitchat with another human for you 🎥 🗣 ☎️\n'
                         '\n'
