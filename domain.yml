@@ -31,6 +31,22 @@ intents:
     use_entities: true
 - EXTERNAL_expire_partner_confirmation:
     use_entities: true
+- gratitude:
+    use_entities: true
+- waiting:
+    use_entities: true
+- out_of_scope:
+    use_entities: true
+- try_again:
+    use_entities: true
+- another_time:
+    use_entities: true
+- cancel:
+    use_entities: true
+- help:
+    use_entities: true
+- impatient:
+    use_entities: true
 entities:
 - partner_id
 - partner_photo_file_id
