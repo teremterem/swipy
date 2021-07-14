@@ -298,7 +298,7 @@ class ActionOfferChitchat(BaseSwiperAction):
                 'parse_mode': 'html',
                 'reply_markup': REMOVE_KEYBOARD_MARKUP,
             })
-            
+
         elif latest_intent in [
             'affirm',
             'waiting',
