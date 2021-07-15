@@ -381,6 +381,25 @@ class ActionDefaultFallback(ActionOfferChitchat):
         self.offer_chitchat_again(dispatcher, "Forgive me, but I've lost track of our conversation 🤖")
 
 
+class ActionRewind(BaseSwiperAction):  # TODO oleksandr: are you sure it should extend BaseSwiperAction
+    def name(self) -> Text:
+        return 'action_rewind'
+
+    def should_update_user_activity_timestamp(self, tracker: Tracker) -> bool:
+        return True
+
+    async def swipy_run(
+            self, dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
+            current_user: UserStateMachine,
+            user_vault: IUserVault,
+    ) -> List[Dict[Text, Any]]:
+        return [
+            UserUtteranceReverted(),
+        ]
+
+
 class ActionFindPartner(BaseSwiperAction):
     def name(self) -> Text:
         return ACTION_FIND_PARTNER

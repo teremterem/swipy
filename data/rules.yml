@@ -22,6 +22,22 @@ rules:
   - action: action_default_fallback
   - intent: affirm
   - action: action_find_partner
+- rule: bot starts looking for a partner and the user confirms that they are waiting
+  condition:
+  - slot_was_set:
+    - swiper_action_result: success
+  steps:
+  - action: action_find_partner
+  - intent: waiting
+  - action: action_rewind
+- rule: user confirms that they are waiting for partner to confirm readiness too
+  condition:
+  - slot_was_set:
+    - swiper_action_result: partner_has_been_asked
+  steps:
+  - action: action_accept_invitation
+  - intent: waiting
+  - action: action_rewind
 - rule: bot is unable to find a partner, offers to try searching again and the user agrees
   condition:
   - slot_was_set:
