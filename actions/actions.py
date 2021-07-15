@@ -337,7 +337,7 @@ class ActionOfferChitchat(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        if GREETING_MAKES_USER_OK_TO_CHITCHAT:
+        if GREETING_MAKES_USER_OK_TO_CHITCHAT:  # TODO oleksandr: is this even useful ? get rid of this completely ?
             if current_user.state in (
                     UserState.NEW,
                     UserState.ASKED_TO_JOIN,
