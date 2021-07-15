@@ -26,12 +26,21 @@ Here is how it works:
 
 - I find someone who also wants to chitchat.
 - I confirm with you and them that you are both ready.
-- I send both of you a video chat link."""
+- I send both of you a video chat link.
+
+<b>Would you like to give it a try?</b>"""
+
+UTTER_CANNOT_HELP_WITH_THAT_TEXT = """\
+I'm sorry, but I cannot help you with that 🤖
+
+<b>Would you like to practice your English speaking skills 🇬🇧 \
+on a video call with a random stranger?</b>"""
 
 UTTER_LOST_TRACK_OF_CONVERSATION_TEXT = """\
 Please forgive me for losing track of our conversation 🤖
 
-<b>Are you agreeing to a video call with another person?</b>"""
+<b>Would you like to practice your English speaking skills 🇬🇧 \
+on a video call with a random stranger?</b>"""
 
 UTTER_GREET_OFFER_CHITCHAT_TEXT = """\
 Hi, my name is Swipy 🙂
@@ -129,7 +138,6 @@ May I ask you if there is any specific time or times of day (maybe days of week)
 when you are more likely to join someone for chitchat over a video call?"""
 
 REMOVE_KEYBOARD_MARKUP = '{"remove_keyboard":true}'
-
 OK_WAITING_CANCEL_MARKUP = (
     '{"keyboard":['
 
@@ -139,13 +147,20 @@ OK_WAITING_CANCEL_MARKUP = (
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
 CANCEL_MARKUP = '{"keyboard":[[{"text":"Cancel"}]],"resize_keyboard":true,"one_time_keyboard":true}'
-
 YES_NO_SOMEONE_ELSE_MARKUP = (
     '{"keyboard":['
 
     '[{"text":"Yes"}],'
     '[{"text":"No"}],'
     '[{"text":"Someone else"}]'
+
+    '],"resize_keyboard":true,"one_time_keyboard":true}'
+)
+YES_NO_MARKUP = (
+    '{"keyboard":['
+
+    '[{"text":"Yes"}],'
+    '[{"text":"No"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
@@ -367,25 +382,23 @@ async def test_action_session_start_with_slots(
 ])
 @pytest.mark.parametrize('latest_intent, source_swiper_state, destination_swiper_state, expected_response_text', [
     ('help', 'new', 'ok_to_chitchat', UTTER_HOW_IT_WORKS_TEXT),
+    ('out_of_scope', 'new', 'ok_to_chitchat', UTTER_CANNOT_HELP_WITH_THAT_TEXT),
     ('start', 'new', 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),
     ('greet', 'new', 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),
-    ('affirm', 'new', 'ok_to_chitchat', UTTER_LOST_TRACK_OF_CONVERSATION_TEXT),
-    ('waiting', 'new', 'ok_to_chitchat', UTTER_LOST_TRACK_OF_CONVERSATION_TEXT),
-    ('impatient', 'new', 'ok_to_chitchat', UTTER_LOST_TRACK_OF_CONVERSATION_TEXT),
 
-    ('greet', None, 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),  # user does not exist yet
-    ('greet', 'new', 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),
-    ('greet', 'wants_chitchat', 'wants_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),
-    ('greet', 'ok_to_chitchat', 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),
-    ('greet', 'waiting_partner_confirm', 'waiting_partner_confirm', UTTER_GREET_OFFER_CHITCHAT_TEXT),
-    ('greet', 'asked_to_join', 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),
-    ('greet', 'asked_to_confirm', 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),
-    ('greet', 'roomed', 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),
-    ('greet', 'rejected_join', 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),
-    ('greet', 'rejected_confirm', 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),
-    ('greet', 'do_not_disturb', 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),
-    ('greet', 'bot_blocked', 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),
-    ('greet', 'user_banned', 'user_banned', UTTER_GREET_OFFER_CHITCHAT_TEXT),
+    ('some_test_intent', None, 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),  # user does not exist yet
+    ('some_test_intent', 'new', 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),
+    ('some_test_intent', 'wants_chitchat', 'wants_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),
+    ('some_test_intent', 'ok_to_chitchat', 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),
+    ('some_test_intent', 'waiting_partner_confirm', 'waiting_partner_confirm', UTTER_GREET_OFFER_CHITCHAT_TEXT),
+    ('some_test_intent', 'asked_to_join', 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),
+    ('some_test_intent', 'asked_to_confirm', 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),
+    ('some_test_intent', 'roomed', 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),
+    ('some_test_intent', 'rejected_join', 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),
+    ('some_test_intent', 'rejected_confirm', 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),
+    ('some_test_intent', 'do_not_disturb', 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),
+    ('some_test_intent', 'bot_blocked', 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),
+    ('some_test_intent', 'user_banned', 'user_banned', UTTER_GREET_OFFER_CHITCHAT_TEXT),
 ])
 async def test_action_offer_chitchat(
         tracker: Tracker,
@@ -439,7 +452,6 @@ async def test_action_offer_chitchat(
     else:
         assert actual_events == [
             SlotSet('swiper_action_result', 'success'),
-            SlotSet('swiper_native', 'unknown'),
             SlotSet('deeplink_data', ''),
             SlotSet('telegram_from', None),
             SlotSet(
@@ -453,7 +465,7 @@ async def test_action_offer_chitchat(
             'custom': {
                 'text': expected_response_text,
                 'parse_mode': 'html',
-                'reply_markup': REMOVE_KEYBOARD_MARKUP,
+                'reply_markup': YES_NO_MARKUP,
             },
             'elements': [],
             'image': None,

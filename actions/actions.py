@@ -295,10 +295,12 @@ class ActionOfferChitchat(BaseSwiperAction):
                         '\n'
                         '- I find someone who also wants to chitchat.\n'
                         '- I confirm with you and them that you are both ready.\n'
-                        '- I send both of you a video chat link.',
+                        '- I send both of you a video chat link.\n'
+                        '\n'
+                        '<b>Would you like to give it a try?</b>',
 
                 'parse_mode': 'html',
-                'reply_markup': REMOVE_KEYBOARD_MARKUP,
+                'reply_markup': YES_NO_MARKUP,
             })
 
         elif latest_intent == 'out_of_scope':
@@ -314,7 +316,7 @@ class ActionOfferChitchat(BaseSwiperAction):
                         '<b>Would you like to give it a try?</b>',
 
                 'parse_mode': 'html',
-                'reply_markup': REMOVE_KEYBOARD_MARKUP,
+                'reply_markup': YES_NO_MARKUP,
             })
 
     def offer_chitchat_again(self, dispatcher: CollectingDispatcher, intro: Text) -> None:
