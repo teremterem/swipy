@@ -143,5 +143,6 @@ actions:
 - action_reject_invitation
 - action_expire_partner_confirmation
 - action_default_fallback
+- action_rewind
 forms: {}
 e2e_actions: []

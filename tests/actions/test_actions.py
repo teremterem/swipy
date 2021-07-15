@@ -404,7 +404,7 @@ async def test_action_session_start_with_slots(
     ('some_test_intent', 'bot_blocked', 'ok_to_chitchat', UTTER_GREET_OFFER_CHITCHAT_TEXT),
     ('some_test_intent', 'user_banned', 'user_banned', UTTER_GREET_OFFER_CHITCHAT_TEXT),
 ])
-async def test_action_offer_chitchat(
+async def test_action_offer_chitchat_and_default_fallback(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
@@ -496,6 +496,32 @@ async def test_action_offer_chitchat(
         newbie=True,
         state_timestamp=expected_state_timestamp,
         state_timestamp_str=expected_state_timestamp_str,
+        activity_timestamp=1619945501,
+        activity_timestamp_str='2021-05-02 08:51:41 Z',
+    )
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures('create_user_state_machine_table')
+@patch('time.time', Mock(return_value=1619945501))
+async def test_action_rewind(
+        tracker: Tracker,
+        dispatcher: CollectingDispatcher,
+        domain: Dict[Text, Any],
+) -> None:
+    action = actions.ActionRewind()
+    assert action.name() == 'action_rewind'
+
+    actual_events = await action.run(dispatcher, tracker, domain)
+    assert actual_events == [
+        UserUtteranceReverted(),
+        SlotSet('swiper_state', 'new'),
+    ]
+    assert dispatcher.messages == []
+
+    user_vault = UserVault()
+    assert user_vault.get_user('unit_test_user') == UserStateMachine(
+        user_id='unit_test_user',
         activity_timestamp=1619945501,
         activity_timestamp_str='2021-05-02 08:51:41 Z',
     )
