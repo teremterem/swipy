@@ -2,7 +2,7 @@ import re
 import uuid
 from copy import deepcopy
 from dataclasses import asdict
-from typing import Dict, Text, Any, List, Callable, Tuple, Optional
+from typing import Dict, Text, Any, List, Callable, Tuple, Optional, Type
 from unittest.mock import patch, AsyncMock, MagicMock, call, Mock
 
 import pytest
@@ -37,7 +37,7 @@ I'm sorry, but I cannot help you with that 🤖
 on a video call with a random stranger?</b>"""
 
 UTTER_LOST_TRACK_OF_CONVERSATION_TEXT = """\
-Please forgive me for losing track of our conversation 🤖
+Forgive me, but I've lost track of our conversation 🤖
 
 <b>Would you like to practice your English speaking skills 🇬🇧 \
 on a video call with a random stranger?</b>"""
@@ -376,6 +376,10 @@ async def test_action_session_start_with_slots(
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('create_user_state_machine_table')
 @patch('time.time', Mock(return_value=1619945501))
+@pytest.mark.parametrize('action_class_to_test, expected_action_name, override_expected_response_text', [
+    (actions.ActionOfferChitchat, 'action_offer_chitchat', None),
+    (actions.ActionDefaultFallback, 'action_default_fallback', UTTER_LOST_TRACK_OF_CONVERSATION_TEXT),
+])
 @pytest.mark.parametrize('greeting_makes_user_ok_to_chitchat', [
     None,  # default - expected to be equivalent to False
     True,
@@ -404,6 +408,9 @@ async def test_action_offer_chitchat(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
+        action_class_to_test: Type[actions.ActionOfferChitchat],
+        expected_action_name: Text,
+        override_expected_response_text: Optional[Text],
         greeting_makes_user_ok_to_chitchat: Optional[bool],
         latest_intent: Text,
         source_swiper_state: Optional[Text],
@@ -429,8 +436,8 @@ async def test_action_offer_chitchat(
 
     tracker.latest_message = {'intent_ranking': [{'name': latest_intent}]}
 
-    action = actions.ActionOfferChitchat()
-    assert action.name() == 'action_offer_chitchat'
+    action = action_class_to_test()
+    assert action.name() == expected_action_name
 
     if greeting_makes_user_ok_to_chitchat is None:
         greeting_makes_user_ok_to_chitchat = False  # this is the expected default
@@ -463,7 +470,7 @@ async def test_action_offer_chitchat(
             'attachment': None,
             'buttons': [],
             'custom': {
-                'text': expected_response_text,
+                'text': override_expected_response_text if override_expected_response_text else expected_response_text,
                 'parse_mode': 'html',
                 'reply_markup': YES_NO_MARKUP,
             },
