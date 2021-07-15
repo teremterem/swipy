@@ -47,7 +47,9 @@ rules:
 - rule: the user refuses to join the call
   steps:
   - action: action_ask_to_join
-  - intent: deny
+  - or:
+    - intent: deny
+    - intent: another_time
   - action: action_reject_invitation
 - rule: upon receiving invitation the user asks for a different partner
   steps:

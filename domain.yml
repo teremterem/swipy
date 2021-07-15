@@ -43,6 +43,8 @@ intents:
     use_entities: true
 - EXTERNAL_expire_partner_confirmation:
     use_entities: true
+- nlu_fallback:
+    use_entities: true
 entities:
 - partner_id
 - partner_photo_file_id
@@ -140,5 +142,6 @@ actions:
 - action_do_not_disturb
 - action_reject_invitation
 - action_expire_partner_confirmation
+- action_default_fallback
 forms: {}
 e2e_actions: []
