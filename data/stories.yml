@@ -1,8 +1,9 @@
 #version: "2.0"
 #stories:
-#- story: user greets the bot or asks how the bot works
+#- story: user confirms that they are waiting -> bot does nothing in response
 #  steps:
-#  - or:
-#    - intent: greet
-#    - intent: how_it_works
-#  - action: action_offer_chitchat
+#  - action: action_find_partner
+#  - slot_was_set:
+#    - swiper_action_result: success
+#  - intent: waiting
+#  - intent: action_listen

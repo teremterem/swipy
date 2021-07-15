@@ -32,7 +32,6 @@ GREETING_MAKES_USER_OK_TO_CHITCHAT = strtobool(os.getenv('GREETING_MAKES_USER_OK
 
 SWIPER_STATE_SLOT = 'swiper_state'
 SWIPER_ACTION_RESULT_SLOT = 'swiper_action_result'
-SWIPER_NATIVE_SLOT = 'swiper_native'
 DEEPLINK_DATA_SLOT = 'deeplink_data'
 TELEGRAM_FROM_SLOT = 'telegram_from'
 
@@ -63,6 +62,30 @@ OK_WAITING_CANCEL_MARKUP = (
 
     '[{"text":"Ok, waiting"}],'
     '[{"text":"Cancel"}]'
+
+    '],"resize_keyboard":true,"one_time_keyboard":true}'
+)
+CANCEL_MARKUP = (
+    '{"keyboard":['
+
+    '[{"text":"Cancel"}]'
+
+    '],"resize_keyboard":true,"one_time_keyboard":true}'
+)
+YES_NO_SOMEONE_ELSE_MARKUP = (
+    '{"keyboard":['
+
+    '[{"text":"Yes"}],'
+    '[{"text":"No"}],'
+    '[{"text":"Someone else"}]'
+
+    '],"resize_keyboard":true,"one_time_keyboard":true}'
+)
+YES_NO_MARKUP = (
+    '{"keyboard":['
+
+    '[{"text":"Yes"}],'
+    '[{"text":"No"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
@@ -261,51 +284,28 @@ class ActionOfferChitchat(BaseSwiperAction):
     def should_update_user_activity_timestamp(self, tracker: Tracker) -> bool:
         return True
 
-    async def swipy_run(
-            self, dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any],
-            current_user: UserStateMachine,
-            user_vault: IUserVault,
-    ) -> List[Dict[Text, Any]]:
-        if GREETING_MAKES_USER_OK_TO_CHITCHAT:
-            if current_user.state in (
-                    UserState.NEW,
-                    UserState.ASKED_TO_JOIN,  # TODO oleksandr: are you sure about this ?
-                    UserState.ASKED_TO_CONFIRM,  # TODO oleksandr: are you sure about this ?
-                    UserState.ROOMED,
-                    UserState.REJECTED_JOIN,
-                    UserState.REJECTED_CONFIRM,
-                    UserState.DO_NOT_DISTURB,
-                    UserState.BOT_BLOCKED,
-            ):
-                # noinspection PyUnresolvedReferences
-                current_user.become_ok_to_chitchat()
-                current_user.save()
-
+    def offer_chitchat(self, dispatcher: CollectingDispatcher, tracker: Tracker) -> None:
         latest_intent = tracker.get_intent_of_latest_message()
-        if latest_intent == 'how_it_works':
-            dispatcher.utter_message(custom={
+
+        if latest_intent == 'help':
+            dispatcher.utter_message(custom={  # TODO oleksandr: rewrite this text !
                 'text': 'I can arrange video chitchat with another human for you 🎥 🗣 ☎️\n'
                         '\n'
                         'Here is how it works:\n'
                         '\n'
                         '- I find someone who also wants to chitchat.\n'
                         '- I confirm with you and them that you are both ready.\n'
-                        '- I send both of you a video chat link.',
-
-                'parse_mode': 'html',
-                'reply_markup': REMOVE_KEYBOARD_MARKUP,
-            })
-        elif latest_intent == 'affirm':
-            dispatcher.utter_message(custom={
-                'text': 'Please forgive me for losing track of our conversation 🤖\n'
+                        '- I send both of you a video chat link.\n'
                         '\n'
-                        '<b>Are you agreeing to a video call with another person?</b>',
+                        '<b>Would you like to give it a try?</b>',
 
                 'parse_mode': 'html',
-                'reply_markup': REMOVE_KEYBOARD_MARKUP,
+                'reply_markup': YES_NO_MARKUP,
             })
+
+        elif latest_intent == 'out_of_scope':
+            self.offer_chitchat_again(dispatcher, "I'm sorry, but I cannot help you with that 🤖")
+
         else:  # 'greet'
             dispatcher.utter_message(custom={
                 'text': 'Hi, my name is Swipy 🙂\n'
@@ -316,18 +316,52 @@ class ActionOfferChitchat(BaseSwiperAction):
                         '<b>Would you like to give it a try?</b>',
 
                 'parse_mode': 'html',
-                'reply_markup': REMOVE_KEYBOARD_MARKUP,
+                'reply_markup': YES_NO_MARKUP,
             })
+
+    def offer_chitchat_again(self, dispatcher: CollectingDispatcher, intro: Text) -> None:
+        dispatcher.utter_message(custom={
+            'text': f"{intro}\n"
+                    f"\n"
+                    f"<b>Would you like to practice your English speaking skills 🇬🇧 "
+                    f"on a video call with a random stranger?</b>",
+
+            'parse_mode': 'html',
+            'reply_markup': YES_NO_MARKUP,
+        })
+
+    async def swipy_run(
+            self, dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
+            current_user: UserStateMachine,
+            user_vault: IUserVault,
+    ) -> List[Dict[Text, Any]]:
+        if GREETING_MAKES_USER_OK_TO_CHITCHAT:  # TODO oleksandr: is this even useful ? get rid of this completely ?
+            if current_user.state in (
+                    UserState.NEW,
+                    UserState.ASKED_TO_JOIN,
+                    UserState.ASKED_TO_CONFIRM,
+                    UserState.ROOMED,
+                    UserState.REJECTED_JOIN,
+                    UserState.REJECTED_CONFIRM,
+                    UserState.DO_NOT_DISTURB,
+                    UserState.BOT_BLOCKED,
+            ):
+                # noinspection PyUnresolvedReferences
+                current_user.become_ok_to_chitchat()
+                current_user.save()
+
+        self.offer_chitchat(dispatcher, tracker)
 
         return [
             SlotSet(
                 key=SWIPER_ACTION_RESULT_SLOT,
                 value=SwiperActionResult.SUCCESS,
             ),
-            SlotSet(
-                key=SWIPER_NATIVE_SLOT,
-                value=current_user.native,
-            ),
+
+            # TODO oleksandr: why am I even setting these slots here every time ?
+            #  set them in BaseSwiperAction and do it only when they change ?
             SlotSet(
                 key=DEEPLINK_DATA_SLOT,
                 value=current_user.deeplink_data,
@@ -337,6 +371,14 @@ class ActionOfferChitchat(BaseSwiperAction):
                 value=current_user.telegram_from,
             ),
         ]
+
+
+class ActionDefaultFallback(ActionOfferChitchat):
+    def name(self) -> Text:
+        return 'action_default_fallback'
+
+    def offer_chitchat(self, dispatcher: CollectingDispatcher, tracker: Tracker) -> None:
+        self.offer_chitchat_again(dispatcher, "Forgive me, but I've lost track of our conversation 🤖")
 
 
 class ActionFindPartner(BaseSwiperAction):
@@ -511,15 +553,7 @@ class ActionAskToJoin(BaseSwiperAction):
             }
 
         custom_dict['parse_mode'] = 'html'
-        custom_dict['reply_markup'] = (
-            '{"keyboard":['
-
-            '[{"text":"Yes"}],'
-            '[{"text":"No"}],'
-            '[{"text":"Someone else"}]'
-
-            '],"resize_keyboard":true,"one_time_keyboard":true}'
-        )
+        custom_dict['reply_markup'] = YES_NO_SOMEONE_ELSE_MARKUP
 
         dispatcher.utter_message(custom=custom_dict)
 
@@ -809,13 +843,7 @@ def utter_room_url(dispatcher: CollectingDispatcher, room_url: Text, after_confi
                 f"{room_url}",
 
         'parse_mode': 'html',
-        'reply_markup': (
-            '{"keyboard":['
-
-            '[{"text":"Cancel"}]'
-
-            '],"resize_keyboard":true,"one_time_keyboard":true}'
-        ),
+        'reply_markup': CANCEL_MARKUP,
     })
 
 
