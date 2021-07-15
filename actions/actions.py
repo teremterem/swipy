@@ -478,7 +478,7 @@ class ActionFindPartner(BaseSwiperAction):
                     "<b>Would you like me to try searching again?</b>",
 
             'parse_mode': 'html',
-            'reply_markup': REMOVE_KEYBOARD_MARKUP,
+            'reply_markup': YES_NO_MARKUP,
         })
 
         return [
