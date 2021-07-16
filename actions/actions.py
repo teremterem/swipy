@@ -40,8 +40,10 @@ SWIPER_ERROR_TRACE_SLOT = 'swiper_error_trace'
 
 PARTNER_SEARCH_START_TS_SLOT = 'partner_search_start_ts'
 
+VIDEOCHAT_INTENT = 'videochat'
 EXTERNAL_FIND_PARTNER_INTENT = 'EXTERNAL_find_partner'
-EXTERNAL_EXPIRE_PARTNER_CONFIRMATION = 'EXTERNAL_expire_partner_confirmation'
+EXTERNAL_EXPIRE_PARTNER_CONFIRMATION_INTENT = 'EXTERNAL_expire_partner_confirmation'
+
 ACTION_FIND_PARTNER = 'action_find_partner'
 ACTION_ACCEPT_INVITATION = 'action_accept_invitation'
 
@@ -791,22 +793,29 @@ class ActionRejectInvitation(BaseSwiperAction):
         current_user.reject()
         current_user.save()
 
-        dispatcher.utter_message(custom={
-            'text': 'Ok, declined ❌\n'
-                    '\n'
-                    'May I ask you if there is any specific time or times of day (maybe days of week) '
-                    'when you are more likely to join someone for chitchat over a video call?',
+        latest_intent = tracker.get_intent_of_latest_message()
 
-            'parse_mode': 'html',
-            'reply_markup': REMOVE_KEYBOARD_MARKUP,
-        })
+        if latest_intent != VIDEOCHAT_INTENT:
+            dispatcher.utter_message(custom={
+                'text': 'Ok, declined ❌\n'
+                        '\n'
+                        'May I ask you if there is any specific time or times of day (maybe days of week) '
+                        'when you are more likely to join someone for chitchat over a video call?',
 
-        partner = user_vault.get_user(current_user.partner_id)
-        await rasa_callbacks.report_partner_did_not_confirm(
-            current_user.user_id,
-            partner,
-            suppress_callback_errors=True,
-        )
+                'parse_mode': 'html',
+                'reply_markup': REMOVE_KEYBOARD_MARKUP,
+            })
+        # if user sent "Someone else" (videochat intent) we don't utter rejection (FindPartner will be triggered)
+
+        if current_user.state == UserState.ASKED_TO_CONFIRM:
+            partner = user_vault.get_user(current_user.partner_id)
+
+            if partner.is_waiting_to_be_confirmed_by(current_user.user_id):
+                await rasa_callbacks.reject_confirmation(
+                    current_user.user_id,
+                    partner,
+                    suppress_callback_errors=True,
+                )
 
         return [
             SlotSet(
@@ -916,7 +925,7 @@ def schedule_expire_partner_confirmation(
 ) -> ReminderScheduled:
     return [_reschedule_reminder(
         current_user_id,
-        EXTERNAL_EXPIRE_PARTNER_CONFIRMATION,
+        EXTERNAL_EXPIRE_PARTNER_CONFIRMATION_INTENT,
         delta_sec,
     )]
 

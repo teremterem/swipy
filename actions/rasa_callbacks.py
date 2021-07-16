@@ -67,7 +67,7 @@ async def ask_to_confirm(
     )
 
 
-async def report_partner_did_not_confirm(
+async def reject_confirmation(
         sender_id: Text,
         receiver: UserStateMachine,
         suppress_callback_errors: bool = False,
