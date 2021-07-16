@@ -843,10 +843,12 @@ class ActionExpirePartnerConfirmation(BaseSwiperAction):
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
         if current_user.state != UserState.WAITING_PARTNER_CONFIRM:
-            # user was not waiting for anybody's confirmation anymore anyway - do nothing and cover your tracks
+            # user was not waiting for anybody's confirmation anymore anyway => do nothing and cover your tracks
             return [
                 UserUtteranceReverted(),
             ]
+
+        partner_id = current_user.partner_id  # back it up - it may get cleared by request_chitchat()
 
         latest_intent = get_intent_of_latest_message_reliably(tracker)
         if latest_intent == rasa_callbacks.EXTERNAL_PARTNER_DID_NOT_CONFIRM_INTENT:
@@ -865,7 +867,7 @@ class ActionExpirePartnerConfirmation(BaseSwiperAction):
             current_user.request_chitchat()
             current_user.save()
 
-        partner = user_vault.get_user(current_user.partner_id)
+        partner = user_vault.get_user(partner_id)
 
         utter_partner_already_gone(dispatcher, partner.get_first_name())
 
