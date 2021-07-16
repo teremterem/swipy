@@ -771,7 +771,7 @@ async def test_action_find_partner_no_one(
         user_id='unit_test_user',
         state='wants_chitchat',
         partner_id=None,
-        exclude_partner_ids=['excluded_unit_test_partner1', 'excluded_unit_test_partner2'],
+        roomed_partner_ids=['excluded_unit_test_partner1', 'excluded_unit_test_partner2'],
         newbie=True,
         state_timestamp=1619945501,
         state_timestamp_str='2021-05-02 08:51:41 Z',
@@ -1021,7 +1021,7 @@ async def test_action_accept_invitation_create_room(
         user_id='unit_test_user',
         state='roomed',
         partner_id='an_asker',
-        exclude_partner_ids=['an_asker'],  # remembered not to be suggested again for awhile
+        roomed_partner_ids=['an_asker'],  # remembered not to be suggested again for awhile
         newbie=False,  # accepting the very first video chitchat graduates the user from newbie
         state_timestamp=1619945501,
         state_timestamp_str='2021-05-02 08:51:41 Z',
@@ -1388,7 +1388,7 @@ async def test_action_join_room(
             user_id='unit_test_user',  # the asker
             state='roomed',
             partner_id='expected_partner',
-            exclude_partner_ids=['expected_partner'],  # remembered not to be suggested again for awhile
+            roomed_partner_ids=['expected_partner'],  # remembered not to be suggested again for awhile
             newbie=False,  # accepting the very first video chitchat graduates the user from newbie
             state_timestamp=1619945501,
             state_timestamp_str='2021-05-02 08:51:41 Z',
@@ -1433,7 +1433,7 @@ async def test_action_join_room(
             user_id='unit_test_user',  # the asker
             state=source_swiper_state,
             partner_id='expected_partner',
-            exclude_partner_ids=[],
+            roomed_partner_ids=[],
             newbie=True,
         )
 

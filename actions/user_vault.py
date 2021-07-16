@@ -70,7 +70,7 @@ class BaseUserVault(IUserVault, ABC):
         return self._cache_and_bind(user)
 
     def _get_random_available_partner_from_tiers(self, current_user: UserStateMachine) -> Optional[UserStateMachine]:
-        exclude_user_ids = [current_user.user_id] + current_user.exclude_partner_ids
+        exclude_user_ids = [current_user.user_id] + current_user.roomed_partner_ids
 
         for tier in UserState.offerable_tiers:
             partner = self._get_random_available_partner(tier, current_user.user_id, exclude_user_ids)
@@ -164,7 +164,7 @@ class NaiveDdbUserVault(BaseUserVault):
             While DDB FilterExpression filters by current user's excluded partners,
             this function is used to filter by potential partner's excluded partners.
             """
-            return filter(lambda i: current_user_id not in (i.get('exclude_partner_ids') or []), items)
+            return filter(lambda i: current_user_id not in (i.get('roomed_partner_ids') or []), items)
 
         def item_generator() -> Iterator[Dict[Text, Any]]:
             # TODO oleksandr: parallelize ? no! we will later be switching to Redis and/or Postgres anyway

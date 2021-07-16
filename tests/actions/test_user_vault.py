@@ -33,7 +33,7 @@ def test_get_new_user() -> None:
         'user_id': 'new_user_id',
         'state': 'new',
         'partner_id': None,
-        'exclude_partner_ids': [],
+        'roomed_partner_ids': [],
         'newbie': True,
         'state_timestamp': Decimal(0),
         'state_timestamp_str': None,
@@ -140,7 +140,7 @@ def test_get_random_available_partner(
     assert user_vault.get_user(actual_random_user.user_id) is actual_random_user  # make sure the user was cached
 
     # _get_random_available_partner_from_tiers did not corrupt the original list by an internal concatenation
-    assert user1.exclude_partner_ids == ['excluded_partner1', 'excluded_partner2', 'excluded_partner3']
+    assert user1.roomed_partner_ids == ['excluded_partner1', 'excluded_partner2', 'excluded_partner3']
 
 
 @patch.object(UserVault, '_get_random_available_partner_dict')
@@ -192,7 +192,7 @@ def test_save_new_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> None:
             'user_id': 'existing_user_id1',
             'state': 'waiting_partner_confirm',
             'partner_id': 'existing_user_id2',
-            'exclude_partner_ids': ['excluded_partner1', 'excluded_partner2', 'excluded_partner3'],
+            'roomed_partner_ids': ['excluded_partner1', 'excluded_partner2', 'excluded_partner3'],
             'newbie': False,
             'state_timestamp': Decimal(0),
             'state_timestamp_str': None,
@@ -210,7 +210,7 @@ def test_save_new_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> None:
             'user_id': 'existing_user_id2',
             'state': 'asked_to_join',
             'partner_id': 'existing_user_id1',
-            'exclude_partner_ids': [],
+            'roomed_partner_ids': [],
             'newbie': True,
             'state_timestamp': Decimal(0),
             'state_timestamp_str': None,
@@ -228,7 +228,7 @@ def test_save_new_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> None:
             'user_id': 'existing_user_id3',
             'state': 'new',
             'partner_id': None,
-            'exclude_partner_ids': [],
+            'roomed_partner_ids': [],
             'newbie': True,
             'state_timestamp': Decimal(0),
             'state_timestamp_str': None,
@@ -246,7 +246,7 @@ def test_save_new_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> None:
             'user_id': 'new_ddb_user_was_put',
             'state': 'new',
             'partner_id': None,
-            'exclude_partner_ids': [],
+            'roomed_partner_ids': [],
             'newbie': True,
             'state_timestamp': Decimal(0),
             'state_timestamp_str': None,
@@ -285,7 +285,7 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
             'user_id': 'existing_user_id1',
             'state': 'do_not_disturb',  # used to be 'waiting_partner_join' but we have overridden it
             'partner_id': None,  # used to be 'existing_user_id2' but we have overridden it
-            'exclude_partner_ids': [],  # used to contain 3 ids but we have overridden it
+            'roomed_partner_ids': [],  # used to contain 3 ids but we have overridden it
             'newbie': True,  # used to be False but we have overridden it
             'state_timestamp': Decimal(0),
             'state_timestamp_str': None,
@@ -303,7 +303,7 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
             'user_id': 'existing_user_id2',
             'state': 'asked_to_join',
             'partner_id': 'existing_user_id1',
-            'exclude_partner_ids': [],
+            'roomed_partner_ids': [],
             'newbie': True,
             'state_timestamp': Decimal(0),
             'state_timestamp_str': None,
@@ -321,7 +321,7 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
             'user_id': 'existing_user_id3',
             'state': 'new',
             'partner_id': None,
-            'exclude_partner_ids': [],
+            'roomed_partner_ids': [],
             'newbie': True,
             'state_timestamp': Decimal(0),
             'state_timestamp_str': None,
@@ -346,7 +346,7 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
                 'user_id': 'roomed_id2',
                 'state': 'roomed',
                 'partner_id': 'some_partner_id',
-                'exclude_partner_ids': [],
+                'roomed_partner_ids': [],
                 'newbie': True,
                 'state_timestamp': Decimal(0),
                 'state_timestamp_str': None,
@@ -367,7 +367,7 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
                 'user_id': 'ok_to_chitchat_id2',
                 'state': 'ok_to_chitchat',
                 'partner_id': None,
-                'exclude_partner_ids': [],
+                'roomed_partner_ids': [],
                 'newbie': False,
                 'state_timestamp': Decimal(0),
                 'state_timestamp_str': None,
@@ -443,7 +443,7 @@ def test_ddb_get_random_available_partner_dict_current_user_excluded_by_all() ->
         'user_id': 'roomed_id2_1',
         'state': 'roomed',
         'partner_id': 'some_partner_id',
-        'exclude_partner_ids': ['some_excluded_partner', 'ok_to_chitchat_id3'],
+        'roomed_partner_ids': ['some_excluded_partner', 'ok_to_chitchat_id3'],
         'newbie': True,
         'state_timestamp': Decimal(0),
         'state_timestamp_str': None,
@@ -461,7 +461,7 @@ def test_ddb_get_random_available_partner_dict_current_user_excluded_by_all() ->
         'user_id': 'ok_to_chitchat_id2_1',
         'state': 'ok_to_chitchat',
         'partner_id': None,
-        'exclude_partner_ids': ['ok_to_chitchat_id3', 'excluded_partner1', 'excluded_partner2'],
+        'roomed_partner_ids': ['ok_to_chitchat_id3', 'excluded_partner1', 'excluded_partner2'],
         'newbie': False,
         'state_timestamp': Decimal(0),
         'state_timestamp_str': None,
