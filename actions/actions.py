@@ -790,6 +790,7 @@ class ActionRejectInvitation(BaseSwiperAction):
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
         is_asked_to_confirm = current_user.state == UserState.ASKED_TO_CONFIRM
+        partner_id = current_user.partner_id
 
         # noinspection PyUnresolvedReferences
         current_user.reject()
@@ -810,8 +811,8 @@ class ActionRejectInvitation(BaseSwiperAction):
         # if user sent "Someone else" (videochat intent) we don't utter rejection
         # (ActionFindPartner will be triggered as the next action in the rule)
 
-        if is_asked_to_confirm:
-            partner = user_vault.get_user(current_user.partner_id)
+        if is_asked_to_confirm:  # as opposed to asked_to_join
+            partner = user_vault.get_user(partner_id)
 
             if partner.is_waiting_to_be_confirmed_by(current_user.user_id):
                 await rasa_callbacks.reject_confirmation(

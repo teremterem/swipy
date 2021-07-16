@@ -1530,7 +1530,7 @@ async def test_action_reject_invitation(
     user_vault.save(UserStateMachine(
         user_id='unit_test_user',
         state=source_swiper_state,
-        partner_id='',
+        partner_id='some_test_partner_id',
         newbie=True,
     ))
 
@@ -1545,7 +1545,7 @@ async def test_action_reject_invitation(
         assert actual_events == [
             SlotSet('swiper_action_result', 'success'),
             SlotSet('swiper_state', destination_swiper_state),
-            SlotSet('partner_id', ''),
+            SlotSet('partner_id', 'some_test_partner_id'),
         ]
         assert dispatcher.messages == [{
             'attachment': None,
@@ -1564,7 +1564,7 @@ async def test_action_reject_invitation(
         assert user_vault.get_user('unit_test_user') == UserStateMachine(
             user_id='unit_test_user',
             state=destination_swiper_state,
-            partner_id='',
+            partner_id='some_test_partner_id',
             newbie=True,
             state_timestamp=1619945501,
             state_timestamp_str='2021-05-02 08:51:41 Z',
@@ -1587,7 +1587,7 @@ async def test_action_reject_invitation(
                 'stack trace goes here',
             ),
             SlotSet('swiper_state', source_swiper_state),
-            SlotSet('partner_id', ''),
+            SlotSet('partner_id', 'some_test_partner_id'),
         ]
         assert dispatcher.messages == [{
             'attachment': None,
@@ -1602,7 +1602,7 @@ async def test_action_reject_invitation(
         assert user_vault.get_user('unit_test_user') == UserStateMachine(
             user_id='unit_test_user',
             state=source_swiper_state,
-            partner_id='',
+            partner_id='some_test_partner_id',
             newbie=True,
             activity_timestamp=1619945501,
             activity_timestamp_str='2021-05-02 08:51:41 Z',
