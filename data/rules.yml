@@ -90,9 +90,14 @@ rules:
   steps:
   - intent: bot_challenge
   - action: utter_iamabot
-- rule: it took too long for partner to confirm - we need to let the user know that partner is likely not available
+- rule: partner rejected invitation explicitly - we need to let the user know that the partner became unavailable
   steps:
-  - intent: EXTERNAL_expire_partner_confirmation
+  - action: action_expire_partner_confirmation
+- rule: it either took too long for partner to confirm or partner rejected explicitly
+  steps:
+  - or:
+    - intent: EXTERNAL_expire_partner_confirmation
+    - intent: EXTERNAL_partner_did_not_confirm
   - action: action_expire_partner_confirmation
 
 - rule: user asks for video chat directly

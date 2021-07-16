@@ -801,6 +801,13 @@ class ActionRejectInvitation(BaseSwiperAction):
             'reply_markup': REMOVE_KEYBOARD_MARKUP,
         })
 
+        partner = user_vault.get_user(current_user.partner_id)
+        await rasa_callbacks.report_partner_did_not_confirm(
+            current_user.user_id,
+            partner,
+            suppress_callback_errors=True,
+        )
+
         return [
             SlotSet(
                 key=SWIPER_ACTION_RESULT_SLOT,
