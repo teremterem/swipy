@@ -805,7 +805,8 @@ class ActionRejectInvitation(BaseSwiperAction):
                 'parse_mode': 'html',
                 'reply_markup': REMOVE_KEYBOARD_MARKUP,
             })
-        # if user sent "Someone else" (videochat intent) we don't utter rejection (FindPartner will be triggered)
+        # if user sent "Someone else" (videochat intent) we don't utter rejection
+        # (ActionFindPartner will be triggered as the next action in the rule)
 
         if current_user.state == UserState.ASKED_TO_CONFIRM:
             partner = user_vault.get_user(current_user.partner_id)
