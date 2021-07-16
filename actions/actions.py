@@ -846,6 +846,17 @@ class ActionExpirePartnerConfirmation(BaseSwiperAction):
                 UserUtteranceReverted(),
             ]
 
+        latest_intent = get_intent_of_latest_message_reliably(tracker)
+        if latest_intent == rasa_callbacks.EXTERNAL_PARTNER_DID_NOT_CONFIRM_INTENT:
+            # this is not a reminder (partner rejected confirmation explicitly)
+            partner_id_that_rejected = tracker.get_slot(rasa_callbacks.PARTNER_ID_THAT_REJECTED_SLOT)
+
+            if not current_user.is_waiting_to_be_confirmed_by(partner_id_that_rejected):
+                # user is not waiting for this particular partner anymore anyway - ignore
+                return [
+                    UserUtteranceReverted(),
+                ]
+
         partner = user_vault.get_user(current_user.partner_id)
 
         utter_partner_already_gone(dispatcher, partner.get_first_name())
