@@ -65,10 +65,10 @@ OK_WAITING_CANCEL_MARKUP = (
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
-CANCEL_MARKUP = (
+STOP_THE_CALL_MARKUP = (
     '{"keyboard":['
 
-    '[{"text":"Cancel"}]'
+    '[{"text":"Stop the call"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
@@ -862,7 +862,7 @@ def utter_room_url(dispatcher: CollectingDispatcher, room_url: Text, after_confi
                 f"{room_url}",
 
         'parse_mode': 'html',
-        'reply_markup': CANCEL_MARKUP,
+        'reply_markup': STOP_THE_CALL_MARKUP,
     })
 
 

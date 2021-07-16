@@ -88,11 +88,10 @@ nlu:
       Hard to say, it depends
 
       Maybe weekends will be more talkative
-- intent: cancel
-  examples: |
-    - Cancel
 - intent: stop
   examples: |
+    - Stop the call
+    - Cancel
     - Stop
 - intent: help
   examples: |

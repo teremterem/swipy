@@ -146,7 +146,13 @@ OK_WAITING_CANCEL_MARKUP = (
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
-CANCEL_MARKUP = '{"keyboard":[[{"text":"Cancel"}]],"resize_keyboard":true,"one_time_keyboard":true}'
+STOP_THE_CALL_MARKUP = (
+    '{"keyboard":['
+
+    '[{"text":"Stop the call"}]'
+
+    '],"resize_keyboard":true,"one_time_keyboard":true}'
+)
 YES_NO_SOMEONE_ELSE_MARKUP = (
     '{"keyboard":['
 
@@ -984,7 +990,7 @@ async def test_action_accept_invitation_create_room(
         'custom': {
             'text': UTTER_ROOM_URL_TEXT,
             'parse_mode': 'html',
-            'reply_markup': CANCEL_MARKUP,
+            'reply_markup': STOP_THE_CALL_MARKUP,
         },
         'elements': [],
         'image': None,
@@ -1370,7 +1376,7 @@ async def test_action_join_room(
             'custom': {
                 'text': UTTER_PARTNER_READY_ROOM_URL_TEXT,
                 'parse_mode': 'html',
-                'reply_markup': CANCEL_MARKUP,
+                'reply_markup': STOP_THE_CALL_MARKUP,
             },
             'elements': [],
             'image': None,
