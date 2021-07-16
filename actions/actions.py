@@ -854,10 +854,16 @@ class ActionExpirePartnerConfirmation(BaseSwiperAction):
             partner_id_that_rejected = tracker.get_slot(rasa_callbacks.PARTNER_ID_THAT_REJECTED_SLOT)
 
             if not current_user.is_waiting_to_be_confirmed_by(partner_id_that_rejected):
-                # user is not waiting for this particular partner anymore anyway - ignore
+                # user is not waiting for this particular partner anymore anyway => ignore
                 return [
                     UserUtteranceReverted(),
                 ]
+
+            # current user is still waiting for confirmation => let's terminate this state
+            # (we don't do this for the reminder case because by then the state of waiting is timed out already anyway)
+            # noinspection PyUnresolvedReferences
+            current_user.request_chitchat()
+            current_user.save()
 
         partner = user_vault.get_user(current_user.partner_id)
 
@@ -920,6 +926,9 @@ def schedule_find_partner_reminder(
         delta_sec: float = FIND_PARTNER_FREQUENCY_SEC,
         initiate: bool = False,
 ) -> ReminderScheduled:
+    # TODO oleksandr: do current_user.request_chitchat() right here instead of in every action when initiate == True ?
+    #  or, maybe, in ActionFindPartner itself ?
+
     events = [_reschedule_reminder(
         current_user_id,
         EXTERNAL_FIND_PARTNER_INTENT,
