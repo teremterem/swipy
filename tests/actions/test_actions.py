@@ -942,6 +942,7 @@ async def test_action_ask_to_join(
 @pytest.mark.usefixtures('create_user_state_machine_table', 'wrap_actions_datetime_now')
 @patch('time.time', Mock(return_value=1619945501))  # "now"
 @patch('actions.daily_co.create_room', wraps=daily_co.create_room)
+@patch('telebot.apihelper._make_request', Mock())
 async def test_action_accept_invitation_create_room(
         wrap_daily_co_create_room: AsyncMock,
         mock_aioresponses: aioresponses,
@@ -1182,9 +1183,28 @@ async def test_action_accept_invitation_confirm_with_asker(
             ),
             UTTER_THAT_PERSON_ALREADY_GONE_TEXT,
     ),
+    (
+            UserStateMachine(
+                user_id='an_asker',
+                state='wants_chitchat',
+                partner_id=None,
+                roomed_partner_ids=['unit_test_user'],  # asker is available but current user is excluded
+            ),
+            UTTER_THAT_PERSON_ALREADY_GONE_TEXT,
+    ),
+    (
+            UserStateMachine(
+                user_id='an_asker',
+                state='wants_chitchat',
+                partner_id=None,
+                rejected_partner_ids=['unit_test_user'],  # asker is available but current user is excluded
+            ),
+            UTTER_THAT_PERSON_ALREADY_GONE_TEXT,
+    ),
 ])
 @pytest.mark.usefixtures('create_user_state_machine_table', 'wrap_actions_datetime_now')
 @patch('time.time', Mock(return_value=1619945501))
+@patch('telebot.apihelper._make_request', Mock())
 async def test_action_accept_invitation_partner_not_waiting(
         mock_aioresponses: aioresponses,
         tracker: Tracker,
