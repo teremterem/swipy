@@ -5,7 +5,8 @@ from typing import Text, Optional, Dict, Any, TYPE_CHECKING, List
 
 from transitions import Machine, EventData
 
-from actions.utils import current_timestamp_int, SwiperStateMachineError, format_swipy_timestamp, SwiperError
+from actions.utils import current_timestamp_int, SwiperStateMachineError, format_swipy_timestamp, SwiperError, \
+    roll_the_list
 
 if TYPE_CHECKING:
     from actions.user_vault import IUserVault
@@ -180,7 +181,7 @@ class UserStateMachine(UserModel):
                 self._assert_partner_id_arg_same,
             ],
             after=[
-                self._exclude_current_partner_id,
+                self._mark_current_partner_id_as_roomed,
                 self._graduate_from_newbie,
             ],
         )
@@ -268,15 +269,12 @@ class UserStateMachine(UserModel):
         self.partner_id = None
 
     # noinspection PyUnusedLocal
-    def _exclude_current_partner_id(self, event: EventData) -> None:
-        if NUM_OF_ROOMED_PARTNERS_TO_REMEMBER > 1:
-            self.roomed_partner_ids = self.roomed_partner_ids[-NUM_OF_ROOMED_PARTNERS_TO_REMEMBER + 1:]
-            self.roomed_partner_ids.append(self.partner_id)
-
-        elif NUM_OF_ROOMED_PARTNERS_TO_REMEMBER == 1:
-            self.roomed_partner_ids = [self.partner_id]
-        else:
-            self.roomed_partner_ids = []
+    def _mark_current_partner_id_as_roomed(self, event: EventData) -> None:
+        self.roomed_partner_ids = roll_the_list(
+            self.roomed_partner_ids,
+            self.partner_id,
+            NUM_OF_ROOMED_PARTNERS_TO_REMEMBER,
+        )
 
     # noinspection PyUnusedLocal
     def _graduate_from_newbie(self, event: EventData) -> None:

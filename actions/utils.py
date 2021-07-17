@@ -1,7 +1,7 @@
 import time
 import traceback
 from datetime import datetime
-from typing import Text, Optional
+from typing import Text, Optional, Union, Any, List, Tuple
 
 from rasa_sdk import Tracker
 
@@ -30,6 +30,19 @@ def get_intent_of_latest_message_reliably(tracker: Tracker) -> Optional[Text]:
     if not tracker.latest_message:
         return None
     return (tracker.latest_message.get('intent') or {}).get('name')
+
+
+def roll_the_list(latest_list: Union[List[Any], Tuple[Any]], new_item: Any, num_of_items_to_keep: int) -> List[Any]:
+    if num_of_items_to_keep > 1:
+        new_list = latest_list[-num_of_items_to_keep + 1:]
+        new_list.append(new_item)
+
+    elif num_of_items_to_keep == 1:
+        new_list = [new_item]
+    else:
+        new_list = []
+
+    return new_list
 
 
 class SwiperError(Exception):
