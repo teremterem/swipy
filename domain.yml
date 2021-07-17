@@ -21,8 +21,6 @@ intents:
     use_entities: true
 - another_time:
     use_entities: true
-- cancel:
-    use_entities: true
 - stop:
     use_entities: true
 - help:
@@ -43,10 +41,13 @@ intents:
     use_entities: true
 - EXTERNAL_expire_partner_confirmation:
     use_entities: true
+- EXTERNAL_partner_did_not_confirm:
+    use_entities: true
 - nlu_fallback:
     use_entities: true
 entities:
 - partner_id
+- partner_id_that_rejected
 - partner_photo_file_id
 - partner_first_name
 - room_url
@@ -107,6 +108,11 @@ slots:
     auto_fill: false
     influence_conversation: false
   partner_id:
+    type: rasa.shared.core.slots.TextSlot
+    initial_value: null
+    auto_fill: true
+    influence_conversation: false
+  partner_id_that_rejected:
     type: rasa.shared.core.slots.TextSlot
     initial_value: null
     auto_fill: true

@@ -146,7 +146,13 @@ OK_WAITING_CANCEL_MARKUP = (
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
-CANCEL_MARKUP = '{"keyboard":[[{"text":"Cancel"}]],"resize_keyboard":true,"one_time_keyboard":true}'
+STOP_THE_CALL_MARKUP = (
+    '{"keyboard":['
+
+    '[{"text":"Stop the call"}]'
+
+    '],"resize_keyboard":true,"one_time_keyboard":true}'
+)
 YES_NO_SOMEONE_ELSE_MARKUP = (
     '{"keyboard":['
 
@@ -765,7 +771,7 @@ async def test_action_find_partner_no_one(
         user_id='unit_test_user',
         state='wants_chitchat',
         partner_id=None,
-        exclude_partner_ids=['excluded_unit_test_partner1', 'excluded_unit_test_partner2'],
+        roomed_partner_ids=['excluded_unit_test_partner1', 'excluded_unit_test_partner2'],
         newbie=True,
         state_timestamp=1619945501,
         state_timestamp_str='2021-05-02 08:51:41 Z',
@@ -936,6 +942,7 @@ async def test_action_ask_to_join(
 @pytest.mark.usefixtures('create_user_state_machine_table', 'wrap_actions_datetime_now')
 @patch('time.time', Mock(return_value=1619945501))  # "now"
 @patch('actions.daily_co.create_room', wraps=daily_co.create_room)
+@patch('telebot.apihelper._make_request', Mock())
 async def test_action_accept_invitation_create_room(
         wrap_daily_co_create_room: AsyncMock,
         mock_aioresponses: aioresponses,
@@ -984,7 +991,7 @@ async def test_action_accept_invitation_create_room(
         'custom': {
             'text': UTTER_ROOM_URL_TEXT,
             'parse_mode': 'html',
-            'reply_markup': CANCEL_MARKUP,
+            'reply_markup': STOP_THE_CALL_MARKUP,
         },
         'elements': [],
         'image': None,
@@ -1015,7 +1022,7 @@ async def test_action_accept_invitation_create_room(
         user_id='unit_test_user',
         state='roomed',
         partner_id='an_asker',
-        exclude_partner_ids=['an_asker'],  # remembered not to be suggested again for awhile
+        roomed_partner_ids=['an_asker'],  # remembered not to be suggested again for awhile
         newbie=False,  # accepting the very first video chitchat graduates the user from newbie
         state_timestamp=1619945501,
         state_timestamp_str='2021-05-02 08:51:41 Z',
@@ -1176,9 +1183,28 @@ async def test_action_accept_invitation_confirm_with_asker(
             ),
             UTTER_THAT_PERSON_ALREADY_GONE_TEXT,
     ),
+    (
+            UserStateMachine(
+                user_id='an_asker',
+                state='wants_chitchat',
+                partner_id=None,
+                roomed_partner_ids=['unit_test_user'],  # asker is available but current user is excluded
+            ),
+            UTTER_THAT_PERSON_ALREADY_GONE_TEXT,
+    ),
+    (
+            UserStateMachine(
+                user_id='an_asker',
+                state='wants_chitchat',
+                partner_id=None,
+                rejected_partner_ids=['unit_test_user'],  # asker is available but current user is excluded
+            ),
+            UTTER_THAT_PERSON_ALREADY_GONE_TEXT,
+    ),
 ])
 @pytest.mark.usefixtures('create_user_state_machine_table', 'wrap_actions_datetime_now')
 @patch('time.time', Mock(return_value=1619945501))
+@patch('telebot.apihelper._make_request', Mock())
 async def test_action_accept_invitation_partner_not_waiting(
         mock_aioresponses: aioresponses,
         tracker: Tracker,
@@ -1370,7 +1396,7 @@ async def test_action_join_room(
             'custom': {
                 'text': UTTER_PARTNER_READY_ROOM_URL_TEXT,
                 'parse_mode': 'html',
-                'reply_markup': CANCEL_MARKUP,
+                'reply_markup': STOP_THE_CALL_MARKUP,
             },
             'elements': [],
             'image': None,
@@ -1382,7 +1408,7 @@ async def test_action_join_room(
             user_id='unit_test_user',  # the asker
             state='roomed',
             partner_id='expected_partner',
-            exclude_partner_ids=['expected_partner'],  # remembered not to be suggested again for awhile
+            roomed_partner_ids=['expected_partner'],  # remembered not to be suggested again for awhile
             newbie=False,  # accepting the very first video chitchat graduates the user from newbie
             state_timestamp=1619945501,
             state_timestamp_str='2021-05-02 08:51:41 Z',
@@ -1427,7 +1453,7 @@ async def test_action_join_room(
             user_id='unit_test_user',  # the asker
             state=source_swiper_state,
             partner_id='expected_partner',
-            exclude_partner_ids=[],
+            roomed_partner_ids=[],
             newbie=True,
         )
 
@@ -1524,7 +1550,7 @@ async def test_action_reject_invitation(
     user_vault.save(UserStateMachine(
         user_id='unit_test_user',
         state=source_swiper_state,
-        partner_id='',
+        partner_id='some_test_partner_id',
         newbie=True,
     ))
 
@@ -1539,7 +1565,7 @@ async def test_action_reject_invitation(
         assert actual_events == [
             SlotSet('swiper_action_result', 'success'),
             SlotSet('swiper_state', destination_swiper_state),
-            SlotSet('partner_id', ''),
+            SlotSet('partner_id', 'some_test_partner_id'),
         ]
         assert dispatcher.messages == [{
             'attachment': None,
@@ -1558,7 +1584,8 @@ async def test_action_reject_invitation(
         assert user_vault.get_user('unit_test_user') == UserStateMachine(
             user_id='unit_test_user',
             state=destination_swiper_state,
-            partner_id='',
+            partner_id='some_test_partner_id',
+            rejected_partner_ids=['some_test_partner_id'],
             newbie=True,
             state_timestamp=1619945501,
             state_timestamp_str='2021-05-02 08:51:41 Z',
@@ -1581,7 +1608,7 @@ async def test_action_reject_invitation(
                 'stack trace goes here',
             ),
             SlotSet('swiper_state', source_swiper_state),
-            SlotSet('partner_id', ''),
+            SlotSet('partner_id', 'some_test_partner_id'),
         ]
         assert dispatcher.messages == [{
             'attachment': None,
@@ -1596,7 +1623,7 @@ async def test_action_reject_invitation(
         assert user_vault.get_user('unit_test_user') == UserStateMachine(
             user_id='unit_test_user',
             state=source_swiper_state,
-            partner_id='',
+            partner_id='some_test_partner_id',
             newbie=True,
             activity_timestamp=1619945501,
             activity_timestamp_str='2021-05-02 08:51:41 Z',

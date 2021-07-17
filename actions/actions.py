@@ -40,8 +40,10 @@ SWIPER_ERROR_TRACE_SLOT = 'swiper_error_trace'
 
 PARTNER_SEARCH_START_TS_SLOT = 'partner_search_start_ts'
 
+VIDEOCHAT_INTENT = 'videochat'
 EXTERNAL_FIND_PARTNER_INTENT = 'EXTERNAL_find_partner'
-EXTERNAL_EXPIRE_PARTNER_CONFIRMATION = 'EXTERNAL_expire_partner_confirmation'
+EXTERNAL_EXPIRE_PARTNER_CONFIRMATION_INTENT = 'EXTERNAL_expire_partner_confirmation'
+
 ACTION_FIND_PARTNER = 'action_find_partner'
 ACTION_ACCEPT_INVITATION = 'action_accept_invitation'
 
@@ -65,10 +67,10 @@ OK_WAITING_CANCEL_MARKUP = (
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
-CANCEL_MARKUP = (
+STOP_THE_CALL_MARKUP = (
     '{"keyboard":['
 
-    '[{"text":"Cancel"}]'
+    '[{"text":"Stop the call"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
@@ -606,7 +608,7 @@ class ActionAcceptInvitation(BaseSwiperAction):
                 # current user was the one asked to confirm and they just did => create the room
                 return await self.create_room(dispatcher, current_user, partner)
 
-            elif partner.chitchat_can_be_offered():
+            elif partner.chitchat_can_be_offered_by(current_user.user_id):
                 # confirm with the partner before creating any rooms
                 return await self.confirm_with_partner(dispatcher, current_user, partner)
 
@@ -787,19 +789,37 @@ class ActionRejectInvitation(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
+        is_asked_to_confirm = current_user.state == UserState.ASKED_TO_CONFIRM
+        partner_id = current_user.partner_id
+
         # noinspection PyUnresolvedReferences
         current_user.reject()
         current_user.save()
 
-        dispatcher.utter_message(custom={
-            'text': 'Ok, declined ❌\n'
-                    '\n'
-                    'May I ask you if there is any specific time or times of day (maybe days of week) '
-                    'when you are more likely to join someone for chitchat over a video call?',
+        latest_intent = tracker.get_intent_of_latest_message()
 
-            'parse_mode': 'html',
-            'reply_markup': REMOVE_KEYBOARD_MARKUP,
-        })
+        if latest_intent != VIDEOCHAT_INTENT:
+            dispatcher.utter_message(custom={
+                'text': 'Ok, declined ❌\n'
+                        '\n'
+                        'May I ask you if there is any specific time or times of day (maybe days of week) '
+                        'when you are more likely to join someone for chitchat over a video call?',
+
+                'parse_mode': 'html',
+                'reply_markup': REMOVE_KEYBOARD_MARKUP,
+            })
+        # if user sent "Someone else" (videochat intent) we don't utter rejection
+        # (ActionFindPartner will be triggered as the next action in the rule)
+
+        if is_asked_to_confirm:  # as opposed to asked_to_join
+            partner = user_vault.get_user(partner_id)
+
+            if partner.is_waiting_to_be_confirmed_by(current_user.user_id):
+                await rasa_callbacks.reject_confirmation(
+                    current_user.user_id,
+                    partner,
+                    suppress_callback_errors=True,
+                )
 
         return [
             SlotSet(
@@ -824,12 +844,31 @@ class ActionExpirePartnerConfirmation(BaseSwiperAction):
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
         if current_user.state != UserState.WAITING_PARTNER_CONFIRM:
-            # user was not waiting for anybody's confirmation anymore anyway - do nothing and cover your tracks
+            # user was not waiting for anybody's confirmation anymore anyway => do nothing and cover your tracks
             return [
                 UserUtteranceReverted(),
             ]
 
-        partner = user_vault.get_user(current_user.partner_id)
+        partner_id = current_user.partner_id  # back it up - it may get cleared by request_chitchat()
+
+        latest_intent = get_intent_of_latest_message_reliably(tracker)
+        if latest_intent == rasa_callbacks.EXTERNAL_PARTNER_DID_NOT_CONFIRM_INTENT:
+            # this is not a reminder (partner rejected confirmation explicitly)
+            partner_id_that_rejected = tracker.get_slot(rasa_callbacks.PARTNER_ID_THAT_REJECTED_SLOT)
+
+            if not current_user.is_waiting_to_be_confirmed_by(partner_id_that_rejected):
+                # user is not waiting for this particular partner anymore anyway => ignore
+                return [
+                    UserUtteranceReverted(),
+                ]
+
+            # current user is still waiting for confirmation => let's terminate this state
+            # (we don't do this for the reminder case because by then the state of waiting is timed out already anyway)
+            # noinspection PyUnresolvedReferences
+            current_user.request_chitchat()
+            current_user.save()
+
+        partner = user_vault.get_user(partner_id)
 
         utter_partner_already_gone(dispatcher, partner.get_first_name())
 
@@ -862,7 +901,7 @@ def utter_room_url(dispatcher: CollectingDispatcher, room_url: Text, after_confi
                 f"{room_url}",
 
         'parse_mode': 'html',
-        'reply_markup': CANCEL_MARKUP,
+        'reply_markup': STOP_THE_CALL_MARKUP,
     })
 
 
@@ -890,6 +929,9 @@ def schedule_find_partner_reminder(
         delta_sec: float = FIND_PARTNER_FREQUENCY_SEC,
         initiate: bool = False,
 ) -> ReminderScheduled:
+    # TODO oleksandr: do current_user.request_chitchat() right here instead of in every action when initiate == True ?
+    #  or, maybe, in ActionFindPartner itself ?
+
     events = [_reschedule_reminder(
         current_user_id,
         EXTERNAL_FIND_PARTNER_INTENT,
@@ -909,7 +951,7 @@ def schedule_expire_partner_confirmation(
 ) -> ReminderScheduled:
     return [_reschedule_reminder(
         current_user_id,
-        EXTERNAL_EXPIRE_PARTNER_CONFIRMATION,
+        EXTERNAL_EXPIRE_PARTNER_CONFIRMATION_INTENT,
         delta_sec,
     )]
 

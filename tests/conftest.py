@@ -31,7 +31,8 @@ def pytest_configure(*args, **kwargs) -> None:
     os.environ.pop('SWIPER_STATE_MAX_TIMEOUT_SEC', None)
     os.environ.pop('ROOMED_STATE_TIMEOUT_SEC', None)
     os.environ.pop('GREETING_MAKES_USER_OK_TO_CHITCHAT', None)
-    os.environ.pop('NUM_OF_EXCLUDED_PARTNERS_TO_REMEMBER', None)
+    os.environ.pop('NUM_OF_ROOMED_PARTNERS_TO_REMEMBER', None)
+    os.environ.pop('NUM_OF_REJECTED_PARTNERS_TO_REMEMBER', None)
 
 
 pytest_configure()  # TODO oleksandr: is this a bad practice ? why ?

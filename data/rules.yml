@@ -28,7 +28,9 @@ rules:
     - swiper_action_result: success
   steps:
   - action: action_find_partner
-  - intent: waiting
+  - or:
+    - intent: waiting
+    - intent: affirm
   - action: action_rewind
 - rule: user confirms that they are waiting for partner to confirm readiness too
   condition:
@@ -36,7 +38,9 @@ rules:
     - swiper_action_result: partner_has_been_asked
   steps:
   - action: action_accept_invitation
-  - intent: waiting
+  - or:
+    - intent: waiting
+    - intent: affirm
   - action: action_rewind
 - rule: bot is unable to find a partner, offers to try searching again and the user agrees
   condition:
@@ -66,6 +70,7 @@ rules:
   - or:
     - intent: deny
     - intent: another_time
+    - intent: stop
   - action: action_reject_invitation
 - rule: upon receiving invitation the user asks for a different partner
   steps:
@@ -85,16 +90,18 @@ rules:
   steps:
   - intent: bot_challenge
   - action: utter_iamabot
-- rule: user asks not to bother them
+- rule: it either took too long for partner to confirm or partner rejected explicitly
   steps:
-  - intent: stop
-  - action: action_do_not_disturb
-- rule: it took too long for partner to confirm - we need to let the user know that partner is likely not available
-  steps:
-  - intent: EXTERNAL_expire_partner_confirmation
+  - or:
+    - intent: EXTERNAL_expire_partner_confirmation
+    - intent: EXTERNAL_partner_did_not_confirm
   - action: action_expire_partner_confirmation
 
 - rule: user asks for video chat directly
   steps:
   - intent: videochat
   - action: action_find_partner
+- rule: user asks not to bother them
+  steps:
+  - intent: stop
+  - action: action_do_not_disturb

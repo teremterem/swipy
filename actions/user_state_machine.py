@@ -5,7 +5,8 @@ from typing import Text, Optional, Dict, Any, TYPE_CHECKING, List
 
 from transitions import Machine, EventData
 
-from actions.utils import current_timestamp_int, SwiperStateMachineError, format_swipy_timestamp, SwiperError
+from actions.utils import current_timestamp_int, SwiperStateMachineError, format_swipy_timestamp, SwiperError, \
+    roll_the_list
 
 if TYPE_CHECKING:
     from actions.user_vault import IUserVault
@@ -14,7 +15,8 @@ SWIPER_STATE_MIN_TIMEOUT_SEC = int(os.getenv('SWIPER_STATE_MIN_TIMEOUT_SEC', '14
 SWIPER_STATE_MAX_TIMEOUT_SEC = int(os.getenv('SWIPER_STATE_MAX_TIMEOUT_SEC', '241200'))  # 67 hours (67*60*60 seconds)
 ROOMED_STATE_TIMEOUT_SEC = int(os.getenv('ROOMED_STATE_TIMEOUT_SEC', '900'))  # 15 minutes (15*60 seconds)
 PARTNER_CONFIRMATION_TIMEOUT_SEC = int(os.getenv('PARTNER_CONFIRMATION_TIMEOUT_SEC', '60'))  # 1 minute
-NUM_OF_EXCLUDED_PARTNERS_TO_REMEMBER = int(os.getenv('NUM_OF_EXCLUDED_PARTNERS_TO_REMEMBER', '2'))
+NUM_OF_ROOMED_PARTNERS_TO_REMEMBER = int(os.getenv('NUM_OF_ROOMED_PARTNERS_TO_REMEMBER', '5'))
+NUM_OF_REJECTED_PARTNERS_TO_REMEMBER = int(os.getenv('NUM_OF_REJECTED_PARTNERS_TO_REMEMBER', '10'))
 
 NATIVE_UNKNOWN = 'unknown'
 
@@ -73,7 +75,8 @@ class UserModel:
     user_id: Text
     state: Text = None  # the state machine will set it to UserState.NEW if not provided explicitly
     partner_id: Optional[Text] = None
-    exclude_partner_ids: List[Text] = field(default_factory=list)
+    roomed_partner_ids: List[Text] = field(default_factory=list)
+    rejected_partner_ids: List[Text] = field(default_factory=list)
     newbie: bool = True
     state_timestamp: int = 0  # DDB GSI does not allow None
     state_timestamp_str: Optional[Text] = None
@@ -180,7 +183,7 @@ class UserStateMachine(UserModel):
                 self._assert_partner_id_arg_same,
             ],
             after=[
-                self._exclude_current_partner_id,
+                self._mark_current_partner_id_as_roomed,
                 self._graduate_from_newbie,
             ],
         )
@@ -192,6 +195,9 @@ class UserStateMachine(UserModel):
                 UserState.ASKED_TO_JOIN,
             ],
             dest=UserState.REJECTED_JOIN,
+            after=[
+                self._mark_current_partner_id_as_rejected,
+            ],
         )
         # noinspection PyTypeChecker
         self.machine.add_transition(
@@ -200,6 +206,9 @@ class UserStateMachine(UserModel):
                 UserState.ASKED_TO_CONFIRM,
             ],
             dest=UserState.REJECTED_CONFIRM,
+            after=[
+                self._mark_current_partner_id_as_rejected,
+            ],
         )
 
         # noinspection PyTypeChecker
@@ -244,6 +253,15 @@ class UserStateMachine(UserModel):
 
         return self.state_timeout_ts < current_timestamp_int()
 
+    def chitchat_can_be_offered_by(self, partner_id: Text):
+        if not partner_id:
+            return False
+
+        return self.chitchat_can_be_offered() and not (
+                partner_id in (self.roomed_partner_ids or []) or
+                partner_id in (self.rejected_partner_ids or [])
+        )
+
     def chitchat_can_be_offered(self):
         return self.state in UserState.offerable_states and self.has_become_discoverable()
 
@@ -268,15 +286,20 @@ class UserStateMachine(UserModel):
         self.partner_id = None
 
     # noinspection PyUnusedLocal
-    def _exclude_current_partner_id(self, event: EventData) -> None:
-        if NUM_OF_EXCLUDED_PARTNERS_TO_REMEMBER > 1:
-            self.exclude_partner_ids = self.exclude_partner_ids[-NUM_OF_EXCLUDED_PARTNERS_TO_REMEMBER + 1:]
-            self.exclude_partner_ids.append(self.partner_id)
+    def _mark_current_partner_id_as_roomed(self, event: EventData) -> None:
+        self.roomed_partner_ids = roll_the_list(
+            self.roomed_partner_ids,
+            self.partner_id,
+            NUM_OF_ROOMED_PARTNERS_TO_REMEMBER,
+        )
 
-        elif NUM_OF_EXCLUDED_PARTNERS_TO_REMEMBER == 1:
-            self.exclude_partner_ids = [self.partner_id]
-        else:
-            self.exclude_partner_ids = []
+    # noinspection PyUnusedLocal
+    def _mark_current_partner_id_as_rejected(self, event: EventData) -> None:
+        self.rejected_partner_ids = roll_the_list(
+            self.rejected_partner_ids,
+            self.partner_id,
+            NUM_OF_REJECTED_PARTNERS_TO_REMEMBER,
+        )
 
     # noinspection PyUnusedLocal
     def _graduate_from_newbie(self, event: EventData) -> None:

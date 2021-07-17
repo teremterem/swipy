@@ -16,12 +16,14 @@ RASA_TOKEN = os.getenv('RASA_TOKEN')
 OUTPUT_CHANNEL = 'telegram'  # seems to be more robust than 'latest'
 
 PARTNER_ID_SLOT = 'partner_id'
+PARTNER_ID_THAT_REJECTED_SLOT = 'partner_id_that_rejected'
 PARTNER_PHOTO_FILE_ID_SLOT = 'partner_photo_file_id'
 PARTNER_FIRST_NAME = 'partner_first_name'
 ROOM_URL_SLOT = 'room_url'
 
 EXTERNAL_ASK_TO_JOIN_INTENT = 'EXTERNAL_ask_to_join'
 EXTERNAL_ASK_TO_CONFIRM_INTENT = 'EXTERNAL_ask_to_confirm'
+EXTERNAL_PARTNER_DID_NOT_CONFIRM_INTENT = 'EXTERNAL_partner_did_not_confirm'
 EXTERNAL_JOIN_ROOM_INTENT = 'EXTERNAL_join_room'
 
 
@@ -60,6 +62,22 @@ async def ask_to_confirm(
             PARTNER_ID_SLOT: sender_id,
             PARTNER_PHOTO_FILE_ID_SLOT: sender_photo_file_id,
             PARTNER_FIRST_NAME: sender_first_name,
+        },
+        suppress_callback_errors,
+    )
+
+
+async def reject_confirmation(
+        sender_id: Text,
+        receiver: UserStateMachine,
+        suppress_callback_errors: bool = False,
+) -> Optional[Dict[Text, Any]]:
+    return await _trigger_external_rasa_intent(
+        sender_id,
+        receiver,
+        EXTERNAL_PARTNER_DID_NOT_CONFIRM_INTENT,
+        {
+            PARTNER_ID_THAT_REJECTED_SLOT: sender_id,
         },
         suppress_callback_errors,
     )

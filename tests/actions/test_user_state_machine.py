@@ -120,7 +120,7 @@ def test_more_narrow_transitions(
     )
     assert user.state == source_state
     assert user.partner_id == initial_partner_id
-    assert user.exclude_partner_ids == []
+    assert user.roomed_partner_ids == []
     assert user.newbie == initial_newbie_status
 
     trigger = partial(getattr(user, trigger_name), 'partner_id_in_trigger')
@@ -140,10 +140,10 @@ def test_more_narrow_transitions(
     assert user.partner_id == expected_partner_id
 
     if destination_state == UserState.ROOMED:
-        assert user.exclude_partner_ids == [initial_partner_id]
+        assert user.roomed_partner_ids == [initial_partner_id]
         assert user.newbie is False  # those who joined a room at least once stop being newbies
     else:
-        assert user.exclude_partner_ids == []
+        assert user.roomed_partner_ids == []
         assert user.newbie == initial_newbie_status
 
 
@@ -194,7 +194,8 @@ def test_state_timestamps(source_state: Text, trigger_name: Text) -> None:
             user_id=user.user_id,  # don't try to validate this
             state=user.state,  # don't try to validate this
             partner_id=user.partner_id,  # don't try to validate this
-            exclude_partner_ids=user.exclude_partner_ids,  # don't try to validate this
+            roomed_partner_ids=user.roomed_partner_ids,  # don't try to validate this
+            rejected_partner_ids=user.rejected_partner_ids,  # don't try to validate this
             newbie=user.newbie,  # don't try to validate this
 
             state_timestamp=1619945501,  # new timestamp
@@ -221,58 +222,69 @@ def test_state_timestamps(source_state: Text, trigger_name: Text) -> None:
         )
 
 
-@pytest.mark.parametrize('num_of_already_excluded', [
+@pytest.mark.parametrize('num_of_already_remembered', [
     0,
     1,
     5,
     10,
     15,
 ])
-@pytest.mark.parametrize('num_of_excluded_partners_to_remember', [
+@pytest.mark.parametrize('num_of_partners_to_remember', [
     0,
     1,
     10,
-    None,  # the default (2)
+    None,  # the default
 ])
-def test_join_room_and_exclude_partner(
-        num_of_already_excluded: int,
-        num_of_excluded_partners_to_remember: Optional[int],
+@pytest.mark.parametrize('trigger_name, list_name, default_num_var_name, expected_default_num_to_remember', [
+    ('join_room', 'roomed_partner_ids', 'NUM_OF_ROOMED_PARTNERS_TO_REMEMBER', 5),
+    ('reject', 'rejected_partner_ids', 'NUM_OF_REJECTED_PARTNERS_TO_REMEMBER', 10),
+])
+def test_partner_exclusion_lists(
+        num_of_already_remembered: int,
+        num_of_partners_to_remember: Optional[int],
+        trigger_name: Text,
+        list_name: Text,
+        default_num_var_name: Text,
+        expected_default_num_to_remember: int,
 ):
     user = UserStateMachine(
         user_id='some_user_id',
         state='asked_to_confirm',
         partner_id='partner100500',
-        exclude_partner_ids=[f"partner{i}" for i in range(num_of_already_excluded)],
     )
-    assert len(user.exclude_partner_ids) == num_of_already_excluded
+    setattr(user, list_name, [f"partner{i}" for i in range(num_of_already_remembered)])
 
-    if num_of_excluded_partners_to_remember is None:
-        num_of_excluded_partners_to_remember = 2  # the default
+    assert len(getattr(user, list_name)) == num_of_already_remembered
 
-        # noinspection PyUnresolvedReferences
-        user.join_room('partner100500')
+    trigger = partial(getattr(user, trigger_name), 'partner100500')
+
+    if num_of_partners_to_remember is None:
+        num_of_partners_to_remember = expected_default_num_to_remember  # the default
+
+        trigger()
     else:
         with patch.object(
                 user_state_machine,
-                'NUM_OF_EXCLUDED_PARTNERS_TO_REMEMBER',
-                num_of_excluded_partners_to_remember,
+                default_num_var_name,
+                num_of_partners_to_remember,
         ):
-            # noinspection PyUnresolvedReferences
-            user.join_room('partner100500')
+            trigger()
 
-    if num_of_excluded_partners_to_remember > 0:
-        assert len(user.exclude_partner_ids) == min(num_of_excluded_partners_to_remember, num_of_already_excluded + 1)
+    list_in_question = getattr(user, list_name)
 
-        if num_of_already_excluded < num_of_excluded_partners_to_remember:
-            assert user.exclude_partner_ids == [
-                f"partner{i}" for i in range(num_of_already_excluded)
+    if num_of_partners_to_remember > 0:
+        assert len(list_in_question) == min(num_of_partners_to_remember, num_of_already_remembered + 1)
+
+        if num_of_already_remembered < num_of_partners_to_remember:
+            assert list_in_question == [
+                f"partner{i}" for i in range(num_of_already_remembered)
             ] + ['partner100500']
         else:
-            assert user.exclude_partner_ids == [
+            assert list_in_question == [
                 f"partner{i}" for i in range(
-                    num_of_already_excluded - num_of_excluded_partners_to_remember + 1,
-                    num_of_already_excluded,
+                    num_of_already_remembered - num_of_partners_to_remember + 1,
+                    num_of_already_remembered,
                 )
             ] + ['partner100500']
     else:
-        assert user.exclude_partner_ids == []
+        assert list_in_question == []
