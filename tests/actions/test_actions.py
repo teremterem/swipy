@@ -1062,6 +1062,15 @@ async def test_action_accept_invitation_create_room(
             ),
             UTTER_CHECKING_IF_THAT_PERSON_READY_TOO_TEXT,
     ),
+    (
+            UserStateMachine(
+                user_id='an_asker',
+                state='wants_chitchat',
+                partner_id=None,
+                seen_partner_ids=['unit_test_user'],  # this should NOT prevent confirmation from being sent
+            ),
+            UTTER_CHECKING_IF_THAT_PERSON_READY_TOO_TEXT,
+    ),
 ])
 @pytest.mark.usefixtures('create_user_state_machine_table', 'wrap_actions_datetime_now')
 @patch('time.time', Mock(return_value=1619945501))  # "now"

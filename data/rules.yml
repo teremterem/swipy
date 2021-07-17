@@ -42,7 +42,7 @@ rules:
     - intent: waiting
     - intent: affirm
   - action: action_rewind
-- rule: bot is unable to find a partner, offers to try searching again and the user agrees
+- rule: bot was unable to find a partner, offers to try searching again and the user agrees
   condition:
   - slot_was_set:
     - swiper_action_result: partner_was_not_found

@@ -8,6 +8,8 @@ def unit_test_user() -> UserStateMachine:
     return UserStateMachine(
         user_id='unit_test_user',
         roomed_partner_ids=['excluded_unit_test_partner1', 'excluded_unit_test_partner2'],
+        rejected_partner_ids=['excluded_unit_test_partner11', 'excluded_unit_test_partner12'],
+        seen_partner_ids=['excluded_unit_test_partner21', 'excluded_unit_test_partner22'],
     )
 
 
@@ -18,6 +20,8 @@ def user1() -> UserStateMachine:
         state=UserState.WAITING_PARTNER_CONFIRM,
         partner_id='existing_user_id2',
         roomed_partner_ids=['excluded_partner1', 'excluded_partner2', 'excluded_partner3'],
+        rejected_partner_ids=['excluded_partner11', 'excluded_partner12', 'excluded_partner13'],
+        seen_partner_ids=['excluded_partner21', 'excluded_partner22', 'excluded_partner23'],
         newbie=False,
         notes='some note',
     )
