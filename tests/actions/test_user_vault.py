@@ -179,7 +179,18 @@ def test_get_random_available_partner_none(
                 'rejected_confirm',
             ],
             'existing_user_id1',
-            ['existing_user_id1', 'excluded_partner1', 'excluded_partner2', 'excluded_partner3'],
+            [
+                'existing_user_id1',
+                'roomed_partner1',
+                'roomed_partner2',
+                'roomed_partner3',
+                'rejected_partner1',
+                'rejected_partner2',
+                'rejected_partner3',
+                'seen_partner1',
+                'seen_partner2',
+                'seen_partner3',
+            ],
         ),
     ]
 
