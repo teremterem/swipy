@@ -73,7 +73,8 @@ class BaseUserVault(IUserVault, ABC):
         exclude_user_ids = (
                 [current_user.user_id] +
                 (current_user.roomed_partner_ids or []) +
-                (current_user.rejected_partner_ids or [])
+                (current_user.rejected_partner_ids or []) +
+                (current_user.seen_partner_ids or [])
         )
 
         for tier in UserState.offerable_tiers:
@@ -171,7 +172,8 @@ class NaiveDdbUserVault(BaseUserVault):
             return filter(
                 lambda i: (
                         current_user_id not in (i.get('roomed_partner_ids') or []) and
-                        current_user_id not in (i.get('rejected_partner_ids') or [])
+                        current_user_id not in (i.get('rejected_partner_ids') or []) and
+                        current_user_id not in (i.get('seen_partner_ids') or [])
                 ),
                 items,
             )

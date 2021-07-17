@@ -152,8 +152,10 @@ def test_get_random_available_partner(
 
     assert user_vault.get_user(actual_random_user.user_id) is actual_random_user  # make sure the user was cached
 
-    # _get_random_available_partner_from_tiers did not corrupt the original list by an internal concatenation
-    assert user1.roomed_partner_ids == ['excluded_partner1', 'excluded_partner2', 'excluded_partner3']
+    # _get_random_available_partner_from_tiers did not corrupt the original lists by internal concatenation
+    assert user1.roomed_partner_ids == ['roomed_partner1', 'roomed_partner2', 'roomed_partner3']
+    assert user1.rejected_partner_ids == ['rejected_partner1', 'rejected_partner2', 'rejected_partner3']
+    assert user1.seen_partner_ids == ['seen_partner1', 'seen_partner2', 'seen_partner3']
 
 
 @patch.object(UserVault, '_get_random_available_partner_dict')
