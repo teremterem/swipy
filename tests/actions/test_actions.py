@@ -1565,6 +1565,7 @@ async def test_action_reject_invitation(
             user_id='unit_test_user',
             state=destination_swiper_state,
             partner_id='some_test_partner_id',
+            rejected_partner_ids=['some_test_partner_id'],
             newbie=True,
             state_timestamp=1619945501,
             state_timestamp_str='2021-05-02 08:51:41 Z',

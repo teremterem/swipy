@@ -75,6 +75,7 @@ class UserModel:
     state: Text = None  # the state machine will set it to UserState.NEW if not provided explicitly
     partner_id: Optional[Text] = None
     roomed_partner_ids: List[Text] = field(default_factory=list)
+    rejected_partner_ids: List[Text] = field(default_factory=list)
     newbie: bool = True
     state_timestamp: int = 0  # DDB GSI does not allow None
     state_timestamp_str: Optional[Text] = None
@@ -193,6 +194,9 @@ class UserStateMachine(UserModel):
                 UserState.ASKED_TO_JOIN,
             ],
             dest=UserState.REJECTED_JOIN,
+            after=[
+                self._mark_current_partner_id_as_rejected,
+            ],
         )
         # noinspection PyTypeChecker
         self.machine.add_transition(
@@ -201,6 +205,9 @@ class UserStateMachine(UserModel):
                 UserState.ASKED_TO_CONFIRM,
             ],
             dest=UserState.REJECTED_CONFIRM,
+            after=[
+                self._mark_current_partner_id_as_rejected,
+            ],
         )
 
         # noinspection PyTypeChecker
@@ -272,6 +279,14 @@ class UserStateMachine(UserModel):
     def _mark_current_partner_id_as_roomed(self, event: EventData) -> None:
         self.roomed_partner_ids = roll_the_list(
             self.roomed_partner_ids,
+            self.partner_id,
+            NUM_OF_ROOMED_PARTNERS_TO_REMEMBER,
+        )
+
+    # noinspection PyUnusedLocal
+    def _mark_current_partner_id_as_rejected(self, event: EventData) -> None:
+        self.rejected_partner_ids = roll_the_list(
+            self.rejected_partner_ids,
             self.partner_id,
             NUM_OF_ROOMED_PARTNERS_TO_REMEMBER,
         )

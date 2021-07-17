@@ -32,7 +32,13 @@ def get_intent_of_latest_message_reliably(tracker: Tracker) -> Optional[Text]:
     return (tracker.latest_message.get('intent') or {}).get('name')
 
 
-def roll_the_list(latest_list: Union[List[Any], Tuple[Any]], new_item: Any, num_of_items_to_keep: int) -> List[Any]:
+def roll_the_list(
+        latest_list: Optional[Union[List[Any], Tuple[Any]]],
+        new_item: Any,
+        num_of_items_to_keep: int,
+) -> List[Any]:
+    latest_list = latest_list or []
+
     if num_of_items_to_keep > 1:
         new_list = latest_list[-num_of_items_to_keep + 1:]
         new_list.append(new_item)
