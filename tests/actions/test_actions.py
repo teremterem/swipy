@@ -762,7 +762,15 @@ async def test_action_find_partner_no_one(
             'rejected_confirm',
         ],
         'unit_test_user',
-        ['unit_test_user', 'excluded_unit_test_partner1', 'excluded_unit_test_partner2'],
+        [
+            'unit_test_user',
+            'roomed_unit_test_partner1',
+            'roomed_unit_test_partner2',
+            'rejected_unit_test_partner1',
+            'rejected_unit_test_partner2',
+            'seen_unit_test_partner1',
+            'seen_unit_test_partner2',
+        ],
     )
     assert mock_aioresponses.requests == {}  # rasa_callbacks.ask_to_join() not called
 
