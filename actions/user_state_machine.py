@@ -16,6 +16,7 @@ SWIPER_STATE_MAX_TIMEOUT_SEC = int(os.getenv('SWIPER_STATE_MAX_TIMEOUT_SEC', '24
 ROOMED_STATE_TIMEOUT_SEC = int(os.getenv('ROOMED_STATE_TIMEOUT_SEC', '900'))  # 15 minutes (15*60 seconds)
 PARTNER_CONFIRMATION_TIMEOUT_SEC = int(os.getenv('PARTNER_CONFIRMATION_TIMEOUT_SEC', '60'))  # 1 minute
 NUM_OF_ROOMED_PARTNERS_TO_REMEMBER = int(os.getenv('NUM_OF_ROOMED_PARTNERS_TO_REMEMBER', '5'))
+NUM_OF_REJECTED_PARTNERS_TO_REMEMBER = int(os.getenv('NUM_OF_REJECTED_PARTNERS_TO_REMEMBER', '10'))
 
 NATIVE_UNKNOWN = 'unknown'
 
@@ -288,7 +289,7 @@ class UserStateMachine(UserModel):
         self.rejected_partner_ids = roll_the_list(
             self.rejected_partner_ids,
             self.partner_id,
-            NUM_OF_ROOMED_PARTNERS_TO_REMEMBER,
+            NUM_OF_REJECTED_PARTNERS_TO_REMEMBER,
         )
 
     # noinspection PyUnusedLocal

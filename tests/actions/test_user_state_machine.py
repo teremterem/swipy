@@ -222,58 +222,69 @@ def test_state_timestamps(source_state: Text, trigger_name: Text) -> None:
         )
 
 
-@pytest.mark.parametrize('num_of_already_roomed', [
+@pytest.mark.parametrize('num_of_already_remembered', [
     0,
     1,
     5,
     10,
     15,
 ])
-@pytest.mark.parametrize('num_of_roomed_partners_to_remember', [
+@pytest.mark.parametrize('num_of_partners_to_remember', [
     0,
     1,
     10,
-    None,  # the default (5)
+    None,  # the default
 ])
-def test_join_room_and_exclude_partner(
-        num_of_already_roomed: int,
-        num_of_roomed_partners_to_remember: Optional[int],
+@pytest.mark.parametrize('trigger_name, list_name, default_num_var_name, expected_default_num_to_remember', [
+    ('join_room', 'roomed_partner_ids', 'NUM_OF_ROOMED_PARTNERS_TO_REMEMBER', 5),
+    ('reject', 'rejected_partner_ids', 'NUM_OF_REJECTED_PARTNERS_TO_REMEMBER', 10),
+])
+def test_partner_exclusion_lists(
+        num_of_already_remembered: int,
+        num_of_partners_to_remember: Optional[int],
+        trigger_name: Text,
+        list_name: Text,
+        default_num_var_name: Text,
+        expected_default_num_to_remember: int,
 ):
     user = UserStateMachine(
         user_id='some_user_id',
         state='asked_to_confirm',
         partner_id='partner100500',
-        roomed_partner_ids=[f"partner{i}" for i in range(num_of_already_roomed)],
     )
-    assert len(user.roomed_partner_ids) == num_of_already_roomed
+    setattr(user, list_name, [f"partner{i}" for i in range(num_of_already_remembered)])
 
-    if num_of_roomed_partners_to_remember is None:
-        num_of_roomed_partners_to_remember = 5  # the default
+    assert len(getattr(user, list_name)) == num_of_already_remembered
 
-        # noinspection PyUnresolvedReferences
-        user.join_room('partner100500')
+    trigger = partial(getattr(user, trigger_name), 'partner100500')
+
+    if num_of_partners_to_remember is None:
+        num_of_partners_to_remember = expected_default_num_to_remember  # the default
+
+        trigger()
     else:
         with patch.object(
                 user_state_machine,
-                'NUM_OF_ROOMED_PARTNERS_TO_REMEMBER',
-                num_of_roomed_partners_to_remember,
+                default_num_var_name,
+                num_of_partners_to_remember,
         ):
-            # noinspection PyUnresolvedReferences
-            user.join_room('partner100500')
+            trigger()
 
-    if num_of_roomed_partners_to_remember > 0:
-        assert len(user.roomed_partner_ids) == min(num_of_roomed_partners_to_remember, num_of_already_roomed + 1)
+    list_in_question = getattr(user, list_name)
 
-        if num_of_already_roomed < num_of_roomed_partners_to_remember:
-            assert user.roomed_partner_ids == [
-                f"partner{i}" for i in range(num_of_already_roomed)
+    if num_of_partners_to_remember > 0:
+        assert len(list_in_question) == min(num_of_partners_to_remember, num_of_already_remembered + 1)
+
+        if num_of_already_remembered < num_of_partners_to_remember:
+            assert list_in_question == [
+                f"partner{i}" for i in range(num_of_already_remembered)
             ] + ['partner100500']
         else:
-            assert user.roomed_partner_ids == [
+            assert list_in_question == [
                 f"partner{i}" for i in range(
-                    num_of_already_roomed - num_of_roomed_partners_to_remember + 1,
-                    num_of_already_roomed,
+                    num_of_already_remembered - num_of_partners_to_remember + 1,
+                    num_of_already_remembered,
                 )
             ] + ['partner100500']
     else:
-        assert user.roomed_partner_ids == []
+        assert list_in_question == []
