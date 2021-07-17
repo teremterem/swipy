@@ -15,8 +15,9 @@ SWIPER_STATE_MIN_TIMEOUT_SEC = int(os.getenv('SWIPER_STATE_MIN_TIMEOUT_SEC', '14
 SWIPER_STATE_MAX_TIMEOUT_SEC = int(os.getenv('SWIPER_STATE_MAX_TIMEOUT_SEC', '241200'))  # 67 hours (67*60*60 seconds)
 ROOMED_STATE_TIMEOUT_SEC = int(os.getenv('ROOMED_STATE_TIMEOUT_SEC', '900'))  # 15 minutes (15*60 seconds)
 PARTNER_CONFIRMATION_TIMEOUT_SEC = int(os.getenv('PARTNER_CONFIRMATION_TIMEOUT_SEC', '60'))  # 1 minute
-NUM_OF_ROOMED_PARTNERS_TO_REMEMBER = int(os.getenv('NUM_OF_ROOMED_PARTNERS_TO_REMEMBER', '5'))
-NUM_OF_REJECTED_PARTNERS_TO_REMEMBER = int(os.getenv('NUM_OF_REJECTED_PARTNERS_TO_REMEMBER', '10'))
+NUM_OF_ROOMED_PARTNERS_TO_REMEMBER = int(os.getenv('NUM_OF_ROOMED_PARTNERS_TO_REMEMBER', '3'))
+NUM_OF_REJECTED_PARTNERS_TO_REMEMBER = int(os.getenv('NUM_OF_REJECTED_PARTNERS_TO_REMEMBER', '21'))
+NUM_OF_SEEN_PARTNERS_TO_REMEMBER = int(os.getenv('NUM_OF_SEEN_PARTNERS_TO_REMEMBER', '1'))
 
 NATIVE_UNKNOWN = 'unknown'
 
@@ -77,6 +78,7 @@ class UserModel:
     partner_id: Optional[Text] = None
     roomed_partner_ids: List[Text] = field(default_factory=list)
     rejected_partner_ids: List[Text] = field(default_factory=list)
+    seen_partner_ids: List[Text] = field(default_factory=list)
     newbie: bool = True
     state_timestamp: int = 0  # DDB GSI does not allow None
     state_timestamp_str: Optional[Text] = None
@@ -154,6 +156,7 @@ class UserStateMachine(UserModel):
             ],
             after=[
                 self._set_partner_id,
+                self._mark_current_partner_id_as_seen,
             ],
         )
 
@@ -167,6 +170,7 @@ class UserStateMachine(UserModel):
             ],
             after=[
                 self._set_partner_id,
+                self._mark_current_partner_id_as_seen,
             ],
         )
 
@@ -299,6 +303,14 @@ class UserStateMachine(UserModel):
             self.rejected_partner_ids,
             self.partner_id,
             NUM_OF_REJECTED_PARTNERS_TO_REMEMBER,
+        )
+
+    # noinspection PyUnusedLocal
+    def _mark_current_partner_id_as_seen(self, event: EventData) -> None:
+        self.seen_partner_ids = roll_the_list(
+            self.seen_partner_ids,
+            self.partner_id,
+            NUM_OF_SEEN_PARTNERS_TO_REMEMBER,
         )
 
     # noinspection PyUnusedLocal

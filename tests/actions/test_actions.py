@@ -762,7 +762,15 @@ async def test_action_find_partner_no_one(
             'rejected_confirm',
         ],
         'unit_test_user',
-        ['unit_test_user', 'excluded_unit_test_partner1', 'excluded_unit_test_partner2'],
+        [
+            'unit_test_user',
+            'roomed_unit_test_partner1',
+            'roomed_unit_test_partner2',
+            'rejected_unit_test_partner1',
+            'rejected_unit_test_partner2',
+            # 'seen_unit_test_partner1',
+            # 'seen_unit_test_partner2',
+        ],
     )
     assert mock_aioresponses.requests == {}  # rasa_callbacks.ask_to_join() not called
 
@@ -771,7 +779,9 @@ async def test_action_find_partner_no_one(
         user_id='unit_test_user',
         state='wants_chitchat',
         partner_id=None,
-        roomed_partner_ids=['excluded_unit_test_partner1', 'excluded_unit_test_partner2'],
+        roomed_partner_ids=['roomed_unit_test_partner1', 'roomed_unit_test_partner2'],
+        rejected_partner_ids=['rejected_unit_test_partner1', 'rejected_unit_test_partner2'],
+        seen_partner_ids=['seen_unit_test_partner1', 'seen_unit_test_partner2'],
         newbie=True,
         state_timestamp=1619945501,
         state_timestamp_str='2021-05-02 08:51:41 Z',
@@ -917,6 +927,7 @@ async def test_action_ask_to_join(
             user_id='unit_test_user',
             state=destination_swiper_state,
             partner_id='new_asker',
+            seen_partner_ids=['new_asker'],
             newbie=True,
             state_timestamp=1619945501,
             state_timestamp_str='2021-05-02 08:51:41 Z',
@@ -1059,6 +1070,15 @@ async def test_action_accept_invitation_create_room(
                 state='waiting_partner_confirm',
                 partner_id='unit_test_user',
                 state_timeout_ts=1619945501 - 1,  # we are 1 second late, now we have to confirm again
+            ),
+            UTTER_CHECKING_IF_THAT_PERSON_READY_TOO_TEXT,
+    ),
+    (
+            UserStateMachine(
+                user_id='an_asker',
+                state='wants_chitchat',
+                partner_id=None,
+                seen_partner_ids=['unit_test_user'],  # this should NOT prevent confirmation from being sent
             ),
             UTTER_CHECKING_IF_THAT_PERSON_READY_TOO_TEXT,
     ),
