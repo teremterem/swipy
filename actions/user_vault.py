@@ -70,7 +70,11 @@ class BaseUserVault(IUserVault, ABC):
         return self._cache_and_bind(user)
 
     def _get_random_available_partner_from_tiers(self, current_user: UserStateMachine) -> Optional[UserStateMachine]:
-        exclude_user_ids = [current_user.user_id] + current_user.roomed_partner_ids
+        exclude_user_ids = (
+                [current_user.user_id] +
+                (current_user.roomed_partner_ids or []) +
+                (current_user.rejected_partner_ids or [])
+        )
 
         for tier in UserState.offerable_tiers:
             partner = self._get_random_available_partner(tier, current_user.user_id, exclude_user_ids)
