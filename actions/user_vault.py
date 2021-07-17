@@ -168,7 +168,13 @@ class NaiveDdbUserVault(BaseUserVault):
             While DDB FilterExpression filters by current user's excluded partners,
             this function is used to filter by potential partner's excluded partners.
             """
-            return filter(lambda i: current_user_id not in (i.get('roomed_partner_ids') or []), items)
+            return filter(
+                lambda i: (
+                        current_user_id not in (i.get('roomed_partner_ids') or []) and
+                        current_user_id not in (i.get('rejected_partner_ids') or [])
+                ),
+                items,
+            )
 
         def item_generator() -> Iterator[Dict[Text, Any]]:
             # TODO oleksandr: parallelize ? no! we will later be switching to Redis and/or Postgres anyway
