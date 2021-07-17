@@ -925,6 +925,7 @@ async def test_action_ask_to_join(
             user_id='unit_test_user',
             state=destination_swiper_state,
             partner_id='new_asker',
+            seen_partner_ids=['new_asker'],
             newbie=True,
             state_timestamp=1619945501,
             state_timestamp_str='2021-05-02 08:51:41 Z',

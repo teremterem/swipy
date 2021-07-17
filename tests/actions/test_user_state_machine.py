@@ -196,6 +196,7 @@ def test_state_timestamps(source_state: Text, trigger_name: Text) -> None:
             partner_id=user.partner_id,  # don't try to validate this
             roomed_partner_ids=user.roomed_partner_ids,  # don't try to validate this
             rejected_partner_ids=user.rejected_partner_ids,  # don't try to validate this
+            seen_partner_ids=user.seen_partner_ids,  # don't try to validate this
             newbie=user.newbie,  # don't try to validate this
 
             state_timestamp=1619945501,  # new timestamp

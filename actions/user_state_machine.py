@@ -156,6 +156,7 @@ class UserStateMachine(UserModel):
             ],
             after=[
                 self._set_partner_id,
+                self._mark_current_partner_id_as_seen,
             ],
         )
 
@@ -169,6 +170,7 @@ class UserStateMachine(UserModel):
             ],
             after=[
                 self._set_partner_id,
+                self._mark_current_partner_id_as_seen,
             ],
         )
 
@@ -301,6 +303,14 @@ class UserStateMachine(UserModel):
             self.rejected_partner_ids,
             self.partner_id,
             NUM_OF_REJECTED_PARTNERS_TO_REMEMBER,
+        )
+
+    # noinspection PyUnusedLocal
+    def _mark_current_partner_id_as_seen(self, event: EventData) -> None:
+        self.seen_partner_ids = roll_the_list(
+            self.seen_partner_ids,
+            self.partner_id,
+            NUM_OF_SEEN_PARTNERS_TO_REMEMBER,
         )
 
     # noinspection PyUnusedLocal
