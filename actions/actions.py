@@ -608,7 +608,7 @@ class ActionAcceptInvitation(BaseSwiperAction):
                 # current user was the one asked to confirm and they just did => create the room
                 return await self.create_room(dispatcher, current_user, partner)
 
-            elif partner.chitchat_can_be_offered():
+            elif partner.chitchat_can_be_offered_by(current_user.user_id):
                 # confirm with the partner before creating any rooms
                 return await self.confirm_with_partner(dispatcher, current_user, partner)
 

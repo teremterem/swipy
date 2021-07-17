@@ -253,6 +253,15 @@ class UserStateMachine(UserModel):
 
         return self.state_timeout_ts < current_timestamp_int()
 
+    def chitchat_can_be_offered_by(self, partner_id: Text):
+        if not partner_id:
+            return False
+
+        return self.chitchat_can_be_offered() and not (
+                partner_id in (self.roomed_partner_ids or []) or
+                partner_id in (self.rejected_partner_ids or [])
+        )
+
     def chitchat_can_be_offered(self):
         return self.state in UserState.offerable_states and self.has_become_discoverable()
 
