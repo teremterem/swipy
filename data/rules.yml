@@ -90,9 +90,6 @@ rules:
   steps:
   - intent: bot_challenge
   - action: utter_iamabot
-- rule: partner rejected invitation explicitly - we need to let the user know that the partner became unavailable
-  steps:
-  - action: action_expire_partner_confirmation
 - rule: it either took too long for partner to confirm or partner rejected explicitly
   steps:
   - or:
