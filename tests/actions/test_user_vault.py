@@ -35,6 +35,7 @@ def test_get_new_user() -> None:
         'partner_id': None,
         'roomed_partner_ids': [],
         'rejected_partner_ids': [],
+        'seen_partner_ids': [],
         'newbie': True,
         'state_timestamp': Decimal(0),
         'state_timestamp_str': None,
@@ -135,7 +136,18 @@ def test_get_random_available_partner(
             'rejected_confirm',
         ],
         'existing_user_id1',
-        ['existing_user_id1', 'excluded_partner1', 'excluded_partner2', 'excluded_partner3'],
+        [
+            'existing_user_id1',
+            'roomed_partner1',
+            'roomed_partner2',
+            'roomed_partner3',
+            'rejected_partner1',
+            'rejected_partner2',
+            'rejected_partner3',
+            'seen_partner1',
+            'seen_partner2',
+            'seen_partner3',
+        ],
     )
 
     assert user_vault.get_user(actual_random_user.user_id) is actual_random_user  # make sure the user was cached
@@ -193,8 +205,9 @@ def test_save_new_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> None:
             'user_id': 'existing_user_id1',
             'state': 'waiting_partner_confirm',
             'partner_id': 'existing_user_id2',
-            'roomed_partner_ids': ['excluded_partner1', 'excluded_partner2', 'excluded_partner3'],
-            'rejected_partner_ids': [],
+            'roomed_partner_ids': ['roomed_partner1', 'roomed_partner2', 'roomed_partner3'],
+            'rejected_partner_ids': ['rejected_partner1', 'rejected_partner2', 'rejected_partner3'],
+            'seen_partner_ids': ['seen_partner1', 'seen_partner2', 'seen_partner3'],
             'newbie': False,
             'state_timestamp': Decimal(0),
             'state_timestamp_str': None,
@@ -214,6 +227,7 @@ def test_save_new_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> None:
             'partner_id': 'existing_user_id1',
             'roomed_partner_ids': [],
             'rejected_partner_ids': [],
+            'seen_partner_ids': [],
             'newbie': True,
             'state_timestamp': Decimal(0),
             'state_timestamp_str': None,
@@ -233,6 +247,7 @@ def test_save_new_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> None:
             'partner_id': None,
             'roomed_partner_ids': [],
             'rejected_partner_ids': [],
+            'seen_partner_ids': [],
             'newbie': True,
             'state_timestamp': Decimal(0),
             'state_timestamp_str': None,
@@ -252,6 +267,7 @@ def test_save_new_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> None:
             'partner_id': None,
             'roomed_partner_ids': [],
             'rejected_partner_ids': [],
+            'seen_partner_ids': [],
             'newbie': True,
             'state_timestamp': Decimal(0),
             'state_timestamp_str': None,
@@ -291,7 +307,8 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
             'state': 'do_not_disturb',  # used to be 'waiting_partner_join' but we have overridden it
             'partner_id': None,  # used to be 'existing_user_id2' but we have overridden it
             'roomed_partner_ids': [],  # used to contain 3 ids but we have overridden it
-            'rejected_partner_ids': [],
+            'rejected_partner_ids': [],  # used to contain 3 ids but we have overridden it
+            'seen_partner_ids': [],  # used to contain 3 ids but we have overridden it
             'newbie': True,  # used to be False but we have overridden it
             'state_timestamp': Decimal(0),
             'state_timestamp_str': None,
@@ -311,6 +328,7 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
             'partner_id': 'existing_user_id1',
             'roomed_partner_ids': [],
             'rejected_partner_ids': [],
+            'seen_partner_ids': [],
             'newbie': True,
             'state_timestamp': Decimal(0),
             'state_timestamp_str': None,
@@ -330,6 +348,7 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
             'partner_id': None,
             'roomed_partner_ids': [],
             'rejected_partner_ids': [],
+            'seen_partner_ids': [],
             'newbie': True,
             'state_timestamp': Decimal(0),
             'state_timestamp_str': None,
