@@ -313,7 +313,7 @@ def user_dicts() -> List[Dict[Text, Any]]:
             'state_timestamp_str': None,
             'state_timeout_ts': Decimal(0),
             'state_timeout_ts_str': None,
-            'activity_timestamp': Decimal(1619901009),  # more resent but the seeker ('ok_to_chitchat_id3') is excluded
+            'activity_timestamp': Decimal(1619901009),  # more resent but the seeker ('ok_to_chitchat_id3') is "roomed"
             'activity_timestamp_str': None,
             'notes': '',
             'deeplink_data': '',
@@ -332,7 +332,45 @@ def user_dicts() -> List[Dict[Text, Any]]:
             'state_timestamp_str': None,
             'state_timeout_ts': Decimal(0),
             'state_timeout_ts_str': None,
-            'activity_timestamp': Decimal(1619901019),  # more resent but the seeker ('ok_to_chitchat_id3') is excluded
+            'activity_timestamp': Decimal(1619901019),  # more resent but the seeker ('ok_to_chitchat_id3') is "roomed"
+            'activity_timestamp_str': None,
+            'notes': '',
+            'deeplink_data': '',
+            'native': 'unknown',
+            'teleg_lang_code': None,
+            'telegram_from': None,
+        },
+        {
+            'user_id': 'ok_to_chitchat_id2_2_1',
+            'state': 'ok_to_chitchat',
+            'partner_id': None,
+            'roomed_partner_ids': [],
+            'rejected_partner_ids': ['excluded_partner1', 'excluded_partner2', 'ok_to_chitchat_id3'],
+            'newbie': False,
+            'state_timestamp': Decimal(0),
+            'state_timestamp_str': None,
+            'state_timeout_ts': Decimal(0),
+            'state_timeout_ts_str': None,
+            'activity_timestamp': Decimal(1619901019),  # more resent but the seeker ('ok_to_chitchat_id3') is rejected
+            'activity_timestamp_str': None,
+            'notes': '',
+            'deeplink_data': '',
+            'native': 'unknown',
+            'teleg_lang_code': None,
+            'telegram_from': None,
+        },
+        {
+            'user_id': 'ok_to_chitchat_id2_3',
+            'state': 'ok_to_chitchat',
+            'partner_id': None,
+            'roomed_partner_ids': [],
+            'rejected_partner_ids': [],
+            'newbie': False,
+            'state_timestamp': Decimal(0),
+            'state_timestamp_str': None,
+            'state_timeout_ts': Decimal(0),
+            'state_timeout_ts_str': None,
+            'activity_timestamp': Decimal(1619901029),  # more resent but excluded by seeker
             'activity_timestamp_str': None,
             'notes': '',
             'deeplink_data': '',
@@ -484,7 +522,7 @@ def user_dicts() -> List[Dict[Text, Any]]:
             'state_timestamp_str': None,
             'state_timeout_ts': Decimal(1624000009),
             'state_timeout_ts_str': None,
-            'activity_timestamp': Decimal(1623000009),  # more resent but the seeker ('ok_to_chitchat_id3') is excluded
+            'activity_timestamp': Decimal(1623000009),  # more resent but the seeker ('ok_to_chitchat_id3') is "roomed"
             'activity_timestamp_str': None,
             'notes': '',
             'deeplink_data': '',
@@ -503,7 +541,26 @@ def user_dicts() -> List[Dict[Text, Any]]:
             'state_timestamp_str': None,
             'state_timeout_ts': Decimal(1624000019),
             'state_timeout_ts_str': None,
-            'activity_timestamp': Decimal(1623000019),  # more resent but the seeker ('ok_to_chitchat_id3') is excluded
+            'activity_timestamp': Decimal(1623000019),  # more resent but the seeker ('ok_to_chitchat_id3') is "roomed"
+            'activity_timestamp_str': None,
+            'notes': '',
+            'deeplink_data': '',
+            'native': 'unknown',
+            'teleg_lang_code': None,
+            'telegram_from': None,
+        },
+        {
+            'user_id': 'roomed_id2_2_1',
+            'state': 'roomed',
+            'partner_id': 'some_partner_id',
+            'roomed_partner_ids': [],
+            'rejected_partner_ids': ['ok_to_chitchat_id3', 'some_excluded_partner'],
+            'newbie': True,
+            'state_timestamp': Decimal(0),
+            'state_timestamp_str': None,
+            'state_timeout_ts': Decimal(1624000019),
+            'state_timeout_ts_str': None,
+            'activity_timestamp': Decimal(1623000019),  # more resent but the seeker ('ok_to_chitchat_id3') is rejected
             'activity_timestamp_str': None,
             'notes': '',
             'deeplink_data': '',

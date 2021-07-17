@@ -410,7 +410,7 @@ def test_ddb_get_random_available_partner_dict(
         partner_dict = user_vault._get_random_available_partner_dict(
             ('wants_chitchat', 'ok_to_chitchat', 'fake_state', 'roomed'),  # let's forget about "tiers" here
             'ok_to_chitchat_id3',
-            ['roomed_id2_3', 'some_exclude_id', 'ok_to_chitchat_id3', 'another_exclude_id'],
+            ['roomed_id2_3', 'some_exclude_id', 'ok_to_chitchat_id3', 'ok_to_chitchat_id2_3', 'another_exclude_id'],
         )
     assert partner_dict == expected_partner_dict
 
