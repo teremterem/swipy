@@ -229,6 +229,7 @@ def test_state_timestamps(source_state: Text, trigger_name: Text) -> None:
     5,
     10,
     15,
+    200,
 ])
 @pytest.mark.parametrize('num_of_partners_to_remember', [
     0,
