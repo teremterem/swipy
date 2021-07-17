@@ -238,8 +238,8 @@ def test_state_timestamps(source_state: Text, trigger_name: Text) -> None:
 @pytest.mark.parametrize('trigger_name, list_name, default_num_var_name, expected_default_num_to_remember', [
     ('join_room', 'roomed_partner_ids', 'NUM_OF_ROOMED_PARTNERS_TO_REMEMBER', 3),
     ('reject', 'rejected_partner_ids', 'NUM_OF_REJECTED_PARTNERS_TO_REMEMBER', 21),
-    ('ask_to_join', 'seen_partner_ids', 'NUM_OF_SEEN_PARTNERS_TO_REMEMBER', 1),
-    ('ask_to_confirm', 'seen_partner_ids', 'NUM_OF_SEEN_PARTNERS_TO_REMEMBER', 1),
+    ('become_asked_to_join', 'seen_partner_ids', 'NUM_OF_SEEN_PARTNERS_TO_REMEMBER', 1),
+    ('become_asked_to_confirm', 'seen_partner_ids', 'NUM_OF_SEEN_PARTNERS_TO_REMEMBER', 1),
 ])
 def test_partner_exclusion_lists(
         num_of_already_remembered: int,
