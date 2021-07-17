@@ -73,9 +73,10 @@ class BaseUserVault(IUserVault, ABC):
         exclude_user_ids = (
                 [current_user.user_id] +
                 (current_user.roomed_partner_ids or []) +
-                (current_user.rejected_partner_ids or []) +
-                (current_user.seen_partner_ids or [])
+                (current_user.rejected_partner_ids or [])
         )
+        # seen partners should NOT discover (see NaiveDdbUserVault::_get_random_available_partner_dict::filter_items),
+        # BUT they should BE discoverable... hence we are NOT doing +(current_user.seen_partner_ids or []) here
 
         for tier in UserState.offerable_tiers:
             partner = self._get_random_available_partner(tier, current_user.user_id, exclude_user_ids)

@@ -144,9 +144,9 @@ def test_get_random_available_partner(
             'rejected_partner1',
             'rejected_partner2',
             'rejected_partner3',
-            'seen_partner1',
-            'seen_partner2',
-            'seen_partner3',
+            # 'seen_partner1',
+            # 'seen_partner2',
+            # 'seen_partner3',
         ],
     )
 
@@ -189,9 +189,9 @@ def test_get_random_available_partner_none(
                 'rejected_partner1',
                 'rejected_partner2',
                 'rejected_partner3',
-                'seen_partner1',
-                'seen_partner2',
-                'seen_partner3',
+                # 'seen_partner1',
+                # 'seen_partner2',
+                # 'seen_partner3',
             ],
         ),
     ]
