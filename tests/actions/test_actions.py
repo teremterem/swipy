@@ -734,23 +734,7 @@ async def test_action_find_partner_no_one(
         },
         SlotSet('swiper_state', 'wants_chitchat'),
     ]
-
-    assert dispatcher.messages == [
-        {
-            'attachment': None,
-            'buttons': [],
-            'custom': {
-                'text': UTTER_OK_ARRANGING_CHITCHAT_TEXT,
-                'parse_mode': 'html',
-                'reply_markup': OK_WAITING_CANCEL_MARKUP,
-            },
-            'elements': [],
-            'image': None,
-            'response': None,
-            'template': None,
-            'text': None,
-        },
-    ]
+    assert dispatcher.messages == []
 
     mock_get_random_available_partner_dict.assert_called_once_with(
         [
