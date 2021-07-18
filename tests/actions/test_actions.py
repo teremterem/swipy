@@ -570,8 +570,9 @@ async def test_action_find_partner(
     current_user = UserStateMachine(
         user_id='unit_test_user',
         state=source_swiper_state,
+        roomed_partner_ids=['roomed_partner1'],
         rejected_partner_ids=['rejected_partner1', 'rejected_partner2'],
-        seen_partner_ids=['seen_partner1', 'seen_partner2'],
+        seen_partner_ids=['seen_partner1', 'seen_partner2', 'seen_partner_3'],
     )
     if user_has_name:
         current_user.telegram_from = {'first_name': 'unit_test_first_name'}
@@ -655,8 +656,12 @@ async def test_action_find_partner(
             'unit_test_user',
             [
                 'unit_test_user',
+                'roomed_partner1',
                 'rejected_partner1',
                 'rejected_partner2',
+                # 'seen_partner1',
+                # 'seen_partner2',
+                # 'seen_partner3',
             ],
         )
         assert mock_telebot_make_request.mock_calls == [
@@ -680,8 +685,9 @@ async def test_action_find_partner(
         user_id='unit_test_user',
         state=source_swiper_state if expect_dry_run else 'wants_chitchat',
         partner_id=None,
+        roomed_partner_ids=['roomed_partner1'],
         rejected_partner_ids=['rejected_partner1', 'rejected_partner2'],
-        seen_partner_ids=['seen_partner1', 'seen_partner2'],
+        seen_partner_ids=['seen_partner1', 'seen_partner2', 'seen_partner_3'] if expect_as_reminder else [],
         newbie=True,
         state_timestamp=0 if expect_as_reminder else 1619945501,
         state_timestamp_str=None if expect_as_reminder else '2021-05-02 08:51:41 Z',

@@ -290,7 +290,7 @@ class ActionOfferChitchat(BaseSwiperAction):
         latest_intent = tracker.get_intent_of_latest_message()
 
         if latest_intent == 'help':
-            dispatcher.utter_message(custom={  # TODO oleksandr: rewrite this text !
+            dispatcher.utter_message(custom={  # TODO oleksandr: rewrite this text ?
                 'text': 'I can arrange video chitchat with another human for you 🎥 🗣 ☎️\n'
                         '\n'
                         'Here is how it works:\n'
