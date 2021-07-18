@@ -732,7 +732,7 @@ async def test_action_find_partner_no_one(
 
     if previous_action_result:
         tracker.add_slots([
-            SlotSet('SWIPER_ACTION_RESULT', previous_action_result),
+            SlotSet('swiper_action_result', previous_action_result),
         ])
 
     if clear_rejected_flag is None:
