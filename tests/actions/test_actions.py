@@ -612,6 +612,7 @@ async def test_action_find_partner(
             UserUtteranceReverted(),
             SlotSet('swiper_state', source_swiper_state),
         ]
+
         mock_get_random_available_partner_dict.assert_not_called()
         mock_telebot_make_request.assert_not_called()
         assert mock_aioresponses.requests == {}
@@ -672,23 +673,7 @@ async def test_action_find_partner(
         )
         assert mock_aioresponses.requests == {expected_req_key: [expected_req_call]}
 
-    if expect_as_reminder:
-        assert dispatcher.messages == []
-    else:
-        assert dispatcher.messages == [{
-            'attachment': None,
-            'buttons': [],
-            'custom': {
-                'text': UTTER_OK_ARRANGING_CHITCHAT_TEXT,
-                'parse_mode': 'html',
-                'reply_markup': OK_WAITING_CANCEL_MARKUP,
-            },
-            'elements': [],
-            'image': None,
-            'response': None,
-            'template': None,
-            'text': None,
-        }]
+    assert dispatcher.messages == []
 
     user_vault = UserVault()
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
