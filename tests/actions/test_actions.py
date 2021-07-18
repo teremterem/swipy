@@ -1246,16 +1246,7 @@ async def test_action_accept_invitation_partner_not_waiting(
     actual_events = await actions.ActionAcceptInvitation().run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'partner_not_waiting_anymore'),
-        SlotSet('partner_search_start_ts', '1619945501'),
-        {
-            'date_time': '2021-05-25T00:00:02',
-            'entities': None,
-            'event': 'reminder',
-            'intent': 'EXTERNAL_find_partner',
-            'kill_on_user_msg': False,
-            'name': 'unit_test_userEXTERNAL_find_partner',
-            'timestamp': None,
-        },
+        FollowupAction('action_find_partner'),
         SlotSet('swiper_state', 'wants_chitchat'),
     ]
     assert dispatcher.messages == [{
