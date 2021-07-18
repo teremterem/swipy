@@ -9,7 +9,7 @@ import pytest
 from aioresponses import aioresponses
 from aioresponses.core import RequestCall
 from rasa_sdk import Tracker
-from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType, UserUtteranceReverted
+from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType, UserUtteranceReverted, FollowupAction
 from rasa_sdk.executor import CollectingDispatcher
 from yarl import URL
 
@@ -1705,16 +1705,7 @@ async def test_action_expire_partner_confirmation(
         # action is expected to have had an effect
         assert actual_events == [
             SlotSet('swiper_action_result', 'success'),
-            SlotSet('partner_search_start_ts', '1619945501'),
-            {
-                'date_time': '2021-05-25T00:00:02',
-                'entities': None,
-                'event': 'reminder',
-                'intent': 'EXTERNAL_find_partner',
-                'kill_on_user_msg': False,
-                'name': 'unit_test_userEXTERNAL_find_partner',
-                'timestamp': None,
-            },
+            FollowupAction('action_find_partner'),
             SlotSet('swiper_state', source_swiper_state),
             SlotSet('partner_id', 'some_partner_id'),
         ]
