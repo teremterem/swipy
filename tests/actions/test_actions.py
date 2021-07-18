@@ -704,6 +704,17 @@ async def test_action_find_partner(
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize('previous_action_result, clear_rejected_flag, expect_rejected_cleared', [
+    ('partner_was_not_found', None, True),
+    ('success', None, False),
+    (None, None, False),
+    ('partner_was_not_found', True, True),
+    ('success', True, False),
+    (None, True, False),
+    ('partner_was_not_found', False, False),
+    ('success', False, False),
+    (None, False, False),
+])
 @pytest.mark.usefixtures('ddb_unit_test_user', 'wrap_actions_datetime_now')
 @patch('time.time', Mock(return_value=1619945501))
 @patch.object(UserVault, '_get_random_available_partner_dict')
@@ -713,10 +724,29 @@ async def test_action_find_partner_no_one(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
+        previous_action_result: Optional[Text],
+        clear_rejected_flag: Optional[bool],
+        expect_rejected_cleared: bool,
 ) -> None:
     mock_get_random_available_partner_dict.return_value = None
 
-    actual_events = await actions.ActionFindPartner().run(dispatcher, tracker, domain)
+    if previous_action_result:
+        tracker.add_slots([
+            SlotSet('SWIPER_ACTION_RESULT', previous_action_result),
+        ])
+
+    if clear_rejected_flag is None:
+
+        actual_events = await actions.ActionFindPartner().run(dispatcher, tracker, domain)
+
+    else:
+        with patch.object(
+                actions,
+                'CLEAR_REJECTED_LIST_WHEN_NO_ONE_FOUND',
+                clear_rejected_flag,
+        ):
+            actual_events = await actions.ActionFindPartner().run(dispatcher, tracker, domain)
+
     assert actual_events == [
         SlotSet('swiper_action_result', 'success'),
         SlotSet('partner_search_start_ts', '1619945501'),
@@ -763,7 +793,10 @@ async def test_action_find_partner_no_one(
         state='wants_chitchat',
         partner_id=None,
         roomed_partner_ids=['roomed_unit_test_partner1', 'roomed_unit_test_partner2'],
-        rejected_partner_ids=['rejected_unit_test_partner1', 'rejected_unit_test_partner2'],
+        rejected_partner_ids=[] if expect_rejected_cleared else [
+            'rejected_unit_test_partner1',
+            'rejected_unit_test_partner2',
+        ],
         seen_partner_ids=[],  # cleared
         newbie=True,
         state_timestamp=1619945501,
