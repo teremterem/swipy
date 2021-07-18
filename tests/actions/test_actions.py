@@ -665,9 +665,6 @@ async def test_action_find_partner(
                 'roomed_partner1',
                 'rejected_partner1',
                 'rejected_partner2',
-                # 'seen_partner1',
-                # 'seen_partner2',
-                # 'seen_partner3',
             ],
         )
         assert mock_telebot_make_request.mock_calls == [
@@ -763,6 +760,16 @@ async def test_action_find_partner_no_one(
     ]
     assert dispatcher.messages == []
 
+    expected_excluded_partner_ids = [
+        'unit_test_user',
+        'roomed_unit_test_partner1',
+        'roomed_unit_test_partner2',
+    ]
+    if not expect_rejected_cleared:
+        expected_excluded_partner_ids.extend([
+            'rejected_unit_test_partner1',
+            'rejected_unit_test_partner2',
+        ])
     mock_get_random_available_partner_dict.assert_called_once_with(
         [
             'wants_chitchat',
@@ -775,15 +782,7 @@ async def test_action_find_partner_no_one(
             'rejected_confirm',
         ],
         'unit_test_user',
-        [
-            'unit_test_user',
-            'roomed_unit_test_partner1',
-            'roomed_unit_test_partner2',
-            'rejected_unit_test_partner1',
-            'rejected_unit_test_partner2',
-            # 'seen_unit_test_partner1',
-            # 'seen_unit_test_partner2',
-        ],
+        expected_excluded_partner_ids,
     )
     assert mock_aioresponses.requests == {}  # rasa_callbacks.ask_to_join() not called
 
