@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 TELL_USER_ABOUT_ERRORS = strtobool(os.getenv('TELL_USER_ABOUT_ERRORS', 'yes'))
 SEND_ERROR_STACK_TRACE_TO_SLOT = strtobool(os.getenv('SEND_ERROR_STACK_TRACE_TO_SLOT', 'yes'))
-CLEAR_REJECTED_LIST_WHEN_NOT_FOUND = strtobool(os.getenv('CLEAR_REJECTED_LIST_WHEN_NOT_FOUND', 'yes'))
+CLEAR_REJECTED_LIST_WHEN_NO_ONE_FOUND = strtobool(os.getenv('CLEAR_REJECTED_LIST_WHEN_NO_ONE_FOUND', 'yes'))
 FIND_PARTNER_FREQUENCY_SEC = float(os.getenv('FIND_PARTNER_FREQUENCY_SEC', '5'))
 PARTNER_SEARCH_TIMEOUT_SEC = int(os.getenv('PARTNER_SEARCH_TIMEOUT_SEC', '114'))  # 1 minute 54 seconds
 GREETING_MAKES_USER_OK_TO_CHITCHAT = strtobool(os.getenv('GREETING_MAKES_USER_OK_TO_CHITCHAT', 'no'))
@@ -446,7 +446,7 @@ class ActionFindPartner(BaseSwiperAction):
 
             # noinspection PyUnresolvedReferences
             current_user.request_chitchat()
-            if CLEAR_REJECTED_LIST_WHEN_NOT_FOUND:
+            if CLEAR_REJECTED_LIST_WHEN_NO_ONE_FOUND:
                 previous_action_result = tracker.get_slot(SWIPER_ACTION_RESULT_SLOT)
                 if previous_action_result == SwiperActionResult.PARTNER_WAS_NOT_FOUND:
                     current_user.rejected_partner_ids = []
