@@ -658,7 +658,11 @@ async def test_action_find_partner(
                 'rejected_confirm',
             ],
             'unit_test_user',
-            ['unit_test_user'],
+            [
+                'unit_test_user',
+                'rejected_partner1',
+                'rejected_partner2',
+            ],
         )
         assert mock_telebot_make_request.mock_calls == [
             telegram_user_profile_photo_make_request_call,
