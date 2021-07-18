@@ -1216,7 +1216,8 @@ async def test_action_accept_invitation_partner_not_waiting(
     assert actual_events == [
         SlotSet('swiper_action_result', 'partner_not_waiting_anymore'),
         FollowupAction('action_find_partner'),
-        SlotSet('swiper_state', 'wants_chitchat'),
+        SlotSet('swiper_state', 'asked_to_join'),  # action_find_partner will later change it to request_chitchat
+        SlotSet('partner_id', 'an_asker'),
     ]
     assert dispatcher.messages == [{
         'attachment': None,
@@ -1239,10 +1240,8 @@ async def test_action_accept_invitation_partner_not_waiting(
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
         user_id='unit_test_user',
-        state='wants_chitchat',
-        partner_id=None,
-        state_timestamp=1619945501,
-        state_timestamp_str='2021-05-02 08:51:41 Z',
+        state='asked_to_join',
+        partner_id='an_asker',
         activity_timestamp=1619945501,
         activity_timestamp_str='2021-05-02 08:51:41 Z',
     )

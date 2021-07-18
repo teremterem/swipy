@@ -506,9 +506,6 @@ def schedule_find_partner_reminder(
         delta_sec: float = FIND_PARTNER_FREQUENCY_SEC,
         initiate: bool = False,
 ) -> ReminderScheduled:
-    # TODO oleksandr: do current_user.request_chitchat() right here instead of in every action when initiate == True ?
-    #  or, maybe, in ActionFindPartner itself ?
-
     events = [_reschedule_reminder(
         current_user_id,
         EXTERNAL_FIND_PARTNER_INTENT,
@@ -695,16 +692,13 @@ class ActionAcceptInvitation(BaseSwiperAction):
             *schedule_expire_partner_confirmation(current_user.user_id),
         ]
 
+    # noinspection PyUnusedLocal
     @staticmethod
     def partner_gone_start_search(
             dispatcher: CollectingDispatcher,
             current_user: UserStateMachine,
             partner: UserStateMachine,
     ) -> List[Dict[Text, Any]]:
-        # noinspection PyUnresolvedReferences
-        current_user.request_chitchat()
-        current_user.save()
-
         utter_partner_already_gone(dispatcher, partner.get_first_name())
 
         return [
@@ -843,8 +837,6 @@ class ActionExpirePartnerConfirmation(BaseSwiperAction):
                 UserUtteranceReverted(),
             ]
 
-        partner_id = current_user.partner_id  # back it up - it may get cleared by request_chitchat()
-
         latest_intent = get_intent_of_latest_message_reliably(tracker)
         if latest_intent == rasa_callbacks.EXTERNAL_PARTNER_DID_NOT_CONFIRM_INTENT:
             # this is not a reminder (partner rejected confirmation explicitly)
@@ -856,14 +848,7 @@ class ActionExpirePartnerConfirmation(BaseSwiperAction):
                     UserUtteranceReverted(),
                 ]
 
-            # current user is still waiting for confirmation => let's terminate this state
-            # (we don't do this for the reminder case because by then the state of waiting is timed out already anyway)
-            # noinspection PyUnresolvedReferences
-            current_user.request_chitchat()
-            current_user.save()
-
-        partner = user_vault.get_user(partner_id)
-
+        partner = user_vault.get_user(current_user.partner_id)
         utter_partner_already_gone(dispatcher, partner.get_first_name())
 
         return [
