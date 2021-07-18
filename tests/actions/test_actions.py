@@ -131,12 +131,6 @@ Ok, I will not bother you 🛑
 Should you change your mind and decide that you want to chitchat with someone, \
 just let me know - I will set up a video call 😉"""
 
-UTTER_DECLINED_TEXT = """\
-Ok, declined ❌
-
-May I ask you if there is any specific time or times of day (maybe days of week) \
-when you are more likely to join someone for chitchat over a video call?"""
-
 REMOVE_KEYBOARD_MARKUP = '{"remove_keyboard":true}'
 OK_WAITING_CANCEL_MARKUP = (
     '{"keyboard":['
@@ -1595,20 +1589,7 @@ async def test_action_reject_invitation(
             SlotSet('swiper_state', destination_swiper_state),
             SlotSet('partner_id', 'some_test_partner_id'),
         ]
-        assert dispatcher.messages == [{
-            'attachment': None,
-            'buttons': [],
-            'custom': {
-                'text': UTTER_DECLINED_TEXT,
-                'parse_mode': 'html',
-                'reply_markup': REMOVE_KEYBOARD_MARKUP,
-            },
-            'elements': [],
-            'image': None,
-            'response': None,
-            'template': None,
-            'text': None,
-        }]
+        assert dispatcher.messages == []
         assert user_vault.get_user('unit_test_user') == UserStateMachine(
             user_id='unit_test_user',
             state=destination_swiper_state,
