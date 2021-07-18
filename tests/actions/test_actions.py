@@ -9,7 +9,7 @@ import pytest
 from aioresponses import aioresponses
 from aioresponses.core import RequestCall
 from rasa_sdk import Tracker
-from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType, UserUtteranceReverted
+from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType, UserUtteranceReverted, FollowupAction
 from rasa_sdk.executor import CollectingDispatcher
 from yarl import URL
 
@@ -130,12 +130,6 @@ Ok, I will not bother you 🛑
 
 Should you change your mind and decide that you want to chitchat with someone, \
 just let me know - I will set up a video call 😉"""
-
-UTTER_DECLINED_TEXT = """\
-Ok, declined ❌
-
-May I ask you if there is any specific time or times of day (maybe days of week) \
-when you are more likely to join someone for chitchat over a video call?"""
 
 REMOVE_KEYBOARD_MARKUP = '{"remove_keyboard":true}'
 OK_WAITING_CANCEL_MARKUP = (
@@ -435,6 +429,9 @@ async def test_action_offer_chitchat_and_default_fallback(
             user_id='unit_test_user',
             state=source_swiper_state,
             partner_id=None,
+            roomed_partner_ids=['roomed_partner1'],
+            rejected_partner_ids=['rejected_partner1', 'rejected_partner2'],
+            seen_partner_ids=['seen_partner1', 'seen_partner2', 'seen_partner3'],
             newbie=True,
             state_timestamp=1619945501,
             state_timestamp_str='2021-05-02 08:51:41 Z',
@@ -499,6 +496,9 @@ async def test_action_offer_chitchat_and_default_fallback(
         user_id='unit_test_user',
         state=destination_swiper_state if greeting_makes_user_ok_to_chitchat else source_swiper_state,
         partner_id=None,
+        roomed_partner_ids=[] if user_is_brand_new else ['roomed_partner1'],
+        rejected_partner_ids=[] if user_is_brand_new else ['rejected_partner1', 'rejected_partner2'],
+        seen_partner_ids=[] if user_is_brand_new else ['seen_partner1', 'seen_partner2', 'seen_partner3'],
         newbie=True,
         state_timestamp=expected_state_timestamp,
         state_timestamp_str=expected_state_timestamp_str,
@@ -528,7 +528,7 @@ async def test_action_rewind(
     user_vault = UserVault()
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
         user_id='unit_test_user',
-        activity_timestamp=1619945501,
+        activity_timestamp=1619945501,  # activity timestamp was updated
         activity_timestamp_str='2021-05-02 08:51:41 Z',
     )
 
@@ -576,6 +576,9 @@ async def test_action_find_partner(
     current_user = UserStateMachine(
         user_id='unit_test_user',
         state=source_swiper_state,
+        roomed_partner_ids=['roomed_partner1'],
+        rejected_partner_ids=['rejected_partner1', 'rejected_partner2'],
+        seen_partner_ids=['seen_partner1', 'seen_partner2', 'seen_partner3'],
     )
     if user_has_name:
         current_user.telegram_from = {'first_name': 'unit_test_first_name'}
@@ -616,6 +619,7 @@ async def test_action_find_partner(
             UserUtteranceReverted(),
             SlotSet('swiper_state', source_swiper_state),
         ]
+
         mock_get_random_available_partner_dict.assert_not_called()
         mock_telebot_make_request.assert_not_called()
         assert mock_aioresponses.requests == {}
@@ -656,7 +660,12 @@ async def test_action_find_partner(
                 'rejected_confirm',
             ],
             'unit_test_user',
-            ['unit_test_user'],
+            [
+                'unit_test_user',
+                'roomed_partner1',
+                'rejected_partner1',
+                'rejected_partner2',
+            ],
         )
         assert mock_telebot_make_request.mock_calls == [
             telegram_user_profile_photo_make_request_call,
@@ -672,29 +681,16 @@ async def test_action_find_partner(
         )
         assert mock_aioresponses.requests == {expected_req_key: [expected_req_call]}
 
-    if expect_as_reminder:
-        assert dispatcher.messages == []
-    else:
-        assert dispatcher.messages == [{
-            'attachment': None,
-            'buttons': [],
-            'custom': {
-                'text': UTTER_OK_ARRANGING_CHITCHAT_TEXT,
-                'parse_mode': 'html',
-                'reply_markup': OK_WAITING_CANCEL_MARKUP,
-            },
-            'elements': [],
-            'image': None,
-            'response': None,
-            'template': None,
-            'text': None,
-        }]
+    assert dispatcher.messages == []
 
     user_vault = UserVault()
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
         user_id='unit_test_user',
         state=source_swiper_state if expect_dry_run else 'wants_chitchat',
         partner_id=None,
+        roomed_partner_ids=['roomed_partner1'],
+        rejected_partner_ids=['rejected_partner1', 'rejected_partner2'],
+        seen_partner_ids=['seen_partner1', 'seen_partner2', 'seen_partner3'] if expect_as_reminder else [],
         newbie=True,
         state_timestamp=0 if expect_as_reminder else 1619945501,
         state_timestamp_str=None if expect_as_reminder else '2021-05-02 08:51:41 Z',
@@ -705,6 +701,17 @@ async def test_action_find_partner(
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize('previous_action_result, clear_rejected_flag, expect_rejected_cleared', [
+    ('partner_was_not_found', None, True),
+    ('success', None, False),
+    (None, None, False),
+    ('partner_was_not_found', True, True),
+    ('success', True, False),
+    (None, True, False),
+    ('partner_was_not_found', False, False),
+    ('success', False, False),
+    (None, False, False),
+])
 @pytest.mark.usefixtures('ddb_unit_test_user', 'wrap_actions_datetime_now')
 @patch('time.time', Mock(return_value=1619945501))
 @patch.object(UserVault, '_get_random_available_partner_dict')
@@ -714,10 +721,29 @@ async def test_action_find_partner_no_one(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
+        previous_action_result: Optional[Text],
+        clear_rejected_flag: Optional[bool],
+        expect_rejected_cleared: bool,
 ) -> None:
     mock_get_random_available_partner_dict.return_value = None
 
-    actual_events = await actions.ActionFindPartner().run(dispatcher, tracker, domain)
+    if previous_action_result:
+        tracker.add_slots([
+            SlotSet('swiper_action_result', previous_action_result),
+        ])
+
+    if clear_rejected_flag is None:
+
+        actual_events = await actions.ActionFindPartner().run(dispatcher, tracker, domain)
+
+    else:
+        with patch.object(
+                actions,
+                'CLEAR_REJECTED_LIST_WHEN_NO_ONE_FOUND',
+                clear_rejected_flag,
+        ):
+            actual_events = await actions.ActionFindPartner().run(dispatcher, tracker, domain)
+
     assert actual_events == [
         SlotSet('swiper_action_result', 'success'),
         SlotSet('partner_search_start_ts', '1619945501'),
@@ -732,24 +758,18 @@ async def test_action_find_partner_no_one(
         },
         SlotSet('swiper_state', 'wants_chitchat'),
     ]
+    assert dispatcher.messages == []
 
-    assert dispatcher.messages == [
-        {
-            'attachment': None,
-            'buttons': [],
-            'custom': {
-                'text': UTTER_OK_ARRANGING_CHITCHAT_TEXT,
-                'parse_mode': 'html',
-                'reply_markup': OK_WAITING_CANCEL_MARKUP,
-            },
-            'elements': [],
-            'image': None,
-            'response': None,
-            'template': None,
-            'text': None,
-        },
+    expected_excluded_partner_ids = [
+        'unit_test_user',
+        'roomed_unit_test_partner1',
+        'roomed_unit_test_partner2',
     ]
-
+    if not expect_rejected_cleared:
+        expected_excluded_partner_ids.extend([
+            'rejected_unit_test_partner1',
+            'rejected_unit_test_partner2',
+        ])
     mock_get_random_available_partner_dict.assert_called_once_with(
         [
             'wants_chitchat',
@@ -762,15 +782,7 @@ async def test_action_find_partner_no_one(
             'rejected_confirm',
         ],
         'unit_test_user',
-        [
-            'unit_test_user',
-            'roomed_unit_test_partner1',
-            'roomed_unit_test_partner2',
-            'rejected_unit_test_partner1',
-            'rejected_unit_test_partner2',
-            # 'seen_unit_test_partner1',
-            # 'seen_unit_test_partner2',
-        ],
+        expected_excluded_partner_ids,
     )
     assert mock_aioresponses.requests == {}  # rasa_callbacks.ask_to_join() not called
 
@@ -780,8 +792,11 @@ async def test_action_find_partner_no_one(
         state='wants_chitchat',
         partner_id=None,
         roomed_partner_ids=['roomed_unit_test_partner1', 'roomed_unit_test_partner2'],
-        rejected_partner_ids=['rejected_unit_test_partner1', 'rejected_unit_test_partner2'],
-        seen_partner_ids=['seen_unit_test_partner1', 'seen_unit_test_partner2'],
+        rejected_partner_ids=[] if expect_rejected_cleared else [
+            'rejected_unit_test_partner1',
+            'rejected_unit_test_partner2',
+        ],
+        seen_partner_ids=[],  # cleared
         newbie=True,
         state_timestamp=1619945501,
         state_timestamp_str='2021-05-02 08:51:41 Z',
@@ -838,6 +853,9 @@ async def test_action_ask_to_join(
         user_id='unit_test_user',
         state=source_swiper_state,
         partner_id='previous_asker',
+        roomed_partner_ids=['roomed_partner1'],
+        rejected_partner_ids=['rejected_partner1', 'rejected_partner2'],
+        seen_partner_ids=['seen_partner1', 'seen_partner2', 'seen_partner3'],
         newbie=True,
     ))
 
@@ -927,6 +945,8 @@ async def test_action_ask_to_join(
             user_id='unit_test_user',
             state=destination_swiper_state,
             partner_id='new_asker',
+            roomed_partner_ids=['roomed_partner1'],
+            rejected_partner_ids=['rejected_partner1', 'rejected_partner2'],
             seen_partner_ids=['new_asker'],
             newbie=True,
             state_timestamp=1619945501,
@@ -941,6 +961,9 @@ async def test_action_ask_to_join(
             user_id='unit_test_user',
             state=source_swiper_state,
             partner_id='previous_asker',
+            roomed_partner_ids=['roomed_partner1'],
+            rejected_partner_ids=['rejected_partner1', 'rejected_partner2'],
+            seen_partner_ids=['seen_partner1', 'seen_partner2', 'seen_partner3'],
             newbie=True,
             state_timestamp=0,
             state_timestamp_str=None,
@@ -983,6 +1006,9 @@ async def test_action_accept_invitation_create_room(
         user_id='unit_test_user',
         state='asked_to_confirm',
         partner_id='an_asker',
+        roomed_partner_ids=['roomed_partner1'],
+        rejected_partner_ids=['rejected_partner1', 'rejected_partner2'],
+        seen_partner_ids=['seen_partner1', 'seen_partner2', 'seen_partner3'],
         newbie=True,
     ))
 
@@ -1033,7 +1059,9 @@ async def test_action_accept_invitation_create_room(
         user_id='unit_test_user',
         state='roomed',
         partner_id='an_asker',
-        roomed_partner_ids=['an_asker'],  # remembered not to be suggested again for awhile
+        roomed_partner_ids=['roomed_partner1', 'an_asker'],
+        rejected_partner_ids=['rejected_partner1', 'rejected_partner2'],
+        seen_partner_ids=['seen_partner1', 'seen_partner2', 'seen_partner3'],
         newbie=False,  # accepting the very first video chitchat graduates the user from newbie
         state_timestamp=1619945501,
         state_timestamp_str='2021-05-02 08:51:41 Z',
@@ -1110,6 +1138,9 @@ async def test_action_accept_invitation_confirm_with_asker(
         user_id='unit_test_user',
         state='asked_to_join',
         partner_id='an_asker',
+        roomed_partner_ids=['roomed_partner1'],
+        rejected_partner_ids=['rejected_partner1', 'rejected_partner2'],
+        seen_partner_ids=['seen_partner1', 'seen_partner2', 'seen_partner3'],
         newbie=True,
     ))
 
@@ -1165,6 +1196,9 @@ async def test_action_accept_invitation_confirm_with_asker(
         user_id='unit_test_user',
         state='waiting_partner_confirm',
         partner_id='an_asker',
+        roomed_partner_ids=['roomed_partner1'],
+        rejected_partner_ids=['rejected_partner1', 'rejected_partner2'],
+        seen_partner_ids=['seen_partner1', 'seen_partner2', 'seen_partner3'],
         newbie=True,
         state_timestamp=1619945501,
         state_timestamp_str='2021-05-02 08:51:41 Z',
@@ -1239,22 +1273,17 @@ async def test_action_accept_invitation_partner_not_waiting(
         user_id='unit_test_user',
         state='asked_to_join',
         partner_id='an_asker',
+        roomed_partner_ids=['roomed_partner1'],
+        rejected_partner_ids=['rejected_partner1', 'rejected_partner2'],
+        seen_partner_ids=['seen_partner1', 'seen_partner2', 'seen_partner3'],
     ))
 
     actual_events = await actions.ActionAcceptInvitation().run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'partner_not_waiting_anymore'),
-        SlotSet('partner_search_start_ts', '1619945501'),
-        {
-            'date_time': '2021-05-25T00:00:02',
-            'entities': None,
-            'event': 'reminder',
-            'intent': 'EXTERNAL_find_partner',
-            'kill_on_user_msg': False,
-            'name': 'unit_test_userEXTERNAL_find_partner',
-            'timestamp': None,
-        },
-        SlotSet('swiper_state', 'wants_chitchat'),
+        FollowupAction('action_find_partner'),
+        SlotSet('swiper_state', 'asked_to_join'),  # action_find_partner will later change it to request_chitchat
+        SlotSet('partner_id', 'an_asker'),
     ]
     assert dispatcher.messages == [{
         'attachment': None,
@@ -1277,10 +1306,11 @@ async def test_action_accept_invitation_partner_not_waiting(
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
         user_id='unit_test_user',
-        state='wants_chitchat',
-        partner_id=None,
-        state_timestamp=1619945501,
-        state_timestamp_str='2021-05-02 08:51:41 Z',
+        state='asked_to_join',
+        partner_id='an_asker',
+        roomed_partner_ids=['roomed_partner1'],
+        rejected_partner_ids=['rejected_partner1', 'rejected_partner2'],
+        seen_partner_ids=['seen_partner1', 'seen_partner2', 'seen_partner3'],
         activity_timestamp=1619945501,
         activity_timestamp_str='2021-05-02 08:51:41 Z',
     )
@@ -1292,12 +1322,18 @@ async def test_action_accept_invitation_partner_not_waiting(
         user_id='unit_test_user',
         state='asked_to_join',
         partner_id='',
+        roomed_partner_ids=['roomed_partner1'],
+        rejected_partner_ids=['rejected_partner1', 'rejected_partner2'],
+        seen_partner_ids=['seen_partner1', 'seen_partner2', 'seen_partner3'],
         newbie=True,
     ),
     UserStateMachine(
         user_id='unit_test_user',
         state='asked_to_join',
         partner_id=None,
+        roomed_partner_ids=['roomed_partner1'],
+        rejected_partner_ids=['rejected_partner1', 'rejected_partner2'],
+        seen_partner_ids=['seen_partner1', 'seen_partner2', 'seen_partner3'],
         newbie=True,
     ),
 ])
@@ -1310,6 +1346,10 @@ async def test_action_accept_invitation_no_partner_id(
         domain: Dict[Text, Any],
         current_user: UserStateMachine,
 ) -> None:
+    new_current_user = deepcopy(current_user)  # deep-copy just in case
+    new_current_user.activity_timestamp = 1619945501
+    new_current_user.activity_timestamp_str = '2021-05-02 08:51:41 Z'
+
     user_vault = UserVault()
     user_vault.save(UserStateMachine(
         user_id='an_asker',
@@ -1353,9 +1393,6 @@ async def test_action_accept_invitation_no_partner_id(
     assert mock_aioresponses.requests == {}
 
     user_vault = UserVault()  # create new instance to avoid hitting cache
-    new_current_user = deepcopy(current_user)  # deep-copy just in case
-    new_current_user.activity_timestamp = 1619945501
-    new_current_user.activity_timestamp_str = '2021-05-02 08:51:41 Z'
     assert user_vault.get_user('unit_test_user') == new_current_user
 
 
@@ -1393,6 +1430,9 @@ async def test_action_join_room(
         user_id='unit_test_user',  # the asker
         state=source_swiper_state,
         partner_id='expected_partner',
+        roomed_partner_ids=['roomed_partner1'],
+        rejected_partner_ids=['rejected_partner1', 'rejected_partner2'],
+        seen_partner_ids=['seen_partner1', 'seen_partner2', 'seen_partner3'],
         newbie=True,
     ))
 
@@ -1428,7 +1468,9 @@ async def test_action_join_room(
             user_id='unit_test_user',  # the asker
             state='roomed',
             partner_id='expected_partner',
-            roomed_partner_ids=['expected_partner'],  # remembered not to be suggested again for awhile
+            roomed_partner_ids=['roomed_partner1', 'expected_partner'],
+            rejected_partner_ids=['rejected_partner1', 'rejected_partner2'],
+            seen_partner_ids=['seen_partner1', 'seen_partner2', 'seen_partner3'],
             newbie=False,  # accepting the very first video chitchat graduates the user from newbie
             state_timestamp=1619945501,
             state_timestamp_str='2021-05-02 08:51:41 Z',
@@ -1473,7 +1515,9 @@ async def test_action_join_room(
             user_id='unit_test_user',  # the asker
             state=source_swiper_state,
             partner_id='expected_partner',
-            roomed_partner_ids=[],
+            roomed_partner_ids=['roomed_partner1'],
+            rejected_partner_ids=['rejected_partner1', 'rejected_partner2'],
+            seen_partner_ids=['seen_partner1', 'seen_partner2', 'seen_partner3'],
             newbie=True,
         )
 
@@ -1504,6 +1548,9 @@ async def test_action_do_not_disturb(
         user_id='unit_test_user',
         state=source_swiper_state,
         partner_id='',
+        roomed_partner_ids=['roomed_partner1'],
+        rejected_partner_ids=['rejected_partner1', 'rejected_partner2'],
+        seen_partner_ids=['seen_partner1', 'seen_partner2', 'seen_partner3'],
         newbie=True,
     ))
 
@@ -1535,6 +1582,9 @@ async def test_action_do_not_disturb(
         user_id='unit_test_user',
         state='do_not_disturb',
         partner_id=None,
+        roomed_partner_ids=['roomed_partner1'],
+        rejected_partner_ids=['rejected_partner1', 'rejected_partner2'],
+        seen_partner_ids=['seen_partner1', 'seen_partner2', 'seen_partner3'],
         newbie=True,
         state_timestamp=1619945501,
         state_timestamp_str='2021-05-02 08:51:41 Z',
@@ -1571,6 +1621,9 @@ async def test_action_reject_invitation(
         user_id='unit_test_user',
         state=source_swiper_state,
         partner_id='some_test_partner_id',
+        roomed_partner_ids=['roomed_partner1'],
+        rejected_partner_ids=['rejected_partner1', 'rejected_partner2'],
+        seen_partner_ids=['seen_partner1', 'seen_partner2', 'seen_partner3'],
         newbie=True,
     ))
 
@@ -1587,25 +1640,14 @@ async def test_action_reject_invitation(
             SlotSet('swiper_state', destination_swiper_state),
             SlotSet('partner_id', 'some_test_partner_id'),
         ]
-        assert dispatcher.messages == [{
-            'attachment': None,
-            'buttons': [],
-            'custom': {
-                'text': UTTER_DECLINED_TEXT,
-                'parse_mode': 'html',
-                'reply_markup': REMOVE_KEYBOARD_MARKUP,
-            },
-            'elements': [],
-            'image': None,
-            'response': None,
-            'template': None,
-            'text': None,
-        }]
+        assert dispatcher.messages == []
         assert user_vault.get_user('unit_test_user') == UserStateMachine(
             user_id='unit_test_user',
             state=destination_swiper_state,
             partner_id='some_test_partner_id',
-            rejected_partner_ids=['some_test_partner_id'],
+            roomed_partner_ids=['roomed_partner1'],
+            rejected_partner_ids=['rejected_partner1', 'rejected_partner2', 'some_test_partner_id'],
+            seen_partner_ids=['seen_partner1', 'seen_partner2', 'seen_partner3'],
             newbie=True,
             state_timestamp=1619945501,
             state_timestamp_str='2021-05-02 08:51:41 Z',
@@ -1644,6 +1686,9 @@ async def test_action_reject_invitation(
             user_id='unit_test_user',
             state=source_swiper_state,
             partner_id='some_test_partner_id',
+            roomed_partner_ids=['roomed_partner1'],
+            rejected_partner_ids=['rejected_partner1', 'rejected_partner2'],
+            seen_partner_ids=['seen_partner1', 'seen_partner2', 'seen_partner3'],
             newbie=True,
             activity_timestamp=1619945501,
             activity_timestamp_str='2021-05-02 08:51:41 Z',
@@ -1681,6 +1726,9 @@ async def test_action_expire_partner_confirmation(
         user_id='unit_test_user',
         state=source_swiper_state,
         partner_id='some_partner_id',
+        roomed_partner_ids=['roomed_partner1'],
+        rejected_partner_ids=['rejected_partner1', 'rejected_partner2'],
+        seen_partner_ids=['seen_partner1', 'seen_partner2', 'seen_partner3'],
         newbie=True,
     ))
     user_vault.save(UserStateMachine(
@@ -1697,16 +1745,7 @@ async def test_action_expire_partner_confirmation(
         # action is expected to have had an effect
         assert actual_events == [
             SlotSet('swiper_action_result', 'success'),
-            SlotSet('partner_search_start_ts', '1619945501'),
-            {
-                'date_time': '2021-05-25T00:00:02',
-                'entities': None,
-                'event': 'reminder',
-                'intent': 'EXTERNAL_find_partner',
-                'kill_on_user_msg': False,
-                'name': 'unit_test_userEXTERNAL_find_partner',
-                'timestamp': None,
-            },
+            FollowupAction('action_find_partner'),
             SlotSet('swiper_state', source_swiper_state),
             SlotSet('partner_id', 'some_partner_id'),
         ]
@@ -1739,5 +1778,8 @@ async def test_action_expire_partner_confirmation(
         user_id='unit_test_user',
         state=source_swiper_state,
         partner_id='some_partner_id',
+        roomed_partner_ids=['roomed_partner1'],
+        rejected_partner_ids=['rejected_partner1', 'rejected_partner2'],
+        seen_partner_ids=['seen_partner1', 'seen_partner2', 'seen_partner3'],
         newbie=True,
     )

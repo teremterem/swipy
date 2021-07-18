@@ -8,7 +8,8 @@ from pprint import pformat
 from typing import Any, Text, Dict, List
 
 from rasa_sdk import Action, Tracker
-from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType, ReminderScheduled, UserUtteranceReverted
+from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType, ReminderScheduled, \
+    UserUtteranceReverted, FollowupAction
 from rasa_sdk.executor import CollectingDispatcher
 from rasa_sdk.interfaces import ACTION_LISTEN_NAME
 
@@ -25,9 +26,9 @@ logger = logging.getLogger(__name__)
 
 TELL_USER_ABOUT_ERRORS = strtobool(os.getenv('TELL_USER_ABOUT_ERRORS', 'yes'))
 SEND_ERROR_STACK_TRACE_TO_SLOT = strtobool(os.getenv('SEND_ERROR_STACK_TRACE_TO_SLOT', 'yes'))
+CLEAR_REJECTED_LIST_WHEN_NO_ONE_FOUND = strtobool(os.getenv('CLEAR_REJECTED_LIST_WHEN_NO_ONE_FOUND', 'yes'))
 FIND_PARTNER_FREQUENCY_SEC = float(os.getenv('FIND_PARTNER_FREQUENCY_SEC', '5'))
-FIND_PARTNER_FOLLOWUP_DELAY_SEC = float(os.getenv('FIND_PARTNER_FOLLOWUP_DELAY_SEC', '2'))
-PARTNER_SEARCH_TIMEOUT_SEC = int(os.getenv('PARTNER_SEARCH_TIMEOUT_SEC', '112'))  # 1 minute 52 seconds
+PARTNER_SEARCH_TIMEOUT_SEC = int(os.getenv('PARTNER_SEARCH_TIMEOUT_SEC', '114'))  # 1 minute 54 seconds
 GREETING_MAKES_USER_OK_TO_CHITCHAT = strtobool(os.getenv('GREETING_MAKES_USER_OK_TO_CHITCHAT', 'no'))
 
 SWIPER_STATE_SLOT = 'swiper_state'
@@ -290,7 +291,7 @@ class ActionOfferChitchat(BaseSwiperAction):
         latest_intent = tracker.get_intent_of_latest_message()
 
         if latest_intent == 'help':
-            dispatcher.utter_message(custom={  # TODO oleksandr: rewrite this text !
+            dispatcher.utter_message(custom={  # TODO oleksandr: rewrite this text ?
                 'text': 'I can arrange video chitchat with another human for you 🎥 🗣 ☎️\n'
                         '\n'
                         'Here is how it works:\n'
@@ -443,17 +444,12 @@ class ActionFindPartner(BaseSwiperAction):
         else:  # user just requested chitchat
             initiate_search = True
 
-            dispatcher.utter_message(custom={
-                'text': 'Great! Let me find someone for you to chitchat with 🗣\n'
-                        '\n'
-                        'I will get back to you within two minutes ⏳',
-
-                'parse_mode': 'html',
-                'reply_markup': OK_WAITING_CANCEL_MARKUP,
-            })
-
             # noinspection PyUnresolvedReferences
             current_user.request_chitchat()
+            if CLEAR_REJECTED_LIST_WHEN_NO_ONE_FOUND:
+                previous_action_result = tracker.get_slot(SWIPER_ACTION_RESULT_SLOT)
+                if previous_action_result == SwiperActionResult.PARTNER_WAS_NOT_FOUND:
+                    current_user.rejected_partner_ids = []
             current_user.save()
 
         partner = user_vault.get_random_available_partner(current_user)
@@ -508,6 +504,24 @@ class ActionFindPartner(BaseSwiperAction):
                 value=SwiperActionResult.PARTNER_WAS_NOT_FOUND,
             ),
         ]
+
+
+def schedule_find_partner_reminder(
+        current_user_id: Text,
+        delta_sec: float = FIND_PARTNER_FREQUENCY_SEC,
+        initiate: bool = False,
+) -> ReminderScheduled:
+    events = [_reschedule_reminder(
+        current_user_id,
+        EXTERNAL_FIND_PARTNER_INTENT,
+        delta_sec,
+    )]
+    if initiate:
+        events.insert(0, SlotSet(
+            key=PARTNER_SEARCH_START_TS_SLOT,
+            value=str(current_timestamp_int()),
+        ))
+    return events
 
 
 class ActionAskToJoin(BaseSwiperAction):
@@ -683,16 +697,13 @@ class ActionAcceptInvitation(BaseSwiperAction):
             *schedule_expire_partner_confirmation(current_user.user_id),
         ]
 
+    # noinspection PyUnusedLocal
     @staticmethod
     def partner_gone_start_search(
             dispatcher: CollectingDispatcher,
             current_user: UserStateMachine,
             partner: UserStateMachine,
     ) -> List[Dict[Text, Any]]:
-        # noinspection PyUnresolvedReferences
-        current_user.request_chitchat()
-        current_user.save()
-
         utter_partner_already_gone(dispatcher, partner.get_first_name())
 
         return [
@@ -700,11 +711,7 @@ class ActionAcceptInvitation(BaseSwiperAction):
                 key=SWIPER_ACTION_RESULT_SLOT,
                 value=SwiperActionResult.PARTNER_NOT_WAITING_ANYMORE,
             ),
-            *schedule_find_partner_reminder(
-                current_user.user_id,
-                delta_sec=FIND_PARTNER_FOLLOWUP_DELAY_SEC,
-                initiate=True,
-            ),
+            FollowupAction(ACTION_FIND_PARTNER),
         ]
 
 
@@ -796,25 +803,11 @@ class ActionRejectInvitation(BaseSwiperAction):
         current_user.reject()
         current_user.save()
 
-        latest_intent = tracker.get_intent_of_latest_message()
-
-        if latest_intent != VIDEOCHAT_INTENT:
-            dispatcher.utter_message(custom={
-                'text': 'Ok, declined ❌\n'
-                        '\n'
-                        'May I ask you if there is any specific time or times of day (maybe days of week) '
-                        'when you are more likely to join someone for chitchat over a video call?',
-
-                'parse_mode': 'html',
-                'reply_markup': REMOVE_KEYBOARD_MARKUP,
-            })
-        # if user sent "Someone else" (videochat intent) we don't utter rejection
-        # (ActionFindPartner will be triggered as the next action in the rule)
-
         if is_asked_to_confirm:  # as opposed to asked_to_join
             partner = user_vault.get_user(partner_id)
 
             if partner.is_waiting_to_be_confirmed_by(current_user.user_id):
+                # don't leave the rejected partner waiting for nothing
                 await rasa_callbacks.reject_confirmation(
                     current_user.user_id,
                     partner,
@@ -849,8 +842,6 @@ class ActionExpirePartnerConfirmation(BaseSwiperAction):
                 UserUtteranceReverted(),
             ]
 
-        partner_id = current_user.partner_id  # back it up - it may get cleared by request_chitchat()
-
         latest_intent = get_intent_of_latest_message_reliably(tracker)
         if latest_intent == rasa_callbacks.EXTERNAL_PARTNER_DID_NOT_CONFIRM_INTENT:
             # this is not a reminder (partner rejected confirmation explicitly)
@@ -862,14 +853,7 @@ class ActionExpirePartnerConfirmation(BaseSwiperAction):
                     UserUtteranceReverted(),
                 ]
 
-            # current user is still waiting for confirmation => let's terminate this state
-            # (we don't do this for the reminder case because by then the state of waiting is timed out already anyway)
-            # noinspection PyUnresolvedReferences
-            current_user.request_chitchat()
-            current_user.save()
-
-        partner = user_vault.get_user(partner_id)
-
+        partner = user_vault.get_user(current_user.partner_id)
         utter_partner_already_gone(dispatcher, partner.get_first_name())
 
         return [
@@ -877,11 +861,7 @@ class ActionExpirePartnerConfirmation(BaseSwiperAction):
                 key=SWIPER_ACTION_RESULT_SLOT,
                 value=SwiperActionResult.SUCCESS,
             ),
-            *schedule_find_partner_reminder(
-                current_user.user_id,
-                delta_sec=FIND_PARTNER_FOLLOWUP_DELAY_SEC,
-                initiate=True,
-            ),
+            FollowupAction(ACTION_FIND_PARTNER),
         ]
 
 
@@ -922,27 +902,6 @@ def utter_partner_already_gone(dispatcher: CollectingDispatcher, partner_first_n
 def get_partner_search_start_ts(tracker: Tracker) -> int:
     ts_str = tracker.get_slot(PARTNER_SEARCH_START_TS_SLOT)
     return int(ts_str) if ts_str else None
-
-
-def schedule_find_partner_reminder(
-        current_user_id: Text,
-        delta_sec: float = FIND_PARTNER_FREQUENCY_SEC,
-        initiate: bool = False,
-) -> ReminderScheduled:
-    # TODO oleksandr: do current_user.request_chitchat() right here instead of in every action when initiate == True ?
-    #  or, maybe, in ActionFindPartner itself ?
-
-    events = [_reschedule_reminder(
-        current_user_id,
-        EXTERNAL_FIND_PARTNER_INTENT,
-        delta_sec,
-    )]
-    if initiate:
-        events.insert(0, SlotSet(
-            key=PARTNER_SEARCH_START_TS_SLOT,
-            value=str(current_timestamp_int()),
-        ))
-    return events
 
 
 def schedule_expire_partner_confirmation(

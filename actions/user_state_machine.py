@@ -119,6 +119,7 @@ class UserStateMachine(UserModel):
             source=UserState.all_states_except_user_banned,
             dest=UserState.WANTS_CHITCHAT,
             after=[
+                self._clear_seen_partner_id_list,  # increase chances to be found
                 self._drop_partner_id,
             ],
         )
@@ -312,6 +313,10 @@ class UserStateMachine(UserModel):
             self.partner_id,
             NUM_OF_SEEN_PARTNERS_TO_REMEMBER,
         )
+
+    # noinspection PyUnusedLocal
+    def _clear_seen_partner_id_list(self, event: EventData) -> None:
+        self.seen_partner_ids = []
 
     # noinspection PyUnusedLocal
     def _graduate_from_newbie(self, event: EventData) -> None:

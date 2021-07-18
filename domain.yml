@@ -136,8 +136,18 @@ responses:
   utter_iamabot:
   - custom:
       parse_mode: html
-      reply_markup: '{"remove_keyboard":true}'
+      reply_markup: '{{"remove_keyboard":true}}'
       text: I'm an AI-powered chatbot 🤖
+  utter_ok_looking_for_partner:
+  - custom:
+      parse_mode: html
+      reply_markup: '{{"keyboard":[[{{"text":"Ok, waiting"}}],[{{"text":"Cancel"}}]],"resize_keyboard":true,"one_time_keyboard":true}}'
+      text: "Great! Let me find someone for you to chitchat with \U0001F5E3\n\nI will get back to you within two minutes ⏳"
+  utter_ok_invitation_rejected:
+  - custom:
+      parse_mode: html
+      reply_markup: '{{"remove_keyboard":true}}'
+      text: "Ok, declined ❌\n\nMay I ask you if there is any specific time or times of day (maybe days of week) when you are more likely to join someone for chitchat over a video call?"
 actions:
 - action_session_start
 - action_offer_chitchat
