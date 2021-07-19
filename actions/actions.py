@@ -510,7 +510,7 @@ def schedule_find_partner_reminder(
         current_user_id: Text,
         delta_sec: float = FIND_PARTNER_FREQUENCY_SEC,
         initiate: bool = False,
-) -> ReminderScheduled:
+) -> List[EventType]:
     events = [_reschedule_reminder(
         current_user_id,
         EXTERNAL_FIND_PARTNER_INTENT,
@@ -907,7 +907,7 @@ def get_partner_search_start_ts(tracker: Tracker) -> int:
 def schedule_expire_partner_confirmation(
         current_user_id: Text,
         delta_sec: float = PARTNER_CONFIRMATION_TIMEOUT_SEC,
-) -> ReminderScheduled:
+) -> List[EventType]:
     return [_reschedule_reminder(
         current_user_id,
         EXTERNAL_EXPIRE_PARTNER_CONFIRMATION_INTENT,
@@ -920,7 +920,7 @@ def _reschedule_reminder(
         intent_name: Text,
         delta_sec: float,
         kill_on_user_message: bool = False,
-) -> ReminderScheduled:
+) -> EventType:
     date = datetime_now() + datetime.timedelta(seconds=delta_sec)
 
     reminder = ReminderScheduled(
