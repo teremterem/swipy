@@ -118,7 +118,19 @@ class BaseSwiperAction(Action, ABC):
             tracker: Tracker,
             domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
-        logger.info('BEGIN ACTION RUN: %r (CURRENT USER ID = %r)', self.name(), tracker.sender_id)
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(
+                'BEGIN ACTION RUN: %r (CURRENT USER ID = %r)\n\nTRACKER.EVENTS:\n\n%s\n',
+                self.name(),
+                tracker.sender_id,
+                pformat(tracker.events),
+            )
+        else:
+            logger.info(
+                'BEGIN ACTION RUN: %r (CURRENT USER ID = %r)',
+                self.name(),
+                tracker.sender_id,
+            )
 
         user_vault = UserVault()
 
