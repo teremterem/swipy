@@ -12,13 +12,13 @@ rules:
   steps:
   - intent: nlu_fallback
   - action: action_default_fallback
-- rule: the bot offers chitchat and the user agrees
+- rule: bot offers chitchat and the user agrees
   steps:
   - action: action_offer_chitchat
   - intent: affirm
   - action: utter_ok_looking_for_partner
   - action: action_find_partner
-- rule: the bot falls back to offering chitchat and the user agrees
+- rule: bot falls back to offering chitchat and the user agrees
   steps:
   - action: action_default_fallback
   - intent: affirm
@@ -62,12 +62,23 @@ rules:
     - intent: EXTERNAL_ask_to_join
     - intent: EXTERNAL_ask_to_confirm
   - action: action_ask_to_join
-- rule: the user aggrees to join the call
+- rule: user aggrees to join the call
   steps:
   - action: action_ask_to_join
   - intent: affirm
   - action: action_accept_invitation
-- rule: the user refuses to join the call
+- rule: user aggrees to join the call (after session was invalidated)
+  conversation_start: true
+  condition:
+  - slot_was_set:
+    - swiper_action_result: user_has_been_asked
+  steps:
+  - intent: affirm
+  - action: action_accept_invitation
+- rule: action_listen after action_accept_invitation
+  steps:
+  - action: action_accept_invitation
+- rule: user refuses to join the call
   steps:
   - action: action_ask_to_join
   - or:

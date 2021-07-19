@@ -880,7 +880,7 @@ async def test_action_ask_to_join(
     actual_events = await action.run(dispatcher, tracker, domain)
     if destination_swiper_state:
         assert actual_events == [
-            SlotSet('swiper_action_result', 'success'),
+            SlotSet('swiper_action_result', 'user_has_been_asked'),
             SlotSet('swiper_state', destination_swiper_state),
         ]
 

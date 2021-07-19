@@ -50,6 +50,7 @@ ACTION_ACCEPT_INVITATION = 'action_accept_invitation'
 
 
 class SwiperActionResult:
+    USER_HAS_BEEN_ASKED = 'user_has_been_asked'
     PARTNER_HAS_BEEN_ASKED = 'partner_has_been_asked'
     PARTNER_WAS_NOT_FOUND = 'partner_was_not_found'
     PARTNER_NOT_WAITING_ANYMORE = 'partner_not_waiting_anymore'
@@ -607,7 +608,7 @@ class ActionAskToJoin(BaseSwiperAction):
         return [
             SlotSet(
                 key=SWIPER_ACTION_RESULT_SLOT,
-                value=SwiperActionResult.SUCCESS,
+                value=SwiperActionResult.USER_HAS_BEEN_ASKED,
             ),
         ]
 
