@@ -67,17 +67,6 @@ rules:
   - action: action_ask_to_join
   - intent: affirm
   - action: action_accept_invitation
-- rule: user aggrees to join the call (after session was invalidated)
-  conversation_start: true
-  condition:
-  - slot_was_set:
-    - swiper_action_result: user_has_been_asked
-  steps:
-  - intent: affirm
-  - action: action_accept_invitation
-- rule: action_listen after action_accept_invitation
-  steps:
-  - action: action_accept_invitation
 - rule: user refuses to join the call
   steps:
   - action: action_ask_to_join
