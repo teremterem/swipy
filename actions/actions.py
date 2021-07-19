@@ -50,6 +50,7 @@ ACTION_ACCEPT_INVITATION = 'action_accept_invitation'
 
 
 class SwiperActionResult:
+    USER_HAS_BEEN_ASKED = 'user_has_been_asked'
     PARTNER_HAS_BEEN_ASKED = 'partner_has_been_asked'
     PARTNER_WAS_NOT_FOUND = 'partner_was_not_found'
     PARTNER_NOT_WAITING_ANYMORE = 'partner_not_waiting_anymore'
@@ -118,7 +119,19 @@ class BaseSwiperAction(Action, ABC):
             tracker: Tracker,
             domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
-        logger.info('BEGIN ACTION RUN: %r (CURRENT USER ID = %r)', self.name(), tracker.sender_id)
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(
+                'BEGIN ACTION RUN: %r (CURRENT USER ID = %r)\n\nTRACKER.EVENTS:\n\n%s\n',
+                self.name(),
+                tracker.sender_id,
+                pformat(tracker.events),
+            )
+        else:
+            logger.info(
+                'BEGIN ACTION RUN: %r (CURRENT USER ID = %r)',
+                self.name(),
+                tracker.sender_id,
+            )
 
         user_vault = UserVault()
 
@@ -510,7 +523,7 @@ def schedule_find_partner_reminder(
         current_user_id: Text,
         delta_sec: float = FIND_PARTNER_FREQUENCY_SEC,
         initiate: bool = False,
-) -> ReminderScheduled:
+) -> List[EventType]:
     events = [_reschedule_reminder(
         current_user_id,
         EXTERNAL_FIND_PARTNER_INTENT,
@@ -595,7 +608,7 @@ class ActionAskToJoin(BaseSwiperAction):
         return [
             SlotSet(
                 key=SWIPER_ACTION_RESULT_SLOT,
-                value=SwiperActionResult.SUCCESS,
+                value=SwiperActionResult.USER_HAS_BEEN_ASKED,
             ),
         ]
 
@@ -907,7 +920,7 @@ def get_partner_search_start_ts(tracker: Tracker) -> int:
 def schedule_expire_partner_confirmation(
         current_user_id: Text,
         delta_sec: float = PARTNER_CONFIRMATION_TIMEOUT_SEC,
-) -> ReminderScheduled:
+) -> List[EventType]:
     return [_reschedule_reminder(
         current_user_id,
         EXTERNAL_EXPIRE_PARTNER_CONFIRMATION_INTENT,
@@ -920,7 +933,7 @@ def _reschedule_reminder(
         intent_name: Text,
         delta_sec: float,
         kill_on_user_message: bool = False,
-) -> ReminderScheduled:
+) -> EventType:
     date = datetime_now() + datetime.timedelta(seconds=delta_sec)
 
     reminder = ReminderScheduled(
