@@ -2,7 +2,7 @@ version: '2.0'
 config:
   store_entities_as_slots: true
 session_config:
-  session_expiration_time: 180
+  session_expiration_time: 0
   carry_over_slots_to_new_session: true
 intents:
 - start:
@@ -76,6 +76,7 @@ slots:
     auto_fill: false
     influence_conversation: true
     values:
+    - user_has_been_asked
     - partner_has_been_asked
     - partner_was_not_found
     - partner_not_waiting_anymore
