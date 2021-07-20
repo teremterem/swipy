@@ -37,6 +37,9 @@ def daily_co_create_room_expected_req() -> Tuple[Tuple[Text, URL], RequestCall]:
             'json': {
                 'privacy': 'public',
                 'properties': {
+                    'eject_at_room_exp': True,
+                    'exp': 1619945501 + (30 * 60),
+                    'max_participants': 3,
                     'enable_network_ui': False,
                     'enable_prejoin_ui': False,
                     'enable_new_call_ui': True,
