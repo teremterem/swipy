@@ -1059,6 +1059,7 @@ async def test_action_accept_invitation_create_room(
         user_id='unit_test_user',
         state='roomed',
         partner_id='an_asker',
+        latest_room_name='pytestroom',
         roomed_partner_ids=['roomed_partner1', 'an_asker'],
         rejected_partner_ids=['rejected_partner1', 'rejected_partner2'],
         seen_partner_ids=['seen_partner1', 'seen_partner2', 'seen_partner3'],
