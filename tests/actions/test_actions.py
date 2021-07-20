@@ -1043,6 +1043,7 @@ async def test_action_accept_invitation_create_room(
         {
             'partner_id': 'unit_test_user',
             'room_url': 'https://swipy.daily.co/pytestroom',
+            'room_name': 'pytestroom',
         },
     )
     expected_requests = {
