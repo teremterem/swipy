@@ -23,6 +23,8 @@ def pytest_configure(*args, **kwargs) -> None:
     # delete these env vars to make sure default settings are tested
     os.environ.pop('TELL_USER_ABOUT_ERRORS', None)
     os.environ.pop('SEND_ERROR_STACK_TRACE_TO_SLOT', None)
+    os.environ.pop('DAILY_CO_MAX_PARTICIPANTS', None)
+    os.environ.pop('DAILY_CO_MEETING_DURATION_SEC', None)
     os.environ.pop('CLEAR_REJECTED_LIST_WHEN_NO_ONE_FOUND', None)
     os.environ.pop('FIND_PARTNER_FREQUENCY_SEC', None)
     os.environ.pop('PARTNER_CONFIRMATION_TIMEOUT_SEC', None)
