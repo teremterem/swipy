@@ -51,6 +51,7 @@ entities:
 - partner_photo_file_id
 - partner_first_name
 - room_url
+- room_name
 slots:
   swiper_state:
     type: rasa.shared.core.slots.CategoricalSlot
@@ -129,6 +130,11 @@ slots:
     auto_fill: true
     influence_conversation: true
   room_url:
+    type: rasa.shared.core.slots.TextSlot
+    initial_value: null
+    auto_fill: true
+    influence_conversation: false
+  room_name:
     type: rasa.shared.core.slots.TextSlot
     initial_value: null
     auto_fill: true

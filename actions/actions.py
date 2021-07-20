@@ -654,7 +654,7 @@ class ActionAcceptInvitation(BaseSwiperAction):
         room_url = created_room['url']
         room_name = created_room['name']
 
-        await rasa_callbacks.join_room(current_user.user_id, partner, room_url)
+        await rasa_callbacks.join_room(current_user.user_id, partner, room_url, room_name)
 
         utter_room_url(dispatcher, room_url, after_confirming_with_partner=False)
 
@@ -745,9 +745,10 @@ class ActionJoinRoom(BaseSwiperAction):
     ) -> List[Dict[Text, Any]]:
         partner_id = tracker.get_slot(rasa_callbacks.PARTNER_ID_SLOT)
         room_url = tracker.get_slot(rasa_callbacks.ROOM_URL_SLOT)
+        room_name = tracker.get_slot(rasa_callbacks.ROOM_NAME_SLOT)
 
         # noinspection PyUnresolvedReferences
-        current_user.join_room(partner_id)
+        current_user.join_room(partner_id, room_name)
         current_user.save()
 
         utter_room_url(dispatcher, room_url, after_confirming_with_partner=True)

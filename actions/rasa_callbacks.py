@@ -20,6 +20,7 @@ PARTNER_ID_THAT_REJECTED_SLOT = 'partner_id_that_rejected'
 PARTNER_PHOTO_FILE_ID_SLOT = 'partner_photo_file_id'
 PARTNER_FIRST_NAME = 'partner_first_name'
 ROOM_URL_SLOT = 'room_url'
+ROOM_NAME_SLOT = 'room_name'
 
 EXTERNAL_ASK_TO_JOIN_INTENT = 'EXTERNAL_ask_to_join'
 EXTERNAL_ASK_TO_CONFIRM_INTENT = 'EXTERNAL_ask_to_confirm'
@@ -87,6 +88,7 @@ async def join_room(
         sender_id: Text,
         receiver: UserStateMachine,
         room_url: Text,
+        room_name: Text,
         suppress_callback_errors: bool = False,
 ) -> Optional[Dict[Text, Any]]:
     return await _trigger_external_rasa_intent(
@@ -96,6 +98,7 @@ async def join_room(
         {
             PARTNER_ID_SLOT: sender_id,
             ROOM_URL_SLOT: room_url,
+            ROOM_NAME_SLOT: room_name,
         },
         suppress_callback_errors,
     )
