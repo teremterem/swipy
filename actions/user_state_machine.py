@@ -76,6 +76,7 @@ class UserModel:
     user_id: Text
     state: Text = None  # the state machine will set it to UserState.NEW if not provided explicitly
     partner_id: Optional[Text] = None
+    latest_room_name: Optional[Text] = None
     roomed_partner_ids: List[Text] = field(default_factory=list)
     rejected_partner_ids: List[Text] = field(default_factory=list)
     seen_partner_ids: List[Text] = field(default_factory=list)
@@ -186,8 +187,10 @@ class UserStateMachine(UserModel):
             before=[
                 self._assert_partner_id_arg_not_empty,
                 self._assert_partner_id_arg_same,
+                self._assert_room_name_arg_not_empty,
             ],
             after=[
+                self._set_latest_room_name,
                 self._mark_current_partner_id_as_roomed,
                 self._graduate_from_newbie,
             ],
@@ -275,6 +278,11 @@ class UserStateMachine(UserModel):
         if not event.args or not event.args[0]:
             raise SwiperStateMachineError('no or empty partner_id was passed')
 
+    @staticmethod
+    def _assert_room_name_arg_not_empty(event: EventData) -> None:
+        if not event.args or len(event.args) < 2 or not event.args[1]:
+            raise SwiperStateMachineError('no or empty room_name was passed')
+
     def _assert_partner_id_arg_same(self, event: EventData) -> None:
         partner_id = event.args[0]
         if self.partner_id != partner_id:
@@ -285,6 +293,9 @@ class UserStateMachine(UserModel):
 
     def _set_partner_id(self, event: EventData) -> None:
         self.partner_id = event.args[0]
+
+    def _set_latest_room_name(self, event: EventData) -> None:
+        self.latest_room_name = event.args[1]
 
     # noinspection PyUnusedLocal
     def _drop_partner_id(self, event: EventData) -> None:
