@@ -82,6 +82,7 @@ async def test_join_room(
         {
             'partner_id': 'a_sending_user',
             'room_url': 'https://room-unittest/url',
+            'room_name': 'unittest_room_name',
         },
     )
     mock_aioresponses.post(re.compile(r'.*'), payload=external_intent_response)
@@ -90,6 +91,7 @@ async def test_join_room(
         'a_sending_user',
         UserStateMachine(user_id='a_receiving_user'),
         'https://room-unittest/url',
+        'unittest_room_name',
     ) == external_intent_response
 
     assert mock_aioresponses.requests == {expected_req_key: [expected_req_call]}
@@ -100,6 +102,7 @@ async def test_join_room(
         {
             'partner_id': 'a_sending_user',
             'room_url': 'https://room-unittest/url',
+            'room_name': 'unittest_room_name',
         },
         False,  # make sure errors are not suppressed by default
     )
