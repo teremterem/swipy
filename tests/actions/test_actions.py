@@ -1019,6 +1019,7 @@ async def test_action_accept_invitation_create_room(
     assert actual_events == [
         SlotSet('swiper_action_result', 'room_url_ready'),
         SlotSet('room_url', 'https://swipy.daily.co/pytestroom'),
+        SlotSet('room_name', 'pytestroom'),
         SlotSet('swiper_state', 'roomed'),
         SlotSet('partner_id', 'an_asker'),
     ]
@@ -1441,6 +1442,7 @@ async def test_action_join_room(
     tracker.add_slots([
         SlotSet('partner_id', 'unexpected_partner' if wrong_partner else 'expected_partner'),
         SlotSet('room_url', 'https://swipy.daily.co/anothertestroom'),
+        SlotSet('room_name', 'anothertestroom'),
     ])
 
     actual_events = await action.run(dispatcher, tracker, domain)
@@ -1470,6 +1472,7 @@ async def test_action_join_room(
             user_id='unit_test_user',  # the asker
             state='roomed',
             partner_id='expected_partner',
+            latest_room_name='anothertestroom',
             roomed_partner_ids=['roomed_partner1', 'expected_partner'],
             rejected_partner_ids=['rejected_partner1', 'rejected_partner2'],
             seen_partner_ids=['seen_partner1', 'seen_partner2', 'seen_partner3'],

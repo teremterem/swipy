@@ -671,6 +671,10 @@ class ActionAcceptInvitation(BaseSwiperAction):
                 key=rasa_callbacks.ROOM_URL_SLOT,
                 value=room_url,
             ),
+            SlotSet(
+                key=rasa_callbacks.ROOM_NAME_SLOT,
+                value=room_name,
+            ),
         ]
 
     @staticmethod
