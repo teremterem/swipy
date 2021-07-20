@@ -1,5 +1,6 @@
 import re
 from typing import Dict, Text, Any, Tuple, Optional
+from unittest.mock import patch, Mock
 
 import pytest
 from aioresponses import aioresponses
@@ -10,6 +11,7 @@ from actions.utils import SwiperDailyCoError
 
 
 @pytest.mark.asyncio
+@patch('time.time', Mock(return_value=1619945501))  # "now"
 async def test_create_room(
         mock_aioresponses: aioresponses,
         daily_co_create_room_expected_req: Tuple[Text, RequestCall],
@@ -23,6 +25,7 @@ async def test_create_room(
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize('url_missing', ['', None, 'del'])
+@patch('time.time', Mock(return_value=1619945501))  # "now"
 async def test_create_room_url_not_returned(
         mock_aioresponses: aioresponses,
         url_missing: Optional[Text],
