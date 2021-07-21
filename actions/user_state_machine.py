@@ -5,6 +5,7 @@ from typing import Text, Optional, Dict, Any, TYPE_CHECKING, List
 
 from transitions import Machine, EventData
 
+from actions.daily_co import DAILY_CO_MEETING_DURATION_SEC
 from actions.utils import current_timestamp_int, SwiperStateMachineError, format_swipy_timestamp, SwiperError, \
     roll_the_list
 
@@ -13,7 +14,7 @@ if TYPE_CHECKING:
 
 SWIPER_STATE_MIN_TIMEOUT_SEC = int(os.getenv('SWIPER_STATE_MIN_TIMEOUT_SEC', '14400'))  # 4 hours (4*60*60 seconds)
 SWIPER_STATE_MAX_TIMEOUT_SEC = int(os.getenv('SWIPER_STATE_MAX_TIMEOUT_SEC', '241200'))  # 67 hours (67*60*60 seconds)
-ROOMED_STATE_TIMEOUT_SEC = int(os.getenv('ROOMED_STATE_TIMEOUT_SEC', '900'))  # 15 minutes (15*60 seconds)
+ROOMED_STATE_TIMEOUT_SEC = int(os.getenv('ROOMED_STATE_TIMEOUT_SEC', str(DAILY_CO_MEETING_DURATION_SEC)))
 PARTNER_CONFIRMATION_TIMEOUT_SEC = int(os.getenv('PARTNER_CONFIRMATION_TIMEOUT_SEC', '60'))  # 1 minute
 NUM_OF_ROOMED_PARTNERS_TO_REMEMBER = int(os.getenv('NUM_OF_ROOMED_PARTNERS_TO_REMEMBER', '3'))
 NUM_OF_REJECTED_PARTNERS_TO_REMEMBER = int(os.getenv('NUM_OF_REJECTED_PARTNERS_TO_REMEMBER', '21'))
