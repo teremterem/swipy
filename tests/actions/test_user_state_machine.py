@@ -182,8 +182,8 @@ def test_state_timestamps(source_state: Text, trigger_name: Text) -> None:
             expected_timeout_ts_str = '2021-05-02 08:52:41 Z'
 
         elif user.state == 'roomed':
-            expected_timeout_ts = 1619945501 + (60 * 15)
-            expected_timeout_ts_str = '2021-05-02 09:06:41 Z'
+            expected_timeout_ts = 1619945501 + (60 * 30)
+            expected_timeout_ts_str = '2021-05-02 09:21:41 Z'
 
         else:
             # destination state is not supposed to have a timeout
