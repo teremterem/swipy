@@ -431,6 +431,9 @@ class ActionStopTheCall(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
+        if current_user.latest_room_name:
+            await daily_co.delete_room(current_user.latest_room_name)
+
         return [
             SlotSet(
                 key=SWIPER_ACTION_RESULT_SLOT,
