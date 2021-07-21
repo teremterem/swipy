@@ -1020,23 +1020,11 @@ async def test_action_accept_invitation_create_room(
         SlotSet('swiper_action_result', 'room_url_ready'),
         SlotSet('room_url', 'https://swipy.daily.co/pytestroom'),
         SlotSet('room_name', 'pytestroom'),
-        SlotSet('swiper_state', 'roomed'),
+        FollowupAction('action_join_room'),
+        SlotSet('swiper_state', 'asked_to_confirm'),
         SlotSet('partner_id', 'an_asker'),
     ]
-    assert dispatcher.messages == [{
-        'attachment': None,
-        'buttons': [],
-        'custom': {
-            'text': UTTER_ROOM_URL_TEXT,
-            'parse_mode': 'html',
-            'reply_markup': STOP_THE_CALL_MARKUP,
-        },
-        'elements': [],
-        'image': None,
-        'response': None,
-        'template': None,
-        'text': None,
-    }]
+    assert dispatcher.messages == []
 
     rasa_callbacks_join_room_req_key, rasa_callbacks_join_room_req_call = rasa_callbacks_expected_req_builder(
         'an_asker',
@@ -1059,17 +1047,12 @@ async def test_action_accept_invitation_create_room(
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
         user_id='unit_test_user',
-        state='roomed',
+        state='asked_to_confirm',
         partner_id='an_asker',
-        latest_room_name='pytestroom',
-        roomed_partner_ids=['roomed_partner1', 'an_asker'],
+        roomed_partner_ids=['roomed_partner1'],
         rejected_partner_ids=['rejected_partner1', 'rejected_partner2'],
         seen_partner_ids=['seen_partner1', 'seen_partner2', 'seen_partner3'],
-        newbie=False,  # accepting the very first video chitchat graduates the user from newbie
-        state_timestamp=1619945501,
-        state_timestamp_str='2021-05-02 08:51:41 Z',
-        state_timeout_ts=1619945501 + (60 * 15),
-        state_timeout_ts_str='2021-05-02 09:06:41 Z',
+        newbie=True,
         activity_timestamp=1619945501,
         activity_timestamp_str='2021-05-02 08:51:41 Z',
     )
