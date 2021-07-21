@@ -62,6 +62,13 @@ class SwiperActionResult:
 
 
 REMOVE_KEYBOARD_MARKUP = '{"remove_keyboard":true}'
+RESTART_MARKUP = (
+    '{"keyboard":['
+
+    '[{"text":"/restart"}]'
+
+    '],"resize_keyboard":true,"one_time_keyboard":true}'
+)
 OK_WAITING_CANCEL_MARKUP = (
     '{"keyboard":['
 
@@ -203,7 +210,12 @@ class BaseSwiperAction(Action, ABC):
                 ))
 
             if TELL_USER_ABOUT_ERRORS:
-                dispatcher.utter_message(text='Ouch! Something went wrong 🤖')
+                dispatcher.utter_message(custom={
+                    'text': 'Ouch! Something went wrong 🤖',
+
+                    'parse_mode': 'html',
+                    'reply_markup': RESTART_MARKUP,
+                })
 
         else:
             if tracker.get_slot(SWIPER_ERROR_SLOT) is not None:

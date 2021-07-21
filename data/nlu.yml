@@ -3,6 +3,11 @@ nlu:
 - intent: start
   examples: |
     - Start
+    - start
+- intent: restart
+  examples: |
+    - Restart
+    - restart
 - intent: greet
   examples: |
     - Hello
