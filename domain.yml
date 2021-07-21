@@ -167,5 +167,6 @@ actions:
 - action_expire_partner_confirmation
 - action_default_fallback
 - action_rewind
+- action_stop_the_call
 forms: {}
 e2e_actions: []

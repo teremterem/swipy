@@ -24,26 +24,6 @@ rules:
   - intent: affirm
   - action: utter_ok_looking_for_partner
   - action: action_find_partner
-- rule: bot starts looking for a partner and the user confirms that they are waiting
-  condition:
-  - slot_was_set:
-    - swiper_action_result: success
-  steps:
-  - action: action_find_partner
-  - or:
-    - intent: waiting
-    - intent: affirm
-  - action: action_rewind
-- rule: user confirms that they are waiting for partner to confirm readiness too
-  condition:
-  - slot_was_set:
-    - swiper_action_result: partner_has_been_asked
-  steps:
-  - action: action_accept_invitation
-  - or:
-    - intent: waiting
-    - intent: affirm
-  - action: action_rewind
 - rule: bot was unable to find a partner, offers to try searching again and the user agrees
   condition:
   - slot_was_set:
@@ -52,9 +32,6 @@ rules:
   - action: action_find_partner
   - intent: affirm
   - action: utter_ok_looking_for_partner
-  - action: action_find_partner
-- rule: action_listen after action_find_partner
-  steps:
   - action: action_find_partner
 - rule: someone asks the user to join/confirm a video chat
   steps:
@@ -91,6 +68,11 @@ rules:
   steps:
   - intent: EXTERNAL_join_room
   - action: action_join_room
+- rule: user asks to stop the call
+  steps:
+  - action: action_join_room
+  - intent: stop
+  - action: action_stop_the_call
 - rule: user asks the bot if the bot is a bot
   steps:
   - intent: bot_challenge
@@ -102,6 +84,13 @@ rules:
     - intent: EXTERNAL_partner_did_not_confirm
   - action: action_expire_partner_confirmation
 
+- rule: action_listen after action_find_partner
+  steps:
+  - action: action_find_partner
+- rule: action_listen after action_join_room (needed for cases when it's triggered as a followup)
+  steps:
+  - action: action_join_room
+
 - rule: user asks for video chat directly
   steps:
   - intent: videochat
@@ -111,3 +100,24 @@ rules:
   steps:
   - intent: stop
   - action: action_do_not_disturb
+
+- rule: bot starts looking for a partner and the user confirms that they are waiting
+  condition:
+  - slot_was_set:
+    - swiper_action_result: success
+  steps:
+  - action: action_find_partner
+  - or:
+    - intent: waiting
+    - intent: affirm
+  - action: action_rewind
+- rule: user confirms that they are waiting for partner to confirm readiness too
+  condition:
+  - slot_was_set:
+    - swiper_action_result: partner_has_been_asked
+  steps:
+  - action: action_accept_invitation
+  - or:
+    - intent: waiting
+    - intent: affirm
+  - action: action_rewind

@@ -47,6 +47,7 @@ EXTERNAL_EXPIRE_PARTNER_CONFIRMATION_INTENT = 'EXTERNAL_expire_partner_confirmat
 
 ACTION_FIND_PARTNER = 'action_find_partner'
 ACTION_ACCEPT_INVITATION = 'action_accept_invitation'
+ACTION_JOIN_ROOM = 'action_join_room'
 
 
 class SwiperActionResult:
@@ -416,6 +417,28 @@ class ActionRewind(BaseSwiperAction):  # TODO oleksandr: are you sure it should 
         ]
 
 
+class ActionStopTheCall(BaseSwiperAction):
+    def name(self) -> Text:
+        return 'action_stop_the_call'
+
+    def should_update_user_activity_timestamp(self, tracker: Tracker) -> bool:
+        return True
+
+    async def swipy_run(
+            self, dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
+            current_user: UserStateMachine,
+            user_vault: IUserVault,
+    ) -> List[Dict[Text, Any]]:
+        return [
+            SlotSet(
+                key=SWIPER_ACTION_RESULT_SLOT,
+                value=SwiperActionResult.SUCCESS,
+            ),
+        ]
+
+
 class ActionFindPartner(BaseSwiperAction):
     def name(self) -> Text:
         return ACTION_FIND_PARTNER
@@ -656,12 +679,6 @@ class ActionAcceptInvitation(BaseSwiperAction):
 
         await rasa_callbacks.join_room(current_user.user_id, partner, room_url, room_name)
 
-        utter_room_url(dispatcher, room_url, after_confirming_with_partner=False)
-
-        # noinspection PyUnresolvedReferences
-        current_user.join_room(partner.user_id, room_name)
-        current_user.save()
-
         return [
             SlotSet(
                 key=SWIPER_ACTION_RESULT_SLOT,
@@ -675,6 +692,7 @@ class ActionAcceptInvitation(BaseSwiperAction):
                 key=rasa_callbacks.ROOM_NAME_SLOT,
                 value=room_name,
             ),
+            FollowupAction(ACTION_JOIN_ROOM),
         ]
 
     @staticmethod
@@ -735,10 +753,15 @@ class ActionAcceptInvitation(BaseSwiperAction):
 
 class ActionJoinRoom(BaseSwiperAction):
     def name(self) -> Text:
-        return 'action_join_room'
+        return ACTION_JOIN_ROOM
+
+    @staticmethod
+    def is_intent_external(tracker: Tracker):
+        latest_intent = get_intent_of_latest_message_reliably(tracker)
+        return latest_intent == rasa_callbacks.EXTERNAL_JOIN_ROOM_INTENT
 
     def should_update_user_activity_timestamp(self, tracker: Tracker) -> bool:
-        return False
+        return not self.is_intent_external(tracker)  # simple False would work too, though
 
     async def swipy_run(
             self, dispatcher: CollectingDispatcher,
@@ -755,7 +778,11 @@ class ActionJoinRoom(BaseSwiperAction):
         current_user.join_room(partner_id, room_name)
         current_user.save()
 
-        utter_room_url(dispatcher, room_url, after_confirming_with_partner=True)
+        utter_room_url(
+            dispatcher,
+            room_url,
+            after_confirming_with_partner=self.is_intent_external(tracker),
+        )
 
         return [
             SlotSet(
@@ -763,6 +790,20 @@ class ActionJoinRoom(BaseSwiperAction):
                 value=SwiperActionResult.SUCCESS,
             ),
         ]
+
+
+def utter_room_url(dispatcher: CollectingDispatcher, room_url: Text, after_confirming_with_partner: bool):
+    shout = 'Done!' if after_confirming_with_partner else 'Awesome!'
+    dispatcher.utter_message(custom={
+        'text': f"{shout}\n"
+                f"\n"
+                f"<b>Please follow this link to join the video call:</b>\n"
+                f"\n"
+                f"{room_url}",
+
+        'parse_mode': 'html',
+        'reply_markup': STOP_THE_CALL_MARKUP,
+    })
 
 
 class ActionDoNotDisturb(BaseSwiperAction):
@@ -888,20 +929,6 @@ def present_partner_name(first_name: Text, placeholder: Text) -> Text:
     if first_name:
         return f"<b><i>{html.escape(first_name)}</i></b>"
     return placeholder
-
-
-def utter_room_url(dispatcher: CollectingDispatcher, room_url: Text, after_confirming_with_partner: bool):
-    shout = 'Done!' if after_confirming_with_partner else 'Awesome!'
-    dispatcher.utter_message(custom={
-        'text': f"{shout}\n"
-                f"\n"
-                f"<b>Please follow this link to join the video call:</b>\n"
-                f"\n"
-                f"{room_url}",
-
-        'parse_mode': 'html',
-        'reply_markup': STOP_THE_CALL_MARKUP,
-    })
 
 
 def utter_partner_already_gone(dispatcher: CollectingDispatcher, partner_first_name: Text):

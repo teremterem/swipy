@@ -2,6 +2,7 @@ import logging
 import os
 from pprint import pformat
 from typing import Dict, Text, Any
+from urllib.parse import quote as urlencode
 
 import aiohttp
 
@@ -50,5 +51,22 @@ async def create_room(sender_id: Text) -> Dict[Text, Any]:
 
     if not resp_json.get('url'):
         raise SwiperDailyCoError(repr(resp_json))
+
+    return resp_json
+
+
+async def delete_room(room_name: Text) -> Dict[Text, Any]:
+    # TODO oleksandr: do I need to reuse ClientSession instance ? what should be its lifetime ?
+    async with aiohttp.ClientSession() as session:
+        async with session.delete(
+                f"{DAILY_CO_BASE_URL}/rooms/{urlencode(room_name)}",
+                headers={
+                    'Authorization': f"Bearer {DAILY_CO_API_TOKEN}",
+                },
+        ) as resp:
+            resp_json = await resp.json()
+
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug('DAILY CO ROOM %r DELETED:\n%s', room_name, pformat(resp_json))
 
     return resp_json
