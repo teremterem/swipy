@@ -119,15 +119,23 @@ async def _trigger_external_rasa_intent(
         if RASA_TOKEN:
             params['token'] = RASA_TOKEN
 
-        async with session.post(
-                f"{RASA_PRODUCTION_HOST}/conversations/{receiver.user_id}/trigger_intent",
-                params=params,
-                json={
-                    'name': intent_name,
-                    'entities': entities,
-                },
-        ) as resp:
-            resp_json = await resp.json()
+        resp_text = ''
+        resp_json = None
+        resp_exc = None
+        try:
+            async with session.post(
+                    f"{RASA_PRODUCTION_HOST}/conversations/{receiver.user_id}/trigger_intent",
+                    params=params,
+                    json={
+                        'name': intent_name,
+                        'entities': entities,
+                    },
+            ) as resp:
+                resp_text = resp.text
+                resp.raise_for_status()
+                resp_json = await resp.json()
+        except Exception as e:
+            resp_exc = e
 
     if logger.isEnabledFor(logging.DEBUG):
         logger.debug(
@@ -136,18 +144,19 @@ async def _trigger_external_rasa_intent(
             sender_id,
             receiver.user_id,
             pformat(entities),
-            pformat(resp_json),
+            pformat(resp_json) if resp_json else resp_text,
         )
 
-    if not resp_json.get('tracker') or resp_json.get('status') == 'failure':
-        if 'bot was blocked' in (resp_json.get('message') or '').lower():
+    if resp_exc or not resp_json or not resp_json.get('tracker') or resp_json.get('status') == 'failure':
+        if 'bot was blocked' in ((resp_json or {}).get('message') or '').lower():
             # noinspection PyUnresolvedReferences
             receiver.mark_as_bot_blocked()
             receiver.save()
 
+        # noinspection PyBroadException
         try:
-            raise SwiperRasaCallbackError(repr(resp_json))
-        except SwiperRasaCallbackError:
+            raise SwiperRasaCallbackError(resp_text) from resp_exc
+        except Exception:
             logger.exception('failure in ' + repr(intent_name))
             if not suppress_callback_errors:
                 raise

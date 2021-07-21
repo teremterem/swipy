@@ -44,6 +44,7 @@ async def create_room(sender_id: Text) -> Dict[Text, Any]:
                 },
                 json=room_data,
         ) as resp:
+            resp.raise_for_status()
             resp_json = await resp.json()
 
     if logger.isEnabledFor(logging.DEBUG):
@@ -64,6 +65,7 @@ async def delete_room(room_name: Text) -> Dict[Text, Any]:
                     'Authorization': f"Bearer {DAILY_CO_API_TOKEN}",
                 },
         ) as resp:
+            resp.raise_for_status()
             resp_json = await resp.json()
 
     if logger.isEnabledFor(logging.DEBUG):
