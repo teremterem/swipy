@@ -434,6 +434,10 @@ class ActionStopTheCall(BaseSwiperAction):
         if current_user.latest_room_name:
             await daily_co.delete_room(current_user.latest_room_name)
 
+        # noinspection PyUnresolvedReferences
+        current_user.become_ok_to_chitchat()  # TODO oleksandr: are you sure ?
+        current_user.save()
+
         return [
             SlotSet(
                 key=SWIPER_ACTION_RESULT_SLOT,
