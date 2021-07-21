@@ -135,7 +135,7 @@ async def test_callback_unsuccessful(
     )
     if unsuccessful_response is None:
         # emulate HTTP 500
-        mock_aioresponses.post(re.compile(r'.*'), status=500, body='HTTP 500 in test')
+        mock_aioresponses.post(re.compile(r'.*'), status=500, body='<html></html>')
     else:
         mock_aioresponses.post(re.compile(r'.*'), payload=unsuccessful_response)
 
