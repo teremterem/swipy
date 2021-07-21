@@ -434,6 +434,8 @@ class ActionStopTheCall(BaseSwiperAction):
         if current_user.latest_room_name:
             await daily_co.delete_room(current_user.latest_room_name)
 
+        dispatcher.utter_message(text='DELETED')
+
         # noinspection PyUnresolvedReferences
         current_user.become_ok_to_chitchat()  # TODO oleksandr: are you sure ?
         current_user.save()
@@ -674,6 +676,7 @@ class ActionAcceptInvitation(BaseSwiperAction):
 
         return self.partner_gone_start_search(dispatcher, current_user, partner)
 
+    # noinspection PyUnusedLocal
     @staticmethod
     async def create_room(
             dispatcher: CollectingDispatcher,
@@ -768,7 +771,9 @@ class ActionJoinRoom(BaseSwiperAction):
         return latest_intent == rasa_callbacks.EXTERNAL_JOIN_ROOM_INTENT
 
     def should_update_user_activity_timestamp(self, tracker: Tracker) -> bool:
-        return not self.is_intent_external(tracker)  # simple False would work too, though
+        return not self.is_intent_external(tracker)
+        # simple False would have worked too, though, because when the latest intent is not external
+        # ActionAcceptInvitation goes right before this one
 
     async def swipy_run(
             self, dispatcher: CollectingDispatcher,
@@ -780,6 +785,9 @@ class ActionJoinRoom(BaseSwiperAction):
         partner_id = tracker.get_slot(rasa_callbacks.PARTNER_ID_SLOT)
         room_url = tracker.get_slot(rasa_callbacks.ROOM_URL_SLOT)
         room_name = tracker.get_slot(rasa_callbacks.ROOM_NAME_SLOT)
+
+        if current_user.latest_room_name:
+            await daily_co.delete_room(current_user.latest_room_name)
 
         # noinspection PyUnresolvedReferences
         current_user.join_room(partner_id, room_name)
