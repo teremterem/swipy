@@ -118,6 +118,7 @@ async def test_join_room(
         'tracker': {'is': 'here, but'},
         'status': 'failure',
     },
+    None,  # emulate HTTP 500
 ])
 async def test_callback_unsuccessful(
         rasa_callbacks_expected_req_builder: Callable[
@@ -132,7 +133,11 @@ async def test_callback_unsuccessful(
         'EXTERNAL_intent',
         {'some_entity': 'entity_value'},
     )
-    mock_aioresponses.post(re.compile(r'.*'), payload=unsuccessful_response)
+    if unsuccessful_response is None:
+        # emulate HTTP 500
+        mock_aioresponses.post(re.compile(r'.*'), status=500, body='HTTP 500 in test')
+    else:
+        mock_aioresponses.post(re.compile(r'.*'), payload=unsuccessful_response)
 
     if suppress_callback_errors:
         result = await rasa_callbacks._trigger_external_rasa_intent(
