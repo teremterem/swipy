@@ -132,6 +132,13 @@ Should you change your mind and decide that you want to chitchat with someone, \
 just let me know - I will set up a video call 😉"""
 
 REMOVE_KEYBOARD_MARKUP = '{"remove_keyboard":true}'
+RESTART_MARKUP = (
+    '{"keyboard":['
+
+    '[{"text":"/restart"}]'
+
+    '],"resize_keyboard":true,"one_time_keyboard":true}'
+)
 OK_WAITING_CANCEL_MARKUP = (
     '{"keyboard":['
 
@@ -202,12 +209,16 @@ async def test_action_swiper_error_trace(
     assert dispatcher.messages == [{
         'attachment': None,
         'buttons': [],
-        'custom': {},
+        'custom': {
+            'text': UTTER_ERROR_TEXT,
+            'parse_mode': 'html',
+            'reply_markup': RESTART_MARKUP,
+        },
         'elements': [],
         'image': None,
         'response': None,
         'template': None,
-        'text': UTTER_ERROR_TEXT,
+        'text': None,
     }]
 
 
@@ -928,12 +939,16 @@ async def test_action_ask_to_join(
         expected_response = {
             'attachment': None,
             'buttons': [],
-            'custom': {},
+            'custom': {
+                'text': UTTER_ERROR_TEXT,
+                'parse_mode': 'html',
+                'reply_markup': RESTART_MARKUP,
+            },
             'elements': [],
             'image': None,
             'response': None,
             'template': None,
-            'text': UTTER_ERROR_TEXT,
+            'text': None,
         }
 
     assert dispatcher.messages == [expected_response]
@@ -1367,12 +1382,16 @@ async def test_action_accept_invitation_no_partner_id(
     assert dispatcher.messages == [{
         'attachment': None,
         'buttons': [],
-        'custom': {},
+        'custom': {
+            'text': UTTER_ERROR_TEXT,
+            'parse_mode': 'html',
+            'reply_markup': RESTART_MARKUP,
+        },
         'elements': [],
         'image': None,
         'response': None,
         'template': None,
-        'text': UTTER_ERROR_TEXT,
+        'text': None,
     }]
 
     # neither daily_co.create_room() nor rasa_callbacks.join_room() are called
@@ -1499,12 +1518,16 @@ async def test_action_join_room(
         assert dispatcher.messages == [{
             'attachment': None,
             'buttons': [],
-            'custom': {},
+            'custom': {
+                'text': UTTER_ERROR_TEXT,
+                'parse_mode': 'html',
+                'reply_markup': RESTART_MARKUP,
+            },
             'elements': [],
             'image': None,
             'response': None,
             'template': None,
-            'text': UTTER_ERROR_TEXT,
+            'text': None,
         }]
         assert user_vault.get_user('unit_test_user') == UserStateMachine(  # the state of current user has not changed
             user_id='unit_test_user',  # the asker
@@ -1672,12 +1695,16 @@ async def test_action_reject_invitation(
         assert dispatcher.messages == [{
             'attachment': None,
             'buttons': [],
-            'custom': {},
+            'custom': {
+                'text': UTTER_ERROR_TEXT,
+                'parse_mode': 'html',
+                'reply_markup': RESTART_MARKUP,
+            },
             'elements': [],
             'image': None,
             'response': None,
             'template': None,
-            'text': UTTER_ERROR_TEXT,
+            'text': None,
         }]
         assert user_vault.get_user('unit_test_user') == UserStateMachine(
             user_id='unit_test_user',
