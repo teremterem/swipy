@@ -60,7 +60,7 @@ Awesome!
 
 <b>Please follow this link to join the video call:</b>
 
-https://swipy.daily.co/pytestroom"""
+https://swipy.daily.co/anothertestroom"""
 
 UTTER_PARTNER_READY_ROOM_URL_TEXT = """\
 Done!
@@ -1383,20 +1383,22 @@ async def test_action_accept_invitation_no_partner_id(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize('source_swiper_state, wrong_partner, action_allowed', [
-    ('new', False, False),
-    ('wants_chitchat', False, False),
-    ('ok_to_chitchat', False, False),
-    ('waiting_partner_confirm', False, True),
-    ('asked_to_join', False, False),
-    ('asked_to_confirm', False, True),
-    ('roomed', False, False),
-    ('rejected_join', False, False),
-    ('rejected_confirm', False, False),
-    ('do_not_disturb', False, False),
+@pytest.mark.parametrize('latest_intent, source_swiper_state, wrong_partner, action_allowed, expect_as_external', [
+    ('some_test_intent', 'new', False, False, False),
+    ('some_test_intent', 'wants_chitchat', False, False, False),
+    ('some_test_intent', 'ok_to_chitchat', False, False, False),
+    ('affirm', 'waiting_partner_confirm', False, True, False),
+    ('EXTERNAL_join_room', 'waiting_partner_confirm', False, True, True),
+    ('some_test_intent', 'asked_to_join', False, False, False),
+    ('some_test_intent', 'asked_to_confirm', False, True, False),
+    ('EXTERNAL_join_room', 'asked_to_confirm', False, True, True),
+    ('some_test_intent', 'roomed', False, False, False),
+    ('some_test_intent', 'rejected_join', False, False, False),
+    ('some_test_intent', 'rejected_confirm', False, False, False),
+    ('some_test_intent', 'do_not_disturb', False, False, False),
 
-    ('waiting_partner_confirm', True, False),
-    ('asked_to_confirm', True, False),
+    ('some_test_intent', 'waiting_partner_confirm', True, False, False),
+    ('some_test_intent', 'asked_to_confirm', True, False, False),
 ])
 @pytest.mark.usefixtures('create_user_state_machine_table', 'wrap_traceback_format_exception')
 @patch('time.time', Mock(return_value=1619945501))
@@ -1404,13 +1406,12 @@ async def test_action_join_room(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
+        latest_intent: Text,
         source_swiper_state: Text,
         wrong_partner: bool,
         action_allowed: bool,
+        expect_as_external: bool,
 ) -> None:
-    action = actions.ActionJoinRoom()
-    assert action.name() == 'action_join_room'
-
     user_vault = UserVault()
     user_vault.save(UserStateMachine(
         user_id='unit_test_user',  # the asker
@@ -1427,6 +1428,10 @@ async def test_action_join_room(
         SlotSet('room_url', 'https://swipy.daily.co/anothertestroom'),
         SlotSet('room_name', 'anothertestroom'),
     ])
+    tracker.latest_message = {'intent': {'name': latest_intent}}
+
+    action = actions.ActionJoinRoom()
+    assert action.name() == 'action_join_room'
 
     actual_events = await action.run(dispatcher, tracker, domain)
 
@@ -1441,7 +1446,7 @@ async def test_action_join_room(
             'attachment': None,
             'buttons': [],
             'custom': {
-                'text': UTTER_PARTNER_READY_ROOM_URL_TEXT,
+                'text': UTTER_PARTNER_READY_ROOM_URL_TEXT if expect_as_external else UTTER_ROOM_URL_TEXT,
                 'parse_mode': 'html',
                 'reply_markup': STOP_THE_CALL_MARKUP,
             },
@@ -1462,8 +1467,10 @@ async def test_action_join_room(
             newbie=False,  # accepting the very first video chitchat graduates the user from newbie
             state_timestamp=1619945501,
             state_timestamp_str='2021-05-02 08:51:41 Z',
-            state_timeout_ts=1619945501 + (60 * 15),
-            state_timeout_ts_str='2021-05-02 09:06:41 Z',
+            state_timeout_ts=1619945501 + (60 * 30),
+            state_timeout_ts_str='2021-05-02 09:21:41 Z',
+            activity_timestamp=0 if expect_as_external else 1619945501,
+            activity_timestamp_str=None if expect_as_external else '2021-05-02 08:51:41 Z',
         )
 
     else:
@@ -1507,6 +1514,8 @@ async def test_action_join_room(
             rejected_partner_ids=['rejected_partner1', 'rejected_partner2'],
             seen_partner_ids=['seen_partner1', 'seen_partner2', 'seen_partner3'],
             newbie=True,
+            activity_timestamp=0 if expect_as_external else 1619945501,
+            activity_timestamp_str=None if expect_as_external else '2021-05-02 08:51:41 Z',
         )
 
 
