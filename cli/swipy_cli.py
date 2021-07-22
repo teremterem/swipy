@@ -1,9 +1,9 @@
 import asyncio
 import os
 import sys
+import time
 from dataclasses import asdict
 from pprint import pprint
-import time
 from typing import Text, Any
 
 import boto3
@@ -48,6 +48,30 @@ def _set_everyones_state(state: Text) -> None:
 @click.group()
 def swipy() -> None:
     ...
+
+
+@swipy.command()
+def make_everyone_available_to_everyone() -> None:
+    user_state_machine_table = _prompt_ddb_table()
+
+    counter = 0
+    for item in user_state_machine_table.scan()['Items']:
+        user_state_machine_table.update_item(
+            Key={'user_id': item['user_id']},
+            UpdateExpression='REMOVE #room, #roomed, #rejected, #seen SET #state=:state',
+            ExpressionAttributeNames={
+                '#room': 'latest_room_name',
+                '#roomed': 'roomed_partner_ids',
+                '#rejected': 'rejected_partner_ids',
+                '#seen': 'seen_partner_ids',
+                '#state': 'state',
+            },
+            ExpressionAttributeValues={':state': UserState.OK_TO_CHITCHAT},
+        )
+        counter += 1
+        if counter % 10 == 0:
+            print(counter)
+    print('DONE FOR', counter, 'ITEMS')
 
 
 @swipy.command()
