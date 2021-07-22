@@ -48,13 +48,18 @@ async def test_create_room_url_not_returned(
 @pytest.mark.asyncio
 @pytest.mark.parametrize('response_payload, emulate_status, expected_result', [
     ({'deleted': True}, 200, True),
-    ({'deleted': True, 'room_name': 'wrong_room_name'}, 200, True),  # we don't bother verifying the room name
-    ({'deleted': True, 'room_name': 'correct_room_name'}, 200, True),  # we don't bother verifying the room name
+    ({'deleted': True, 'name': '3yMqC9bWG2L12Bzcuiys'}, 200, True),
+    ({'deleted': True, 'name': 'wrong_room_name'}, 200, True),  # we don't bother verifying the room name
     ({}, 200, False),
     ({'deleted': False}, 200, False),
-    ({'deleted': False, 'room_name': 'correct_room_name'}, 200, False),
-    ({'deleted': True}, 404, False),  # attempt to delete expired room
-    ({'deleted': True, 'room_name': 'correct_room_name'}, 404, False),  # attempt to delete expired room
+    ({'deleted': False, 'name': '3yMqC9bWG2L12Bzcuiys'}, 200, False),
+    (  # existing but expired room
+            {'deleted': True, 'error': 'not-found', 'info': 'room 3yMqC9bWG2L12Bzcuiys  not found'},
+            404,
+            False,
+    ),
+    ({'deleted': True}, 404, False),  # existing but expired room
+    ({'error': 'not-found', 'info': "room '3yMqC9bWG2L12Bzcuiys' not found"}, 404, False),  # non-existent room
     (None, 500, False),  # emulate non-json payload
 ])
 @patch('time.time', Mock(return_value=1619945501))  # "now"
@@ -65,7 +70,7 @@ async def test_delete_room(
         emulate_status: int,
         expected_result: bool,
 ) -> None:
-    expected_req_key, expected_req_call = daily_co_delete_room_expected_req_builder('correct_room_name')
+    expected_req_key, expected_req_call = daily_co_delete_room_expected_req_builder('3yMqC9bWG2L12Bzcuiys')
 
     if response_payload is None:
         # emulate non-json payload
@@ -73,7 +78,7 @@ async def test_delete_room(
     else:
         mock_aioresponses.delete(re.compile(r'.*'), status=emulate_status, payload=response_payload)
 
-    actual_result = await daily_co.delete_room('correct_room_name')
+    actual_result = await daily_co.delete_room('3yMqC9bWG2L12Bzcuiys')
     assert actual_result == expected_result
 
     assert mock_aioresponses.requests == {expected_req_key: [expected_req_call]}
