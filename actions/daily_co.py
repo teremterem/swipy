@@ -80,7 +80,7 @@ async def delete_room(room_name: Text) -> Dict[Text, Any]:
 
     except Exception:
         logger.info(
-            'UNSUCCESSFUL DELETION OF DAILY CO ROOM %r:\n%s',
+            'Unsuccessful deletion of DAILY CO room %r:\n%s',
             room_name,
             resp_text,
             exc_info=logger.isEnabledFor(logging.DEBUG),
