@@ -71,4 +71,4 @@ async def delete_room(room_name: Text) -> Dict[Text, Any]:
     if logger.isEnabledFor(logging.DEBUG):
         logger.debug('DAILY CO ROOM %r DELETED:\n%s', room_name, pformat(resp_json))
 
-    return resp_json
+    return resp_json.get('deleted') is True

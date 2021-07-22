@@ -64,7 +64,6 @@ def daily_co_delete_room_expected_req_builder() -> Callable[[Text], Tuple[Tuple[
         expected_req_call = RequestCall(
             args=(),
             kwargs={
-                'data': None,
                 'headers': {
                     'Authorization': 'Bearer test-daily-co-api-token',
                 },
