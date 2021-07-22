@@ -68,10 +68,10 @@ async def test_delete_room(
     expected_req_key, expected_req_call = daily_co_delete_room_expected_req_builder('correct_room_name')
 
     if response_payload is None:
-        # emulate HTTP 500
-        mock_aioresponses.delete(re.compile(r'.*'), status=500, body='<html></html>')
+        # emulate non-json payload
+        mock_aioresponses.delete(re.compile(r'.*'), status=emulate_status, body='<html></html>')
     else:
-        mock_aioresponses.delete(re.compile(r'.*'), payload=response_payload)
+        mock_aioresponses.delete(re.compile(r'.*'), status=emulate_status, payload=response_payload)
 
     actual_result = await daily_co.delete_room('correct_room_name')
     assert actual_result == expected_result
