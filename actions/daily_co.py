@@ -57,18 +57,33 @@ async def create_room(sender_id: Text) -> Dict[Text, Any]:
 
 
 async def delete_room(room_name: Text) -> Dict[Text, Any]:
-    # TODO oleksandr: do I need to reuse ClientSession instance ? what should be its lifetime ?
-    async with aiohttp.ClientSession() as session:
-        async with session.delete(
-                f"{DAILY_CO_BASE_URL}/rooms/{urlencode(room_name)}",
-                headers={
-                    'Authorization': f"Bearer {DAILY_CO_API_TOKEN}",
-                },
-        ) as resp:
-            resp.raise_for_status()
-            resp_json = await resp.json()
+    result = False
+    resp_text = ''
+    # noinspection PyBroadException
+    try:
+        # TODO oleksandr: do I need to reuse ClientSession instance ? what should be its lifetime ?
+        async with aiohttp.ClientSession() as session:
+            async with session.delete(
+                    f"{DAILY_CO_BASE_URL}/rooms/{urlencode(room_name)}",
+                    headers={
+                        'Authorization': f"Bearer {DAILY_CO_API_TOKEN}",
+                    },
+            ) as resp:
+                resp_text = await resp.text()
+                resp.raise_for_status()
+                resp_json = await resp.json()
 
-    if logger.isEnabledFor(logging.DEBUG):
-        logger.debug('DAILY CO ROOM %r DELETED:\n%s', room_name, pformat(resp_json))
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('DAILY CO ROOM %r DELETED:\n%s', room_name, pformat(resp_json))
 
-    return resp_json.get('deleted') is True
+        result = resp_json.get('deleted') is True
+
+    except Exception:
+        logger.info(
+            'UNSUCCESSFUL DELETION OF DAILY CO ROOM %r:\n%s',
+            room_name,
+            resp_text,
+            exc_info=logger.isEnabledFor(logging.DEBUG),
+        )
+
+    return result

@@ -157,7 +157,7 @@ async def _trigger_external_rasa_intent(
         try:
             raise SwiperRasaCallbackError(resp_text) from resp_exc
         except Exception:
-            logger.exception('failure in ' + repr(intent_name))
+            logger.exception('failure in %r', intent_name)
             if not suppress_callback_errors:
                 raise
 
