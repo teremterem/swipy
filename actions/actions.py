@@ -446,7 +446,7 @@ class ActionStopTheCall(BaseSwiperAction):
         if current_user.latest_room_name:
             await daily_co.delete_room(current_user.latest_room_name)
 
-        dispatcher.utter_message(text='DELETED')
+        dispatcher.utter_message(text='ROOM DELETED')
 
         # noinspection PyUnresolvedReferences
         current_user.become_ok_to_chitchat()  # TODO oleksandr: are you sure ?

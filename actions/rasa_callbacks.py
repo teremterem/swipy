@@ -131,7 +131,7 @@ async def _trigger_external_rasa_intent(
                         'entities': entities,
                     },
             ) as resp:
-                resp_text = resp.text
+                resp_text = await resp.text()
                 resp.raise_for_status()
                 resp_json = await resp.json()
         except Exception as e:

@@ -45,6 +45,8 @@ intents:
     use_entities: true
 - nlu_fallback:
     use_entities: true
+- restart:
+    use_entities: true
 entities:
 - partner_id
 - partner_id_that_rejected
