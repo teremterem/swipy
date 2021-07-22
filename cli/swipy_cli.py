@@ -58,9 +58,9 @@ def make_everyone_available_to_everyone() -> None:
     for item in user_state_machine_table.scan()['Items']:
         user_state_machine_table.update_item(
             Key={'user_id': item['user_id']},
-            UpdateExpression='REMOVE #room, #roomed, #rejected, #seen SET #state=:state',
+            UpdateExpression='SET #state=:state REMOVE #roomed, #rejected, #seen',  # , #room_name',
             ExpressionAttributeNames={
-                '#room': 'latest_room_name',
+                # '#room_name': 'latest_room_name',
                 '#roomed': 'roomed_partner_ids',
                 '#rejected': 'rejected_partner_ids',
                 '#seen': 'seen_partner_ids',
