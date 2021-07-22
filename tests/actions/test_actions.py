@@ -171,6 +171,14 @@ YES_NO_MARKUP = (
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
+ANOTHER_CALL_FEEDBACK_MARKUP = (
+    '{"keyboard":['
+
+    '[{"text":"I want another call"}],'
+    '[{"text":"Can I leave feedback?"}]'
+
+    '],"resize_keyboard":true,"one_time_keyboard":true}'
+)
 
 
 @pytest.mark.asyncio
@@ -1588,7 +1596,7 @@ async def test_action_do_not_disturb(
         'custom': {
             'text': UTTER_HOPE_TO_SEE_YOU_LATER_TEXT,
             'parse_mode': 'html',
-            'reply_markup': REMOVE_KEYBOARD_MARKUP,
+            'reply_markup': ANOTHER_CALL_FEEDBACK_MARKUP,
         },
         'elements': [],
         'image': None,

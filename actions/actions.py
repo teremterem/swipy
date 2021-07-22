@@ -101,6 +101,14 @@ YES_NO_MARKUP = (
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
+ANOTHER_CALL_FEEDBACK_MARKUP = (
+    '{"keyboard":['
+
+    '[{"text":"I want another call"}],'
+    '[{"text":"Can I leave feedback?"}]'
+
+    '],"resize_keyboard":true,"one_time_keyboard":true}'
+)
 
 
 class BaseSwiperAction(Action, ABC):
@@ -443,10 +451,24 @@ class ActionStopTheCall(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
+        room_deleted = False
         if current_user.latest_room_name:
-            await daily_co.delete_room(current_user.latest_room_name)
+            room_deleted = await daily_co.delete_room(current_user.latest_room_name)
 
-        dispatcher.utter_message(text='ROOM DELETED')
+        if room_deleted:
+            dispatcher.utter_message(custom={
+                'text': 'Thank you! The chat room will be disposed shortly.',
+
+                'parse_mode': 'html',
+                'reply_markup': ANOTHER_CALL_FEEDBACK_MARKUP,
+            })
+        else:
+            dispatcher.utter_message(custom={
+                'text': 'Seems that like this chat room has already been disposed.',
+
+                'parse_mode': 'html',
+                'reply_markup': ANOTHER_CALL_FEEDBACK_MARKUP,
+            })
 
         current_user.latest_room_name = None
         # noinspection PyUnresolvedReferences
@@ -859,7 +881,7 @@ class ActionDoNotDisturb(BaseSwiperAction):
                     'just let me know - I will set up a video call 😉',
 
             'parse_mode': 'html',
-            'reply_markup': REMOVE_KEYBOARD_MARKUP,
+            'reply_markup': ANOTHER_CALL_FEEDBACK_MARKUP,
         })
 
         return [
