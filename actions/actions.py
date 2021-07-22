@@ -483,6 +483,66 @@ class ActionStopTheCall(BaseSwiperAction):
         ]
 
 
+class ActionScheduleRoomDisposalReport(BaseSwiperAction):
+    def name(self) -> Text:
+        return 'action_schedule_room_disposal_report'
+
+    def should_update_user_activity_timestamp(self, tracker: Tracker) -> bool:
+        return False
+
+    async def swipy_run(
+            self, dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
+            current_user: UserStateMachine,
+            user_vault: IUserVault,
+    ) -> List[Dict[Text, Any]]:
+        # TODO TODO TODO oleksandr
+        return [
+            UserUtteranceReverted(),
+        ]
+
+
+class ActionRoomDisposalReport(BaseSwiperAction):
+    def name(self) -> Text:
+        return 'action_room_disposal_report'
+
+    def should_update_user_activity_timestamp(self, tracker: Tracker) -> bool:
+        return False
+
+    async def swipy_run(
+            self, dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
+            current_user: UserStateMachine,
+            user_vault: IUserVault,
+    ) -> List[Dict[Text, Any]]:
+        # TODO TODO TODO oleksandr
+        return [
+            UserUtteranceReverted(),
+        ]
+
+
+class ActionRoomExpirationReport(BaseSwiperAction):
+    def name(self) -> Text:
+        return 'action_room_expiration_report'
+
+    def should_update_user_activity_timestamp(self, tracker: Tracker) -> bool:
+        return False
+
+    async def swipy_run(
+            self, dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
+            current_user: UserStateMachine,
+            user_vault: IUserVault,
+    ) -> List[Dict[Text, Any]]:
+        # TODO TODO TODO oleksandr
+        return [
+            UserUtteranceReverted(),
+        ]
+
+
 class ActionFindPartner(BaseSwiperAction):
     def name(self) -> Text:
         return ACTION_FIND_PARTNER

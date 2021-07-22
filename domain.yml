@@ -43,6 +43,12 @@ intents:
     use_entities: true
 - EXTERNAL_partner_did_not_confirm:
     use_entities: true
+- EXTERNAL_schedule_room_disposal_report:
+    use_entities: true
+- EXTERNAL_room_disposal_report:
+    use_entities: true
+- EXTERNAL_room_expiration_report:
+    use_entities: true
 - nlu_fallback:
     use_entities: true
 - restart:

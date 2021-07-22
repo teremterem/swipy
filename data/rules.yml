@@ -83,6 +83,18 @@ rules:
     - intent: EXTERNAL_expire_partner_confirmation
     - intent: EXTERNAL_partner_did_not_confirm
   - action: action_expire_partner_confirmation
+- rule: schedule room disposal report
+  steps:
+  - intent: EXTERNAL_schedule_room_disposal_report
+  - action: action_schedule_room_disposal_report
+- rule: room disposal report itself
+  steps:
+  - intent: EXTERNAL_room_disposal_report
+  - action: action_room_disposal_report
+- rule: room expiration report
+  steps:
+  - intent: EXTERNAL_room_expiration_report
+  - action: action_room_expiration_report
 
 - rule: action_listen after action_find_partner
   steps:
