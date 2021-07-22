@@ -176,5 +176,8 @@ actions:
 - action_default_fallback
 - action_rewind
 - action_stop_the_call
+- action_schedule_room_disposal_report
+- action_room_disposal_report
+- action_room_expiration_report
 forms: {}
 e2e_actions: []
