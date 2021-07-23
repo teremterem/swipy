@@ -27,7 +27,7 @@ EXTERNAL_ASK_TO_JOIN_INTENT = 'EXTERNAL_ask_to_join'
 EXTERNAL_ASK_TO_CONFIRM_INTENT = 'EXTERNAL_ask_to_confirm'
 EXTERNAL_PARTNER_DID_NOT_CONFIRM_INTENT = 'EXTERNAL_partner_did_not_confirm'
 EXTERNAL_JOIN_ROOM_INTENT = 'EXTERNAL_join_room'
-EXTERNAL_SCHEDULE_ROOM_DISPOSED_REPORT_INTENT = 'EXTERNAL_schedule_room_disposed_report'
+EXTERNAL_SCHEDULE_ROOM_DISPOSAL_REPORT_INTENT = 'EXTERNAL_schedule_room_disposal_report'
 
 
 async def ask_to_join(
@@ -106,7 +106,7 @@ async def join_room(
     )
 
 
-async def schedule_room_disposed_report(
+async def schedule_room_disposal_report(
         sender_id: Text,
         receiver: UserStateMachine,
         room_name: Text,
@@ -115,7 +115,7 @@ async def schedule_room_disposed_report(
     return await _trigger_external_rasa_intent(
         sender_id,
         receiver,
-        EXTERNAL_SCHEDULE_ROOM_DISPOSED_REPORT_INTENT,
+        EXTERNAL_SCHEDULE_ROOM_DISPOSAL_REPORT_INTENT,
         {
             DISPOSED_ROOM_NAME_SLOT: room_name,
         },

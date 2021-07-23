@@ -274,6 +274,9 @@ class UserStateMachine(UserModel):
     def chitchat_can_be_offered(self):
         return self.state in UserState.offerable_states and self.has_become_discoverable()
 
+    def is_still_in_the_room(self, room_name: Text):
+        return room_name and self.state == UserState.ROOMED and self.latest_room_name == room_name
+
     @staticmethod
     def _assert_partner_id_arg_not_empty(event: EventData) -> None:
         if not event.args or not event.args[0]:

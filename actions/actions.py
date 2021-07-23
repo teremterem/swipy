@@ -5,7 +5,7 @@ import os
 from abc import ABC, abstractmethod
 from distutils.util import strtobool
 from pprint import pformat
-from typing import Any, Text, Dict, List
+from typing import Any, Text, Dict, List, Optional, Union
 
 from rasa_sdk import Action, Tracker
 from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType, ReminderScheduled, \
@@ -29,6 +29,7 @@ SEND_ERROR_STACK_TRACE_TO_SLOT = strtobool(os.getenv('SEND_ERROR_STACK_TRACE_TO_
 CLEAR_REJECTED_LIST_WHEN_NO_ONE_FOUND = strtobool(os.getenv('CLEAR_REJECTED_LIST_WHEN_NO_ONE_FOUND', 'yes'))
 FIND_PARTNER_FREQUENCY_SEC = float(os.getenv('FIND_PARTNER_FREQUENCY_SEC', '5'))
 PARTNER_SEARCH_TIMEOUT_SEC = int(os.getenv('PARTNER_SEARCH_TIMEOUT_SEC', '114'))  # 1 minute 54 seconds
+ROOM_DISPOSAL_REPORT_DELAY_SEC = int(os.getenv('ROOM_DISPOSAL_REPORT_DELAY_SEC', '60'))  # 1 minute
 GREETING_MAKES_USER_OK_TO_CHITCHAT = strtobool(os.getenv('GREETING_MAKES_USER_OK_TO_CHITCHAT', 'no'))
 
 SWIPER_STATE_SLOT = 'swiper_state'
@@ -44,6 +45,7 @@ PARTNER_SEARCH_START_TS_SLOT = 'partner_search_start_ts'
 VIDEOCHAT_INTENT = 'videochat'
 EXTERNAL_FIND_PARTNER_INTENT = 'EXTERNAL_find_partner'
 EXTERNAL_EXPIRE_PARTNER_CONFIRMATION_INTENT = 'EXTERNAL_expire_partner_confirmation'
+EXTERNAL_ROOM_DISPOSAL_REPORT_INTENT = 'EXTERNAL_room_disposal_report'
 
 ACTION_FIND_PARTNER = 'action_find_partner'
 ACTION_ACCEPT_INVITATION = 'action_accept_invitation'
@@ -457,8 +459,9 @@ class ActionStopTheCall(BaseSwiperAction):
 
             if current_user.partner_id:
                 partner = user_vault.get_user(current_user.partner_id)
-                if partner.state == UserState.ROOMED and partner.latest_room_name == current_user.latest_room_name:
-                    await rasa_callbacks.schedule_room_disposed_report(
+
+                if partner.is_still_in_the_room(current_user.latest_room_name):
+                    await rasa_callbacks.schedule_room_disposal_report(
                         current_user.user_id,
                         partner,
                         current_user.latest_room_name,
@@ -507,9 +510,23 @@ class ActionScheduleRoomDisposalReport(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        # TODO TODO TODO oleksandr
+        disposed_room_name = tracker.get_slot(rasa_callbacks.DISPOSED_ROOM_NAME_SLOT)
+        if not current_user.is_still_in_the_room(disposed_room_name):
+            return [
+                UserUtteranceReverted(),
+            ]
+
         return [
             UserUtteranceReverted(),
+
+            reschedule_reminder(
+                current_user.user_id,
+                EXTERNAL_ROOM_DISPOSAL_REPORT_INTENT,
+                ROOM_DISPOSAL_REPORT_DELAY_SEC,
+                entities={
+                    rasa_callbacks.DISPOSED_ROOM_NAME_SLOT: disposed_room_name,
+                },
+            ),
         ]
 
 
@@ -527,6 +544,12 @@ class ActionRoomDisposalReport(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
+        disposed_room_name = tracker.get_slot(rasa_callbacks.DISPOSED_ROOM_NAME_SLOT)
+        if not current_user.is_still_in_the_room(disposed_room_name):
+            return [
+                UserUtteranceReverted(),
+            ]
+
         # TODO TODO TODO oleksandr
         return [
             UserUtteranceReverted(),
@@ -1078,6 +1101,7 @@ def reschedule_reminder(
         current_user_id: Text,
         intent_name: Text,
         delta_sec: float,
+        entities: Optional[Union[List[Dict[Text, Any]], Dict[Text, Text]]] = None,
         kill_on_user_message: bool = False,
 ) -> EventType:
     date = datetime_now() + datetime.timedelta(seconds=delta_sec)
@@ -1085,6 +1109,7 @@ def reschedule_reminder(
     reminder = ReminderScheduled(
         intent_name,
         trigger_date_time=date,
+        entities=entities,
         name=current_user_id + intent_name,  # unique per user and and can be rescheduled for the user
         kill_on_user_message=kill_on_user_message,
     )

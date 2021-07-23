@@ -60,6 +60,7 @@ entities:
 - partner_first_name
 - room_url
 - room_name
+- disposed_room_name
 slots:
   swiper_state:
     type: rasa.shared.core.slots.CategoricalSlot
