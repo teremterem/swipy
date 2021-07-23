@@ -33,14 +33,14 @@ Here is how it works:
 UTTER_CANNOT_HELP_WITH_THAT_TEXT = """\
 I'm sorry, but I cannot help you with that 🤖
 
-<b>Would you like to practice your English speaking skills 🇬🇧 \
-on a video call with a random stranger?</b>"""
+<b>Would you like to practice your spoken English 🇬🇧 \
+on a video call with a stranger?</b>"""
 
 UTTER_LOST_TRACK_OF_CONVERSATION_TEXT = """\
 Forgive me, but I've lost track of our conversation 🤖
 
-<b>Would you like to practice your English speaking skills 🇬🇧 \
-on a video call with a random stranger?</b>"""
+<b>Would you like to practice your spoken English 🇬🇧 \
+on a video call with a stranger?</b>"""
 
 UTTER_GREET_OFFER_CHITCHAT_TEXT = """\
 Hi, my name is Swipy 🙂
