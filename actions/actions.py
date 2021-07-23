@@ -550,7 +550,27 @@ class ActionRoomDisposalReport(BaseSwiperAction):
                 UserUtteranceReverted(),
             ]
 
-        # TODO TODO TODO oleksandr
+        partner_first_name = None
+        if current_user.partner_id:
+            partner = user_vault.get_user(current_user.partner_id)
+            partner_first_name = partner.get_first_name()
+
+        presented_partner = present_partner_name(
+            partner_first_name,
+            'Your chit-chat partner',
+        )
+        dispatcher.utter_message(custom={
+            'text': f"{presented_partner} has stopped the call.",
+
+            'parse_mode': 'html',
+            'reply_markup': ANOTHER_CALL_FEEDBACK_MARKUP,
+        })
+
+        current_user.latest_room_name = None
+        # noinspection PyUnresolvedReferences
+        current_user.become_ok_to_chitchat()
+        current_user.save()
+
         return [
             UserUtteranceReverted(),
         ]
