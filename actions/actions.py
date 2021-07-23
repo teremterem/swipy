@@ -357,12 +357,13 @@ class ActionOfferChitchat(BaseSwiperAction):
                 'reply_markup': YES_NO_MARKUP,
             })
 
+    # noinspection PyMethodMayBeStatic
     def offer_chitchat_again(self, dispatcher: CollectingDispatcher, intro: Text) -> None:
         dispatcher.utter_message(custom={
             'text': f"{intro}\n"
                     f"\n"
-                    f"<b>Would you like to practice your English speaking skills 🇬🇧 "
-                    f"on a video call with a random stranger?</b>",
+                    f"<b>Would you like to practice your spoken English 🇬🇧 "
+                    f"on a video call with a stranger?</b>",
 
             'parse_mode': 'html',
             'reply_markup': YES_NO_MARKUP,
