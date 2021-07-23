@@ -455,6 +455,21 @@ class ActionStopTheCall(BaseSwiperAction):
         if current_user.latest_room_name:
             room_deleted = await daily_co.delete_room(current_user.latest_room_name)
 
+            if current_user.partner_id:
+                partner = user_vault.get_user(current_user.partner_id)
+                if partner.state == UserState.ROOMED and partner.latest_room_name == current_user.latest_room_name:
+                    await rasa_callbacks.schedule_room_disposed_report(
+                        current_user.user_id,
+                        partner,
+                        current_user.latest_room_name,
+                        suppress_callback_errors=True,
+                    )
+
+        current_user.latest_room_name = None
+        # noinspection PyUnresolvedReferences
+        current_user.become_ok_to_chitchat()
+        current_user.save()
+
         if room_deleted:
             dispatcher.utter_message(custom={
                 'text': 'Thank you! The chat room will be disposed shortly.',
@@ -469,11 +484,6 @@ class ActionStopTheCall(BaseSwiperAction):
                 'parse_mode': 'html',
                 'reply_markup': ANOTHER_CALL_FEEDBACK_MARKUP,
             })
-
-        current_user.latest_room_name = None
-        # noinspection PyUnresolvedReferences
-        current_user.become_ok_to_chitchat()  # TODO oleksandr: are you sure ?
-        current_user.save()
 
         return [
             SlotSet(

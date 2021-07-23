@@ -147,6 +147,11 @@ slots:
     initial_value: null
     auto_fill: true
     influence_conversation: false
+  disposed_room_name:
+    type: rasa.shared.core.slots.TextSlot
+    initial_value: null
+    auto_fill: true
+    influence_conversation: false
 responses:
   utter_iamabot:
   - custom:

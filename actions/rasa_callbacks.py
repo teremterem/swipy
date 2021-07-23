@@ -21,11 +21,13 @@ PARTNER_PHOTO_FILE_ID_SLOT = 'partner_photo_file_id'
 PARTNER_FIRST_NAME = 'partner_first_name'
 ROOM_URL_SLOT = 'room_url'
 ROOM_NAME_SLOT = 'room_name'
+DISPOSED_ROOM_NAME_SLOT = 'disposed_room_name'
 
 EXTERNAL_ASK_TO_JOIN_INTENT = 'EXTERNAL_ask_to_join'
 EXTERNAL_ASK_TO_CONFIRM_INTENT = 'EXTERNAL_ask_to_confirm'
 EXTERNAL_PARTNER_DID_NOT_CONFIRM_INTENT = 'EXTERNAL_partner_did_not_confirm'
 EXTERNAL_JOIN_ROOM_INTENT = 'EXTERNAL_join_room'
+EXTERNAL_SCHEDULE_ROOM_DISPOSED_REPORT_INTENT = 'EXTERNAL_schedule_room_disposed_report'
 
 
 async def ask_to_join(
@@ -99,6 +101,23 @@ async def join_room(
             PARTNER_ID_SLOT: sender_id,
             ROOM_URL_SLOT: room_url,
             ROOM_NAME_SLOT: room_name,
+        },
+        suppress_callback_errors,
+    )
+
+
+async def schedule_room_disposed_report(
+        sender_id: Text,
+        receiver: UserStateMachine,
+        room_name: Text,
+        suppress_callback_errors: bool = False,
+) -> Optional[Dict[Text, Any]]:
+    return await _trigger_external_rasa_intent(
+        sender_id,
+        receiver,
+        EXTERNAL_SCHEDULE_ROOM_DISPOSED_REPORT_INTENT,
+        {
+            DISPOSED_ROOM_NAME_SLOT: room_name,
         },
         suppress_callback_errors,
     )
