@@ -633,7 +633,7 @@ class ActionFindPartner(BaseSwiperAction):
                     value=SwiperActionResult.SUCCESS,
                 ),
 
-                *schedule_find_partner_reminder(
+                *self.schedule_find_partner_reminder(
                     current_user.user_id,
                     initiate=initiate_search,
                 ),
@@ -655,23 +655,23 @@ class ActionFindPartner(BaseSwiperAction):
             ),
         ]
 
-
-def schedule_find_partner_reminder(
-        current_user_id: Text,
-        delta_sec: float = FIND_PARTNER_FREQUENCY_SEC,
-        initiate: bool = False,
-) -> List[EventType]:
-    events = [_reschedule_reminder(
-        current_user_id,
-        EXTERNAL_FIND_PARTNER_INTENT,
-        delta_sec,
-    )]
-    if initiate:
-        events.insert(0, SlotSet(
-            key=PARTNER_SEARCH_START_TS_SLOT,
-            value=str(current_timestamp_int()),
-        ))
-    return events
+    @staticmethod
+    def schedule_find_partner_reminder(
+            current_user_id: Text,
+            delta_sec: float = FIND_PARTNER_FREQUENCY_SEC,
+            initiate: bool = False,
+    ) -> List[EventType]:
+        events = [reschedule_reminder(
+            current_user_id,
+            EXTERNAL_FIND_PARTNER_INTENT,
+            delta_sec,
+        )]
+        if initiate:
+            events.insert(0, SlotSet(
+                key=PARTNER_SEARCH_START_TS_SLOT,
+                value=str(current_timestamp_int()),
+            ))
+        return events
 
 
 class ActionAskToJoin(BaseSwiperAction):
@@ -845,7 +845,11 @@ class ActionAcceptInvitation(BaseSwiperAction):
                 key=SWIPER_ACTION_RESULT_SLOT,
                 value=SwiperActionResult.PARTNER_HAS_BEEN_ASKED,
             ),
-            *schedule_expire_partner_confirmation(current_user.user_id),
+            reschedule_reminder(
+                current_user.user_id,
+                EXTERNAL_EXPIRE_PARTNER_CONFIRMATION_INTENT,
+                PARTNER_CONFIRMATION_TIMEOUT_SEC,
+            ),
         ]
 
     # noinspection PyUnusedLocal
@@ -1070,18 +1074,7 @@ def get_partner_search_start_ts(tracker: Tracker) -> int:
     return int(ts_str) if ts_str else None
 
 
-def schedule_expire_partner_confirmation(
-        current_user_id: Text,
-        delta_sec: float = PARTNER_CONFIRMATION_TIMEOUT_SEC,
-) -> List[EventType]:
-    return [_reschedule_reminder(
-        current_user_id,
-        EXTERNAL_EXPIRE_PARTNER_CONFIRMATION_INTENT,
-        delta_sec,
-    )]
-
-
-def _reschedule_reminder(
+def reschedule_reminder(
         current_user_id: Text,
         intent_name: Text,
         delta_sec: float,
