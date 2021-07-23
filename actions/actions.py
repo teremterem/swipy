@@ -46,6 +46,7 @@ VIDEOCHAT_INTENT = 'videochat'
 EXTERNAL_FIND_PARTNER_INTENT = 'EXTERNAL_find_partner'
 EXTERNAL_EXPIRE_PARTNER_CONFIRMATION_INTENT = 'EXTERNAL_expire_partner_confirmation'
 EXTERNAL_ROOM_DISPOSAL_REPORT_INTENT = 'EXTERNAL_room_disposal_report'
+EXTERNAL_ROOM_EXPIRATION_REPORT_INTENT = 'EXTERNAL_room_expiration_report'
 
 ACTION_FIND_PARTNER = 'action_find_partner'
 ACTION_ACCEPT_INVITATION = 'action_accept_invitation'
@@ -572,7 +573,10 @@ class ActionRoomDisposalReport(BaseSwiperAction):
         current_user.save()
 
         return [
-            UserUtteranceReverted(),
+            SlotSet(
+                key=SWIPER_ACTION_RESULT_SLOT,
+                value=SwiperActionResult.SUCCESS,
+            ),
         ]
 
 
@@ -590,9 +594,29 @@ class ActionRoomExpirationReport(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        # TODO TODO TODO oleksandr
+        disposed_room_name = tracker.get_slot(rasa_callbacks.DISPOSED_ROOM_NAME_SLOT)
+        if not current_user.is_still_in_the_room(disposed_room_name):
+            return [
+                UserUtteranceReverted(),
+            ]
+
+        dispatcher.utter_message(custom={
+            'text': f"Video chat has expired.",
+
+            'parse_mode': 'html',
+            'reply_markup': START_OVER_MARKUP,
+        })
+
+        current_user.latest_room_name = None
+        # noinspection PyUnresolvedReferences
+        current_user.become_ok_to_chitchat()
+        current_user.save()
+
         return [
-            UserUtteranceReverted(),
+            SlotSet(
+                key=SWIPER_ACTION_RESULT_SLOT,
+                value=SwiperActionResult.SUCCESS,
+            ),
         ]
 
 
@@ -955,6 +979,14 @@ class ActionJoinRoom(BaseSwiperAction):
             SlotSet(
                 key=SWIPER_ACTION_RESULT_SLOT,
                 value=SwiperActionResult.SUCCESS,
+            ),
+            reschedule_reminder(
+                current_user.user_id,
+                EXTERNAL_ROOM_EXPIRATION_REPORT_INTENT,
+                daily_co.DAILY_CO_MEETING_DURATION_SEC,
+                entities={
+                    rasa_callbacks.DISPOSED_ROOM_NAME_SLOT: room_name,
+                },
             ),
         ]
 

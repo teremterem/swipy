@@ -1426,7 +1426,11 @@ async def test_action_accept_invitation_no_partner_id(
     ('some_test_intent', 'waiting_partner_confirm', True, False, False),
     ('some_test_intent', 'asked_to_confirm', True, False, False),
 ])
-@pytest.mark.usefixtures('create_user_state_machine_table', 'wrap_traceback_format_exception')
+@pytest.mark.usefixtures(
+    'create_user_state_machine_table',
+    'wrap_traceback_format_exception',
+    'wrap_actions_datetime_now',
+)
 @patch('time.time', Mock(return_value=1619945501))
 async def test_action_join_room(
         tracker: Tracker,
@@ -1466,6 +1470,15 @@ async def test_action_join_room(
     if action_allowed:
         assert actual_events == [
             SlotSet('swiper_action_result', 'success'),
+            {
+                'date_time': '2021-05-25T00:30:00',
+                'entities': {'disposed_room_name': 'anothertestroom'},
+                'event': 'reminder',
+                'intent': 'EXTERNAL_room_expiration_report',
+                'kill_on_user_msg': False,
+                'name': 'unit_test_userEXTERNAL_room_expiration_report',
+                'timestamp': None,
+            },
             SlotSet('swiper_state', 'roomed'),
         ]
         assert dispatcher.messages == [{
