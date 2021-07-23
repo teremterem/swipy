@@ -1,11 +1,10 @@
 version: "2.0"
 nlu:
-- intent: start
-  examples: |
-    - Start
-    - start
 - intent: restart
   examples: |
+    - Start over
+    - Start
+    - start
     - Restart
     - restart
 - intent: greet
@@ -20,7 +19,6 @@ nlu:
     - hi
 - intent: videochat
   examples: |
-    - I want another call
     - Someone else
     - someone else
     - run

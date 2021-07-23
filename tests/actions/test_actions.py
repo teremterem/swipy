@@ -171,11 +171,10 @@ YES_NO_MARKUP = (
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
-ANOTHER_CALL_FEEDBACK_MARKUP = (
+START_OVER_MARKUP = (
     '{"keyboard":['
 
-    '[{"text":"I want another call"}],'
-    '[{"text":"Can I leave feedback?"}]'
+    '[{"text":"Start over"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
@@ -1596,7 +1595,7 @@ async def test_action_do_not_disturb(
         'custom': {
             'text': UTTER_HOPE_TO_SEE_YOU_LATER_TEXT,
             'parse_mode': 'html',
-            'reply_markup': ANOTHER_CALL_FEEDBACK_MARKUP,
+            'reply_markup': START_OVER_MARKUP,
         },
         'elements': [],
         'image': None,

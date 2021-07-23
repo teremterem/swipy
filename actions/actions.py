@@ -103,11 +103,10 @@ YES_NO_MARKUP = (
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
-ANOTHER_CALL_FEEDBACK_MARKUP = (
+START_OVER_MARKUP = (
     '{"keyboard":['
 
-    '[{"text":"I want another call"}],'
-    '[{"text":"Can I leave feedback?"}]'
+    '[{"text":"Start over"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
@@ -478,14 +477,14 @@ class ActionStopTheCall(BaseSwiperAction):
                 'text': 'Thank you! The chat room will be disposed shortly.',
 
                 'parse_mode': 'html',
-                'reply_markup': ANOTHER_CALL_FEEDBACK_MARKUP,
+                'reply_markup': START_OVER_MARKUP,
             })
         else:
             dispatcher.utter_message(custom={
                 'text': 'Seems that like this chat room has already been disposed.',
 
                 'parse_mode': 'html',
-                'reply_markup': ANOTHER_CALL_FEEDBACK_MARKUP,
+                'reply_markup': START_OVER_MARKUP,
             })
 
         return [
@@ -563,7 +562,7 @@ class ActionRoomDisposalReport(BaseSwiperAction):
             'text': f"{presented_partner} has stopped the call.",
 
             'parse_mode': 'html',
-            'reply_markup': ANOTHER_CALL_FEEDBACK_MARKUP,
+            'reply_markup': START_OVER_MARKUP,
         })
 
         current_user.latest_room_name = None
@@ -998,7 +997,7 @@ class ActionDoNotDisturb(BaseSwiperAction):
                     'just let me know - I will set up a video call 😉',
 
             'parse_mode': 'html',
-            'reply_markup': ANOTHER_CALL_FEEDBACK_MARKUP,
+            'reply_markup': START_OVER_MARKUP,
         })
 
         return [
