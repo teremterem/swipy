@@ -21,6 +21,8 @@ intents:
     use_entities: true
 - another_time:
     use_entities: true
+- hang_up:
+    use_entities: true
 - stop:
     use_entities: true
 - dnd:
