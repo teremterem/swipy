@@ -125,11 +125,7 @@ Hey! <b><i>unitTest firstName30</i></b> is willing to chitchat with 👉 you �
 
 <b>Are you ready for a video call?</b> 🎥 ☎️"""
 
-UTTER_HOPE_TO_SEE_YOU_LATER_TEXT = """\
-Ok, I will not bother you 🛑
-
-Should you change your mind and decide that you want to chitchat with someone, \
-just let me know - I will set up a video call 😉"""
+UTTER_DND = 'Ok, I will not be sending invitations anymore 🛑'
 
 REMOVE_KEYBOARD_MARKUP = '{"remove_keyboard":true}'
 RESTART_MARKUP = (
@@ -147,10 +143,10 @@ OK_WAITING_CANCEL_MARKUP = (
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
-STOP_THE_CALL_MARKUP = (
+HANG_UP_MARKUP = (
     '{"keyboard":['
 
-    '[{"text":"❌ Stop the call"}]'
+    '[{"text":"❌ Hang up"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
@@ -1487,7 +1483,7 @@ async def test_action_join_room(
             'custom': {
                 'text': UTTER_PARTNER_READY_ROOM_URL_TEXT if expect_as_external else UTTER_ROOM_URL_TEXT,
                 'parse_mode': 'html',
-                'reply_markup': STOP_THE_CALL_MARKUP,
+                'reply_markup': HANG_UP_MARKUP,
             },
             'elements': [],
             'image': None,
@@ -1606,7 +1602,7 @@ async def test_action_do_not_disturb(
         'attachment': None,
         'buttons': [],
         'custom': {
-            'text': UTTER_HOPE_TO_SEE_YOU_LATER_TEXT,
+            'text': UTTER_DND,
             'parse_mode': 'html',
             'reply_markup': START_OVER_MARKUP,
         },
