@@ -59,7 +59,7 @@ rules:
     - intent: deny
     - intent: another_time
     - intent: stop
-  - action: utter_ok_let_me_know
+  - action: utter_ok_let_me_know_to_try_again
 - rule: someone asks the user to join/confirm a video chat
   steps:
   - or:

@@ -178,6 +178,11 @@ responses:
       parse_mode: html
       reply_markup: '{{"keyboard":[[{{"text":"Start over"}}]],"resize_keyboard":true,"one_time_keyboard":true}}'
       text: Ok, should you decide that you want to practice your English speaking skills 🇬🇧 on a video call with a stranger just let me know 😉
+  utter_ok_let_me_know_to_try_again:
+  - custom:
+      parse_mode: html
+      reply_markup: '{{"keyboard":[[{{"text":"Try again now"}}]],"resize_keyboard":true,"one_time_keyboard":true}}'
+      text: Ok, should you decide that you want to practice your English speaking skills 🇬🇧 on a video call with a stranger just let me know 😉
 actions:
 - action_session_start
 - action_offer_chitchat
