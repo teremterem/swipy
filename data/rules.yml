@@ -132,6 +132,43 @@ rules:
   steps:
   - action: action_join_room
 
+- rule: bot starts looking for a partner and the user confirms that they are waiting
+  condition:
+  - slot_was_set:
+    - swiper_action_result: success
+  steps:
+  - action: action_find_partner
+  - or:
+    - intent: waiting
+    - intent: affirm
+  - action: action_rewind
+- rule: bot starts looking for a partner but the user requests cancelation
+  condition:
+  - slot_was_set:
+    - swiper_action_result: success
+  steps:
+  - action: action_find_partner
+  - intent: stop
+  - action: utter_ok_let_me_know
+- rule: user confirms that they are waiting for partner to confirm readiness too
+  condition:
+  - slot_was_set:
+    - swiper_action_result: partner_has_been_asked
+  steps:
+  - action: action_accept_invitation
+  - or:
+    - intent: waiting
+    - intent: affirm
+  - action: action_rewind
+- rule: user requests cancelation in the middle of waiting for partner to confirm
+  condition:
+  - slot_was_set:
+    - swiper_action_result: partner_has_been_asked
+  steps:
+  - action: action_accept_invitation
+  - intent: stop
+  - action: utter_ok_invitation_declined
+
 - rule: user asks for video chat directly
   steps:
   - intent: videochat
@@ -143,24 +180,3 @@ rules:
     - intent: dnd
     - intent: stop
   - action: action_do_not_disturb
-
-- rule: bot starts looking for a partner and the user confirms that they are waiting
-  condition:
-  - slot_was_set:
-    - swiper_action_result: success
-  steps:
-  - action: action_find_partner
-  - or:
-    - intent: waiting
-    - intent: affirm
-  - action: action_rewind
-- rule: user confirms that they are waiting for partner to confirm readiness too
-  condition:
-  - slot_was_set:
-    - swiper_action_result: partner_has_been_asked
-  steps:
-  - action: action_accept_invitation
-  - or:
-    - intent: waiting
-    - intent: affirm
-  - action: action_rewind
