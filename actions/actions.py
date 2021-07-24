@@ -1024,10 +1024,10 @@ class ActionDoNotDisturb(BaseSwiperAction):
         current_user.save()
 
         dispatcher.utter_message(custom={
-            'text': 'Ok, I will not bother you 🛑\n'
+            'text': 'Ok, I will not disturb you with invitations 🛑\n'
                     '\n'
-                    'Should you change your mind and decide that you want to chitchat with someone, '
-                    'just let me know - I will set up a video call 😉',
+                    'Should you change your mind and decide that you want to practice your English speaking skills 🇬🇧 '
+                    'by having video calls with strangers just let me know 😉',
 
             'parse_mode': 'html',
             'reply_markup': START_OVER_MARKUP,

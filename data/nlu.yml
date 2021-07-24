@@ -102,6 +102,9 @@ nlu:
     - stop
     - Cancel
     - cancel
+- intent: dnd
+  examples: |
+    - Do not disturb me
 - intent: help
   examples: |
     - What should I do?

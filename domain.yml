@@ -23,6 +23,8 @@ intents:
     use_entities: true
 - stop:
     use_entities: true
+- dnd:
+    use_entities: true
 - help:
     use_entities: true
 - gratitude:

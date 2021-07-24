@@ -110,7 +110,9 @@ rules:
   - action: action_find_partner
 - rule: user asks not to bother them
   steps:
-  - intent: stop
+  - or:
+    - intent: dnd
+    - intent: stop
   - action: action_do_not_disturb
 
 - rule: bot starts looking for a partner and the user confirms that they are waiting
