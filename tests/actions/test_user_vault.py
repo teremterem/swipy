@@ -33,6 +33,7 @@ def test_get_new_user() -> None:
         'user_id': 'new_user_id',
         'state': 'new',
         'partner_id': None,
+        'latest_room_name': None,
         'roomed_partner_ids': [],
         'rejected_partner_ids': [],
         'seen_partner_ids': [],
@@ -144,9 +145,6 @@ def test_get_random_available_partner(
             'rejected_partner1',
             'rejected_partner2',
             'rejected_partner3',
-            # 'seen_partner1',
-            # 'seen_partner2',
-            # 'seen_partner3',
         ],
     )
 
@@ -189,9 +187,6 @@ def test_get_random_available_partner_none(
                 'rejected_partner1',
                 'rejected_partner2',
                 'rejected_partner3',
-                # 'seen_partner1',
-                # 'seen_partner2',
-                # 'seen_partner3',
             ],
         ),
     ]
@@ -218,6 +213,7 @@ def test_save_new_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> None:
             'user_id': 'existing_user_id1',
             'state': 'waiting_partner_confirm',
             'partner_id': 'existing_user_id2',
+            'latest_room_name': None,
             'roomed_partner_ids': ['roomed_partner1', 'roomed_partner2', 'roomed_partner3'],
             'rejected_partner_ids': ['rejected_partner1', 'rejected_partner2', 'rejected_partner3'],
             'seen_partner_ids': ['seen_partner1', 'seen_partner2', 'seen_partner3'],
@@ -238,6 +234,7 @@ def test_save_new_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> None:
             'user_id': 'existing_user_id2',
             'state': 'asked_to_join',
             'partner_id': 'existing_user_id1',
+            'latest_room_name': None,
             'roomed_partner_ids': [],
             'rejected_partner_ids': [],
             'seen_partner_ids': [],
@@ -258,6 +255,7 @@ def test_save_new_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> None:
             'user_id': 'existing_user_id3',
             'state': 'new',
             'partner_id': None,
+            'latest_room_name': None,
             'roomed_partner_ids': [],
             'rejected_partner_ids': [],
             'seen_partner_ids': [],
@@ -278,6 +276,7 @@ def test_save_new_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> None:
             'user_id': 'new_ddb_user_was_put',
             'state': 'new',
             'partner_id': None,
+            'latest_room_name': None,
             'roomed_partner_ids': [],
             'rejected_partner_ids': [],
             'seen_partner_ids': [],
@@ -319,6 +318,7 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
             'user_id': 'existing_user_id1',
             'state': 'do_not_disturb',  # used to be 'waiting_partner_join' but we have overridden it
             'partner_id': None,  # used to be 'existing_user_id2' but we have overridden it
+            'latest_room_name': None,
             'roomed_partner_ids': [],  # used to contain 3 ids but we have overridden it
             'rejected_partner_ids': [],  # used to contain 3 ids but we have overridden it
             'seen_partner_ids': [],  # used to contain 3 ids but we have overridden it
@@ -339,6 +339,7 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
             'user_id': 'existing_user_id2',
             'state': 'asked_to_join',
             'partner_id': 'existing_user_id1',
+            'latest_room_name': None,
             'roomed_partner_ids': [],
             'rejected_partner_ids': [],
             'seen_partner_ids': [],
@@ -359,6 +360,7 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
             'user_id': 'existing_user_id3',
             'state': 'new',
             'partner_id': None,
+            'latest_room_name': None,
             'roomed_partner_ids': [],
             'rejected_partner_ids': [],
             'seen_partner_ids': [],
@@ -386,6 +388,7 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
                 'user_id': 'roomed_id2',
                 'state': 'roomed',
                 'partner_id': 'some_partner_id',
+                'latest_room_name': None,
                 'roomed_partner_ids': [],
                 'rejected_partner_ids': [],
                 'newbie': True,
@@ -408,6 +411,7 @@ def test_save_existing_user(ddb_scan_of_three_users: List[Dict[Text, Any]]) -> N
                 'user_id': 'ok_to_chitchat_id2',
                 'state': 'ok_to_chitchat',
                 'partner_id': None,
+                'latest_room_name': None,
                 'roomed_partner_ids': [],
                 'rejected_partner_ids': [],
                 'newbie': False,

@@ -123,7 +123,7 @@ def test_more_narrow_transitions(
     assert user.roomed_partner_ids == []
     assert user.newbie == initial_newbie_status
 
-    trigger = partial(getattr(user, trigger_name), 'partner_id_in_trigger')
+    trigger = partial(getattr(user, trigger_name), 'partner_id_in_trigger', 'room_name_in_trigger')
 
     if destination_state:
         trigger()
@@ -163,7 +163,7 @@ def test_state_timestamps(source_state: Text, trigger_name: Text) -> None:
     )
     transition_is_valid = trigger_name in user.machine.get_triggers(source_state)
 
-    trigger = partial(getattr(user, trigger_name), 'some_partner_id')
+    trigger = partial(getattr(user, trigger_name), 'some_partner_id', 'some_room_name')
 
     if transition_is_valid:
         trigger()  # run trigger and pass partner_id just in case (some triggers need it)
@@ -182,45 +182,28 @@ def test_state_timestamps(source_state: Text, trigger_name: Text) -> None:
             expected_timeout_ts_str = '2021-05-02 08:52:41 Z'
 
         elif user.state == 'roomed':
-            expected_timeout_ts = 1619945501 + (60 * 15)
-            expected_timeout_ts_str = '2021-05-02 09:06:41 Z'
+            expected_timeout_ts = 1619945501 + (60 * 30)
+            expected_timeout_ts_str = '2021-05-02 09:21:41 Z'
 
         else:
             # destination state is not supposed to have a timeout
             expected_timeout_ts = 0
             expected_timeout_ts_str = None
 
-        assert user == UserStateMachine(
-            user_id=user.user_id,  # don't try to validate this
-            state=user.state,  # don't try to validate this
-            partner_id=user.partner_id,  # don't try to validate this
-            roomed_partner_ids=user.roomed_partner_ids,  # don't try to validate this
-            rejected_partner_ids=user.rejected_partner_ids,  # don't try to validate this
-            seen_partner_ids=user.seen_partner_ids,  # don't try to validate this
-            newbie=user.newbie,  # don't try to validate this
-
-            state_timestamp=1619945501,  # new timestamp
-            state_timestamp_str='2021-05-02 08:51:41 Z',  # new timestamp
-            state_timeout_ts=expected_timeout_ts,
-            state_timeout_ts_str=expected_timeout_ts_str,
-        )
+        assert user.state_timestamp == 1619945501  # new timestamp
+        assert user.state_timestamp_str == '2021-05-02 08:51:41 Z'  # new timestamp
+        assert user.state_timeout_ts == expected_timeout_ts
+        assert user.state_timeout_ts_str == expected_timeout_ts_str
 
     else:
         # invalid transition is expected to not go through
         with pytest.raises(MachineError):
             trigger()
 
-        assert user == UserStateMachine(
-            user_id=user.user_id,  # don't try to validate this
-            state=user.state,  # don't try to validate this
-            partner_id=user.partner_id,  # don't try to validate this
-            newbie=user.newbie,  # don't try to validate this
-
-            state_timestamp=1619697022,  # timestamp is expected to remain unchanged
-            state_timestamp_str='2021-04-29 11:50:22 Z',  # timestamp is expected to remain unchanged
-            state_timeout_ts=1619697052,  # timeout timestamp is expected to remain unchanged
-            state_timeout_ts_str='2021-04-29 11:50:52 Z',  # timeout timestamp is expected to remain unchanged
-        )
+        assert user.state_timestamp == 1619697022  # timestamp is expected to remain unchanged
+        assert user.state_timestamp_str == '2021-04-29 11:50:22 Z'  # timestamp is expected to remain unchanged
+        assert user.state_timeout_ts == 1619697052  # timeout timestamp is expected to remain unchanged
+        assert user.state_timeout_ts_str == '2021-04-29 11:50:52 Z'  # timeout timestamp is expected to remain unchanged
 
 
 @pytest.mark.parametrize('num_of_already_remembered', [
@@ -260,7 +243,7 @@ def test_partner_exclusion_lists(
 
     assert len(getattr(user, list_name)) == num_of_already_remembered
 
-    trigger = partial(getattr(user, trigger_name), 'partner100500')
+    trigger = partial(getattr(user, trigger_name), 'partner100500', 'a_room_name')
 
     if num_of_partners_to_remember is None:
         num_of_partners_to_remember = expected_default_num_to_remember  # the default

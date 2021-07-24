@@ -1,4 +1,5 @@
-from typing import Dict, Text, Any, Tuple
+from typing import Dict, Text, Any, Tuple, Callable
+from urllib.parse import quote as urlencode
 
 import pytest
 from aioresponses.core import RequestCall
@@ -54,3 +55,20 @@ def daily_co_create_room_expected_req() -> Tuple[Tuple[Text, URL], RequestCall]:
         },
     )
     return expected_req_key, expected_req_call
+
+
+@pytest.fixture
+def daily_co_delete_room_expected_req_builder() -> Callable[[Text], Tuple[Tuple[Text, URL], RequestCall]]:
+    def _expected_request_builder(expected_room_name: Text):
+        expected_req_key = ('DELETE', URL(f"https://api.daily-unittest.co/v1/rooms/{urlencode(expected_room_name)}"))
+        expected_req_call = RequestCall(
+            args=(),
+            kwargs={
+                'headers': {
+                    'Authorization': 'Bearer test-daily-co-api-token',
+                },
+            },
+        )
+        return expected_req_key, expected_req_call
+
+    return _expected_request_builder

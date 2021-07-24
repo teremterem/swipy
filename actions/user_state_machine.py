@@ -5,6 +5,7 @@ from typing import Text, Optional, Dict, Any, TYPE_CHECKING, List
 
 from transitions import Machine, EventData
 
+from actions.daily_co import DAILY_CO_MEETING_DURATION_SEC
 from actions.utils import current_timestamp_int, SwiperStateMachineError, format_swipy_timestamp, SwiperError, \
     roll_the_list
 
@@ -13,7 +14,7 @@ if TYPE_CHECKING:
 
 SWIPER_STATE_MIN_TIMEOUT_SEC = int(os.getenv('SWIPER_STATE_MIN_TIMEOUT_SEC', '14400'))  # 4 hours (4*60*60 seconds)
 SWIPER_STATE_MAX_TIMEOUT_SEC = int(os.getenv('SWIPER_STATE_MAX_TIMEOUT_SEC', '241200'))  # 67 hours (67*60*60 seconds)
-ROOMED_STATE_TIMEOUT_SEC = int(os.getenv('ROOMED_STATE_TIMEOUT_SEC', '900'))  # 15 minutes (15*60 seconds)
+ROOMED_STATE_TIMEOUT_SEC = int(os.getenv('ROOMED_STATE_TIMEOUT_SEC', str(DAILY_CO_MEETING_DURATION_SEC)))
 PARTNER_CONFIRMATION_TIMEOUT_SEC = int(os.getenv('PARTNER_CONFIRMATION_TIMEOUT_SEC', '60'))  # 1 minute
 NUM_OF_ROOMED_PARTNERS_TO_REMEMBER = int(os.getenv('NUM_OF_ROOMED_PARTNERS_TO_REMEMBER', '3'))
 NUM_OF_REJECTED_PARTNERS_TO_REMEMBER = int(os.getenv('NUM_OF_REJECTED_PARTNERS_TO_REMEMBER', '21'))
@@ -76,6 +77,7 @@ class UserModel:
     user_id: Text
     state: Text = None  # the state machine will set it to UserState.NEW if not provided explicitly
     partner_id: Optional[Text] = None
+    latest_room_name: Optional[Text] = None
     roomed_partner_ids: List[Text] = field(default_factory=list)
     rejected_partner_ids: List[Text] = field(default_factory=list)
     seen_partner_ids: List[Text] = field(default_factory=list)
@@ -186,8 +188,10 @@ class UserStateMachine(UserModel):
             before=[
                 self._assert_partner_id_arg_not_empty,
                 self._assert_partner_id_arg_same,
+                self._assert_room_name_arg_not_empty,
             ],
             after=[
+                self._set_latest_room_name,
                 self._mark_current_partner_id_as_roomed,
                 self._graduate_from_newbie,
             ],
@@ -270,10 +274,18 @@ class UserStateMachine(UserModel):
     def chitchat_can_be_offered(self):
         return self.state in UserState.offerable_states and self.has_become_discoverable()
 
+    def is_still_in_the_room(self, room_name: Text):
+        return room_name and self.state == UserState.ROOMED and self.latest_room_name == room_name
+
     @staticmethod
     def _assert_partner_id_arg_not_empty(event: EventData) -> None:
         if not event.args or not event.args[0]:
             raise SwiperStateMachineError('no or empty partner_id was passed')
+
+    @staticmethod
+    def _assert_room_name_arg_not_empty(event: EventData) -> None:
+        if not event.args or len(event.args) < 2 or not event.args[1]:
+            raise SwiperStateMachineError('no or empty room_name was passed')
 
     def _assert_partner_id_arg_same(self, event: EventData) -> None:
         partner_id = event.args[0]
@@ -285,6 +297,9 @@ class UserStateMachine(UserModel):
 
     def _set_partner_id(self, event: EventData) -> None:
         self.partner_id = event.args[0]
+
+    def _set_latest_room_name(self, event: EventData) -> None:
+        self.latest_room_name = event.args[1]
 
     # noinspection PyUnusedLocal
     def _drop_partner_id(self, event: EventData) -> None:

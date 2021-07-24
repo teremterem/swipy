@@ -33,14 +33,14 @@ Here is how it works:
 UTTER_CANNOT_HELP_WITH_THAT_TEXT = """\
 I'm sorry, but I cannot help you with that 🤖
 
-<b>Would you like to practice your English speaking skills 🇬🇧 \
-on a video call with a random stranger?</b>"""
+<b>Would you like to practice your spoken English 🇬🇧 \
+on a video call with a stranger?</b>"""
 
 UTTER_LOST_TRACK_OF_CONVERSATION_TEXT = """\
 Forgive me, but I've lost track of our conversation 🤖
 
-<b>Would you like to practice your English speaking skills 🇬🇧 \
-on a video call with a random stranger?</b>"""
+<b>Would you like to practice your spoken English 🇬🇧 \
+on a video call with a stranger?</b>"""
 
 UTTER_GREET_OFFER_CHITCHAT_TEXT = """\
 Hi, my name is Swipy 🙂
@@ -56,14 +56,14 @@ Great! Let me find someone for you to chitchat with 🗣
 I will get back to you within two minutes ⏳"""
 
 UTTER_ROOM_URL_TEXT = """\
-Awesome!
+Awesome! 🎉
 
 <b>Please follow this link to join the video call:</b>
 
-https://swipy.daily.co/pytestroom"""
+https://swipy.daily.co/anothertestroom"""
 
 UTTER_PARTNER_READY_ROOM_URL_TEXT = """\
-Done!
+Done! 🎉
 
 <b>Please follow this link to join the video call:</b>
 
@@ -88,12 +88,12 @@ and will get back to you within two minutes ⏳"""
 UTTER_CHECKING_IF_THAT_PERSON_READY_TOO_TEXT = """\
 Just a moment, I'm checking if that person is ready too...
 
-Please don't go anywhere - <b>this may take up to a minute</b> ⏳"""
+Please don't go anywhere - <b>this may take ONE minute</b> ⏳"""
 
 UTTER_CHECKING_IF_FIRST_NAME_READY_TOO_TEXT = """\
 Just a moment, I'm checking if <b><i>unitTest firstName20</i></b> is ready too...
 
-Please don't go anywhere - <b>this may take up to a minute</b> ⏳"""
+Please don't go anywhere - <b>this may take ONE minute</b> ⏳"""
 
 UTTER_ASK_TO_JOIN_SOMEONE_TEXT = """\
 Hey! Someone is looking to chitchat 🗣
@@ -132,6 +132,13 @@ Should you change your mind and decide that you want to chitchat with someone, \
 just let me know - I will set up a video call 😉"""
 
 REMOVE_KEYBOARD_MARKUP = '{"remove_keyboard":true}'
+RESTART_MARKUP = (
+    '{"keyboard":['
+
+    '[{"text":"/restart"}]'
+
+    '],"resize_keyboard":true,"one_time_keyboard":true}'
+)
 OK_WAITING_CANCEL_MARKUP = (
     '{"keyboard":['
 
@@ -143,7 +150,7 @@ OK_WAITING_CANCEL_MARKUP = (
 STOP_THE_CALL_MARKUP = (
     '{"keyboard":['
 
-    '[{"text":"Stop the call"}]'
+    '[{"text":"❌ Stop the call"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
@@ -161,6 +168,13 @@ YES_NO_MARKUP = (
 
     '[{"text":"Yes"}],'
     '[{"text":"No"}]'
+
+    '],"resize_keyboard":true,"one_time_keyboard":true}'
+)
+START_OVER_MARKUP = (
+    '{"keyboard":['
+
+    '[{"text":"Start over"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
@@ -202,12 +216,16 @@ async def test_action_swiper_error_trace(
     assert dispatcher.messages == [{
         'attachment': None,
         'buttons': [],
-        'custom': {},
+        'custom': {
+            'text': UTTER_ERROR_TEXT,
+            'parse_mode': 'html',
+            'reply_markup': RESTART_MARKUP,
+        },
         'elements': [],
         'image': None,
         'response': None,
         'template': None,
-        'text': UTTER_ERROR_TEXT,
+        'text': None,
     }]
 
 
@@ -928,12 +946,16 @@ async def test_action_ask_to_join(
         expected_response = {
             'attachment': None,
             'buttons': [],
-            'custom': {},
+            'custom': {
+                'text': UTTER_ERROR_TEXT,
+                'parse_mode': 'html',
+                'reply_markup': RESTART_MARKUP,
+            },
             'elements': [],
             'image': None,
             'response': None,
             'template': None,
-            'text': UTTER_ERROR_TEXT,
+            'text': None,
         }
 
     assert dispatcher.messages == [expected_response]
@@ -1019,23 +1041,12 @@ async def test_action_accept_invitation_create_room(
     assert actual_events == [
         SlotSet('swiper_action_result', 'room_url_ready'),
         SlotSet('room_url', 'https://swipy.daily.co/pytestroom'),
-        SlotSet('swiper_state', 'roomed'),
+        SlotSet('room_name', 'pytestroom'),
+        FollowupAction('action_join_room'),
+        SlotSet('swiper_state', 'asked_to_confirm'),
         SlotSet('partner_id', 'an_asker'),
     ]
-    assert dispatcher.messages == [{
-        'attachment': None,
-        'buttons': [],
-        'custom': {
-            'text': UTTER_ROOM_URL_TEXT,
-            'parse_mode': 'html',
-            'reply_markup': STOP_THE_CALL_MARKUP,
-        },
-        'elements': [],
-        'image': None,
-        'response': None,
-        'template': None,
-        'text': None,
-    }]
+    assert dispatcher.messages == []
 
     rasa_callbacks_join_room_req_key, rasa_callbacks_join_room_req_call = rasa_callbacks_expected_req_builder(
         'an_asker',
@@ -1043,6 +1054,7 @@ async def test_action_accept_invitation_create_room(
         {
             'partner_id': 'unit_test_user',
             'room_url': 'https://swipy.daily.co/pytestroom',
+            'room_name': 'pytestroom',
         },
     )
     expected_requests = {
@@ -1057,16 +1069,12 @@ async def test_action_accept_invitation_create_room(
     user_vault = UserVault()  # create new instance to avoid hitting cache
     assert user_vault.get_user('unit_test_user') == UserStateMachine(
         user_id='unit_test_user',
-        state='roomed',
+        state='asked_to_confirm',
         partner_id='an_asker',
-        roomed_partner_ids=['roomed_partner1', 'an_asker'],
+        roomed_partner_ids=['roomed_partner1'],
         rejected_partner_ids=['rejected_partner1', 'rejected_partner2'],
         seen_partner_ids=['seen_partner1', 'seen_partner2', 'seen_partner3'],
-        newbie=False,  # accepting the very first video chitchat graduates the user from newbie
-        state_timestamp=1619945501,
-        state_timestamp_str='2021-05-02 08:51:41 Z',
-        state_timeout_ts=1619945501 + (60 * 15),
-        state_timeout_ts_str='2021-05-02 09:06:41 Z',
+        newbie=True,
         activity_timestamp=1619945501,
         activity_timestamp_str='2021-05-02 08:51:41 Z',
     )
@@ -1381,12 +1389,16 @@ async def test_action_accept_invitation_no_partner_id(
     assert dispatcher.messages == [{
         'attachment': None,
         'buttons': [],
-        'custom': {},
+        'custom': {
+            'text': UTTER_ERROR_TEXT,
+            'parse_mode': 'html',
+            'reply_markup': RESTART_MARKUP,
+        },
         'elements': [],
         'image': None,
         'response': None,
         'template': None,
-        'text': UTTER_ERROR_TEXT,
+        'text': None,
     }]
 
     # neither daily_co.create_room() nor rasa_callbacks.join_room() are called
@@ -1397,34 +1409,39 @@ async def test_action_accept_invitation_no_partner_id(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize('source_swiper_state, wrong_partner, action_allowed', [
-    ('new', False, False),
-    ('wants_chitchat', False, False),
-    ('ok_to_chitchat', False, False),
-    ('waiting_partner_confirm', False, True),
-    ('asked_to_join', False, False),
-    ('asked_to_confirm', False, True),
-    ('roomed', False, False),
-    ('rejected_join', False, False),
-    ('rejected_confirm', False, False),
-    ('do_not_disturb', False, False),
+@pytest.mark.parametrize('latest_intent, source_swiper_state, wrong_partner, action_allowed, expect_as_external', [
+    ('some_test_intent', 'new', False, False, False),
+    ('some_test_intent', 'wants_chitchat', False, False, False),
+    ('some_test_intent', 'ok_to_chitchat', False, False, False),
+    ('affirm', 'waiting_partner_confirm', False, True, False),
+    ('EXTERNAL_join_room', 'waiting_partner_confirm', False, True, True),
+    ('some_test_intent', 'asked_to_join', False, False, False),
+    ('some_test_intent', 'asked_to_confirm', False, True, False),
+    ('EXTERNAL_join_room', 'asked_to_confirm', False, True, True),
+    ('some_test_intent', 'roomed', False, False, False),
+    ('some_test_intent', 'rejected_join', False, False, False),
+    ('some_test_intent', 'rejected_confirm', False, False, False),
+    ('some_test_intent', 'do_not_disturb', False, False, False),
 
-    ('waiting_partner_confirm', True, False),
-    ('asked_to_confirm', True, False),
+    ('some_test_intent', 'waiting_partner_confirm', True, False, False),
+    ('some_test_intent', 'asked_to_confirm', True, False, False),
 ])
-@pytest.mark.usefixtures('create_user_state_machine_table', 'wrap_traceback_format_exception')
+@pytest.mark.usefixtures(
+    'create_user_state_machine_table',
+    'wrap_traceback_format_exception',
+    'wrap_actions_datetime_now',
+)
 @patch('time.time', Mock(return_value=1619945501))
 async def test_action_join_room(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
+        latest_intent: Text,
         source_swiper_state: Text,
         wrong_partner: bool,
         action_allowed: bool,
+        expect_as_external: bool,
 ) -> None:
-    action = actions.ActionJoinRoom()
-    assert action.name() == 'action_join_room'
-
     user_vault = UserVault()
     user_vault.save(UserStateMachine(
         user_id='unit_test_user',  # the asker
@@ -1439,7 +1456,12 @@ async def test_action_join_room(
     tracker.add_slots([
         SlotSet('partner_id', 'unexpected_partner' if wrong_partner else 'expected_partner'),
         SlotSet('room_url', 'https://swipy.daily.co/anothertestroom'),
+        SlotSet('room_name', 'anothertestroom'),
     ])
+    tracker.latest_message = {'intent': {'name': latest_intent}}
+
+    action = actions.ActionJoinRoom()
+    assert action.name() == 'action_join_room'
 
     actual_events = await action.run(dispatcher, tracker, domain)
 
@@ -1448,13 +1470,22 @@ async def test_action_join_room(
     if action_allowed:
         assert actual_events == [
             SlotSet('swiper_action_result', 'success'),
+            {
+                'date_time': '2021-05-25T00:30:00',
+                'entities': {'disposed_room_name': 'anothertestroom'},
+                'event': 'reminder',
+                'intent': 'EXTERNAL_room_expiration_report',
+                'kill_on_user_msg': False,
+                'name': 'unit_test_userEXTERNAL_room_expiration_report',
+                'timestamp': None,
+            },
             SlotSet('swiper_state', 'roomed'),
         ]
         assert dispatcher.messages == [{
             'attachment': None,
             'buttons': [],
             'custom': {
-                'text': UTTER_PARTNER_READY_ROOM_URL_TEXT,
+                'text': UTTER_PARTNER_READY_ROOM_URL_TEXT if expect_as_external else UTTER_ROOM_URL_TEXT,
                 'parse_mode': 'html',
                 'reply_markup': STOP_THE_CALL_MARKUP,
             },
@@ -1468,14 +1499,17 @@ async def test_action_join_room(
             user_id='unit_test_user',  # the asker
             state='roomed',
             partner_id='expected_partner',
+            latest_room_name='anothertestroom',
             roomed_partner_ids=['roomed_partner1', 'expected_partner'],
             rejected_partner_ids=['rejected_partner1', 'rejected_partner2'],
             seen_partner_ids=['seen_partner1', 'seen_partner2', 'seen_partner3'],
             newbie=False,  # accepting the very first video chitchat graduates the user from newbie
             state_timestamp=1619945501,
             state_timestamp_str='2021-05-02 08:51:41 Z',
-            state_timeout_ts=1619945501 + (60 * 15),
-            state_timeout_ts_str='2021-05-02 09:06:41 Z',
+            state_timeout_ts=1619945501 + (60 * 30),
+            state_timeout_ts_str='2021-05-02 09:21:41 Z',
+            activity_timestamp=0 if expect_as_external else 1619945501,
+            activity_timestamp_str=None if expect_as_external else '2021-05-02 08:51:41 Z',
         )
 
     else:
@@ -1504,12 +1538,16 @@ async def test_action_join_room(
         assert dispatcher.messages == [{
             'attachment': None,
             'buttons': [],
-            'custom': {},
+            'custom': {
+                'text': UTTER_ERROR_TEXT,
+                'parse_mode': 'html',
+                'reply_markup': RESTART_MARKUP,
+            },
             'elements': [],
             'image': None,
             'response': None,
             'template': None,
-            'text': UTTER_ERROR_TEXT,
+            'text': None,
         }]
         assert user_vault.get_user('unit_test_user') == UserStateMachine(  # the state of current user has not changed
             user_id='unit_test_user',  # the asker
@@ -1519,6 +1557,8 @@ async def test_action_join_room(
             rejected_partner_ids=['rejected_partner1', 'rejected_partner2'],
             seen_partner_ids=['seen_partner1', 'seen_partner2', 'seen_partner3'],
             newbie=True,
+            activity_timestamp=0 if expect_as_external else 1619945501,
+            activity_timestamp_str=None if expect_as_external else '2021-05-02 08:51:41 Z',
         )
 
 
@@ -1568,7 +1608,7 @@ async def test_action_do_not_disturb(
         'custom': {
             'text': UTTER_HOPE_TO_SEE_YOU_LATER_TEXT,
             'parse_mode': 'html',
-            'reply_markup': REMOVE_KEYBOARD_MARKUP,
+            'reply_markup': START_OVER_MARKUP,
         },
         'elements': [],
         'image': None,
@@ -1675,12 +1715,16 @@ async def test_action_reject_invitation(
         assert dispatcher.messages == [{
             'attachment': None,
             'buttons': [],
-            'custom': {},
+            'custom': {
+                'text': UTTER_ERROR_TEXT,
+                'parse_mode': 'html',
+                'reply_markup': RESTART_MARKUP,
+            },
             'elements': [],
             'image': None,
             'response': None,
             'template': None,
-            'text': UTTER_ERROR_TEXT,
+            'text': None,
         }]
         assert user_vault.get_user('unit_test_user') == UserStateMachine(
             user_id='unit_test_user',

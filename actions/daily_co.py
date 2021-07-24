@@ -2,6 +2,7 @@ import logging
 import os
 from pprint import pformat
 from typing import Dict, Text, Any
+from urllib.parse import quote as urlencode
 
 import aiohttp
 
@@ -43,6 +44,7 @@ async def create_room(sender_id: Text) -> Dict[Text, Any]:
                 },
                 json=room_data,
         ) as resp:
+            resp.raise_for_status()
             resp_json = await resp.json()
 
     if logger.isEnabledFor(logging.DEBUG):
@@ -52,3 +54,36 @@ async def create_room(sender_id: Text) -> Dict[Text, Any]:
         raise SwiperDailyCoError(repr(resp_json))
 
     return resp_json
+
+
+async def delete_room(room_name: Text) -> Dict[Text, Any]:
+    result = False
+    resp_text = ''
+    # noinspection PyBroadException
+    try:
+        # TODO oleksandr: do I need to reuse ClientSession instance ? what should be its lifetime ?
+        async with aiohttp.ClientSession() as session:
+            async with session.delete(
+                    f"{DAILY_CO_BASE_URL}/rooms/{urlencode(room_name)}",
+                    headers={
+                        'Authorization': f"Bearer {DAILY_CO_API_TOKEN}",
+                    },
+            ) as resp:
+                resp_text = await resp.text()
+                resp.raise_for_status()
+                resp_json = await resp.json()
+
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('DAILY CO ROOM %r DELETED:\n%s', room_name, pformat(resp_json))
+
+        result = resp_json.get('deleted') is True
+
+    except Exception:
+        logger.info(
+            'Unsuccessful deletion of DAILY CO room %r:\n%s',
+            room_name,
+            resp_text,
+            exc_info=logger.isEnabledFor(logging.DEBUG),
+        )
+
+    return result

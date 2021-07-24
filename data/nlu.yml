@@ -2,7 +2,11 @@ version: "2.0"
 nlu:
 - intent: start
   examples: |
+    - Start over
     - Start
+    - start
+    - Restart
+    - restart
 - intent: greet
   examples: |
     - Hello
@@ -16,6 +20,7 @@ nlu:
 - intent: videochat
   examples: |
     - Someone else
+    - someone else
     - run
     - now
     - one more
@@ -62,10 +67,10 @@ nlu:
 - intent: deny
   examples: |
     - No
+    - no
     - nope
     - n
     - -
-    - no
 - intent: another_time
   examples:
   - text: |
@@ -90,9 +95,13 @@ nlu:
       Maybe weekends will be more talkative
 - intent: stop
   examples: |
+    - ❌ Stop the call
     - Stop the call
-    - Cancel
+    - stop the call
     - Stop
+    - stop
+    - Cancel
+    - cancel
 - intent: help
   examples: |
     - What should I do?

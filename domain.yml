@@ -43,7 +43,15 @@ intents:
     use_entities: true
 - EXTERNAL_partner_did_not_confirm:
     use_entities: true
+- EXTERNAL_schedule_room_disposal_report:
+    use_entities: true
+- EXTERNAL_room_disposal_report:
+    use_entities: true
+- EXTERNAL_room_expiration_report:
+    use_entities: true
 - nlu_fallback:
+    use_entities: true
+- restart:
     use_entities: true
 entities:
 - partner_id
@@ -51,6 +59,8 @@ entities:
 - partner_photo_file_id
 - partner_first_name
 - room_url
+- room_name
+- disposed_room_name
 slots:
   swiper_state:
     type: rasa.shared.core.slots.CategoricalSlot
@@ -133,6 +143,16 @@ slots:
     initial_value: null
     auto_fill: true
     influence_conversation: false
+  room_name:
+    type: rasa.shared.core.slots.TextSlot
+    initial_value: null
+    auto_fill: true
+    influence_conversation: false
+  disposed_room_name:
+    type: rasa.shared.core.slots.TextSlot
+    initial_value: null
+    auto_fill: true
+    influence_conversation: false
 responses:
   utter_iamabot:
   - custom:
@@ -161,5 +181,9 @@ actions:
 - action_expire_partner_confirmation
 - action_default_fallback
 - action_rewind
+- action_stop_the_call
+- action_schedule_room_disposal_report
+- action_room_disposal_report
+- action_room_expiration_report
 forms: {}
 e2e_actions: []

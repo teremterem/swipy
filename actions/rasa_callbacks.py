@@ -20,11 +20,14 @@ PARTNER_ID_THAT_REJECTED_SLOT = 'partner_id_that_rejected'
 PARTNER_PHOTO_FILE_ID_SLOT = 'partner_photo_file_id'
 PARTNER_FIRST_NAME = 'partner_first_name'
 ROOM_URL_SLOT = 'room_url'
+ROOM_NAME_SLOT = 'room_name'
+DISPOSED_ROOM_NAME_SLOT = 'disposed_room_name'
 
 EXTERNAL_ASK_TO_JOIN_INTENT = 'EXTERNAL_ask_to_join'
 EXTERNAL_ASK_TO_CONFIRM_INTENT = 'EXTERNAL_ask_to_confirm'
 EXTERNAL_PARTNER_DID_NOT_CONFIRM_INTENT = 'EXTERNAL_partner_did_not_confirm'
 EXTERNAL_JOIN_ROOM_INTENT = 'EXTERNAL_join_room'
+EXTERNAL_SCHEDULE_ROOM_DISPOSAL_REPORT_INTENT = 'EXTERNAL_schedule_room_disposal_report'
 
 
 async def ask_to_join(
@@ -87,6 +90,7 @@ async def join_room(
         sender_id: Text,
         receiver: UserStateMachine,
         room_url: Text,
+        room_name: Text,
         suppress_callback_errors: bool = False,
 ) -> Optional[Dict[Text, Any]]:
     return await _trigger_external_rasa_intent(
@@ -96,6 +100,24 @@ async def join_room(
         {
             PARTNER_ID_SLOT: sender_id,
             ROOM_URL_SLOT: room_url,
+            ROOM_NAME_SLOT: room_name,
+        },
+        suppress_callback_errors,
+    )
+
+
+async def schedule_room_disposal_report(
+        sender_id: Text,
+        receiver: UserStateMachine,
+        room_name: Text,
+        suppress_callback_errors: bool = False,
+) -> Optional[Dict[Text, Any]]:
+    return await _trigger_external_rasa_intent(
+        sender_id,
+        receiver,
+        EXTERNAL_SCHEDULE_ROOM_DISPOSAL_REPORT_INTENT,
+        {
+            DISPOSED_ROOM_NAME_SLOT: room_name,
         },
         suppress_callback_errors,
     )
@@ -116,15 +138,23 @@ async def _trigger_external_rasa_intent(
         if RASA_TOKEN:
             params['token'] = RASA_TOKEN
 
-        async with session.post(
-                f"{RASA_PRODUCTION_HOST}/conversations/{receiver.user_id}/trigger_intent",
-                params=params,
-                json={
-                    'name': intent_name,
-                    'entities': entities,
-                },
-        ) as resp:
-            resp_json = await resp.json()
+        resp_text = ''
+        resp_json = None
+        resp_exc = None
+        try:
+            async with session.post(
+                    f"{RASA_PRODUCTION_HOST}/conversations/{receiver.user_id}/trigger_intent",
+                    params=params,
+                    json={
+                        'name': intent_name,
+                        'entities': entities,
+                    },
+            ) as resp:
+                resp_text = await resp.text()
+                resp.raise_for_status()
+                resp_json = await resp.json()
+        except Exception as e:
+            resp_exc = e
 
     if logger.isEnabledFor(logging.DEBUG):
         logger.debug(
@@ -133,19 +163,20 @@ async def _trigger_external_rasa_intent(
             sender_id,
             receiver.user_id,
             pformat(entities),
-            pformat(resp_json),
+            pformat(resp_json) if resp_json else resp_text,
         )
 
-    if not resp_json.get('tracker') or resp_json.get('status') == 'failure':
-        if 'bot was blocked' in (resp_json.get('message') or '').lower():
+    if resp_exc or not resp_json or not resp_json.get('tracker') or resp_json.get('status') == 'failure':
+        if 'bot was blocked' in ((resp_json or {}).get('message') or '').lower():
             # noinspection PyUnresolvedReferences
             receiver.mark_as_bot_blocked()
             receiver.save()
 
+        # noinspection PyBroadException
         try:
-            raise SwiperRasaCallbackError(repr(resp_json))
-        except SwiperRasaCallbackError:
-            logger.exception('failure in ' + repr(intent_name))
+            raise SwiperRasaCallbackError(resp_text) from resp_exc
+        except Exception:
+            logger.exception('failure in %r', intent_name)
             if not suppress_callback_errors:
                 raise
 
