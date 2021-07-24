@@ -52,7 +52,7 @@ rules:
     - intent: another_time
     - intent: stop
   - action: action_reject_invitation
-  - action: utter_ok_invitation_rejected
+  - action: utter_let_me_know_if_change_mind
 - rule: upon receiving invitation the user asks for a different partner
   steps:
   - action: action_ask_to_join
