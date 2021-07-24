@@ -94,6 +94,7 @@ nlu:
 
       Maybe weekends will be more talkative
 - intent: hang_up
+  examples: |
     - ❌ Hang up
     - hang up
 - intent: stop
