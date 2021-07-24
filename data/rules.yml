@@ -98,7 +98,9 @@ rules:
 - rule: user asks to stop the call
   steps:
   - action: action_join_room
-  - intent: stop
+  - or:
+    - intent: hang_up
+    - intent: stop
   - action: action_stop_the_call
 - rule: user asks the bot if the bot is a bot
   steps:

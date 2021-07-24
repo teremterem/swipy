@@ -93,18 +93,21 @@ nlu:
       Hard to say, it depends
 
       Maybe weekends will be more talkative
+- intent: hang_up
+    - ❌ Hang up
+    - hang up
 - intent: stop
   examples: |
-    - ❌ Stop the call
-    - Stop the call
-    - stop the call
     - Stop
     - stop
     - Cancel
     - cancel
+    - Abort
+    - abort
 - intent: dnd
   examples: |
-    - Do not disturb
+    - Do not disturb me
+    - do not disturb
 - intent: help
   examples: |
     - What should I do?
