@@ -175,7 +175,7 @@ responses:
   - custom:
       parse_mode: html
       reply_markup: '{{"keyboard":[[{{"text":"Start over"}}]],"resize_keyboard":true,"one_time_keyboard":true}}'
-      text: "Ok, should you decide that you want to practice your English speaking skills \U0001F1EC\U0001F1E7 on a video call with a stranger just let me know \U0001F609"
+      text: Ok, should you decide that you want to practice your English speaking skills 🇬🇧 on a video call with a stranger just let me know 😉
 actions:
 - action_session_start
 - action_offer_chitchat
