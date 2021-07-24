@@ -104,7 +104,7 @@ nlu:
     - cancel
 - intent: dnd
   examples: |
-    - Do not disturb me
+    - Do not disturb
 - intent: help
   examples: |
     - What should I do?
