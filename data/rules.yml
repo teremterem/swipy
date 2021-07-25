@@ -18,12 +18,28 @@ rules:
   - intent: affirm
   - action: utter_ok_looking_for_partner
   - action: action_find_partner
+- rule: bot offers chitchat but the user declines
+  steps:
+  - action: action_offer_chitchat
+  - or:
+    - intent: deny
+    - intent: another_time
+    - intent: stop
+  - action: utter_ok_let_me_know
 - rule: bot falls back to offering chitchat and the user agrees
   steps:
   - action: action_default_fallback
   - intent: affirm
   - action: utter_ok_looking_for_partner
   - action: action_find_partner
+- rule: bot falls back to offering chitchat but the user declines
+  steps:
+  - action: action_default_fallback
+  - or:
+    - intent: deny
+    - intent: another_time
+    - intent: stop
+  - action: utter_ok_let_me_know
 - rule: bot was unable to find a partner, offers to try searching again and the user agrees
   condition:
   - slot_was_set:
@@ -33,6 +49,17 @@ rules:
   - intent: affirm
   - action: utter_ok_looking_for_partner
   - action: action_find_partner
+- rule: bot was unable to find a partner, offers to try searching again but the user declines
+  condition:
+  - slot_was_set:
+    - swiper_action_result: partner_was_not_found
+  steps:
+  - action: action_find_partner
+  - or:
+    - intent: deny
+    - intent: another_time
+    - intent: stop
+  - action: utter_ok_let_me_know_to_try_again
 - rule: someone asks the user to join/confirm a video chat
   steps:
   - or:
@@ -51,8 +78,8 @@ rules:
     - intent: deny
     - intent: another_time
     - intent: stop
+  - action: utter_ok_invitation_declined
   - action: action_reject_invitation
-  - action: utter_ok_invitation_rejected
 - rule: upon receiving invitation the user asks for a different partner
   steps:
   - action: action_ask_to_join
@@ -96,23 +123,6 @@ rules:
   - intent: EXTERNAL_room_expiration_report
   - action: action_room_expiration_report
 
-- rule: action_listen after action_find_partner
-  steps:
-  - action: action_find_partner
-- rule: action_listen after action_join_room (needed for cases when it's triggered as a followup)
-  steps:
-  - action: action_join_room
-
-- rule: user asks for video chat directly
-  steps:
-  - intent: videochat
-  - action: utter_ok_looking_for_partner
-  - action: action_find_partner
-- rule: user asks not to bother them
-  steps:
-  - intent: stop
-  - action: action_do_not_disturb
-
 - rule: bot starts looking for a partner and the user confirms that they are waiting
   condition:
   - slot_was_set:
@@ -123,6 +133,14 @@ rules:
     - intent: waiting
     - intent: affirm
   - action: action_rewind
+- rule: bot starts looking for a partner but the user requests cancelation
+  condition:
+  - slot_was_set:
+    - swiper_action_result: success
+  steps:
+  - action: action_find_partner
+  - intent: stop
+  - action: utter_ok_let_me_know
 - rule: user confirms that they are waiting for partner to confirm readiness too
   condition:
   - slot_was_set:
@@ -133,3 +151,34 @@ rules:
     - intent: waiting
     - intent: affirm
   - action: action_rewind
+- rule: user requests cancelation in the middle of waiting for partner to confirm
+  condition:
+  - slot_was_set:
+    - swiper_action_result: partner_has_been_asked
+  steps:
+  - action: action_accept_invitation
+  - intent: stop
+  - action: utter_ok_invitation_declined_no_dnd
+  - action: action_reject_invitation
+
+- rule: user asks for video chat directly
+  steps:
+  - intent: videochat
+  - action: utter_ok_looking_for_partner
+  - action: action_find_partner
+- rule: user asks not to bother them
+  steps:
+  - or:
+    - intent: dnd
+    - intent: stop
+  - action: action_do_not_disturb
+
+- rule: action_listen after action_find_partner
+  steps:
+  - action: action_find_partner
+- rule: action_listen after action_join_room (needed for cases when it's triggered as a followup)
+  steps:
+  - action: action_join_room
+- rule: action_listen after action_reject_invitation
+  steps:
+  - action: action_reject_invitation

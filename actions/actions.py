@@ -901,7 +901,7 @@ class ActionAcceptInvitation(BaseSwiperAction):
             'text': f"Just a moment, I'm checking if {present_partner_name(partner.get_first_name(), 'that person')} "
                     f"is ready too...\n"
                     f"\n"
-                    f"Please don't go anywhere - <b>this may take ONE minute</b> ⏳",
+                    f"Please don't go anywhere - <b>this will take one minute or less</b> ⏳",
 
             'parse_mode': 'html',
             'reply_markup': OK_WAITING_CANCEL_MARKUP,
@@ -1010,7 +1010,7 @@ class ActionDoNotDisturb(BaseSwiperAction):
         return 'action_do_not_disturb'
 
     def should_update_user_activity_timestamp(self, tracker: Tracker) -> bool:
-        return True  # TODO oleksandr: are you sure about this one ?
+        return True
 
     async def swipy_run(
             self, dispatcher: CollectingDispatcher,
@@ -1024,10 +1024,7 @@ class ActionDoNotDisturb(BaseSwiperAction):
         current_user.save()
 
         dispatcher.utter_message(custom={
-            'text': 'Ok, I will not bother you 🛑\n'
-                    '\n'
-                    'Should you change your mind and decide that you want to chitchat with someone, '
-                    'just let me know - I will set up a video call 😉',
+            'text': 'Ok, I will not be sending invitations anymore 🛑',
 
             'parse_mode': 'html',
             'reply_markup': START_OVER_MARKUP,
@@ -1046,7 +1043,7 @@ class ActionRejectInvitation(BaseSwiperAction):
         return 'action_reject_invitation'
 
     def should_update_user_activity_timestamp(self, tracker: Tracker) -> bool:
-        return True  # TODO oleksandr: are you sure about this one ?
+        return True
 
     async def swipy_run(
             self, dispatcher: CollectingDispatcher,
@@ -1058,8 +1055,14 @@ class ActionRejectInvitation(BaseSwiperAction):
         is_asked_to_confirm = current_user.state == UserState.ASKED_TO_CONFIRM
         partner_id = current_user.partner_id
 
-        # noinspection PyUnresolvedReferences
-        current_user.reject()
+        latest_intent = tracker.get_intent_of_latest_message()
+
+        if latest_intent == VIDEOCHAT_INTENT:  # user wants a different partner ("Someone else" button, most likely)
+            # noinspection PyUnresolvedReferences
+            current_user.reject_partner()
+        else:
+            # noinspection PyUnresolvedReferences
+            current_user.reject_invitation()
         current_user.save()
 
         if is_asked_to_confirm:  # as opposed to asked_to_join

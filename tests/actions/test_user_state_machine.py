@@ -77,18 +77,31 @@ expected_more_narrow_transitions = [
     ('join_room', 'bot_blocked', None, 'previous_partner_id', 'previous_partner_id'),
     ('join_room', 'user_banned', None, 'previous_partner_id', 'previous_partner_id'),
 
-    ('reject', 'new', None, 'previous_partner_id', 'previous_partner_id'),
-    ('reject', 'wants_chitchat', None, 'previous_partner_id', 'previous_partner_id'),
-    ('reject', 'ok_to_chitchat', None, 'previous_partner_id', 'previous_partner_id'),
-    ('reject', 'waiting_partner_confirm', None, 'previous_partner_id', 'previous_partner_id'),
-    ('reject', 'asked_to_join', 'rejected_join', 'previous_partner_id', 'previous_partner_id'),
-    ('reject', 'asked_to_confirm', 'rejected_confirm', 'previous_partner_id', 'previous_partner_id'),
-    ('reject', 'roomed', None, 'previous_partner_id', 'previous_partner_id'),
-    ('reject', 'rejected_join', None, 'previous_partner_id', 'previous_partner_id'),
-    ('reject', 'rejected_confirm', None, 'previous_partner_id', 'previous_partner_id'),
-    ('reject', 'do_not_disturb', None, 'previous_partner_id', 'previous_partner_id'),
-    ('reject', 'bot_blocked', None, 'previous_partner_id', 'previous_partner_id'),
-    ('reject', 'user_banned', None, 'previous_partner_id', 'previous_partner_id'),
+    ('reject_partner', 'new', None, 'previous_partner_id', 'previous_partner_id'),
+    ('reject_partner', 'wants_chitchat', None, 'previous_partner_id', 'previous_partner_id'),
+    ('reject_partner', 'ok_to_chitchat', None, 'previous_partner_id', 'previous_partner_id'),
+    ('reject_partner', 'waiting_partner_confirm', 'rejected_join', 'previous_partner_id', 'previous_partner_id'),
+    ('reject_partner', 'asked_to_join', 'rejected_join', 'previous_partner_id', 'previous_partner_id'),
+    ('reject_partner', 'asked_to_confirm', 'rejected_confirm', 'previous_partner_id', 'previous_partner_id'),
+    ('reject_partner', 'roomed', None, 'previous_partner_id', 'previous_partner_id'),
+    ('reject_partner', 'rejected_join', None, 'previous_partner_id', 'previous_partner_id'),
+    ('reject_partner', 'rejected_confirm', None, 'previous_partner_id', 'previous_partner_id'),
+    ('reject_partner', 'do_not_disturb', None, 'previous_partner_id', 'previous_partner_id'),
+    ('reject_partner', 'bot_blocked', None, 'previous_partner_id', 'previous_partner_id'),
+    ('reject_partner', 'user_banned', None, 'previous_partner_id', 'previous_partner_id'),
+
+    ('reject_invitation', 'new', None, 'previous_partner_id', 'previous_partner_id'),
+    ('reject_invitation', 'wants_chitchat', None, 'previous_partner_id', 'previous_partner_id'),
+    ('reject_invitation', 'ok_to_chitchat', None, 'previous_partner_id', 'previous_partner_id'),
+    ('reject_invitation', 'waiting_partner_confirm', 'rejected_join', 'previous_partner_id', 'previous_partner_id'),
+    ('reject_invitation', 'asked_to_join', 'rejected_join', 'previous_partner_id', 'previous_partner_id'),
+    ('reject_invitation', 'asked_to_confirm', 'rejected_confirm', 'previous_partner_id', 'previous_partner_id'),
+    ('reject_invitation', 'roomed', None, 'previous_partner_id', 'previous_partner_id'),
+    ('reject_invitation', 'rejected_join', None, 'previous_partner_id', 'previous_partner_id'),
+    ('reject_invitation', 'rejected_confirm', None, 'previous_partner_id', 'previous_partner_id'),
+    ('reject_invitation', 'do_not_disturb', None, 'previous_partner_id', 'previous_partner_id'),
+    ('reject_invitation', 'bot_blocked', None, 'previous_partner_id', 'previous_partner_id'),
+    ('reject_invitation', 'user_banned', None, 'previous_partner_id', 'previous_partner_id'),
 ]
 
 
@@ -222,7 +235,7 @@ def test_state_timestamps(source_state: Text, trigger_name: Text) -> None:
 ])
 @pytest.mark.parametrize('trigger_name, list_name, default_num_var_name, expected_default_num_to_remember', [
     ('join_room', 'roomed_partner_ids', 'NUM_OF_ROOMED_PARTNERS_TO_REMEMBER', 3),
-    ('reject', 'rejected_partner_ids', 'NUM_OF_REJECTED_PARTNERS_TO_REMEMBER', 21),
+    ('reject_partner', 'rejected_partner_ids', 'NUM_OF_REJECTED_PARTNERS_TO_REMEMBER', 21),
     ('become_asked_to_join', 'seen_partner_ids', 'NUM_OF_SEEN_PARTNERS_TO_REMEMBER', 1),
     ('become_asked_to_confirm', 'seen_partner_ids', 'NUM_OF_SEEN_PARTNERS_TO_REMEMBER', 1),
 ])

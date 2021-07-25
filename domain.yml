@@ -23,6 +23,8 @@ intents:
     use_entities: true
 - stop:
     use_entities: true
+- dnd:
+    use_entities: true
 - help:
     use_entities: true
 - gratitude:
@@ -164,11 +166,26 @@ responses:
       parse_mode: html
       reply_markup: '{{"keyboard":[[{{"text":"Ok, waiting"}}],[{{"text":"Cancel"}}]],"resize_keyboard":true,"one_time_keyboard":true}}'
       text: "Great! Let me find someone for you to chitchat with \U0001F5E3\n\nI will get back to you within two minutes ⏳"
-  utter_ok_invitation_rejected:
+  utter_ok_invitation_declined:
   - custom:
       parse_mode: html
-      reply_markup: '{{"remove_keyboard":true}}'
-      text: "Ok, declined ❌\n\nMay I ask you if there is any specific time or times of day (maybe days of week) when you are more likely to join someone for chitchat over a video call?"
+      reply_markup: '{{"keyboard":[[{{"text":"Start over"}}],[{{"text":"Do not disturb me"}}]],"resize_keyboard":true,"one_time_keyboard":true}}'
+      text: "Ok, declined ❌\n\nShould you decide that you want to practice your English speaking skills \U0001F1EC\U0001F1E7 on a video call with a stranger just let me know \U0001F609"
+  utter_ok_invitation_declined_no_dnd:
+  - custom:
+      parse_mode: html
+      reply_markup: '{{"keyboard":[[{{"text":"Start over"}}]],"resize_keyboard":true,"one_time_keyboard":true}}'
+      text: "Ok, declined ❌\n\nShould you decide that you want to practice your English speaking skills \U0001F1EC\U0001F1E7 on a video call with a stranger just let me know \U0001F609"
+  utter_ok_let_me_know:
+  - custom:
+      parse_mode: html
+      reply_markup: '{{"keyboard":[[{{"text":"Start over"}}]],"resize_keyboard":true,"one_time_keyboard":true}}'
+      text: Ok, should you decide that you want to practice your English speaking skills 🇬🇧 on a video call with a stranger just let me know 😉
+  utter_ok_let_me_know_to_try_again:
+  - custom:
+      parse_mode: html
+      reply_markup: '{{"keyboard":[[{{"text":"Try again now"}}]],"resize_keyboard":true,"one_time_keyboard":true}}'
+      text: Ok, should you decide that you want to practice your English speaking skills 🇬🇧 on a video call with a stranger just let me know 😉
 actions:
 - action_session_start
 - action_offer_chitchat

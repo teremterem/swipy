@@ -88,12 +88,12 @@ and will get back to you within two minutes ⏳"""
 UTTER_CHECKING_IF_THAT_PERSON_READY_TOO_TEXT = """\
 Just a moment, I'm checking if that person is ready too...
 
-Please don't go anywhere - <b>this may take ONE minute</b> ⏳"""
+Please don't go anywhere - <b>this will take one minute or less</b> ⏳"""
 
 UTTER_CHECKING_IF_FIRST_NAME_READY_TOO_TEXT = """\
 Just a moment, I'm checking if <b><i>unitTest firstName20</i></b> is ready too...
 
-Please don't go anywhere - <b>this may take ONE minute</b> ⏳"""
+Please don't go anywhere - <b>this will take one minute or less</b> ⏳"""
 
 UTTER_ASK_TO_JOIN_SOMEONE_TEXT = """\
 Hey! Someone is looking to chitchat 🗣
@@ -125,11 +125,7 @@ Hey! <b><i>unitTest firstName30</i></b> is willing to chitchat with 👉 you �
 
 <b>Are you ready for a video call?</b> 🎥 ☎️"""
 
-UTTER_HOPE_TO_SEE_YOU_LATER_TEXT = """\
-Ok, I will not bother you 🛑
-
-Should you change your mind and decide that you want to chitchat with someone, \
-just let me know - I will set up a video call 😉"""
+UTTER_DND = 'Ok, I will not be sending invitations anymore 🛑'
 
 REMOVE_KEYBOARD_MARKUP = '{"remove_keyboard":true}'
 RESTART_MARKUP = (
@@ -1606,7 +1602,7 @@ async def test_action_do_not_disturb(
         'attachment': None,
         'buttons': [],
         'custom': {
-            'text': UTTER_HOPE_TO_SEE_YOU_LATER_TEXT,
+            'text': UTTER_DND,
             'parse_mode': 'html',
             'reply_markup': START_OVER_MARKUP,
         },
@@ -1636,25 +1632,31 @@ async def test_action_do_not_disturb(
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('create_user_state_machine_table', 'wrap_traceback_format_exception')
 @patch('time.time', Mock(return_value=1619945501))
-@pytest.mark.parametrize('source_swiper_state, destination_swiper_state', [
-    ('new', None),
-    ('wants_chitchat', None),
-    ('ok_to_chitchat', None),
-    ('waiting_partner_confirm', None),
-    ('asked_to_join', 'rejected_join'),
-    ('asked_to_confirm', 'rejected_confirm'),
-    ('roomed', None),
-    ('rejected_join', None),
-    ('rejected_confirm', None),
-    ('do_not_disturb', None),
+@pytest.mark.parametrize('latest_intent, source_swiper_state, destination_swiper_state, attempt_to_reject_partner', [
+    ('some_intent', 'new', None, False),
+    ('some_intent', 'wants_chitchat', None, False),
+    ('some_intent', 'ok_to_chitchat', None, False),
+    ('some_intent', 'waiting_partner_confirm', 'rejected_join', False),
+    ('some_intent', 'asked_to_join', 'rejected_join', False),
+    ('some_intent', 'asked_to_confirm', 'rejected_confirm', False),
+    ('videochat', 'waiting_partner_confirm', 'rejected_join', True),
+    ('videochat', 'asked_to_join', 'rejected_join', True),
+    ('videochat', 'asked_to_confirm', 'rejected_confirm', True),
+    ('some_intent', 'roomed', None, False),
+    ('videochat', 'roomed', None, True),
+    ('some_intent', 'rejected_join', None, False),
+    ('some_intent', 'rejected_confirm', None, False),
+    ('some_intent', 'do_not_disturb', None, False),
 ])
 async def test_action_reject_invitation(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
         wrap_random_randint: MagicMock,
+        latest_intent: Text,
         source_swiper_state: Text,
         destination_swiper_state: Text,
+        attempt_to_reject_partner: bool,
 ) -> None:
     user_vault = UserVault()
     user_vault.save(UserStateMachine(
@@ -1666,6 +1668,8 @@ async def test_action_reject_invitation(
         seen_partner_ids=['seen_partner1', 'seen_partner2', 'seen_partner3'],
         newbie=True,
     ))
+
+    tracker.latest_message = {'intent_ranking': [{'name': latest_intent}]}
 
     action = actions.ActionRejectInvitation()
     assert action.name() == 'action_reject_invitation'
@@ -1681,12 +1685,17 @@ async def test_action_reject_invitation(
             SlotSet('partner_id', 'some_test_partner_id'),
         ]
         assert dispatcher.messages == []
+
+        expected_rejection_list = ['rejected_partner1', 'rejected_partner2']
+        if attempt_to_reject_partner:
+            expected_rejection_list.append('some_test_partner_id')
+
         assert user_vault.get_user('unit_test_user') == UserStateMachine(
             user_id='unit_test_user',
             state=destination_swiper_state,
             partner_id='some_test_partner_id',
             roomed_partner_ids=['roomed_partner1'],
-            rejected_partner_ids=['rejected_partner1', 'rejected_partner2', 'some_test_partner_id'],
+            rejected_partner_ids=expected_rejection_list,
             seen_partner_ids=['seen_partner1', 'seen_partner2', 'seen_partner3'],
             newbie=True,
             state_timestamp=1619945501,
@@ -1703,7 +1712,9 @@ async def test_action_reject_invitation(
             SlotSet('swiper_action_result', 'error'),
             SlotSet(
                 'swiper_error',
-                f"MachineError(\"Can't trigger event reject from state {source_swiper_state}!\")",
+                f"MachineError(\"Can't trigger event "
+                f"{'reject_partner' if attempt_to_reject_partner else 'reject_invitation'} "
+                f"from state {source_swiper_state}!\")",
             ),
             SlotSet(
                 'swiper_error_trace',
