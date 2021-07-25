@@ -2,6 +2,7 @@ from typing import Callable, Awaitable, Any, Optional, Dict, Text
 
 import ujson
 from rasa.core.channels import TelegramInput, UserMessage
+from rasa.core.channels.telegram import TelegramOutput
 from sanic import Blueprint
 from sanic.request import Request
 
@@ -40,3 +41,15 @@ class SwiperTelegramInput(TelegramInput):
                 return {'telegram_from': telegram_from}
 
         return None
+
+    def get_output_channel(self) -> TelegramOutput:
+        channel = super().get_output_channel()
+        raw_get_me = channel.get_me
+
+        def _cached_get_me():
+            if not hasattr(channel, '_get_me_cache'):
+                channel._get_me_cache = raw_get_me()
+            return channel._get_me_cache
+
+        channel.get_me = _cached_get_me
+        return channel
