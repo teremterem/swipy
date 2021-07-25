@@ -78,8 +78,8 @@ rules:
     - intent: deny
     - intent: another_time
     - intent: stop
-  - action: action_reject_invitation
   - action: utter_ok_invitation_declined
+  - action: action_reject_invitation
 - rule: upon receiving invitation the user asks for a different partner
   steps:
   - action: action_ask_to_join
@@ -125,13 +125,6 @@ rules:
   - intent: EXTERNAL_room_expiration_report
   - action: action_room_expiration_report
 
-- rule: action_listen after action_find_partner
-  steps:
-  - action: action_find_partner
-- rule: action_listen after action_join_room (needed for cases when it's triggered as a followup)
-  steps:
-  - action: action_join_room
-
 - rule: bot starts looking for a partner and the user confirms that they are waiting
   condition:
   - slot_was_set:
@@ -167,8 +160,8 @@ rules:
   steps:
   - action: action_accept_invitation
   - intent: stop
-  - action: action_reject_invitation
   - action: utter_ok_invitation_declined_no_dnd
+  - action: action_reject_invitation
 
 - rule: user asks for video chat directly
   steps:
@@ -181,3 +174,13 @@ rules:
     - intent: dnd
     - intent: stop
   - action: action_do_not_disturb
+
+- rule: action_listen after action_find_partner
+  steps:
+  - action: action_find_partner
+- rule: action_listen after action_join_room (needed for cases when it's triggered as a followup)
+  steps:
+  - action: action_join_room
+- rule: action_listen after action_reject_invitation
+  steps:
+  - action: action_reject_invitation

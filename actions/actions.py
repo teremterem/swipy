@@ -901,7 +901,7 @@ class ActionAcceptInvitation(BaseSwiperAction):
             'text': f"Just a moment, I'm checking if {present_partner_name(partner.get_first_name(), 'that person')} "
                     f"is ready too...\n"
                     f"\n"
-                    f"Please don't go anywhere - <b>this may take ONE minute</b> ⏳",
+                    f"Please don't go anywhere - <b>this will take one minute or less</b> ⏳",
 
             'parse_mode': 'html',
             'reply_markup': OK_WAITING_CANCEL_MARKUP,

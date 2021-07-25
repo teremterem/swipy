@@ -88,12 +88,12 @@ and will get back to you within two minutes ⏳"""
 UTTER_CHECKING_IF_THAT_PERSON_READY_TOO_TEXT = """\
 Just a moment, I'm checking if that person is ready too...
 
-Please don't go anywhere - <b>this may take ONE minute</b> ⏳"""
+Please don't go anywhere - <b>this will take one minute or less</b> ⏳"""
 
 UTTER_CHECKING_IF_FIRST_NAME_READY_TOO_TEXT = """\
 Just a moment, I'm checking if <b><i>unitTest firstName20</i></b> is ready too...
 
-Please don't go anywhere - <b>this may take ONE minute</b> ⏳"""
+Please don't go anywhere - <b>this will take one minute or less</b> ⏳"""
 
 UTTER_ASK_TO_JOIN_SOMEONE_TEXT = """\
 Hey! Someone is looking to chitchat 🗣
