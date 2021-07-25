@@ -1010,7 +1010,7 @@ class ActionDoNotDisturb(BaseSwiperAction):
         return 'action_do_not_disturb'
 
     def should_update_user_activity_timestamp(self, tracker: Tracker) -> bool:
-        return True  # TODO oleksandr: are you sure about this one ?
+        return True
 
     async def swipy_run(
             self, dispatcher: CollectingDispatcher,
@@ -1043,7 +1043,7 @@ class ActionRejectInvitation(BaseSwiperAction):
         return 'action_reject_invitation'
 
     def should_update_user_activity_timestamp(self, tracker: Tracker) -> bool:
-        return True  # TODO oleksandr: are you sure about this one ?
+        return True
 
     async def swipy_run(
             self, dispatcher: CollectingDispatcher,
@@ -1055,8 +1055,14 @@ class ActionRejectInvitation(BaseSwiperAction):
         is_asked_to_confirm = current_user.state == UserState.ASKED_TO_CONFIRM
         partner_id = current_user.partner_id
 
-        # noinspection PyUnresolvedReferences
-        current_user.reject()
+        latest_intent = tracker.get_intent_of_latest_message()
+
+        if latest_intent == VIDEOCHAT_INTENT:  # user wants a different partner ("Someone else" button, most likely)
+            # noinspection PyUnresolvedReferences
+            current_user.reject_partner()
+        else:
+            # noinspection PyUnresolvedReferences
+            current_user.reject_invitation()
         current_user.save()
 
         if is_asked_to_confirm:  # as opposed to asked_to_join

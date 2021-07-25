@@ -199,7 +199,7 @@ class UserStateMachine(UserModel):
 
         # noinspection PyTypeChecker
         self.machine.add_transition(
-            trigger='reject',
+            trigger='reject_partner',
             source=[
                 UserState.ASKED_TO_JOIN,
             ],
@@ -210,7 +210,7 @@ class UserStateMachine(UserModel):
         )
         # noinspection PyTypeChecker
         self.machine.add_transition(
-            trigger='reject',
+            trigger='reject_partner',
             source=[
                 UserState.ASKED_TO_CONFIRM,
             ],
@@ -218,6 +218,23 @@ class UserStateMachine(UserModel):
             after=[
                 self._mark_current_partner_id_as_rejected,
             ],
+        )
+
+        # noinspection PyTypeChecker
+        self.machine.add_transition(
+            trigger='reject_invitation',
+            source=[
+                UserState.ASKED_TO_JOIN,
+            ],
+            dest=UserState.REJECTED_JOIN,
+        )
+        # noinspection PyTypeChecker
+        self.machine.add_transition(
+            trigger='reject_invitation',
+            source=[
+                UserState.ASKED_TO_CONFIRM,
+            ],
+            dest=UserState.REJECTED_CONFIRM,
         )
 
         # noinspection PyTypeChecker

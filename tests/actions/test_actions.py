@@ -1632,25 +1632,30 @@ async def test_action_do_not_disturb(
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('create_user_state_machine_table', 'wrap_traceback_format_exception')
 @patch('time.time', Mock(return_value=1619945501))
-@pytest.mark.parametrize('source_swiper_state, destination_swiper_state', [
-    ('new', None),
-    ('wants_chitchat', None),
-    ('ok_to_chitchat', None),
-    ('waiting_partner_confirm', None),
-    ('asked_to_join', 'rejected_join'),
-    ('asked_to_confirm', 'rejected_confirm'),
-    ('roomed', None),
-    ('rejected_join', None),
-    ('rejected_confirm', None),
-    ('do_not_disturb', None),
+@pytest.mark.parametrize('latest_intent, source_swiper_state, destination_swiper_state, attempt_to_reject_partner', [
+    ('some_intent', 'new', None, False),
+    ('some_intent', 'wants_chitchat', None, False),
+    ('some_intent', 'ok_to_chitchat', None, False),
+    ('some_intent', 'waiting_partner_confirm', None, False),
+    ('videochat', 'waiting_partner_confirm', None, True),
+    ('some_intent', 'asked_to_join', 'rejected_join', False),
+    ('some_intent', 'asked_to_confirm', 'rejected_confirm', False),
+    ('videochat', 'asked_to_join', 'rejected_join', True),
+    ('videochat', 'asked_to_confirm', 'rejected_confirm', True),
+    ('some_intent', 'roomed', None, False),
+    ('some_intent', 'rejected_join', None, False),
+    ('some_intent', 'rejected_confirm', None, False),
+    ('some_intent', 'do_not_disturb', None, False),
 ])
 async def test_action_reject_invitation(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
         wrap_random_randint: MagicMock,
+        latest_intent: Text,
         source_swiper_state: Text,
         destination_swiper_state: Text,
+        attempt_to_reject_partner: bool,
 ) -> None:
     user_vault = UserVault()
     user_vault.save(UserStateMachine(
@@ -1662,6 +1667,8 @@ async def test_action_reject_invitation(
         seen_partner_ids=['seen_partner1', 'seen_partner2', 'seen_partner3'],
         newbie=True,
     ))
+
+    tracker.latest_message = {'intent_ranking': [{'name': latest_intent}]}
 
     action = actions.ActionRejectInvitation()
     assert action.name() == 'action_reject_invitation'
@@ -1677,12 +1684,17 @@ async def test_action_reject_invitation(
             SlotSet('partner_id', 'some_test_partner_id'),
         ]
         assert dispatcher.messages == []
+
+        expected_rejection_list = ['rejected_partner1', 'rejected_partner2']
+        if attempt_to_reject_partner:
+            expected_rejection_list.append('some_test_partner_id')
+
         assert user_vault.get_user('unit_test_user') == UserStateMachine(
             user_id='unit_test_user',
             state=destination_swiper_state,
             partner_id='some_test_partner_id',
             roomed_partner_ids=['roomed_partner1'],
-            rejected_partner_ids=['rejected_partner1', 'rejected_partner2', 'some_test_partner_id'],
+            rejected_partner_ids=expected_rejection_list,
             seen_partner_ids=['seen_partner1', 'seen_partner2', 'seen_partner3'],
             newbie=True,
             state_timestamp=1619945501,
@@ -1699,7 +1711,9 @@ async def test_action_reject_invitation(
             SlotSet('swiper_action_result', 'error'),
             SlotSet(
                 'swiper_error',
-                f"MachineError(\"Can't trigger event reject from state {source_swiper_state}!\")",
+                f"MachineError(\"Can't trigger event "
+                f"{'reject_partner' if attempt_to_reject_partner else 'reject_invitation'} "
+                f"from state {source_swiper_state}!\")",
             ),
             SlotSet(
                 'swiper_error_trace',
