@@ -20,7 +20,8 @@ all_expected_user_state_machine_triggers = [
     'become_asked_to_join',
     'become_asked_to_confirm',
     'join_room',
-    'reject',
+    'reject_partner',
+    'reject_invitation',
     'become_do_not_disturb',
     'mark_as_bot_blocked',
 ]
