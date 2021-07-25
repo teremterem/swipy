@@ -94,12 +94,9 @@ nlu:
       Hard to say, it depends
 
       Maybe weekends will be more talkative
-- intent: hang_up
-  examples: |
-    - ❌ Hang up
-    - hang up
 - intent: stop
   examples: |
+    - ❌ Stop the call
     - Stop
     - stop
     - Cancel

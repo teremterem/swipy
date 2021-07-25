@@ -143,10 +143,10 @@ OK_WAITING_CANCEL_MARKUP = (
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
-HANG_UP_MARKUP = (
+STOP_THE_CALL_MARKUP = (
     '{"keyboard":['
 
-    '[{"text":"❌ Hang up"}]'
+    '[{"text":"❌ Stop the call"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
@@ -1483,7 +1483,7 @@ async def test_action_join_room(
             'custom': {
                 'text': UTTER_PARTNER_READY_ROOM_URL_TEXT if expect_as_external else UTTER_ROOM_URL_TEXT,
                 'parse_mode': 'html',
-                'reply_markup': HANG_UP_MARKUP,
+                'reply_markup': STOP_THE_CALL_MARKUP,
             },
             'elements': [],
             'image': None,
