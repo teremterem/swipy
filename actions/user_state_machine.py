@@ -202,6 +202,7 @@ class UserStateMachine(UserModel):
             trigger='reject_partner',
             source=[
                 UserState.ASKED_TO_JOIN,
+                UserState.WAITING_PARTNER_CONFIRM,
             ],
             dest=UserState.REJECTED_JOIN,
             after=[
@@ -225,6 +226,7 @@ class UserStateMachine(UserModel):
             trigger='reject_invitation',
             source=[
                 UserState.ASKED_TO_JOIN,
+                UserState.WAITING_PARTNER_CONFIRM,
             ],
             dest=UserState.REJECTED_JOIN,
         )
