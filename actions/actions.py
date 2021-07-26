@@ -72,10 +72,9 @@ RESTART_MARKUP = (
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
-OK_WAITING_CANCEL_MARKUP = (
+CANCEL_MARKUP = (
     '{"keyboard":['
 
-    '[{"text":"Ok, waiting"}],'
     '[{"text":"Cancel"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
@@ -939,7 +938,7 @@ class ActionAcceptInvitation(BaseSwiperAction):
                     f"Please don't go anywhere - <b>this will take one minute or less</b> ⏳",
 
             'parse_mode': 'html',
-            'reply_markup': OK_WAITING_CANCEL_MARKUP,
+            'reply_markup': CANCEL_MARKUP,
         })
 
         return [
@@ -1178,7 +1177,7 @@ def utter_partner_already_gone(dispatcher: CollectingDispatcher, partner_first_n
                 f"and will get back to you within two minutes ⏳",
 
         'parse_mode': 'html',
-        'reply_markup': OK_WAITING_CANCEL_MARKUP,
+        'reply_markup': CANCEL_MARKUP,
     })
 
 
