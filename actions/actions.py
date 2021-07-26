@@ -111,10 +111,10 @@ START_OVER_MARKUP = (
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
-NEW_VIDEO_CHAT_MARKUP = (
+NEW_VIDEO_CALL_MARKUP = (
     '{"keyboard":['
 
-    '[{"text":"New video chat"}]'
+    '[{"text":"New video call"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
@@ -514,14 +514,14 @@ class ActionStopTheCall(BaseSwiperAction):
                         "Thank you!",
 
                 'parse_mode': 'html',
-                'reply_markup': NEW_VIDEO_CHAT_MARKUP,
+                'reply_markup': NEW_VIDEO_CALL_MARKUP,
             })
         else:
             dispatcher.utter_message(custom={
                 'text': 'Thank you!',
 
                 'parse_mode': 'html',
-                'reply_markup': NEW_VIDEO_CHAT_MARKUP,
+                'reply_markup': NEW_VIDEO_CALL_MARKUP,
             })
 
         return [
@@ -599,7 +599,7 @@ class ActionRoomDisposalReport(BaseSwiperAction):
             'text': f"{presented_partner} has stopped the call.",
 
             'parse_mode': 'html',
-            'reply_markup': NEW_VIDEO_CHAT_MARKUP,
+            'reply_markup': NEW_VIDEO_CALL_MARKUP,
         })
 
         current_user.latest_room_name = None
@@ -636,10 +636,10 @@ class ActionRoomExpirationReport(BaseSwiperAction):
             ]
 
         dispatcher.utter_message(custom={
-            'text': f"Video chat has expired.",
+            'text': f"Video call has expired.",
 
             'parse_mode': 'html',
-            'reply_markup': NEW_VIDEO_CHAT_MARKUP,
+            'reply_markup': NEW_VIDEO_CALL_MARKUP,
         })
 
         current_user.latest_room_name = None
