@@ -1,3 +1,4 @@
+import os
 from typing import Callable, Awaitable, Any, Optional, Dict, Text
 
 import ujson
@@ -6,10 +7,14 @@ from rasa.core.channels.telegram import TelegramOutput
 from sanic import Blueprint
 from sanic.request import Request
 
+SWIPY_TELEGRAM_WEBHOOK_SECRET = os.environ['SWIPY_TELEGRAM_WEBHOOK_SECRET']
 START_DEEPLINK_PREFIX = '/start '
 
 
 class SwiperTelegramInput(TelegramInput):
+    def url_prefix(self) -> Text:
+        return self.name() + SWIPY_TELEGRAM_WEBHOOK_SECRET
+
     def blueprint(
             self, on_new_message: Callable[[UserMessage], Awaitable[Any]]
     ) -> Blueprint:
