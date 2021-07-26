@@ -72,10 +72,9 @@ RESTART_MARKUP = (
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
-OK_WAITING_CANCEL_MARKUP = (
+CANCEL_MARKUP = (
     '{"keyboard":['
 
-    '[{"text":"Ok, waiting"}],'
     '[{"text":"Cancel"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
@@ -108,6 +107,13 @@ START_OVER_MARKUP = (
     '{"keyboard":['
 
     '[{"text":"Start over"}]'
+
+    '],"resize_keyboard":true,"one_time_keyboard":true}'
+)
+NEW_VIDEO_CALL_MARKUP = (
+    '{"keyboard":['
+
+    '[{"text":"New video call"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
@@ -502,17 +508,19 @@ class ActionStopTheCall(BaseSwiperAction):
 
         if room_deleted:
             dispatcher.utter_message(custom={
-                'text': 'Thank you! The chat room will be disposed shortly.',
+                'text': "Thank you!\n"
+                        "\n"
+                        "The call will be stopped shortly (if it hasn't already).",
 
                 'parse_mode': 'html',
-                'reply_markup': START_OVER_MARKUP,
+                'reply_markup': NEW_VIDEO_CALL_MARKUP,
             })
         else:
             dispatcher.utter_message(custom={
-                'text': 'Seems that like this chat room has already been disposed.',
+                'text': 'Thank you!',
 
                 'parse_mode': 'html',
-                'reply_markup': START_OVER_MARKUP,
+                'reply_markup': NEW_VIDEO_CALL_MARKUP,
             })
 
         return [
@@ -590,7 +598,7 @@ class ActionRoomDisposalReport(BaseSwiperAction):
             'text': f"{presented_partner} has stopped the call.",
 
             'parse_mode': 'html',
-            'reply_markup': START_OVER_MARKUP,
+            'reply_markup': NEW_VIDEO_CALL_MARKUP,
         })
 
         current_user.latest_room_name = None
@@ -627,10 +635,10 @@ class ActionRoomExpirationReport(BaseSwiperAction):
             ]
 
         dispatcher.utter_message(custom={
-            'text': f"Video chat has expired.",
+            'text': f"Video call has expired.",
 
             'parse_mode': 'html',
-            'reply_markup': START_OVER_MARKUP,
+            'reply_markup': NEW_VIDEO_CALL_MARKUP,
         })
 
         current_user.latest_room_name = None
@@ -930,7 +938,7 @@ class ActionAcceptInvitation(BaseSwiperAction):
                     f"Please don't go anywhere - <b>this will take one minute or less</b> ⏳",
 
             'parse_mode': 'html',
-            'reply_markup': OK_WAITING_CANCEL_MARKUP,
+            'reply_markup': CANCEL_MARKUP,
         })
 
         return [
@@ -1020,7 +1028,7 @@ class ActionJoinRoom(BaseSwiperAction):
 def utter_room_url(dispatcher: CollectingDispatcher, room_url: Text, after_confirming_with_partner: bool):
     shout = 'Done!' if after_confirming_with_partner else 'Awesome!'
     dispatcher.utter_message(custom={
-        'text': f"{shout} 🎉\n"
+        'text': f"{shout} ✅ 🎉\n"
                 f"\n"
                 f"<b>Please follow this link to join the video call:</b>\n"
                 f"\n"
@@ -1169,7 +1177,7 @@ def utter_partner_already_gone(dispatcher: CollectingDispatcher, partner_first_n
                 f"and will get back to you within two minutes ⏳",
 
         'parse_mode': 'html',
-        'reply_markup': OK_WAITING_CANCEL_MARKUP,
+        'reply_markup': CANCEL_MARKUP,
     })
 
 

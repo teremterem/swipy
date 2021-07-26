@@ -56,14 +56,14 @@ Great! Let me find someone for you to chitchat with 🗣
 I will get back to you within two minutes ⏳"""
 
 UTTER_ROOM_URL_TEXT = """\
-Awesome! 🎉
+Awesome! ✅ 🎉
 
 <b>Please follow this link to join the video call:</b>
 
 https://swipy.daily.co/anothertestroom"""
 
 UTTER_PARTNER_READY_ROOM_URL_TEXT = """\
-Done! 🎉
+Done! ✅ 🎉
 
 <b>Please follow this link to join the video call:</b>
 
@@ -135,10 +135,9 @@ RESTART_MARKUP = (
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
-OK_WAITING_CANCEL_MARKUP = (
+CANCEL_MARKUP = (
     '{"keyboard":['
 
-    '[{"text":"Ok, waiting"}],'
     '[{"text":"Cancel"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
@@ -1171,7 +1170,7 @@ async def test_action_accept_invitation_confirm_with_asker(
         'custom': {
             'text': expected_response_text,
             'parse_mode': 'html',
-            'reply_markup': OK_WAITING_CANCEL_MARKUP,
+            'reply_markup': CANCEL_MARKUP,
         },
         'elements': [],
         'image': None,
@@ -1297,7 +1296,7 @@ async def test_action_accept_invitation_partner_not_waiting(
         'custom': {
             'text': expected_response_text,
             'parse_mode': 'html',
-            'reply_markup': OK_WAITING_CANCEL_MARKUP,
+            'reply_markup': CANCEL_MARKUP,
         },
         'elements': [],
         'image': None,
@@ -1812,7 +1811,7 @@ async def test_action_expire_partner_confirmation(
             'custom': {
                 'text': expected_response_text,
                 'parse_mode': 'html',
-                'reply_markup': OK_WAITING_CANCEL_MARKUP,
+                'reply_markup': CANCEL_MARKUP,
             },
             'elements': [],
             'image': None,
