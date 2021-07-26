@@ -440,6 +440,32 @@ class ActionRewind(BaseSwiperAction):  # TODO oleksandr: are you sure it should 
         ]
 
 
+class ActionTakeABreak(BaseSwiperAction):
+    def name(self) -> Text:
+        return 'action_take_a_break'
+
+    def should_update_user_activity_timestamp(self, tracker: Tracker) -> bool:
+        return True
+
+    async def swipy_run(
+            self, dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
+            current_user: UserStateMachine,
+            user_vault: IUserVault,
+    ) -> List[Dict[Text, Any]]:
+        # noinspection PyUnresolvedReferences
+        current_user.take_a_break()
+        current_user.save()
+
+        return [
+            SlotSet(
+                key=SWIPER_ACTION_RESULT_SLOT,
+                value=SwiperActionResult.SUCCESS,
+            ),
+        ]
+
+
 class ActionStopTheCall(BaseSwiperAction):
     def name(self) -> Text:
         return 'action_stop_the_call'

@@ -8,6 +8,7 @@ all_expected_user_states = [
     'roomed',
     'rejected_join',
     'rejected_confirm',
+    'take_a_break',
     'do_not_disturb',
     'bot_blocked',
     'user_banned',
@@ -16,6 +17,7 @@ all_expected_user_states = [
 all_expected_user_state_machine_triggers = [
     'request_chitchat',
     'become_ok_to_chitchat',
+    'take_a_break',
     'wait_for_partner_to_confirm',
     'become_asked_to_join',
     'become_asked_to_confirm',

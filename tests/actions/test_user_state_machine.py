@@ -23,6 +23,7 @@ expected_catch_all_transitions = [
     ('request_chitchat', 'wants_chitchat', None),
     ('become_ok_to_chitchat', 'ok_to_chitchat', None),
     ('become_do_not_disturb', 'do_not_disturb', None),
+    ('take_a_break', 'take_a_break', None),
     ('wait_for_partner_to_confirm', 'waiting_partner_confirm', 'partner_id_in_trigger'),
     ('become_asked_to_join', 'asked_to_join', 'partner_id_in_trigger'),
     ('become_asked_to_confirm', 'asked_to_confirm', 'partner_id_in_trigger'),
@@ -67,6 +68,7 @@ expected_more_narrow_transitions = [
     ('join_room', 'new', None, 'previous_partner_id', 'previous_partner_id'),
     ('join_room', 'wants_chitchat', None, 'previous_partner_id', 'previous_partner_id'),
     ('join_room', 'ok_to_chitchat', None, 'previous_partner_id', 'previous_partner_id'),
+    ('join_room', 'take_a_break', None, 'previous_partner_id', 'previous_partner_id'),
     ('join_room', 'waiting_partner_confirm', 'roomed', 'partner_id_in_trigger', 'partner_id_in_trigger'),
     ('join_room', 'asked_to_join', None, 'previous_partner_id', 'previous_partner_id'),
     ('join_room', 'asked_to_confirm', 'roomed', 'partner_id_in_trigger', 'partner_id_in_trigger'),
@@ -80,6 +82,7 @@ expected_more_narrow_transitions = [
     ('reject_partner', 'new', None, 'previous_partner_id', 'previous_partner_id'),
     ('reject_partner', 'wants_chitchat', None, 'previous_partner_id', 'previous_partner_id'),
     ('reject_partner', 'ok_to_chitchat', None, 'previous_partner_id', 'previous_partner_id'),
+    ('reject_partner', 'take_a_break', None, 'previous_partner_id', 'previous_partner_id'),
     ('reject_partner', 'waiting_partner_confirm', 'rejected_join', 'previous_partner_id', 'previous_partner_id'),
     ('reject_partner', 'asked_to_join', 'rejected_join', 'previous_partner_id', 'previous_partner_id'),
     ('reject_partner', 'asked_to_confirm', 'rejected_confirm', 'previous_partner_id', 'previous_partner_id'),
@@ -93,6 +96,7 @@ expected_more_narrow_transitions = [
     ('reject_invitation', 'new', None, 'previous_partner_id', 'previous_partner_id'),
     ('reject_invitation', 'wants_chitchat', None, 'previous_partner_id', 'previous_partner_id'),
     ('reject_invitation', 'ok_to_chitchat', None, 'previous_partner_id', 'previous_partner_id'),
+    ('reject_invitation', 'take_a_break', None, 'previous_partner_id', 'previous_partner_id'),
     ('reject_invitation', 'waiting_partner_confirm', 'rejected_join', 'previous_partner_id', 'previous_partner_id'),
     ('reject_invitation', 'asked_to_join', 'rejected_join', 'previous_partner_id', 'previous_partner_id'),
     ('reject_invitation', 'asked_to_confirm', 'rejected_confirm', 'previous_partner_id', 'previous_partner_id'),
@@ -186,6 +190,7 @@ def test_state_timestamps(source_state: Text, trigger_name: Text) -> None:
             'asked_to_confirm',
             'rejected_join',
             'rejected_confirm',
+            'take_a_break',
         ]:
             expected_timeout_ts = 1619945501 + (60 * 60 * 5)
             expected_timeout_ts_str = '2021-05-02 13:51:41 Z'

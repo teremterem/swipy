@@ -135,6 +135,7 @@ def test_get_random_available_partner(
             'roomed',
             'rejected_join',
             'rejected_confirm',
+            'take_a_break',
         ],
         'existing_user_id1',
         [
@@ -177,6 +178,7 @@ def test_get_random_available_partner_none(
                 'roomed',
                 'rejected_join',
                 'rejected_confirm',
+                'take_a_break',
             ],
             'existing_user_id1',
             [
