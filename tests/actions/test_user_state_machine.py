@@ -23,6 +23,7 @@ expected_catch_all_transitions = [
     ('request_chitchat', 'wants_chitchat', None),
     ('become_ok_to_chitchat', 'ok_to_chitchat', None),
     ('become_do_not_disturb', 'do_not_disturb', None),
+    ('take_a_break', 'take_a_break', None),
     ('wait_for_partner_to_confirm', 'waiting_partner_confirm', 'partner_id_in_trigger'),
     ('become_asked_to_join', 'asked_to_join', 'partner_id_in_trigger'),
     ('become_asked_to_confirm', 'asked_to_confirm', 'partner_id_in_trigger'),
@@ -186,6 +187,7 @@ def test_state_timestamps(source_state: Text, trigger_name: Text) -> None:
             'asked_to_confirm',
             'rejected_join',
             'rejected_confirm',
+            'take_a_break',
         ]:
             expected_timeout_ts = 1619945501 + (60 * 60 * 5)
             expected_timeout_ts_str = '2021-05-02 13:51:41 Z'
