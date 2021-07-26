@@ -509,7 +509,7 @@ class ActionStopTheCall(BaseSwiperAction):
 
         if room_deleted:
             dispatcher.utter_message(custom={
-                'text': "This video call will be stopped shortly (if it hasn't already).\n"
+                'text': "The call will be stopped shortly (if it hasn't already).\n"
                         "\n"
                         "Thank you!",
 
@@ -1029,7 +1029,7 @@ class ActionJoinRoom(BaseSwiperAction):
 def utter_room_url(dispatcher: CollectingDispatcher, room_url: Text, after_confirming_with_partner: bool):
     shout = 'Done!' if after_confirming_with_partner else 'Awesome!'
     dispatcher.utter_message(custom={
-        'text': f"{shout} 🎉\n"
+        'text': f"{shout} ✅\n"
                 f"\n"
                 f"<b>Please follow this link to join the video call:</b>\n"
                 f"\n"
