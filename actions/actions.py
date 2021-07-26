@@ -509,9 +509,9 @@ class ActionStopTheCall(BaseSwiperAction):
 
         if room_deleted:
             dispatcher.utter_message(custom={
-                'text': "The call will be stopped shortly (if it hasn't already).\n"
+                'text': "Thank you!\n"
                         "\n"
-                        "Thank you!",
+                        "The call will be stopped shortly (if it hasn't already).",
 
                 'parse_mode': 'html',
                 'reply_markup': NEW_VIDEO_CALL_MARKUP,
