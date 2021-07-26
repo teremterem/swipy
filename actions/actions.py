@@ -111,10 +111,10 @@ START_OVER_MARKUP = (
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
-FIND_ANOTHER_PERSON_MARKUP = (
+NEW_VIDEO_CHAT_MARKUP = (
     '{"keyboard":['
 
-    '[{"text":"Find another person"}]'
+    '[{"text":"New video chat"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
@@ -509,17 +509,19 @@ class ActionStopTheCall(BaseSwiperAction):
 
         if room_deleted:
             dispatcher.utter_message(custom={
-                'text': "Thanks, this video call will be stopped shortly (if it hasn't already).",
+                'text': "This video call will be stopped shortly (if it hasn't already).\n"
+                        "\n"
+                        "Thank you!",
 
                 'parse_mode': 'html',
-                'reply_markup': FIND_ANOTHER_PERSON_MARKUP,
+                'reply_markup': NEW_VIDEO_CHAT_MARKUP,
             })
         else:
             dispatcher.utter_message(custom={
-                'text': 'Thanks, this video call has already been stopped.',
+                'text': 'Thank you!',
 
                 'parse_mode': 'html',
-                'reply_markup': FIND_ANOTHER_PERSON_MARKUP,
+                'reply_markup': NEW_VIDEO_CHAT_MARKUP,
             })
 
         return [
@@ -597,7 +599,7 @@ class ActionRoomDisposalReport(BaseSwiperAction):
             'text': f"{presented_partner} has stopped the call.",
 
             'parse_mode': 'html',
-            'reply_markup': FIND_ANOTHER_PERSON_MARKUP,
+            'reply_markup': NEW_VIDEO_CHAT_MARKUP,
         })
 
         current_user.latest_room_name = None
@@ -637,7 +639,7 @@ class ActionRoomExpirationReport(BaseSwiperAction):
             'text': f"Video chat has expired.",
 
             'parse_mode': 'html',
-            'reply_markup': FIND_ANOTHER_PERSON_MARKUP,
+            'reply_markup': NEW_VIDEO_CHAT_MARKUP,
         })
 
         current_user.latest_room_name = None
