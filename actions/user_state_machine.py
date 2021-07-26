@@ -33,6 +33,7 @@ class UserState:
     ROOMED = 'roomed'
     REJECTED_JOIN = 'rejected_join'
     REJECTED_CONFIRM = 'rejected_confirm'
+    TAKE_A_BREAK = 'take_a_break'
     DO_NOT_DISTURB = 'do_not_disturb'
     BOT_BLOCKED = 'bot_blocked'
     USER_BANNED = 'user_banned'
@@ -47,6 +48,7 @@ class UserState:
         ROOMED,
         REJECTED_JOIN,
         REJECTED_CONFIRM,
+        TAKE_A_BREAK,
         DO_NOT_DISTURB,
         BOT_BLOCKED,
     ]
@@ -61,6 +63,7 @@ class UserState:
         ROOMED,
         REJECTED_JOIN,
         REJECTED_CONFIRM,
+        TAKE_A_BREAK,
     ]
     offerable_states = [
                            WANTS_CHITCHAT,
@@ -131,6 +134,16 @@ class UserStateMachine(UserModel):
             trigger='become_ok_to_chitchat',
             source=UserState.all_states_except_user_banned,
             dest=UserState.OK_TO_CHITCHAT,
+            after=[
+                self._drop_partner_id,
+            ],
+        )
+
+        # noinspection PyTypeChecker
+        self.machine.add_transition(
+            trigger='take_a_break',
+            source=UserState.all_states_except_user_banned,
+            dest=UserState.TAKE_A_BREAK,
             after=[
                 self._drop_partner_id,
             ],
@@ -374,7 +387,6 @@ class UserStateMachine(UserModel):
             elif event.transition.dest == UserState.ROOMED:
                 timeout = ROOMED_STATE_TIMEOUT_SEC
             else:
-                # TODO oleksandr: care to switch to secrets ?
                 timeout = random.randint(SWIPER_STATE_MIN_TIMEOUT_SEC, SWIPER_STATE_MAX_TIMEOUT_SEC)
 
             self.state_timeout_ts = self.state_timestamp + timeout

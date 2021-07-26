@@ -672,6 +672,7 @@ async def test_action_find_partner(
                 'roomed',
                 'rejected_join',
                 'rejected_confirm',
+                'take_a_break',
             ],
             'unit_test_user',
             [
@@ -794,6 +795,7 @@ async def test_action_find_partner_no_one(
             'roomed',
             'rejected_join',
             'rejected_confirm',
+            'take_a_break',
         ],
         'unit_test_user',
         expected_excluded_partner_ids,
