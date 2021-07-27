@@ -180,12 +180,12 @@ responses:
   - custom:
       parse_mode: html
       reply_markup: '{{"keyboard":[[{{"text":"Start over"}}]],"resize_keyboard":true,"one_time_keyboard":true}}'
-      text: Ok, should you decide that you want to practice your English speaking skills 🇬🇧 on a video call with a stranger just let me know 😉
-  utter_ok_let_me_know_to_try_again:
+      text: "Ok, declined ❌\n\nLet me know if you change your mind \U0001F609"
+  utter_ok_i_will_keep_you_in_mind:
   - custom:
       parse_mode: html
-      reply_markup: '{{"keyboard":[[{{"text":"Try again now"}}]],"resize_keyboard":true,"one_time_keyboard":true}}'
-      text: Ok, should you decide that you want to practice your English speaking skills 🇬🇧 on a video call with a stranger just let me know 😉
+      reply_markup: '{{"keyboard":[[{{"text":"Look again now"}}]],"resize_keyboard":true,"one_time_keyboard":true}}'
+      text: "Ok, not looking actively ❌\n\n I will, however, let you know if someone shows up \U0001F609"
 actions:
 - action_session_start
 - action_offer_chitchat
