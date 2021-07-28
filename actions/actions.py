@@ -31,6 +31,7 @@ FIND_PARTNER_FREQUENCY_SEC = float(os.getenv('FIND_PARTNER_FREQUENCY_SEC', '5'))
 PARTNER_SEARCH_TIMEOUT_SEC = int(os.getenv('PARTNER_SEARCH_TIMEOUT_SEC', '114'))  # 1 minute 54 seconds
 ROOM_DISPOSAL_REPORT_DELAY_SEC = int(os.getenv('ROOM_DISPOSAL_REPORT_DELAY_SEC', '60'))  # 1 minute
 GREETING_MAKES_USER_OK_TO_CHITCHAT = strtobool(os.getenv('GREETING_MAKES_USER_OK_TO_CHITCHAT', 'no'))
+SEARCH_CANCELLATION_TAKES_A_BREAK = strtobool(os.getenv('SEARCH_CANCELLATION_TAKES_A_BREAK', 'no'))
 
 SWIPER_STATE_SLOT = 'swiper_state'
 SWIPER_ACTION_RESULT_SLOT = 'swiper_action_result'
@@ -446,9 +447,9 @@ class ActionRewind(BaseSwiperAction):  # TODO oleksandr: are you sure it should 
         ]
 
 
-class ActionTakeABreak(BaseSwiperAction):
+class ActionStopPartnerSearch(BaseSwiperAction):
     def name(self) -> Text:
-        return 'action_take_a_break'
+        return 'action_stop_partner_search'
 
     def should_update_user_activity_timestamp(self, tracker: Tracker) -> bool:
         return True
@@ -460,8 +461,12 @@ class ActionTakeABreak(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        # noinspection PyUnresolvedReferences
-        current_user.take_a_break()
+        if SEARCH_CANCELLATION_TAKES_A_BREAK:
+            # noinspection PyUnresolvedReferences
+            current_user.take_a_break()
+        else:
+            # noinspection PyUnresolvedReferences
+            current_user.become_ok_to_chitchat()
         current_user.save()
 
         return [
@@ -659,7 +664,11 @@ class ActionFindPartner(BaseSwiperAction):
         return ACTION_FIND_PARTNER
 
     def should_update_user_activity_timestamp(self, tracker: Tracker) -> bool:
-        return not self.is_triggered_by_reminder(tracker)
+        if tracker.followup_action == ACTION_FIND_PARTNER:
+            return False
+        if self.is_triggered_by_reminder(tracker):
+            return False
+        return True
 
     @staticmethod
     def is_triggered_by_reminder(tracker: Tracker) -> bool:
@@ -680,11 +689,7 @@ class ActionFindPartner(BaseSwiperAction):
         if self.is_triggered_by_reminder(tracker):
             revert_user_utterance = True
 
-            if current_user.state not in [
-                UserState.WANTS_CHITCHAT,
-                UserState.OK_TO_CHITCHAT,
-                UserState.WAITING_PARTNER_CONFIRM,
-            ]:
+            if current_user.state != UserState.WANTS_CHITCHAT:
                 # the search was stopped for the user one way or another (user said stop, or was asked to join etc.)
                 # => don't do any partner searching and don't schedule another reminder
                 return [
@@ -981,9 +986,13 @@ class ActionJoinRoom(BaseSwiperAction):
         return latest_intent == rasa_callbacks.EXTERNAL_JOIN_ROOM_INTENT
 
     def should_update_user_activity_timestamp(self, tracker: Tracker) -> bool:
-        return not self.is_intent_external(tracker)
-        # simple False would have worked too, though, because when the latest intent is not external
-        # ActionAcceptInvitation goes right before this one
+        if tracker.followup_action == ACTION_JOIN_ROOM:
+            return False
+        if self.is_intent_external(tracker):
+            return False
+        return True
+        # it will never return True, though (in current design
+        # it is always either a followup or an external intent)
 
     async def swipy_run(
             self, dispatcher: CollectingDispatcher,
