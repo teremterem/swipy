@@ -198,7 +198,7 @@ actions:
 - action_expire_partner_confirmation
 - action_default_fallback
 - action_rewind
-- action_take_a_break
+- action_stop_partner_search
 - action_stop_the_call
 - action_schedule_room_disposal_report
 - action_room_disposal_report
