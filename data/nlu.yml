@@ -120,7 +120,7 @@ nlu:
   examples: |
     - Thanks
     - Was nice chatting
-- intent: out_of_scope
+- intent: nlu_fallback
   examples: |
     - г
     - I have a photo
@@ -130,6 +130,4 @@ nlu:
     - упс, не туда)
     - упс
     - https://www.screencast.com/t/pWdPt5UIE
-- intent: nlu_fallback
-  examples: |
     - I stell you
