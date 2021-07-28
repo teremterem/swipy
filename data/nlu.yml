@@ -55,6 +55,7 @@ nlu:
     - Yes, please
     - That would be great
     - Ok, cool
+    - Yas can
 - intent: waiting
   examples: |
     - Ok, waiting
@@ -114,6 +115,7 @@ nlu:
     - Ok where is the link?
     - Ok. How to call you?
     - Why?
+    - Ha?
 - intent: gratitude
   examples: |
     - Thanks
@@ -128,3 +130,6 @@ nlu:
     - упс, не туда)
     - упс
     - https://www.screencast.com/t/pWdPt5UIE
+- intent: nlu_fallback
+  examples: |
+    - I stell you
