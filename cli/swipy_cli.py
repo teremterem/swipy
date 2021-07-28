@@ -33,6 +33,12 @@ def _set_everyones_state(state: Text) -> None:
 
     counter = 0
     for item in user_state_machine_table.scan()['Items']:
+        if item.get('state') in [
+            UserState.DO_NOT_DISTURB,
+            UserState.USER_BANNED,
+        ]:
+            continue
+
         user_state_machine_table.update_item(
             Key={'user_id': item['user_id']},
             UpdateExpression='set #state=:state',
@@ -56,6 +62,12 @@ def make_everyone_available_to_everyone() -> None:
 
     counter = 0
     for item in user_state_machine_table.scan()['Items']:
+        if item.get('state') in [
+            UserState.DO_NOT_DISTURB,
+            UserState.USER_BANNED,
+        ]:
+            continue
+
         user_state_machine_table.update_item(
             Key={'user_id': item['user_id']},
             UpdateExpression='SET #state=:state REMOVE #roomed, #rejected, #seen',  # , #room_name',
@@ -75,7 +87,27 @@ def make_everyone_available_to_everyone() -> None:
 
 
 @swipy.command()
-def make_everyone_do_not_disturb() -> None:
+def remove_obsolete_attributes() -> None:
+    user_state_machine_table = _prompt_ddb_table()
+
+    counter = 0
+    for item in user_state_machine_table.scan()['Items']:
+        user_state_machine_table.update_item(
+            Key={'user_id': item['user_id']},
+            UpdateExpression='REMOVE #blahblah, #exclude_list',
+            ExpressionAttributeNames={
+                '#blahblah': 'blahblah',  # just testing removal of a non-existent dummy attribute
+                '#exclude_list': 'exclude_partner_ids',
+            },
+        )
+        counter += 1
+        if counter % 10 == 0:
+            print(counter)
+    print('DONE FOR', counter, 'ITEMS')
+
+
+@swipy.command()
+def make_everyone_do_not_disturb() -> None:  # TODO oleksandr: replace with make_everyone_take_a_break
     _set_everyones_state(UserState.DO_NOT_DISTURB)
 
 
@@ -105,6 +137,12 @@ def start_everyone() -> None:
     async def do_callbacks():
         counter = 0
         for item in user_state_machine_table.scan()['Items']:
+            if item.get('state') in [
+                UserState.DO_NOT_DISTURB,
+                UserState.USER_BANNED,
+            ]:
+                continue
+
             print(item.get('user_id'))
             pprint(item.get('telegram_from'))
 
