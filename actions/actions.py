@@ -230,7 +230,7 @@ class BaseSwiperAction(Action, ABC):
                 ))
 
             if TELL_USER_ABOUT_ERRORS:
-                dispatcher.utter_message(custom={
+                dispatcher.utter_message(json_message={
                     'text': 'Ouch! Something went wrong 🤖',
 
                     'parse_mode': 'html',
@@ -337,7 +337,7 @@ class ActionOfferChitchat(BaseSwiperAction):
         latest_intent = tracker.get_intent_of_latest_message()
 
         if latest_intent == 'help':
-            dispatcher.utter_message(custom={  # TODO oleksandr: rewrite this text ?
+            dispatcher.utter_message(json_message={  # TODO oleksandr: rewrite this text ?
                 'text': 'I can arrange video chitchat with another human for you 🎥 🗣 ☎️\n'
                         '\n'
                         'Here is how it works:\n'
@@ -356,7 +356,7 @@ class ActionOfferChitchat(BaseSwiperAction):
             self.offer_chitchat_again(dispatcher, "I'm sorry, but I cannot help you with that 🤖")
 
         else:  # 'greet'
-            dispatcher.utter_message(custom={
+            dispatcher.utter_message(json_message={
                 'text': 'Hi, my name is Swipy 🙂\n'
                         '\n'
                         'I can connect you with a stranger in a video chat '
@@ -370,7 +370,7 @@ class ActionOfferChitchat(BaseSwiperAction):
 
     # noinspection PyMethodMayBeStatic
     def offer_chitchat_again(self, dispatcher: CollectingDispatcher, intro: Text) -> None:
-        dispatcher.utter_message(custom={
+        dispatcher.utter_message(json_message={
             'text': f"{intro}\n"
                     f"\n"
                     f"<b>Would you like to practice your spoken English 🇬🇧 "
@@ -515,7 +515,7 @@ class ActionStopTheCall(BaseSwiperAction):
         current_user.save()
 
         if room_deleted:
-            dispatcher.utter_message(custom={
+            dispatcher.utter_message(json_message={
                 'text': "Thank you!\n"
                         "\n"
                         "The call will be stopped shortly (if it hasn't already).",
@@ -524,7 +524,7 @@ class ActionStopTheCall(BaseSwiperAction):
                 'reply_markup': NEW_VIDEO_CALL_MARKUP,
             })
         else:
-            dispatcher.utter_message(custom={
+            dispatcher.utter_message(json_message={
                 'text': 'Thank you!',
 
                 'parse_mode': 'html',
@@ -602,7 +602,7 @@ class ActionRoomDisposalReport(BaseSwiperAction):
             partner_first_name,
             'Your chit-chat partner',
         )
-        dispatcher.utter_message(custom={
+        dispatcher.utter_message(json_message={
             'text': f"{presented_partner} has stopped the call.",
 
             'parse_mode': 'html',
@@ -642,7 +642,7 @@ class ActionRoomExpirationReport(BaseSwiperAction):
                 UserUtteranceReverted(),
             ]
 
-        dispatcher.utter_message(custom={
+        dispatcher.utter_message(json_message={
             'text': f"Video call has expired.",
 
             'parse_mode': 'html',
@@ -748,7 +748,7 @@ class ActionFindPartner(BaseSwiperAction):
                 ),
             ]
 
-        dispatcher.utter_message(custom={
+        dispatcher.utter_message(json_message={
             'text': "Unfortunately, I couldn't find anyone in two minutes 😞\n"
                     "\n"
                     "<b>Would you like me to try searching again?</b>",
@@ -849,7 +849,7 @@ class ActionAskToJoin(BaseSwiperAction):
         custom_dict['parse_mode'] = 'html'
         custom_dict['reply_markup'] = YES_NO_SOMEONE_ELSE_MARKUP
 
-        dispatcher.utter_message(custom=custom_dict)
+        dispatcher.utter_message(json_message=custom_dict)
 
         return [
             SlotSet(
@@ -954,7 +954,7 @@ class ActionAcceptInvitation(BaseSwiperAction):
         current_user.wait_for_partner_to_confirm(partner.user_id)
         current_user.save()
 
-        dispatcher.utter_message(custom={
+        dispatcher.utter_message(json_message={
             'text': f"Just a moment, I'm checking if {present_partner_name(partner.get_first_name(), 'that person')} "
                     f"is ready too...\n"
                     f"\n"
@@ -1054,7 +1054,7 @@ class ActionJoinRoom(BaseSwiperAction):
 
 def utter_room_url(dispatcher: CollectingDispatcher, room_url: Text, after_confirming_with_partner: bool):
     shout = 'Done!' if after_confirming_with_partner else 'Awesome!'
-    dispatcher.utter_message(custom={
+    dispatcher.utter_message(json_message={
         'text': f"{shout} ✅ 🎉\n"
                 f"\n"
                 f"<b>Please follow this link to join the video call:</b>\n"
@@ -1084,7 +1084,7 @@ class ActionDoNotDisturb(BaseSwiperAction):
         current_user.become_do_not_disturb()
         current_user.save()
 
-        dispatcher.utter_message(custom={
+        dispatcher.utter_message(json_message={
             'text': 'Ok, I will not be sending invitations anymore 🛑',
 
             'parse_mode': 'html',
@@ -1113,17 +1113,30 @@ class ActionRejectInvitation(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
+        if not does_invitation_go_right_before(tracker):
+            # user said yes to something but it wasn't an invitation
+            return [
+                ActionReverted(),
+                FollowupAction(ACTION_DEFAULT_FALLBACK_NAME),
+            ]
+
         is_asked_to_confirm = current_user.state == UserState.ASKED_TO_CONFIRM
         partner_id = current_user.partner_id
 
         latest_intent = tracker.get_intent_of_latest_message()
+        user_wants_a_different_partner = latest_intent == VIDEOCHAT_INTENT
 
-        if latest_intent == VIDEOCHAT_INTENT:  # user wants a different partner ("Someone else" button, most likely)
+        if user_wants_a_different_partner:
             # noinspection PyUnresolvedReferences
             current_user.reject_partner()
+
+            dispatcher.utter_message(template='utter_ok_looking_for_partner')
         else:
             # noinspection PyUnresolvedReferences
             current_user.reject_invitation()
+
+            dispatcher.utter_message(template='utter_ok_invitation_declined')
+
         current_user.save()
 
         if is_asked_to_confirm:  # as opposed to asked_to_join
@@ -1136,6 +1149,37 @@ class ActionRejectInvitation(BaseSwiperAction):
                     partner,
                     suppress_callback_errors=True,
                 )
+
+        events = [
+            SlotSet(
+                key=SWIPER_ACTION_RESULT_SLOT,
+                value=SwiperActionResult.SUCCESS,
+            ),
+        ]
+        if user_wants_a_different_partner:
+            events.append(FollowupAction(ACTION_FIND_PARTNER_NAME))
+        return events
+
+
+class ActionCancelAcceptedInvitation(BaseSwiperAction):
+    def name(self) -> Text:
+        return 'action_cancel_accepted_invitation'
+
+    def should_update_user_activity_timestamp(self, tracker: Tracker) -> bool:
+        return True
+
+    async def swipy_run(
+            self, dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
+            current_user: UserStateMachine,
+            user_vault: IUserVault,
+    ) -> List[Dict[Text, Any]]:
+        # noinspection PyUnresolvedReferences
+        current_user.reject_invitation()
+        current_user.save()
+
+        dispatcher.utter_message(template='utter_ok_invitation_declined_no_dnd')
 
         return [
             SlotSet(
@@ -1195,7 +1239,7 @@ def present_partner_name(first_name: Text, placeholder: Text) -> Text:
 
 
 def utter_partner_already_gone(dispatcher: CollectingDispatcher, partner_first_name: Text):
-    dispatcher.utter_message(custom={
+    dispatcher.utter_message(json_message={
         'text': f"{present_partner_name(partner_first_name, 'That person')} has become unavailable 😵\n"
                 f"\n"
                 f"Fear not!\n"
