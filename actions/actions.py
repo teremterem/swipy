@@ -9,7 +9,7 @@ from typing import Any, Text, Dict, List, Optional, Union
 
 from rasa_sdk import Action, Tracker
 from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType, ReminderScheduled, \
-    UserUtteranceReverted, FollowupAction
+    UserUtteranceReverted, FollowupAction, ActionReverted
 from rasa_sdk.executor import CollectingDispatcher
 from rasa_sdk.interfaces import ACTION_LISTEN_NAME
 
@@ -49,9 +49,12 @@ EXTERNAL_EXPIRE_PARTNER_CONFIRMATION_INTENT = 'EXTERNAL_expire_partner_confirmat
 EXTERNAL_ROOM_DISPOSAL_REPORT_INTENT = 'EXTERNAL_room_disposal_report'
 EXTERNAL_ROOM_EXPIRATION_REPORT_INTENT = 'EXTERNAL_room_expiration_report'
 
-ACTION_FIND_PARTNER = 'action_find_partner'
-ACTION_ACCEPT_INVITATION = 'action_accept_invitation'
-ACTION_JOIN_ROOM = 'action_join_room'
+ACTION_DEFAULT_FALLBACK_NAME = 'action_default_fallback'
+ACTION_SESSION_START_NAME = 'action_session_start'
+ACTION_FIND_PARTNER_NAME = 'action_find_partner'
+ACTION_ASK_TO_JOIN_NAME = 'action_ask_to_join'
+ACTION_ACCEPT_INVITATION_NAME = 'action_accept_invitation'
+ACTION_JOIN_ROOM_NAME = 'action_join_room'
 
 
 class SwiperActionResult:
@@ -279,7 +282,7 @@ class ActionSessionStart(BaseSwiperAction):
     """Adaptation of https://github.com/RasaHQ/rasa/blob/main/rasa/core/actions/action.py ::ActionSessionStart"""
 
     def name(self) -> Text:
-        return 'action_session_start'
+        return ACTION_SESSION_START_NAME
 
     def should_update_user_activity_timestamp(self, _tracker: Tracker) -> bool:
         return False
@@ -422,7 +425,7 @@ class ActionOfferChitchat(BaseSwiperAction):
 
 class ActionDefaultFallback(ActionOfferChitchat):
     def name(self) -> Text:
-        return 'action_default_fallback'
+        return ACTION_DEFAULT_FALLBACK_NAME
 
     def offer_chitchat(self, dispatcher: CollectingDispatcher, tracker: Tracker) -> None:
         self.offer_chitchat_again(dispatcher, "Forgive me, but I've lost track of our conversation 🤖")
@@ -661,10 +664,10 @@ class ActionRoomExpirationReport(BaseSwiperAction):
 
 class ActionFindPartner(BaseSwiperAction):
     def name(self) -> Text:
-        return ACTION_FIND_PARTNER
+        return ACTION_FIND_PARTNER_NAME
 
     def should_update_user_activity_timestamp(self, tracker: Tracker) -> bool:
-        if tracker.followup_action == ACTION_FIND_PARTNER:
+        if tracker.followup_action == ACTION_FIND_PARTNER_NAME:
             return False
         if self.is_triggered_by_reminder(tracker):
             return False
@@ -782,7 +785,7 @@ class ActionFindPartner(BaseSwiperAction):
 
 class ActionAskToJoin(BaseSwiperAction):
     def name(self) -> Text:
-        return 'action_ask_to_join'
+        return ACTION_ASK_TO_JOIN_NAME
 
     def should_update_user_activity_timestamp(self, tracker: Tracker) -> bool:
         return False
@@ -856,9 +859,17 @@ class ActionAskToJoin(BaseSwiperAction):
         ]
 
 
+def does_invitation_go_right_before(tracker: Tracker):
+    filtered_reversed_applied_events = filter(
+        lambda e: e.get('event') == 'action' and e.get('name') not in [ACTION_LISTEN_NAME, ACTION_SESSION_START_NAME],
+        reversed(tracker.applied_events()),
+    )
+    return next(filtered_reversed_applied_events, '') == ACTION_ASK_TO_JOIN_NAME
+
+
 class ActionAcceptInvitation(BaseSwiperAction):
     def name(self) -> Text:
-        return ACTION_ACCEPT_INVITATION
+        return ACTION_ACCEPT_INVITATION_NAME
 
     def should_update_user_activity_timestamp(self, tracker: Tracker) -> bool:
         return True
@@ -870,6 +881,13 @@ class ActionAcceptInvitation(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
+        if not does_invitation_go_right_before(tracker):
+            # user said yes to something but it wasn't an invitation
+            return [
+                ActionReverted(),
+                FollowupAction(ACTION_DEFAULT_FALLBACK_NAME),
+            ]
+
         partner = user_vault.get_user(current_user.partner_id)
 
         # noinspection PyBroadException
@@ -913,7 +931,7 @@ class ActionAcceptInvitation(BaseSwiperAction):
                 key=rasa_callbacks.ROOM_NAME_SLOT,
                 value=room_name,
             ),
-            FollowupAction(ACTION_JOIN_ROOM),
+            FollowupAction(ACTION_JOIN_ROOM_NAME),
         ]
 
     @staticmethod
@@ -972,13 +990,13 @@ class ActionAcceptInvitation(BaseSwiperAction):
                 key=SWIPER_ACTION_RESULT_SLOT,
                 value=SwiperActionResult.PARTNER_NOT_WAITING_ANYMORE,
             ),
-            FollowupAction(ACTION_FIND_PARTNER),
+            FollowupAction(ACTION_FIND_PARTNER_NAME),
         ]
 
 
 class ActionJoinRoom(BaseSwiperAction):
     def name(self) -> Text:
-        return ACTION_JOIN_ROOM
+        return ACTION_JOIN_ROOM_NAME
 
     @staticmethod
     def is_intent_external(tracker: Tracker):
@@ -986,7 +1004,7 @@ class ActionJoinRoom(BaseSwiperAction):
         return latest_intent == rasa_callbacks.EXTERNAL_JOIN_ROOM_INTENT
 
     def should_update_user_activity_timestamp(self, tracker: Tracker) -> bool:
-        if tracker.followup_action == ACTION_JOIN_ROOM:
+        if tracker.followup_action == ACTION_JOIN_ROOM_NAME:
             return False
         if self.is_intent_external(tracker):
             return False
@@ -1166,7 +1184,7 @@ class ActionExpirePartnerConfirmation(BaseSwiperAction):
                 key=SWIPER_ACTION_RESULT_SLOT,
                 value=SwiperActionResult.SUCCESS,
             ),
-            FollowupAction(ACTION_FIND_PARTNER),
+            FollowupAction(ACTION_FIND_PARTNER_NAME),
         ]
 
 
