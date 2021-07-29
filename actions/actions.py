@@ -68,6 +68,13 @@ class SwiperActionResult:
     ERROR = 'error'
 
 
+INVITATION_DECLINED_TEXT = (
+    'Ok, declined ❌\n'
+    '\n'
+    'Should you decide that you want to practice your English speaking skills 🇬🇧 '
+    'on a video call with a stranger just let me know 😉'
+)
+
 REMOVE_KEYBOARD_MARKUP = '{"remove_keyboard":true}'
 RESTART_MARKUP = (
     '{"keyboard":['
@@ -111,6 +118,14 @@ START_OVER_MARKUP = (
     '{"keyboard":['
 
     '[{"text":"Start over"}]'
+
+    '],"resize_keyboard":true,"one_time_keyboard":true}'
+)
+START_OVER_DND_MARKUP = (
+    '{"keyboard":['
+
+    '[{"text":"Start over"}],'
+    '[{"text":"Do not disturb me"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
@@ -1135,7 +1150,11 @@ class ActionRejectInvitation(BaseSwiperAction):
             # noinspection PyUnresolvedReferences
             current_user.reject_invitation()
 
-            dispatcher.utter_message(template='utter_ok_invitation_declined')
+            dispatcher.utter_message(json_message={
+                'text': INVITATION_DECLINED_TEXT,
+                'parse_mode': 'html',
+                'reply_markup': START_OVER_DND_MARKUP,
+            })
 
         current_user.save()
 
@@ -1179,7 +1198,11 @@ class ActionCancelAcceptedInvitation(BaseSwiperAction):
         current_user.reject_invitation()
         current_user.save()
 
-        dispatcher.utter_message(template='utter_ok_invitation_declined_no_dnd')
+        dispatcher.utter_message(json_message={
+            'text': INVITATION_DECLINED_TEXT,
+            'parse_mode': 'html',
+            'reply_markup': START_OVER_MARKUP,
+        })
 
         return [
             SlotSet(
