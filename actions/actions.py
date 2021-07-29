@@ -1114,7 +1114,7 @@ class ActionRejectInvitation(BaseSwiperAction):
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
         if not does_invitation_go_right_before(tracker):
-            # user said yes to something but it wasn't an invitation
+            # user rejected something but it wasn't an invitation
             return [
                 ActionReverted(),
                 FollowupAction(ACTION_DEFAULT_FALLBACK_NAME),
