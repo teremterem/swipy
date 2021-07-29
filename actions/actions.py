@@ -864,7 +864,7 @@ def does_invitation_go_right_before(tracker: Tracker):
         lambda e: e.get('event') == 'action' and e.get('name') not in [ACTION_LISTEN_NAME, ACTION_SESSION_START_NAME],
         reversed(tracker.applied_events()),
     )
-    return next(filtered_reversed_applied_events, '') == ACTION_ASK_TO_JOIN_NAME
+    return next(filtered_reversed_applied_events, {}).get('name') == ACTION_ASK_TO_JOIN_NAME
 
 
 class ActionAcceptInvitation(BaseSwiperAction):
