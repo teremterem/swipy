@@ -125,6 +125,12 @@ Hey! <b><i>unitTest firstName30</i></b> is willing to chitchat with 👉 you �
 
 <b>Are you ready for a video call?</b> 🎥 ☎️"""
 
+UTTER_INVITATION_DECLINED = """\
+Ok, declined ❌
+
+Should you decide that you want to practice your English speaking skills 🇬🇧 \
+on a video call with a stranger just let me know 😉"""
+
 UTTER_DND = 'Ok, I will not be sending invitations anymore 🛑'
 
 REMOVE_KEYBOARD_MARKUP = '{"remove_keyboard":true}'
@@ -170,6 +176,14 @@ START_OVER_MARKUP = (
     '{"keyboard":['
 
     '[{"text":"Start over"}]'
+
+    '],"resize_keyboard":true,"one_time_keyboard":true}'
+)
+START_OVER_DND_MARKUP = (
+    '{"keyboard":['
+
+    '[{"text":"Start over"}],'
+    '[{"text":"Do not disturb me"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
@@ -1670,6 +1684,10 @@ async def test_action_reject_invitation(
         newbie=True,
     ))
 
+    tracker.events.append({
+        'event': 'action',
+        'name': 'action_ask_to_join',
+    })
     tracker.latest_message = {'intent_ranking': [{'name': latest_intent}]}
 
     action = actions.ActionRejectInvitation()
@@ -1680,12 +1698,43 @@ async def test_action_reject_invitation(
     user_vault = UserVault()  # create new instance to avoid hitting cache
 
     if destination_swiper_state:
-        assert actual_events == [
+        expected_events = [
             SlotSet('swiper_action_result', 'success'),
+        ]
+        if attempt_to_reject_partner:
+            expected_events.append(FollowupAction('action_find_partner'))
+        expected_events.extend([
             SlotSet('swiper_state', destination_swiper_state),
             SlotSet('partner_id', 'some_test_partner_id'),
-        ]
-        assert dispatcher.messages == []
+        ])
+        assert actual_events == expected_events
+
+        if attempt_to_reject_partner:
+            assert dispatcher.messages == [{
+                'attachment': None,
+                'buttons': [],
+                'custom': {},
+                'elements': [],
+                'image': None,
+                'response': 'utter_ok_looking_for_partner',
+                'template': 'utter_ok_looking_for_partner',
+                'text': None,
+            }]
+        else:
+            assert dispatcher.messages == [{
+                'attachment': None,
+                'buttons': [],
+                'custom': {
+                    'text': UTTER_INVITATION_DECLINED,
+                    'parse_mode': 'html',
+                    'reply_markup': START_OVER_DND_MARKUP,
+                },
+                'elements': [],
+                'image': None,
+                'response': None,
+                'template': None,
+                'text': None,
+            }]
 
         expected_rejection_list = ['rejected_partner1', 'rejected_partner2']
         if attempt_to_reject_partner:

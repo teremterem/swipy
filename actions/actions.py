@@ -68,7 +68,7 @@ class SwiperActionResult:
     ERROR = 'error'
 
 
-INVITATION_DECLINED_TEXT = (
+UTTER_INVITATION_DECLINED = (
     'Ok, declined ❌\n'
     '\n'
     'Should you decide that you want to practice your English speaking skills 🇬🇧 '
@@ -1151,7 +1151,7 @@ class ActionRejectInvitation(BaseSwiperAction):
             current_user.reject_invitation()
 
             dispatcher.utter_message(json_message={
-                'text': INVITATION_DECLINED_TEXT,
+                'text': UTTER_INVITATION_DECLINED,
                 'parse_mode': 'html',
                 'reply_markup': START_OVER_DND_MARKUP,
             })
@@ -1199,7 +1199,7 @@ class ActionCancelAcceptedInvitation(BaseSwiperAction):
         current_user.save()
 
         dispatcher.utter_message(json_message={
-            'text': INVITATION_DECLINED_TEXT,
+            'text': UTTER_INVITATION_DECLINED,
             'parse_mode': 'html',
             'reply_markup': START_OVER_MARKUP,
         })
