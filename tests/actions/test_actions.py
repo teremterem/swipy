@@ -1045,6 +1045,11 @@ async def test_action_accept_invitation_create_room(
         newbie=True,
     ))
 
+    tracker.events.append({
+        'event': 'action',
+        'name': 'action_ask_to_join',
+    })
+
     action = actions.ActionAcceptInvitation()
     assert action.name() == 'action_accept_invitation'
 
@@ -1162,6 +1167,11 @@ async def test_action_accept_invitation_confirm_with_asker(
         seen_partner_ids=['seen_partner1', 'seen_partner2', 'seen_partner3'],
         newbie=True,
     ))
+
+    tracker.events.append({
+        'event': 'action',
+        'name': 'action_ask_to_join',
+    })
 
     actual_events = await actions.ActionAcceptInvitation().run(dispatcher, tracker, domain)
     assert actual_events == [
@@ -1297,6 +1307,11 @@ async def test_action_accept_invitation_partner_not_waiting(
         seen_partner_ids=['seen_partner1', 'seen_partner2', 'seen_partner3'],
     ))
 
+    tracker.events.append({
+        'event': 'action',
+        'name': 'action_ask_to_join',
+    })
+
     actual_events = await actions.ActionAcceptInvitation().run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'partner_not_waiting_anymore'),
@@ -1377,6 +1392,11 @@ async def test_action_accept_invitation_no_partner_id(
         newbie=True,
     ))
     user_vault.save(current_user)
+
+    tracker.events.append({
+        'event': 'action',
+        'name': 'action_ask_to_join',
+    })
 
     actual_events = await actions.ActionAcceptInvitation().run(dispatcher, tracker, domain)
     expected_events = [
