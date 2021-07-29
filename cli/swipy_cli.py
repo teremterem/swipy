@@ -35,6 +35,7 @@ def _set_everyones_state(state: Text) -> None:
     for item in user_state_machine_table.scan()['Items']:
         if item.get('state') in [
             UserState.DO_NOT_DISTURB,
+            UserState.BOT_BLOCKED,
             UserState.USER_BANNED,
         ]:
             continue
@@ -64,6 +65,7 @@ def make_everyone_available_to_everyone() -> None:
     for item in user_state_machine_table.scan()['Items']:
         if item.get('state') in [
             UserState.DO_NOT_DISTURB,
+            UserState.BOT_BLOCKED,
             UserState.USER_BANNED,
         ]:
             continue
@@ -139,6 +141,7 @@ def start_everyone() -> None:
         for item in user_state_machine_table.scan()['Items']:
             if item.get('state') in [
                 UserState.DO_NOT_DISTURB,
+                UserState.BOT_BLOCKED,
                 UserState.USER_BANNED,
             ]:
                 continue
