@@ -78,7 +78,7 @@ UTTER_INVITATION_DECLINED = (
 UTTER_OK_LOOKING_FOR_PARTNER_TEMPLATE = 'utter_ok_looking_for_partner'
 
 REMOVE_KEYBOARD_MARKUP = '{"remove_keyboard":true}'
-RESTART_MARKUP = (
+RESTART_COMMAND_MARKUP = (
     '{"keyboard":['
 
     '[{"text":"/restart"}]'
@@ -260,7 +260,7 @@ class BaseSwiperAction(Action, ABC):
                     'text': 'Ouch! Something went wrong 🤖',
 
                     'parse_mode': 'html',
-                    'reply_markup': RESTART_MARKUP,
+                    'reply_markup': RESTART_COMMAND_MARKUP,
                 })
 
         else:

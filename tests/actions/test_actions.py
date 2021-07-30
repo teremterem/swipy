@@ -134,7 +134,7 @@ on a video call with a stranger just let me know 😉"""
 UTTER_DND = 'Ok, I will not be sending invitations anymore 🛑'
 
 REMOVE_KEYBOARD_MARKUP = '{"remove_keyboard":true}'
-RESTART_MARKUP = (
+RESTART_COMMAND_MARKUP = (
     '{"keyboard":['
 
     '[{"text":"/restart"}]'
@@ -237,7 +237,7 @@ async def test_action_swiper_error_trace(
         'custom': {
             'text': UTTER_ERROR_TEXT,
             'parse_mode': 'html',
-            'reply_markup': RESTART_MARKUP,
+            'reply_markup': RESTART_COMMAND_MARKUP,
         },
         'elements': [],
         'image': None,
@@ -505,13 +505,19 @@ async def test_action_offer_chitchat_and_default_fallback(
                 destination_swiper_state if greeting_makes_user_ok_to_chitchat else source_swiper_state,
             ),
         ]
+
+        if override_expected_response_text:
+            expected_response_text = override_expected_response_text
         assert dispatcher.messages == [{
             'attachment': None,
             'buttons': [],
             'custom': {
-                'text': override_expected_response_text if override_expected_response_text else expected_response_text,
+                'text': expected_response_text,
                 'parse_mode': 'html',
-                'reply_markup': YES_NO_MARKUP if latest_intent == 'help' else YES_NO_HOW_DOES_IT_WORK_MARKUP,
+                'reply_markup':
+                    YES_NO_MARKUP
+                    if expected_response_text == UTTER_HOW_IT_WORKS_TEXT else
+                    YES_NO_HOW_DOES_IT_WORK_MARKUP,
             },
             'elements': [],
             'image': None,
@@ -969,7 +975,7 @@ async def test_action_ask_to_join(
             'custom': {
                 'text': UTTER_ERROR_TEXT,
                 'parse_mode': 'html',
-                'reply_markup': RESTART_MARKUP,
+                'reply_markup': RESTART_COMMAND_MARKUP,
             },
             'elements': [],
             'image': None,
@@ -1432,7 +1438,7 @@ async def test_action_accept_invitation_no_partner_id(
         'custom': {
             'text': UTTER_ERROR_TEXT,
             'parse_mode': 'html',
-            'reply_markup': RESTART_MARKUP,
+            'reply_markup': RESTART_COMMAND_MARKUP,
         },
         'elements': [],
         'image': None,
@@ -1581,7 +1587,7 @@ async def test_action_join_room(
             'custom': {
                 'text': UTTER_ERROR_TEXT,
                 'parse_mode': 'html',
-                'reply_markup': RESTART_MARKUP,
+                'reply_markup': RESTART_COMMAND_MARKUP,
             },
             'elements': [],
             'image': None,
@@ -1808,7 +1814,7 @@ async def test_action_reject_invitation(
             'custom': {
                 'text': UTTER_ERROR_TEXT,
                 'parse_mode': 'html',
-                'reply_markup': RESTART_MARKUP,
+                'reply_markup': RESTART_COMMAND_MARKUP,
             },
             'elements': [],
             'image': None,
