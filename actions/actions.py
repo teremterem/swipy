@@ -74,6 +74,7 @@ UTTER_INVITATION_DECLINED = (
     'Should you decide that you want to practice your English speaking skills 🇬🇧 '
     'on a video call with a stranger just let me know 😉'
 )
+UTTER_OK_LOOKING_FOR_PARTNER_TEMPLATE = 'utter_ok_looking_for_partner'
 
 REMOVE_KEYBOARD_MARKUP = '{"remove_keyboard":true}'
 RESTART_MARKUP = (
@@ -1128,24 +1129,33 @@ class ActionRejectInvitation(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
+        latest_intent = tracker.get_intent_of_latest_message()
+        user_wants_a_different_partner = latest_intent == VIDEOCHAT_INTENT
+
         if not does_invitation_go_right_before(tracker):
-            # user rejected something but it wasn't an invitation
-            return [
-                ActionReverted(),
-                FollowupAction(ACTION_DEFAULT_FALLBACK_NAME),
-            ]
+            if user_wants_a_different_partner:
+                # it's not a rejection at all - user simply asked for videochat
+                dispatcher.utter_message(template=UTTER_OK_LOOKING_FOR_PARTNER_TEMPLATE)
+
+                return [
+                    ActionReverted(),
+                    FollowupAction(ACTION_FIND_PARTNER_NAME),
+                ]
+            else:
+                # user rejected something but it wasn't an invitation
+                return [
+                    ActionReverted(),
+                    FollowupAction(ACTION_DEFAULT_FALLBACK_NAME),
+                ]
 
         is_asked_to_confirm = current_user.state == UserState.ASKED_TO_CONFIRM
         partner_id = current_user.partner_id
-
-        latest_intent = tracker.get_intent_of_latest_message()
-        user_wants_a_different_partner = latest_intent == VIDEOCHAT_INTENT
 
         if user_wants_a_different_partner:
             # noinspection PyUnresolvedReferences
             current_user.reject_partner()
 
-            dispatcher.utter_message(template='utter_ok_looking_for_partner')
+            dispatcher.utter_message(template=UTTER_OK_LOOKING_FOR_PARTNER_TEMPLATE)
         else:
             # noinspection PyUnresolvedReferences
             current_user.reject_invitation()
