@@ -116,6 +116,15 @@ YES_NO_MARKUP = (
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
+YES_NO_HOW_DOES_IT_WORK_MARKUP = (
+    '{"keyboard":['
+
+    '[{"text":"Yes"}],'
+    '[{"text":"No"}],'
+    '[{"text":"How does it work?"}]'
+
+    '],"resize_keyboard":true,"one_time_keyboard":true}'
+)
 START_OVER_MARKUP = (
     '{"keyboard":['
 
@@ -382,7 +391,7 @@ class ActionOfferChitchat(BaseSwiperAction):
                         '<b>Would you like to give it a try?</b>',
 
                 'parse_mode': 'html',
-                'reply_markup': YES_NO_MARKUP,
+                'reply_markup': YES_NO_HOW_DOES_IT_WORK_MARKUP,
             })
 
     # noinspection PyMethodMayBeStatic
@@ -394,7 +403,7 @@ class ActionOfferChitchat(BaseSwiperAction):
                     f"on a video call with a stranger?</b>",
 
             'parse_mode': 'html',
-            'reply_markup': YES_NO_MARKUP,
+            'reply_markup': YES_NO_HOW_DOES_IT_WORK_MARKUP,
         })
 
     async def swipy_run(

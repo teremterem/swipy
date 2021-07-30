@@ -111,6 +111,7 @@ nlu:
     - do not disturb
 - intent: help
   examples: |
+    - How does it work?
     - What should I do?
     - Ok where is the link?
     - Ok. How to call you?
