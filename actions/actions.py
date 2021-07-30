@@ -1308,7 +1308,7 @@ def reschedule_reminder(
         intent_name,
         trigger_date_time=date,
         entities=entities,
-        name=current_user_id + intent_name,  # unique per user and and can be rescheduled for the user
+        name=current_user_id + intent_name,  # unique per user and can be rescheduled for the user
         kill_on_user_message=kill_on_user_message,
     )
     return reminder
