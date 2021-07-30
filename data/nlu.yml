@@ -2,11 +2,10 @@ version: "2.0"
 nlu:
 - intent: start
   examples: |
-    - Start over
-    - Start
-    - start
     - Restart
     - restart
+    - Start
+    - start
 - intent: greet
   examples: |
     - Hello

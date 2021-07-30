@@ -172,17 +172,26 @@ YES_NO_MARKUP = (
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
-START_OVER_MARKUP = (
+YES_NO_HOW_DOES_IT_WORK_MARKUP = (
     '{"keyboard":['
 
-    '[{"text":"Start over"}]'
+    '[{"text":"Yes"}],'
+    '[{"text":"No"}],'
+    '[{"text":"How does it work?"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
-START_OVER_DND_MARKUP = (
+RESTART_MARKUP = (
     '{"keyboard":['
 
-    '[{"text":"Start over"}],'
+    '[{"text":"Restart"}]'
+
+    '],"resize_keyboard":true,"one_time_keyboard":true}'
+)
+RESTART_DND_MARKUP = (
+    '{"keyboard":['
+
+    '[{"text":"Restart"}],'
     '[{"text":"Do not disturb me"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
@@ -502,7 +511,7 @@ async def test_action_offer_chitchat_and_default_fallback(
             'custom': {
                 'text': override_expected_response_text if override_expected_response_text else expected_response_text,
                 'parse_mode': 'html',
-                'reply_markup': YES_NO_MARKUP,
+                'reply_markup': YES_NO_HOW_DOES_IT_WORK_MARKUP,
             },
             'elements': [],
             'image': None,
@@ -1639,7 +1648,7 @@ async def test_action_do_not_disturb(
         'custom': {
             'text': UTTER_DND,
             'parse_mode': 'html',
-            'reply_markup': START_OVER_MARKUP,
+            'reply_markup': RESTART_MARKUP,
         },
         'elements': [],
         'image': None,
@@ -1747,7 +1756,7 @@ async def test_action_reject_invitation(
                 'custom': {
                     'text': UTTER_INVITATION_DECLINED,
                     'parse_mode': 'html',
-                    'reply_markup': START_OVER_DND_MARKUP,
+                    'reply_markup': RESTART_DND_MARKUP,
                 },
                 'elements': [],
                 'image': None,
