@@ -511,7 +511,7 @@ async def test_action_offer_chitchat_and_default_fallback(
             'custom': {
                 'text': override_expected_response_text if override_expected_response_text else expected_response_text,
                 'parse_mode': 'html',
-                'reply_markup': YES_NO_HOW_DOES_IT_WORK_MARKUP,
+                'reply_markup': YES_NO_MARKUP if latest_intent == 'help' else YES_NO_HOW_DOES_IT_WORK_MARKUP,
             },
             'elements': [],
             'image': None,
