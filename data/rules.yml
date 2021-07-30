@@ -184,9 +184,9 @@ rules:
 - rule: action_listen after action_join_room (needed for cases when it's triggered as a followup)
   steps:
   - action: action_join_room
-- rule: action_listen after action_reject_invitation
+- rule: action_listen after action_cancel_accepted_invitation
   steps:
-  - action: action_reject_invitation
+  - action: action_cancel_accepted_invitation
 - rule: action_listen after action_stop_partner_search
   steps:
   - action: action_stop_partner_search
