@@ -2,7 +2,7 @@ version: '2.0'
 config:
   store_entities_as_slots: true
 session_config:
-  session_expiration_time: 0
+  session_expiration_time: 180
   carry_over_slots_to_new_session: true
 intents:
 - start:
@@ -166,20 +166,10 @@ responses:
       parse_mode: html
       reply_markup: '{{"keyboard":[[{{"text":"Cancel"}}]],"resize_keyboard":true,"one_time_keyboard":true}}'
       text: "Great! Let me find someone for you to chitchat with \U0001F5E3\n\nI will get back to you within two minutes ⏳"
-  utter_ok_invitation_declined:
-  - custom:
-      parse_mode: html
-      reply_markup: '{{"keyboard":[[{{"text":"Start over"}}],[{{"text":"Do not disturb me"}}]],"resize_keyboard":true,"one_time_keyboard":true}}'
-      text: "Ok, declined ❌\n\nShould you decide that you want to practice your English speaking skills \U0001F1EC\U0001F1E7 on a video call with a stranger just let me know \U0001F609"
-  utter_ok_invitation_declined_no_dnd:
-  - custom:
-      parse_mode: html
-      reply_markup: '{{"keyboard":[[{{"text":"Start over"}}]],"resize_keyboard":true,"one_time_keyboard":true}}'
-      text: "Ok, declined ❌\n\nShould you decide that you want to practice your English speaking skills \U0001F1EC\U0001F1E7 on a video call with a stranger just let me know \U0001F609"
   utter_ok_let_me_know:
   - custom:
       parse_mode: html
-      reply_markup: '{{"keyboard":[[{{"text":"Start over"}}]],"resize_keyboard":true,"one_time_keyboard":true}}'
+      reply_markup: '{{"keyboard":[[{{"text":"Restart"}}]],"resize_keyboard":true,"one_time_keyboard":true}}'
       text: "Ok, declined ❌\n\nLet me know if you change your mind \U0001F609"
   utter_ok_i_will_keep_you_in_mind:
   - custom:
@@ -195,6 +185,7 @@ actions:
 - action_join_room
 - action_do_not_disturb
 - action_reject_invitation
+- action_cancel_accepted_invitation
 - action_expire_partner_confirmation
 - action_default_fallback
 - action_rewind

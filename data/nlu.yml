@@ -2,11 +2,10 @@ version: "2.0"
 nlu:
 - intent: start
   examples: |
-    - Start over
-    - Start
-    - start
     - Restart
     - restart
+    - Start
+    - start
 - intent: greet
   examples: |
     - Hello
@@ -111,6 +110,7 @@ nlu:
     - do not disturb
 - intent: help
   examples: |
+    - How does it work?
     - What should I do?
     - Ok where is the link?
     - Ok. How to call you?

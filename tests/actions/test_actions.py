@@ -125,10 +125,16 @@ Hey! <b><i>unitTest firstName30</i></b> is willing to chitchat with 👉 you �
 
 <b>Are you ready for a video call?</b> 🎥 ☎️"""
 
+UTTER_INVITATION_DECLINED = """\
+Ok, declined ❌
+
+Should you decide that you want to practice your English speaking skills 🇬🇧 \
+on a video call with a stranger just let me know 😉"""
+
 UTTER_DND = 'Ok, I will not be sending invitations anymore 🛑'
 
 REMOVE_KEYBOARD_MARKUP = '{"remove_keyboard":true}'
-RESTART_MARKUP = (
+RESTART_COMMAND_MARKUP = (
     '{"keyboard":['
 
     '[{"text":"/restart"}]'
@@ -166,10 +172,27 @@ YES_NO_MARKUP = (
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
-START_OVER_MARKUP = (
+YES_NO_HOW_DOES_IT_WORK_MARKUP = (
     '{"keyboard":['
 
-    '[{"text":"Start over"}]'
+    '[{"text":"Yes"}],'
+    '[{"text":"No"}],'
+    '[{"text":"How does it work?"}]'
+
+    '],"resize_keyboard":true,"one_time_keyboard":true}'
+)
+RESTART_MARKUP = (
+    '{"keyboard":['
+
+    '[{"text":"Restart"}]'
+
+    '],"resize_keyboard":true,"one_time_keyboard":true}'
+)
+RESTART_DND_MARKUP = (
+    '{"keyboard":['
+
+    '[{"text":"Restart"}],'
+    '[{"text":"Do not disturb me"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
@@ -214,7 +237,7 @@ async def test_action_swiper_error_trace(
         'custom': {
             'text': UTTER_ERROR_TEXT,
             'parse_mode': 'html',
-            'reply_markup': RESTART_MARKUP,
+            'reply_markup': RESTART_COMMAND_MARKUP,
         },
         'elements': [],
         'image': None,
@@ -482,13 +505,19 @@ async def test_action_offer_chitchat_and_default_fallback(
                 destination_swiper_state if greeting_makes_user_ok_to_chitchat else source_swiper_state,
             ),
         ]
+
+        if override_expected_response_text:
+            expected_response_text = override_expected_response_text
         assert dispatcher.messages == [{
             'attachment': None,
             'buttons': [],
             'custom': {
-                'text': override_expected_response_text if override_expected_response_text else expected_response_text,
+                'text': expected_response_text,
                 'parse_mode': 'html',
-                'reply_markup': YES_NO_MARKUP,
+                'reply_markup':
+                    YES_NO_MARKUP
+                    if expected_response_text == UTTER_HOW_IT_WORKS_TEXT else
+                    YES_NO_HOW_DOES_IT_WORK_MARKUP,
             },
             'elements': [],
             'image': None,
@@ -946,7 +975,7 @@ async def test_action_ask_to_join(
             'custom': {
                 'text': UTTER_ERROR_TEXT,
                 'parse_mode': 'html',
-                'reply_markup': RESTART_MARKUP,
+                'reply_markup': RESTART_COMMAND_MARKUP,
             },
             'elements': [],
             'image': None,
@@ -1030,6 +1059,11 @@ async def test_action_accept_invitation_create_room(
         seen_partner_ids=['seen_partner1', 'seen_partner2', 'seen_partner3'],
         newbie=True,
     ))
+
+    tracker.events.append({
+        'event': 'action',
+        'name': 'action_ask_to_join',
+    })
 
     action = actions.ActionAcceptInvitation()
     assert action.name() == 'action_accept_invitation'
@@ -1148,6 +1182,11 @@ async def test_action_accept_invitation_confirm_with_asker(
         seen_partner_ids=['seen_partner1', 'seen_partner2', 'seen_partner3'],
         newbie=True,
     ))
+
+    tracker.events.append({
+        'event': 'action',
+        'name': 'action_ask_to_join',
+    })
 
     actual_events = await actions.ActionAcceptInvitation().run(dispatcher, tracker, domain)
     assert actual_events == [
@@ -1283,6 +1322,11 @@ async def test_action_accept_invitation_partner_not_waiting(
         seen_partner_ids=['seen_partner1', 'seen_partner2', 'seen_partner3'],
     ))
 
+    tracker.events.append({
+        'event': 'action',
+        'name': 'action_ask_to_join',
+    })
+
     actual_events = await actions.ActionAcceptInvitation().run(dispatcher, tracker, domain)
     assert actual_events == [
         SlotSet('swiper_action_result', 'partner_not_waiting_anymore'),
@@ -1364,6 +1408,11 @@ async def test_action_accept_invitation_no_partner_id(
     ))
     user_vault.save(current_user)
 
+    tracker.events.append({
+        'event': 'action',
+        'name': 'action_ask_to_join',
+    })
+
     actual_events = await actions.ActionAcceptInvitation().run(dispatcher, tracker, domain)
     expected_events = [
         SlotSet('swiper_action_result', 'error'),
@@ -1389,7 +1438,7 @@ async def test_action_accept_invitation_no_partner_id(
         'custom': {
             'text': UTTER_ERROR_TEXT,
             'parse_mode': 'html',
-            'reply_markup': RESTART_MARKUP,
+            'reply_markup': RESTART_COMMAND_MARKUP,
         },
         'elements': [],
         'image': None,
@@ -1538,7 +1587,7 @@ async def test_action_join_room(
             'custom': {
                 'text': UTTER_ERROR_TEXT,
                 'parse_mode': 'html',
-                'reply_markup': RESTART_MARKUP,
+                'reply_markup': RESTART_COMMAND_MARKUP,
             },
             'elements': [],
             'image': None,
@@ -1605,7 +1654,7 @@ async def test_action_do_not_disturb(
         'custom': {
             'text': UTTER_DND,
             'parse_mode': 'html',
-            'reply_markup': START_OVER_MARKUP,
+            'reply_markup': RESTART_MARKUP,
         },
         'elements': [],
         'image': None,
@@ -1670,6 +1719,10 @@ async def test_action_reject_invitation(
         newbie=True,
     ))
 
+    tracker.events.append({
+        'event': 'action',
+        'name': 'action_ask_to_join',
+    })
     tracker.latest_message = {'intent_ranking': [{'name': latest_intent}]}
 
     action = actions.ActionRejectInvitation()
@@ -1680,12 +1733,43 @@ async def test_action_reject_invitation(
     user_vault = UserVault()  # create new instance to avoid hitting cache
 
     if destination_swiper_state:
-        assert actual_events == [
+        expected_events = [
             SlotSet('swiper_action_result', 'success'),
+        ]
+        if attempt_to_reject_partner:
+            expected_events.append(FollowupAction('action_find_partner'))
+        expected_events.extend([
             SlotSet('swiper_state', destination_swiper_state),
             SlotSet('partner_id', 'some_test_partner_id'),
-        ]
-        assert dispatcher.messages == []
+        ])
+        assert actual_events == expected_events
+
+        if attempt_to_reject_partner:
+            assert dispatcher.messages == [{
+                'attachment': None,
+                'buttons': [],
+                'custom': {},
+                'elements': [],
+                'image': None,
+                'response': 'utter_ok_looking_for_partner',
+                'template': 'utter_ok_looking_for_partner',
+                'text': None,
+            }]
+        else:
+            assert dispatcher.messages == [{
+                'attachment': None,
+                'buttons': [],
+                'custom': {
+                    'text': UTTER_INVITATION_DECLINED,
+                    'parse_mode': 'html',
+                    'reply_markup': RESTART_DND_MARKUP,
+                },
+                'elements': [],
+                'image': None,
+                'response': None,
+                'template': None,
+                'text': None,
+            }]
 
         expected_rejection_list = ['rejected_partner1', 'rejected_partner2']
         if attempt_to_reject_partner:
@@ -1730,7 +1814,7 @@ async def test_action_reject_invitation(
             'custom': {
                 'text': UTTER_ERROR_TEXT,
                 'parse_mode': 'html',
-                'reply_markup': RESTART_MARKUP,
+                'reply_markup': RESTART_COMMAND_MARKUP,
             },
             'elements': [],
             'image': None,

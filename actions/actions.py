@@ -9,7 +9,7 @@ from typing import Any, Text, Dict, List, Optional, Union
 
 from rasa_sdk import Action, Tracker
 from rasa_sdk.events import SessionStarted, ActionExecuted, SlotSet, EventType, ReminderScheduled, \
-    UserUtteranceReverted, FollowupAction
+    UserUtteranceReverted, FollowupAction, ActionReverted
 from rasa_sdk.executor import CollectingDispatcher
 from rasa_sdk.interfaces import ACTION_LISTEN_NAME
 
@@ -32,6 +32,7 @@ PARTNER_SEARCH_TIMEOUT_SEC = int(os.getenv('PARTNER_SEARCH_TIMEOUT_SEC', '114'))
 ROOM_DISPOSAL_REPORT_DELAY_SEC = int(os.getenv('ROOM_DISPOSAL_REPORT_DELAY_SEC', '60'))  # 1 minute
 GREETING_MAKES_USER_OK_TO_CHITCHAT = strtobool(os.getenv('GREETING_MAKES_USER_OK_TO_CHITCHAT', 'no'))
 SEARCH_CANCELLATION_TAKES_A_BREAK = strtobool(os.getenv('SEARCH_CANCELLATION_TAKES_A_BREAK', 'no'))
+WAITING_CANCELLATION_REJECTS_INVITATION = strtobool(os.getenv('WAITING_CANCELLATION_REJECTS_INVITATION', 'no'))
 
 SWIPER_STATE_SLOT = 'swiper_state'
 SWIPER_ACTION_RESULT_SLOT = 'swiper_action_result'
@@ -49,9 +50,12 @@ EXTERNAL_EXPIRE_PARTNER_CONFIRMATION_INTENT = 'EXTERNAL_expire_partner_confirmat
 EXTERNAL_ROOM_DISPOSAL_REPORT_INTENT = 'EXTERNAL_room_disposal_report'
 EXTERNAL_ROOM_EXPIRATION_REPORT_INTENT = 'EXTERNAL_room_expiration_report'
 
-ACTION_FIND_PARTNER = 'action_find_partner'
-ACTION_ACCEPT_INVITATION = 'action_accept_invitation'
-ACTION_JOIN_ROOM = 'action_join_room'
+ACTION_DEFAULT_FALLBACK_NAME = 'action_default_fallback'
+ACTION_SESSION_START_NAME = 'action_session_start'
+ACTION_FIND_PARTNER_NAME = 'action_find_partner'
+ACTION_ASK_TO_JOIN_NAME = 'action_ask_to_join'
+ACTION_ACCEPT_INVITATION_NAME = 'action_accept_invitation'
+ACTION_JOIN_ROOM_NAME = 'action_join_room'
 
 
 class SwiperActionResult:
@@ -65,8 +69,16 @@ class SwiperActionResult:
     ERROR = 'error'
 
 
+UTTER_INVITATION_DECLINED = (
+    'Ok, declined ❌\n'
+    '\n'
+    'Should you decide that you want to practice your English speaking skills 🇬🇧 '
+    'on a video call with a stranger just let me know 😉'
+)
+UTTER_OK_LOOKING_FOR_PARTNER_TEMPLATE = 'utter_ok_looking_for_partner'
+
 REMOVE_KEYBOARD_MARKUP = '{"remove_keyboard":true}'
-RESTART_MARKUP = (
+RESTART_COMMAND_MARKUP = (
     '{"keyboard":['
 
     '[{"text":"/restart"}]'
@@ -104,10 +116,27 @@ YES_NO_MARKUP = (
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
-START_OVER_MARKUP = (
+YES_NO_HOW_DOES_IT_WORK_MARKUP = (
     '{"keyboard":['
 
-    '[{"text":"Start over"}]'
+    '[{"text":"Yes"}],'
+    '[{"text":"No"}],'
+    '[{"text":"How does it work?"}]'
+
+    '],"resize_keyboard":true,"one_time_keyboard":true}'
+)
+RESTART_MARKUP = (
+    '{"keyboard":['
+
+    '[{"text":"Restart"}]'
+
+    '],"resize_keyboard":true,"one_time_keyboard":true}'
+)
+RESTART_DND_MARKUP = (
+    '{"keyboard":['
+
+    '[{"text":"Restart"}],'
+    '[{"text":"Do not disturb me"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
@@ -227,11 +256,11 @@ class BaseSwiperAction(Action, ABC):
                 ))
 
             if TELL_USER_ABOUT_ERRORS:
-                dispatcher.utter_message(custom={
+                dispatcher.utter_message(json_message={
                     'text': 'Ouch! Something went wrong 🤖',
 
                     'parse_mode': 'html',
-                    'reply_markup': RESTART_MARKUP,
+                    'reply_markup': RESTART_COMMAND_MARKUP,
                 })
 
         else:
@@ -279,7 +308,7 @@ class ActionSessionStart(BaseSwiperAction):
     """Adaptation of https://github.com/RasaHQ/rasa/blob/main/rasa/core/actions/action.py ::ActionSessionStart"""
 
     def name(self) -> Text:
-        return 'action_session_start'
+        return ACTION_SESSION_START_NAME
 
     def should_update_user_activity_timestamp(self, _tracker: Tracker) -> bool:
         return False
@@ -334,7 +363,7 @@ class ActionOfferChitchat(BaseSwiperAction):
         latest_intent = tracker.get_intent_of_latest_message()
 
         if latest_intent == 'help':
-            dispatcher.utter_message(custom={  # TODO oleksandr: rewrite this text ?
+            dispatcher.utter_message(json_message={  # TODO oleksandr: rewrite this text ?
                 'text': 'I can arrange video chitchat with another human for you 🎥 🗣 ☎️\n'
                         '\n'
                         'Here is how it works:\n'
@@ -353,7 +382,7 @@ class ActionOfferChitchat(BaseSwiperAction):
             self.offer_chitchat_again(dispatcher, "I'm sorry, but I cannot help you with that 🤖")
 
         else:  # 'greet'
-            dispatcher.utter_message(custom={
+            dispatcher.utter_message(json_message={
                 'text': 'Hi, my name is Swipy 🙂\n'
                         '\n'
                         'I can connect you with a stranger in a video chat '
@@ -362,19 +391,19 @@ class ActionOfferChitchat(BaseSwiperAction):
                         '<b>Would you like to give it a try?</b>',
 
                 'parse_mode': 'html',
-                'reply_markup': YES_NO_MARKUP,
+                'reply_markup': YES_NO_HOW_DOES_IT_WORK_MARKUP,
             })
 
     # noinspection PyMethodMayBeStatic
     def offer_chitchat_again(self, dispatcher: CollectingDispatcher, intro: Text) -> None:
-        dispatcher.utter_message(custom={
+        dispatcher.utter_message(json_message={
             'text': f"{intro}\n"
                     f"\n"
                     f"<b>Would you like to practice your spoken English 🇬🇧 "
                     f"on a video call with a stranger?</b>",
 
             'parse_mode': 'html',
-            'reply_markup': YES_NO_MARKUP,
+            'reply_markup': YES_NO_HOW_DOES_IT_WORK_MARKUP,
         })
 
     async def swipy_run(
@@ -422,7 +451,7 @@ class ActionOfferChitchat(BaseSwiperAction):
 
 class ActionDefaultFallback(ActionOfferChitchat):
     def name(self) -> Text:
-        return 'action_default_fallback'
+        return ACTION_DEFAULT_FALLBACK_NAME
 
     def offer_chitchat(self, dispatcher: CollectingDispatcher, tracker: Tracker) -> None:
         self.offer_chitchat_again(dispatcher, "Forgive me, but I've lost track of our conversation 🤖")
@@ -512,7 +541,7 @@ class ActionStopTheCall(BaseSwiperAction):
         current_user.save()
 
         if room_deleted:
-            dispatcher.utter_message(custom={
+            dispatcher.utter_message(json_message={
                 'text': "Thank you!\n"
                         "\n"
                         "The call will be stopped shortly (if it hasn't already).",
@@ -521,7 +550,7 @@ class ActionStopTheCall(BaseSwiperAction):
                 'reply_markup': NEW_VIDEO_CALL_MARKUP,
             })
         else:
-            dispatcher.utter_message(custom={
+            dispatcher.utter_message(json_message={
                 'text': 'Thank you!',
 
                 'parse_mode': 'html',
@@ -599,7 +628,7 @@ class ActionRoomDisposalReport(BaseSwiperAction):
             partner_first_name,
             'Your chit-chat partner',
         )
-        dispatcher.utter_message(custom={
+        dispatcher.utter_message(json_message={
             'text': f"{presented_partner} has stopped the call.",
 
             'parse_mode': 'html',
@@ -639,7 +668,7 @@ class ActionRoomExpirationReport(BaseSwiperAction):
                 UserUtteranceReverted(),
             ]
 
-        dispatcher.utter_message(custom={
+        dispatcher.utter_message(json_message={
             'text': f"Video call has expired.",
 
             'parse_mode': 'html',
@@ -661,10 +690,10 @@ class ActionRoomExpirationReport(BaseSwiperAction):
 
 class ActionFindPartner(BaseSwiperAction):
     def name(self) -> Text:
-        return ACTION_FIND_PARTNER
+        return ACTION_FIND_PARTNER_NAME
 
     def should_update_user_activity_timestamp(self, tracker: Tracker) -> bool:
-        if tracker.followup_action == ACTION_FIND_PARTNER:
+        if tracker.followup_action == ACTION_FIND_PARTNER_NAME:
             return False
         if self.is_triggered_by_reminder(tracker):
             return False
@@ -745,7 +774,7 @@ class ActionFindPartner(BaseSwiperAction):
                 ),
             ]
 
-        dispatcher.utter_message(custom={
+        dispatcher.utter_message(json_message={
             'text': "Unfortunately, I couldn't find anyone in two minutes 😞\n"
                     "\n"
                     "<b>Would you like me to try searching again?</b>",
@@ -782,7 +811,7 @@ class ActionFindPartner(BaseSwiperAction):
 
 class ActionAskToJoin(BaseSwiperAction):
     def name(self) -> Text:
-        return 'action_ask_to_join'
+        return ACTION_ASK_TO_JOIN_NAME
 
     def should_update_user_activity_timestamp(self, tracker: Tracker) -> bool:
         return False
@@ -846,7 +875,7 @@ class ActionAskToJoin(BaseSwiperAction):
         custom_dict['parse_mode'] = 'html'
         custom_dict['reply_markup'] = YES_NO_SOMEONE_ELSE_MARKUP
 
-        dispatcher.utter_message(custom=custom_dict)
+        dispatcher.utter_message(json_message=custom_dict)
 
         return [
             SlotSet(
@@ -856,9 +885,17 @@ class ActionAskToJoin(BaseSwiperAction):
         ]
 
 
+def does_invitation_go_right_before(tracker: Tracker):
+    filtered_reversed_applied_events = filter(
+        lambda e: e.get('event') == 'action' and e.get('name') not in [ACTION_LISTEN_NAME, ACTION_SESSION_START_NAME],
+        reversed(tracker.applied_events()),
+    )
+    return next(filtered_reversed_applied_events, {}).get('name') == ACTION_ASK_TO_JOIN_NAME
+
+
 class ActionAcceptInvitation(BaseSwiperAction):
     def name(self) -> Text:
-        return ACTION_ACCEPT_INVITATION
+        return ACTION_ACCEPT_INVITATION_NAME
 
     def should_update_user_activity_timestamp(self, tracker: Tracker) -> bool:
         return True
@@ -870,6 +907,13 @@ class ActionAcceptInvitation(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
+        if not does_invitation_go_right_before(tracker):
+            # user said yes to something but it wasn't an invitation
+            return [
+                ActionReverted(),
+                FollowupAction(ACTION_DEFAULT_FALLBACK_NAME),
+            ]
+
         partner = user_vault.get_user(current_user.partner_id)
 
         # noinspection PyBroadException
@@ -913,7 +957,7 @@ class ActionAcceptInvitation(BaseSwiperAction):
                 key=rasa_callbacks.ROOM_NAME_SLOT,
                 value=room_name,
             ),
-            FollowupAction(ACTION_JOIN_ROOM),
+            FollowupAction(ACTION_JOIN_ROOM_NAME),
         ]
 
     @staticmethod
@@ -936,7 +980,7 @@ class ActionAcceptInvitation(BaseSwiperAction):
         current_user.wait_for_partner_to_confirm(partner.user_id)
         current_user.save()
 
-        dispatcher.utter_message(custom={
+        dispatcher.utter_message(json_message={
             'text': f"Just a moment, I'm checking if {present_partner_name(partner.get_first_name(), 'that person')} "
                     f"is ready too...\n"
                     f"\n"
@@ -972,13 +1016,13 @@ class ActionAcceptInvitation(BaseSwiperAction):
                 key=SWIPER_ACTION_RESULT_SLOT,
                 value=SwiperActionResult.PARTNER_NOT_WAITING_ANYMORE,
             ),
-            FollowupAction(ACTION_FIND_PARTNER),
+            FollowupAction(ACTION_FIND_PARTNER_NAME),
         ]
 
 
 class ActionJoinRoom(BaseSwiperAction):
     def name(self) -> Text:
-        return ACTION_JOIN_ROOM
+        return ACTION_JOIN_ROOM_NAME
 
     @staticmethod
     def is_intent_external(tracker: Tracker):
@@ -986,7 +1030,7 @@ class ActionJoinRoom(BaseSwiperAction):
         return latest_intent == rasa_callbacks.EXTERNAL_JOIN_ROOM_INTENT
 
     def should_update_user_activity_timestamp(self, tracker: Tracker) -> bool:
-        if tracker.followup_action == ACTION_JOIN_ROOM:
+        if tracker.followup_action == ACTION_JOIN_ROOM_NAME:
             return False
         if self.is_intent_external(tracker):
             return False
@@ -1036,7 +1080,7 @@ class ActionJoinRoom(BaseSwiperAction):
 
 def utter_room_url(dispatcher: CollectingDispatcher, room_url: Text, after_confirming_with_partner: bool):
     shout = 'Done!' if after_confirming_with_partner else 'Awesome!'
-    dispatcher.utter_message(custom={
+    dispatcher.utter_message(json_message={
         'text': f"{shout} ✅ 🎉\n"
                 f"\n"
                 f"<b>Please follow this link to join the video call:</b>\n"
@@ -1066,11 +1110,11 @@ class ActionDoNotDisturb(BaseSwiperAction):
         current_user.become_do_not_disturb()
         current_user.save()
 
-        dispatcher.utter_message(custom={
+        dispatcher.utter_message(json_message={
             'text': 'Ok, I will not be sending invitations anymore 🛑',
 
             'parse_mode': 'html',
-            'reply_markup': START_OVER_MARKUP,
+            'reply_markup': RESTART_MARKUP,
         })
 
         return [
@@ -1095,17 +1139,43 @@ class ActionRejectInvitation(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
+        latest_intent = tracker.get_intent_of_latest_message()
+        user_wants_a_different_partner = latest_intent == VIDEOCHAT_INTENT
+
+        if not does_invitation_go_right_before(tracker):
+            if user_wants_a_different_partner:
+                # it's not a rejection at all - user simply asked for videochat
+                dispatcher.utter_message(template=UTTER_OK_LOOKING_FOR_PARTNER_TEMPLATE)
+
+                return [
+                    ActionReverted(),
+                    FollowupAction(ACTION_FIND_PARTNER_NAME),
+                ]
+            else:
+                # user rejected something but it wasn't an invitation
+                return [
+                    ActionReverted(),
+                    FollowupAction(ACTION_DEFAULT_FALLBACK_NAME),
+                ]
+
         is_asked_to_confirm = current_user.state == UserState.ASKED_TO_CONFIRM
         partner_id = current_user.partner_id
 
-        latest_intent = tracker.get_intent_of_latest_message()
-
-        if latest_intent == VIDEOCHAT_INTENT:  # user wants a different partner ("Someone else" button, most likely)
+        if user_wants_a_different_partner:
             # noinspection PyUnresolvedReferences
             current_user.reject_partner()
+
+            dispatcher.utter_message(template=UTTER_OK_LOOKING_FOR_PARTNER_TEMPLATE)
         else:
             # noinspection PyUnresolvedReferences
             current_user.reject_invitation()
+
+            dispatcher.utter_message(json_message={
+                'text': UTTER_INVITATION_DECLINED,
+                'parse_mode': 'html',
+                'reply_markup': RESTART_DND_MARKUP,
+            })
+
         current_user.save()
 
         if is_asked_to_confirm:  # as opposed to asked_to_join
@@ -1118,6 +1188,45 @@ class ActionRejectInvitation(BaseSwiperAction):
                     partner,
                     suppress_callback_errors=True,
                 )
+
+        events = [
+            SlotSet(
+                key=SWIPER_ACTION_RESULT_SLOT,
+                value=SwiperActionResult.SUCCESS,
+            ),
+        ]
+        if user_wants_a_different_partner:
+            events.append(FollowupAction(ACTION_FIND_PARTNER_NAME))
+        return events
+
+
+class ActionCancelAcceptedInvitation(BaseSwiperAction):
+    def name(self) -> Text:
+        return 'action_cancel_accepted_invitation'
+
+    def should_update_user_activity_timestamp(self, tracker: Tracker) -> bool:
+        return True
+
+    async def swipy_run(
+            self, dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
+            current_user: UserStateMachine,
+            user_vault: IUserVault,
+    ) -> List[Dict[Text, Any]]:
+        if WAITING_CANCELLATION_REJECTS_INVITATION:
+            # noinspection PyUnresolvedReferences
+            current_user.reject_invitation()
+        else:
+            # noinspection PyUnresolvedReferences
+            current_user.become_ok_to_chitchat()
+        current_user.save()
+
+        dispatcher.utter_message(json_message={
+            'text': UTTER_INVITATION_DECLINED,
+            'parse_mode': 'html',
+            'reply_markup': RESTART_MARKUP,
+        })
 
         return [
             SlotSet(
@@ -1166,7 +1275,7 @@ class ActionExpirePartnerConfirmation(BaseSwiperAction):
                 key=SWIPER_ACTION_RESULT_SLOT,
                 value=SwiperActionResult.SUCCESS,
             ),
-            FollowupAction(ACTION_FIND_PARTNER),
+            FollowupAction(ACTION_FIND_PARTNER_NAME),
         ]
 
 
@@ -1177,7 +1286,7 @@ def present_partner_name(first_name: Text, placeholder: Text) -> Text:
 
 
 def utter_partner_already_gone(dispatcher: CollectingDispatcher, partner_first_name: Text):
-    dispatcher.utter_message(custom={
+    dispatcher.utter_message(json_message={
         'text': f"{present_partner_name(partner_first_name, 'That person')} has become unavailable 😵\n"
                 f"\n"
                 f"Fear not!\n"
@@ -1208,7 +1317,7 @@ def reschedule_reminder(
         intent_name,
         trigger_date_time=date,
         entities=entities,
-        name=current_user_id + intent_name,  # unique per user and and can be rescheduled for the user
+        name=current_user_id + intent_name,  # unique per user and can be rescheduled for the user
         kill_on_user_message=kill_on_user_message,
     )
     return reminder
