@@ -32,6 +32,7 @@ PARTNER_SEARCH_TIMEOUT_SEC = int(os.getenv('PARTNER_SEARCH_TIMEOUT_SEC', '114'))
 ROOM_DISPOSAL_REPORT_DELAY_SEC = int(os.getenv('ROOM_DISPOSAL_REPORT_DELAY_SEC', '60'))  # 1 minute
 GREETING_MAKES_USER_OK_TO_CHITCHAT = strtobool(os.getenv('GREETING_MAKES_USER_OK_TO_CHITCHAT', 'no'))
 SEARCH_CANCELLATION_TAKES_A_BREAK = strtobool(os.getenv('SEARCH_CANCELLATION_TAKES_A_BREAK', 'no'))
+WAITING_CANCELLATION_REJECTS_INVITATION = strtobool(os.getenv('WAITING_CANCELLATION_REJECTS_INVITATION', 'no'))
 
 SWIPER_STATE_SLOT = 'swiper_state'
 SWIPER_ACTION_RESULT_SLOT = 'swiper_action_result'
@@ -1204,8 +1205,12 @@ class ActionCancelAcceptedInvitation(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        # noinspection PyUnresolvedReferences
-        current_user.reject_invitation()
+        if WAITING_CANCELLATION_REJECTS_INVITATION:
+            # noinspection PyUnresolvedReferences
+            current_user.reject_invitation()
+        else:
+            # noinspection PyUnresolvedReferences
+            current_user.become_ok_to_chitchat()
         current_user.save()
 
         dispatcher.utter_message(json_message={
