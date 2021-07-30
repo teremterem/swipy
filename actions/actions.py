@@ -85,6 +85,14 @@ RESTART_COMMAND_MARKUP = (
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
+RESTART_COMMAND_DND_MARKUP = (
+    '{"keyboard":['
+
+    '[{"text":"/restart"}],'
+    '[{"text":"Do not disturb me"}]'
+
+    '],"resize_keyboard":true,"one_time_keyboard":true}'
+)
 CANCEL_MARKUP = (
     '{"keyboard":['
 
@@ -122,21 +130,6 @@ YES_NO_HOW_DOES_IT_WORK_MARKUP = (
     '[{"text":"Yes"}],'
     '[{"text":"No"}],'
     '[{"text":"How does it work?"}]'
-
-    '],"resize_keyboard":true,"one_time_keyboard":true}'
-)
-RESTART_MARKUP = (
-    '{"keyboard":['
-
-    '[{"text":"Restart"}]'
-
-    '],"resize_keyboard":true,"one_time_keyboard":true}'
-)
-RESTART_DND_MARKUP = (
-    '{"keyboard":['
-
-    '[{"text":"Restart"}],'
-    '[{"text":"Do not disturb me"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
@@ -1114,7 +1107,7 @@ class ActionDoNotDisturb(BaseSwiperAction):
             'text': 'Ok, I will not be sending invitations anymore 🛑',
 
             'parse_mode': 'html',
-            'reply_markup': RESTART_MARKUP,
+            'reply_markup': RESTART_COMMAND_MARKUP,
         })
 
         return [
@@ -1173,7 +1166,7 @@ class ActionRejectInvitation(BaseSwiperAction):
             dispatcher.utter_message(json_message={
                 'text': UTTER_INVITATION_DECLINED,
                 'parse_mode': 'html',
-                'reply_markup': RESTART_DND_MARKUP,
+                'reply_markup': RESTART_COMMAND_DND_MARKUP,
             })
 
         current_user.save()
@@ -1225,7 +1218,7 @@ class ActionCancelAcceptedInvitation(BaseSwiperAction):
         dispatcher.utter_message(json_message={
             'text': UTTER_INVITATION_DECLINED,
             'parse_mode': 'html',
-            'reply_markup': RESTART_MARKUP,
+            'reply_markup': RESTART_COMMAND_MARKUP,
         })
 
         return [
