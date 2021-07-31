@@ -195,6 +195,7 @@ rules:
 - rule: user wants to give feedback
   steps:
   - intent: give_feedback
+  - action: action_take_a_short_break
   - action: give_feedback_form
   - active_loop: give_feedback_form
 - rule: user gave feedback (form ended)

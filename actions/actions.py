@@ -534,7 +534,7 @@ class ActionStopTheCall(BaseSwiperAction):
 
         current_user.latest_room_name = None
         # noinspection PyUnresolvedReferences
-        current_user.become_ok_to_chitchat()
+        current_user.take_a_short_break()
         current_user.save()
 
         if room_deleted:
@@ -634,7 +634,7 @@ class ActionRoomDisposalReport(BaseSwiperAction):
 
         current_user.latest_room_name = None
         # noinspection PyUnresolvedReferences
-        current_user.become_ok_to_chitchat()
+        current_user.take_a_short_break()
         current_user.save()
 
         return [
@@ -674,7 +674,7 @@ class ActionRoomExpirationReport(BaseSwiperAction):
 
         current_user.latest_room_name = None
         # noinspection PyUnresolvedReferences
-        current_user.become_ok_to_chitchat()
+        current_user.take_a_short_break()
         current_user.save()
 
         return [
@@ -1299,6 +1299,32 @@ class ActionClearFeedbackProblemSlots(BaseSwiperAction):
                 key=FEEDBACK_TEXT_SLOT,
                 value=None,
             ),
+            SlotSet(
+                key=SWIPER_ACTION_RESULT_SLOT,
+                value=SwiperActionResult.SUCCESS,
+            ),
+        ]
+
+
+class ActionTakeAShortBreak(BaseSwiperAction):
+    def name(self) -> Text:
+        return 'action_take_a_short_break'
+
+    def should_update_user_activity_timestamp(self, tracker: Tracker) -> bool:
+        return False
+
+    async def swipy_run(
+            self, dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
+            current_user: UserStateMachine,
+            user_vault: IUserVault,
+    ) -> List[Dict[Text, Any]]:
+        # noinspection PyUnresolvedReferences
+        current_user.take_a_short_break()
+        current_user.save()
+
+        return [
             SlotSet(
                 key=SWIPER_ACTION_RESULT_SLOT,
                 value=SwiperActionResult.SUCCESS,

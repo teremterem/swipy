@@ -16,11 +16,14 @@ SWIPER_STATE_MIN_TIMEOUT_SEC = int(os.getenv('SWIPER_STATE_MIN_TIMEOUT_SEC', '14
 SWIPER_STATE_MAX_TIMEOUT_SEC = int(os.getenv('SWIPER_STATE_MAX_TIMEOUT_SEC', '241200'))  # 67 hours (67*60*60 seconds)
 ROOMED_STATE_TIMEOUT_SEC = int(os.getenv('ROOMED_STATE_TIMEOUT_SEC', str(DAILY_CO_MEETING_DURATION_SEC)))
 PARTNER_CONFIRMATION_TIMEOUT_SEC = int(os.getenv('PARTNER_CONFIRMATION_TIMEOUT_SEC', '60'))  # 1 minute
+SHORT_BREAK_TIMEOUT_SEC = int(os.getenv('SHORT_BREAK_TIMEOUT_SEC', '900'))  # 15 minutes
 NUM_OF_ROOMED_PARTNERS_TO_REMEMBER = int(os.getenv('NUM_OF_ROOMED_PARTNERS_TO_REMEMBER', '3'))
 NUM_OF_REJECTED_PARTNERS_TO_REMEMBER = int(os.getenv('NUM_OF_REJECTED_PARTNERS_TO_REMEMBER', '21'))
 NUM_OF_SEEN_PARTNERS_TO_REMEMBER = int(os.getenv('NUM_OF_SEEN_PARTNERS_TO_REMEMBER', '1'))
 
 NATIVE_UNKNOWN = 'unknown'
+
+TAKE_A_SHORT_BREAK_TRIGGER = 'take_a_short_break'
 
 
 class UserState:
@@ -142,6 +145,15 @@ class UserStateMachine(UserModel):
         # noinspection PyTypeChecker
         self.machine.add_transition(
             trigger='take_a_break',
+            source=UserState.all_states_except_user_banned,
+            dest=UserState.TAKE_A_BREAK,
+            after=[
+                self._drop_partner_id,
+            ],
+        )
+        # noinspection PyTypeChecker
+        self.machine.add_transition(
+            trigger=TAKE_A_SHORT_BREAK_TRIGGER,
             source=UserState.all_states_except_user_banned,
             dest=UserState.TAKE_A_BREAK,
             after=[
@@ -382,7 +394,10 @@ class UserStateMachine(UserModel):
     def _update_state_timeout_ts(self, event: EventData) -> None:
         if event.transition.dest in UserState.states_with_timeouts:
 
-            if event.transition.dest == UserState.WAITING_PARTNER_CONFIRM:
+            if event.event.name == TAKE_A_SHORT_BREAK_TRIGGER:
+                timeout = SHORT_BREAK_TIMEOUT_SEC
+
+            elif event.transition.dest == UserState.WAITING_PARTNER_CONFIRM:
                 timeout = PARTNER_CONFIRMATION_TIMEOUT_SEC
             elif event.transition.dest == UserState.ROOMED:
                 timeout = ROOMED_STATE_TIMEOUT_SEC

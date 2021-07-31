@@ -28,6 +28,7 @@ def pytest_configure(*args, **kwargs) -> None:
     os.environ.pop('CLEAR_REJECTED_LIST_WHEN_NO_ONE_FOUND', None)
     os.environ.pop('FIND_PARTNER_FREQUENCY_SEC', None)
     os.environ.pop('PARTNER_CONFIRMATION_TIMEOUT_SEC', None)
+    os.environ.pop('SHORT_BREAK_TIMEOUT_SEC', None)
     os.environ.pop('PARTNER_SEARCH_TIMEOUT_SEC', None)
     os.environ.pop('SWIPER_STATE_MIN_TIMEOUT_SEC', None)
     os.environ.pop('SWIPER_STATE_MAX_TIMEOUT_SEC', None)
