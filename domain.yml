@@ -33,8 +33,6 @@ intents:
     use_entities: true
 - bot_challenge:
     use_entities: true
-- report_problem:
-    use_entities: true
 - EXTERNAL_ask_to_join:
     use_entities: true
 - EXTERNAL_ask_to_confirm:
@@ -56,6 +54,10 @@ intents:
 - nlu_fallback:
     use_entities: true
 - restart:
+    use_entities: true
+- report_problem:
+    use_entities: true
+- give_feedback:
     use_entities: true
 entities:
 - partner_id
