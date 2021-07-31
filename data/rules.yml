@@ -65,6 +65,8 @@ rules:
   - or:
     - intent: EXTERNAL_ask_to_join
     - intent: EXTERNAL_ask_to_confirm
+  - action: action_deactivate_loop
+  - active_loop: null
   - action: action_ask_to_join
 - rule: user aggrees to join the call
   steps:

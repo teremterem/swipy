@@ -240,10 +240,30 @@ forms:
     required_slots:
       problem_text:
       - entity: problem_text
+        not_intent:
+        - EXTERNAL_ask_to_join
+        - EXTERNAL_ask_to_confirm
+        - EXTERNAL_join_room
+        - EXTERNAL_find_partner
+        - EXTERNAL_expire_partner_confirmation
+        - EXTERNAL_partner_did_not_confirm
+        - EXTERNAL_schedule_room_disposal_report
+        - EXTERNAL_room_disposal_report
+        - EXTERNAL_room_expiration_report
         type: from_text
   give_feedback_form:
     required_slots:
       feedback_text:
       - entity: feedback_text
+        not_intent:
+        - EXTERNAL_ask_to_join
+        - EXTERNAL_ask_to_confirm
+        - EXTERNAL_join_room
+        - EXTERNAL_find_partner
+        - EXTERNAL_expire_partner_confirmation
+        - EXTERNAL_partner_did_not_confirm
+        - EXTERNAL_schedule_room_disposal_report
+        - EXTERNAL_room_disposal_report
+        - EXTERNAL_room_expiration_report
         type: from_text
 e2e_actions: []
