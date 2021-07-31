@@ -1142,7 +1142,7 @@ class ActionRejectInvitation(BaseSwiperAction):
         if not does_invitation_go_right_before(tracker):
             if user_wants_a_different_partner:
                 # it's not a rejection at all - user simply asked for videochat
-                dispatcher.utter_message(template=UTTER_OK_LOOKING_FOR_PARTNER_TEMPLATE)
+                dispatcher.utter_message(response=UTTER_OK_LOOKING_FOR_PARTNER_TEMPLATE)
 
                 return [
                     ActionReverted(),
@@ -1162,7 +1162,7 @@ class ActionRejectInvitation(BaseSwiperAction):
             # noinspection PyUnresolvedReferences
             current_user.reject_partner()
 
-            dispatcher.utter_message(template=UTTER_OK_LOOKING_FOR_PARTNER_TEMPLATE)
+            dispatcher.utter_message(response=UTTER_OK_LOOKING_FOR_PARTNER_TEMPLATE)
         else:
             # noinspection PyUnresolvedReferences
             current_user.reject_invitation()
