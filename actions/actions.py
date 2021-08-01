@@ -535,22 +535,12 @@ class ActionStopTheCall(BaseSwiperAction):
         current_user.take_a_short_break()
         current_user.save()
 
-        if room_deleted:
-            dispatcher.utter_message(json_message={
-                'text': "Thank you!\n"
-                        "\n"
-                        "The call will be stopped shortly (if it hasn't already).",
+        dispatcher.utter_message(json_message={
+            'text': 'Thank you!',
 
-                'parse_mode': 'html',
-                'reply_markup': NEW_VIDEO_CALL_GIVE_FEEDBACK_MARKUP,
-            })
-        else:
-            dispatcher.utter_message(json_message={
-                'text': 'Thank you!',
-
-                'parse_mode': 'html',
-                'reply_markup': NEW_VIDEO_CALL_GIVE_FEEDBACK_MARKUP,
-            })
+            'parse_mode': 'html',
+            'reply_markup': NEW_VIDEO_CALL_GIVE_FEEDBACK_MARKUP,
+        })
 
         return [
             SlotSet(
