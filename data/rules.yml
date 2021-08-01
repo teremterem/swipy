@@ -65,6 +65,8 @@ rules:
   - or:
     - intent: EXTERNAL_ask_to_join
     - intent: EXTERNAL_ask_to_confirm
+  - action: action_deactivate_loop
+  - active_loop: null
   - action: action_ask_to_join
 - rule: user aggrees to join the call
   steps:
@@ -177,6 +179,37 @@ rules:
   steps:
   - intent: dnd
   - action: action_do_not_disturb
+- rule: user wants to report a problem
+  steps:
+  - intent: report_problem
+  - action: report_problem_form
+  - active_loop: report_problem_form
+- rule: user reported a problem (form ended)
+  condition:
+  - active_loop: report_problem_form
+  steps:
+  - action: report_problem_form
+  - active_loop: null
+  - slot_was_set:
+    - requested_slot: null
+  - action: action_clear_feedback_problem_slots
+  - action: utter_thanks_for_problem_report
+- rule: user wants to give feedback
+  steps:
+  - intent: give_feedback
+  - action: action_take_a_short_break
+  - action: give_feedback_form
+  - active_loop: give_feedback_form
+- rule: user gave feedback (form ended)
+  condition:
+  - active_loop: give_feedback_form
+  steps:
+  - action: give_feedback_form
+  - active_loop: null
+  - slot_was_set:
+    - requested_slot: null
+  - action: action_clear_feedback_problem_slots
+  - action: utter_thanks_for_feedback
 
 - rule: action_listen after action_find_partner
   steps:

@@ -18,6 +18,7 @@ all_expected_user_state_machine_triggers = [
     'request_chitchat',
     'become_ok_to_chitchat',
     'take_a_break',
+    'take_a_short_break',
     'wait_for_partner_to_confirm',
     'become_asked_to_join',
     'become_asked_to_confirm',

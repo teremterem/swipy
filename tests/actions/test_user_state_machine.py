@@ -24,6 +24,7 @@ expected_catch_all_transitions = [
     ('become_ok_to_chitchat', 'ok_to_chitchat', None),
     ('become_do_not_disturb', 'do_not_disturb', None),
     ('take_a_break', 'take_a_break', None),
+    ('take_a_short_break', 'take_a_break', None),
     ('wait_for_partner_to_confirm', 'waiting_partner_confirm', 'partner_id_in_trigger'),
     ('become_asked_to_join', 'asked_to_join', 'partner_id_in_trigger'),
     ('become_asked_to_confirm', 'asked_to_confirm', 'partner_id_in_trigger'),
@@ -185,7 +186,11 @@ def test_state_timestamps(source_state: Text, trigger_name: Text) -> None:
     if transition_is_valid:
         trigger()  # run trigger and pass partner_id just in case (some triggers need it)
 
-        if user.state in [
+        if trigger_name == 'take_a_short_break':
+            expected_timeout_ts = 1619945501 + (60 * 15)
+            expected_timeout_ts_str = '2021-05-02 09:06:41 Z'
+
+        elif user.state in [
             'asked_to_join',
             'asked_to_confirm',
             'rejected_join',

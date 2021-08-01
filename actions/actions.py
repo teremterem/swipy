@@ -43,6 +43,8 @@ SWIPER_ERROR_SLOT = 'swiper_error'
 SWIPER_ERROR_TRACE_SLOT = 'swiper_error_trace'
 
 PARTNER_SEARCH_START_TS_SLOT = 'partner_search_start_ts'
+PROBLEM_TEXT_SLOT = 'problem_text'
+FEEDBACK_TEXT_SLOT = 'feedback_text'
 
 VIDEOCHAT_INTENT = 'videochat'
 EXTERNAL_FIND_PARTNER_INTENT = 'EXTERNAL_find_partner'
@@ -100,10 +102,11 @@ CANCEL_MARKUP = (
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
-STOP_THE_CALL_MARKUP = (
+STOP_THE_CALL_REPORT_PROBLEM_MARKUP = (
     '{"keyboard":['
 
-    '[{"text":"❌ Stop the call"}]'
+    '[{"text":"❌ Stop the call"}],'
+    '[{"text":"Report problem"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
@@ -133,10 +136,11 @@ YES_NO_HOW_DOES_IT_WORK_MARKUP = (
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
-NEW_VIDEO_CALL_MARKUP = (
+NEW_VIDEO_CALL_GIVE_FEEDBACK_MARKUP = (
     '{"keyboard":['
 
-    '[{"text":"New video call"}]'
+    '[{"text":"New video call"}],'
+    '[{"text":"Give feedback"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
@@ -530,7 +534,7 @@ class ActionStopTheCall(BaseSwiperAction):
 
         current_user.latest_room_name = None
         # noinspection PyUnresolvedReferences
-        current_user.become_ok_to_chitchat()
+        current_user.take_a_short_break()
         current_user.save()
 
         if room_deleted:
@@ -540,14 +544,14 @@ class ActionStopTheCall(BaseSwiperAction):
                         "The call will be stopped shortly (if it hasn't already).",
 
                 'parse_mode': 'html',
-                'reply_markup': NEW_VIDEO_CALL_MARKUP,
+                'reply_markup': NEW_VIDEO_CALL_GIVE_FEEDBACK_MARKUP,
             })
         else:
             dispatcher.utter_message(json_message={
                 'text': 'Thank you!',
 
                 'parse_mode': 'html',
-                'reply_markup': NEW_VIDEO_CALL_MARKUP,
+                'reply_markup': NEW_VIDEO_CALL_GIVE_FEEDBACK_MARKUP,
             })
 
         return [
@@ -625,12 +629,12 @@ class ActionRoomDisposalReport(BaseSwiperAction):
             'text': f"{presented_partner} has stopped the call.",
 
             'parse_mode': 'html',
-            'reply_markup': NEW_VIDEO_CALL_MARKUP,
+            'reply_markup': NEW_VIDEO_CALL_GIVE_FEEDBACK_MARKUP,
         })
 
         current_user.latest_room_name = None
         # noinspection PyUnresolvedReferences
-        current_user.become_ok_to_chitchat()
+        current_user.take_a_short_break()
         current_user.save()
 
         return [
@@ -665,12 +669,12 @@ class ActionRoomExpirationReport(BaseSwiperAction):
             'text': f"Video call has expired.",
 
             'parse_mode': 'html',
-            'reply_markup': NEW_VIDEO_CALL_MARKUP,
+            'reply_markup': NEW_VIDEO_CALL_GIVE_FEEDBACK_MARKUP,
         })
 
         current_user.latest_room_name = None
         # noinspection PyUnresolvedReferences
-        current_user.become_ok_to_chitchat()
+        current_user.take_a_short_break()
         current_user.save()
 
         return [
@@ -1081,7 +1085,7 @@ def utter_room_url(dispatcher: CollectingDispatcher, room_url: Text, after_confi
                 f"{room_url}",
 
         'parse_mode': 'html',
-        'reply_markup': STOP_THE_CALL_MARKUP,
+        'reply_markup': STOP_THE_CALL_REPORT_PROBLEM_MARKUP,
     })
 
 
@@ -1138,7 +1142,7 @@ class ActionRejectInvitation(BaseSwiperAction):
         if not does_invitation_go_right_before(tracker):
             if user_wants_a_different_partner:
                 # it's not a rejection at all - user simply asked for videochat
-                dispatcher.utter_message(template=UTTER_OK_LOOKING_FOR_PARTNER_TEMPLATE)
+                dispatcher.utter_message(response=UTTER_OK_LOOKING_FOR_PARTNER_TEMPLATE)
 
                 return [
                     ActionReverted(),
@@ -1158,7 +1162,7 @@ class ActionRejectInvitation(BaseSwiperAction):
             # noinspection PyUnresolvedReferences
             current_user.reject_partner()
 
-            dispatcher.utter_message(template=UTTER_OK_LOOKING_FOR_PARTNER_TEMPLATE)
+            dispatcher.utter_message(response=UTTER_OK_LOOKING_FOR_PARTNER_TEMPLATE)
         else:
             # noinspection PyUnresolvedReferences
             current_user.reject_invitation()
@@ -1269,6 +1273,62 @@ class ActionExpirePartnerConfirmation(BaseSwiperAction):
                 value=SwiperActionResult.SUCCESS,
             ),
             FollowupAction(ACTION_FIND_PARTNER_NAME),
+        ]
+
+
+class ActionClearFeedbackProblemSlots(BaseSwiperAction):
+    def name(self) -> Text:
+        return 'action_clear_feedback_problem_slots'
+
+    def should_update_user_activity_timestamp(self, tracker: Tracker) -> bool:
+        return False
+
+    async def swipy_run(
+            self, dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
+            current_user: UserStateMachine,
+            user_vault: IUserVault,
+    ) -> List[Dict[Text, Any]]:
+        return [
+            SlotSet(
+                key=PROBLEM_TEXT_SLOT,
+                value=None,
+            ),
+            SlotSet(
+                key=FEEDBACK_TEXT_SLOT,
+                value=None,
+            ),
+            SlotSet(
+                key=SWIPER_ACTION_RESULT_SLOT,
+                value=SwiperActionResult.SUCCESS,
+            ),
+        ]
+
+
+class ActionTakeAShortBreak(BaseSwiperAction):
+    def name(self) -> Text:
+        return 'action_take_a_short_break'
+
+    def should_update_user_activity_timestamp(self, tracker: Tracker) -> bool:
+        return False
+
+    async def swipy_run(
+            self, dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
+            current_user: UserStateMachine,
+            user_vault: IUserVault,
+    ) -> List[Dict[Text, Any]]:
+        # noinspection PyUnresolvedReferences
+        current_user.take_a_short_break()
+        current_user.save()
+
+        return [
+            SlotSet(
+                key=SWIPER_ACTION_RESULT_SLOT,
+                value=SwiperActionResult.SUCCESS,
+            ),
         ]
 
 
