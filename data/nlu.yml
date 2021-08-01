@@ -131,12 +131,11 @@ nlu:
     - упс
     - https://www.screencast.com/t/pWdPt5UIE
     - I stell you
-- intent: report_problem
+- intent: feedback
   examples: |
-    - Report problem
-    - problem
-- intent: give_feedback
-  examples: |
+    - Leave feedback / report problem
     - Leave feedback
     - Give feedback
-    - feedback
+    - Report problem
+    - Feedback
+    - Problem

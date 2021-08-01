@@ -43,7 +43,6 @@ SWIPER_ERROR_SLOT = 'swiper_error'
 SWIPER_ERROR_TRACE_SLOT = 'swiper_error_trace'
 
 PARTNER_SEARCH_START_TS_SLOT = 'partner_search_start_ts'
-PROBLEM_TEXT_SLOT = 'problem_text'
 FEEDBACK_TEXT_SLOT = 'feedback_text'
 
 VIDEOCHAT_INTENT = 'videochat'
@@ -139,7 +138,7 @@ NEW_VIDEO_CALL_GIVE_FEEDBACK_MARKUP = (
     '{"keyboard":['
 
     '[{"text":"New video call"}],'
-    '[{"text":"Give feedback"}]'
+    '[{"text":"Leave feedback / report problem"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
@@ -1275,9 +1274,9 @@ class ActionExpirePartnerConfirmation(BaseSwiperAction):
         ]
 
 
-class ActionClearFeedbackProblemSlots(BaseSwiperAction):
+class ActionClearFeedbackSlot(BaseSwiperAction):
     def name(self) -> Text:
-        return 'action_clear_feedback_problem_slots'
+        return 'action_clear_feedback_slot'
 
     def should_update_user_activity_timestamp(self, tracker: Tracker) -> bool:
         return False
@@ -1290,10 +1289,6 @@ class ActionClearFeedbackProblemSlots(BaseSwiperAction):
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
         return [
-            SlotSet(
-                key=PROBLEM_TEXT_SLOT,
-                value=None,
-            ),
             SlotSet(
                 key=FEEDBACK_TEXT_SLOT,
                 value=None,
