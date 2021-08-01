@@ -300,23 +300,23 @@ class UserStateMachine(UserModel):
         return self.state == UserState.WAITING_PARTNER_CONFIRM and \
                not self.has_become_discoverable()  # the state hasn't timed out yet
 
-    def has_become_discoverable(self):
+    def has_become_discoverable(self, seconds_later: int = 0):
         if not self.state_timeout_ts:  # 0 and None are treated equally
             return True  # users in states that don't support timeouts are immediately discoverable
 
-        return self.state_timeout_ts < current_timestamp_int()
+        return self.state_timeout_ts < current_timestamp_int() + seconds_later
 
-    def chitchat_can_be_offered_by(self, partner_id: Text):
+    def chitchat_can_be_offered_by(self, partner_id: Text, seconds_later: int = 0):
         if not partner_id:
             return False
 
-        return self.chitchat_can_be_offered() and not (
+        return self.chitchat_can_be_offered(seconds_later=seconds_later) and not (
                 partner_id in (self.roomed_partner_ids or []) or
                 partner_id in (self.rejected_partner_ids or [])
         )
 
-    def chitchat_can_be_offered(self):
-        return self.state in UserState.offerable_states and self.has_become_discoverable()
+    def chitchat_can_be_offered(self, seconds_later: int = 0):
+        return self.state in UserState.offerable_states and self.has_become_discoverable(seconds_later=seconds_later)
 
     def is_still_in_the_room(self, room_name: Text):
         return room_name and self.state == UserState.ROOMED and self.latest_room_name == room_name

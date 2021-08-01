@@ -141,14 +141,6 @@ RESTART_COMMAND_MARKUP = (
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
-RESTART_COMMAND_DND_MARKUP = (
-    '{"keyboard":['
-
-    '[{"text":"/restart"}],'
-    '[{"text":"Do not disturb me"}]'
-
-    '],"resize_keyboard":true,"one_time_keyboard":true}'
-)
 CANCEL_MARKUP = (
     '{"keyboard":['
 
@@ -1755,7 +1747,7 @@ async def test_action_reject_invitation(
                 'custom': {
                     'text': UTTER_INVITATION_DECLINED,
                     'parse_mode': 'html',
-                    'reply_markup': RESTART_COMMAND_DND_MARKUP,
+                    'reply_markup': RESTART_COMMAND_MARKUP,
                 },
                 'elements': [],
                 'image': None,

@@ -17,7 +17,8 @@ from actions import daily_co
 from actions import rasa_callbacks
 from actions import telegram_helpers
 from actions.rasa_callbacks import EXTERNAL_ASK_TO_JOIN_INTENT, EXTERNAL_ASK_TO_CONFIRM_INTENT
-from actions.user_state_machine import UserStateMachine, UserState, NATIVE_UNKNOWN, PARTNER_CONFIRMATION_TIMEOUT_SEC
+from actions.user_state_machine import UserStateMachine, UserState, NATIVE_UNKNOWN, PARTNER_CONFIRMATION_TIMEOUT_SEC, \
+    SHORT_BREAK_TIMEOUT_SEC
 from actions.user_vault import UserVault, IUserVault
 from actions.utils import stack_trace_to_str, datetime_now, get_intent_of_latest_message_reliably, SwiperError, \
     current_timestamp_int, SwiperRasaCallbackError
@@ -83,14 +84,6 @@ RESTART_COMMAND_MARKUP = (
     '{"keyboard":['
 
     '[{"text":"/restart"}]'
-
-    '],"resize_keyboard":true,"one_time_keyboard":true}'
-)
-RESTART_COMMAND_DND_MARKUP = (
-    '{"keyboard":['
-
-    '[{"text":"/restart"}],'
-    '[{"text":"Do not disturb me"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
@@ -1158,7 +1151,7 @@ class ActionRejectInvitation(BaseSwiperAction):
             dispatcher.utter_message(json_message={
                 'text': UTTER_INVITATION_DECLINED,
                 'parse_mode': 'html',
-                'reply_markup': RESTART_COMMAND_DND_MARKUP,
+                'reply_markup': RESTART_COMMAND_MARKUP,
             })
 
         current_user.save()
@@ -1304,9 +1297,10 @@ class ActionTakeAShortBreak(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        # noinspection PyUnresolvedReferences
-        current_user.take_a_short_break()
-        current_user.save()
+        if current_user.chitchat_can_be_offered(seconds_later=SHORT_BREAK_TIMEOUT_SEC):
+            # noinspection PyUnresolvedReferences
+            current_user.take_a_short_break()
+            current_user.save()
 
         return [
             SlotSet(
