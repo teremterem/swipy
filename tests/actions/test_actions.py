@@ -1467,6 +1467,7 @@ async def test_action_join_room(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
+        wrap_random_randint: MagicMock,
         latest_intent: Text,
         source_swiper_state: Text,
         wrong_partner: bool,
@@ -1537,11 +1538,12 @@ async def test_action_join_room(
             newbie=False,  # accepting the very first video chitchat graduates the user from newbie
             state_timestamp=1619945501,
             state_timestamp_str='2021-05-02 08:51:41 Z',
-            state_timeout_ts=1619945501 + (60 * 30),
-            state_timeout_ts_str='2021-05-02 09:21:41 Z',
+            state_timeout_ts=1619945501 + (60 * 60 * 5),
+            state_timeout_ts_str='2021-05-02 13:51:41 Z',
             activity_timestamp=0 if expect_as_external else 1619945501,
             activity_timestamp_str=None if expect_as_external else '2021-05-02 08:51:41 Z',
         )
+        wrap_random_randint.assert_called_once_with(60 * 60 * 4, 60 * 60 * (24 * 3 - 5))
 
     else:
         expected_events = [
@@ -1591,6 +1593,7 @@ async def test_action_join_room(
             activity_timestamp=0 if expect_as_external else 1619945501,
             activity_timestamp_str=None if expect_as_external else '2021-05-02 08:51:41 Z',
         )
+        wrap_random_randint.assert_not_called()
 
 
 @pytest.mark.asyncio

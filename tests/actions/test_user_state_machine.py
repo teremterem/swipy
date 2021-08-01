@@ -196,6 +196,7 @@ def test_state_timestamps(source_state: Text, trigger_name: Text) -> None:
             'rejected_join',
             'rejected_confirm',
             'take_a_break',
+            'roomed',
         ]:
             expected_timeout_ts = 1619945501 + (60 * 60 * 5)
             expected_timeout_ts_str = '2021-05-02 13:51:41 Z'
@@ -203,10 +204,6 @@ def test_state_timestamps(source_state: Text, trigger_name: Text) -> None:
         elif user.state == 'waiting_partner_confirm':
             expected_timeout_ts = 1619945501 + 60
             expected_timeout_ts_str = '2021-05-02 08:52:41 Z'
-
-        elif user.state == 'roomed':
-            expected_timeout_ts = 1619945501 + (60 * 30)
-            expected_timeout_ts_str = '2021-05-02 09:21:41 Z'
 
         else:
             # destination state is not supposed to have a timeout

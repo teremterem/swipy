@@ -508,9 +508,8 @@ class ActionStopTheCall(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        room_deleted = False
         if current_user.latest_room_name:
-            room_deleted = await daily_co.delete_room(current_user.latest_room_name)
+            await daily_co.delete_room(current_user.latest_room_name)
 
             if current_user.partner_id:
                 partner = user_vault.get_user(current_user.partner_id)
@@ -523,10 +522,8 @@ class ActionStopTheCall(BaseSwiperAction):
                         suppress_callback_errors=True,
                     )
 
-        current_user.latest_room_name = None
-        # noinspection PyUnresolvedReferences
-        current_user.take_a_short_break()
-        current_user.save()
+            current_user.latest_room_name = None
+            current_user.save()
 
         dispatcher.utter_message(json_message={
             'text': 'Thank you!',
@@ -614,8 +611,6 @@ class ActionRoomDisposalReport(BaseSwiperAction):
         })
 
         current_user.latest_room_name = None
-        # noinspection PyUnresolvedReferences
-        current_user.take_a_short_break()
         current_user.save()
 
         return [
@@ -654,8 +649,6 @@ class ActionRoomExpirationReport(BaseSwiperAction):
         })
 
         current_user.latest_room_name = None
-        # noinspection PyUnresolvedReferences
-        current_user.take_a_short_break()
         current_user.save()
 
         return [

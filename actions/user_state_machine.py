@@ -14,7 +14,6 @@ if TYPE_CHECKING:
 
 SWIPER_STATE_MIN_TIMEOUT_SEC = int(os.getenv('SWIPER_STATE_MIN_TIMEOUT_SEC', '14400'))  # 4 hours (4*60*60 seconds)
 SWIPER_STATE_MAX_TIMEOUT_SEC = int(os.getenv('SWIPER_STATE_MAX_TIMEOUT_SEC', '241200'))  # 67 hours (67*60*60 seconds)
-ROOMED_STATE_TIMEOUT_SEC = int(os.getenv('ROOMED_STATE_TIMEOUT_SEC', str(DAILY_CO_MEETING_DURATION_SEC)))
 PARTNER_CONFIRMATION_TIMEOUT_SEC = int(os.getenv('PARTNER_CONFIRMATION_TIMEOUT_SEC', '60'))  # 1 minute
 SHORT_BREAK_TIMEOUT_SEC = int(os.getenv('SHORT_BREAK_TIMEOUT_SEC', '900'))  # 15 minutes
 NUM_OF_ROOMED_PARTNERS_TO_REMEMBER = int(os.getenv('NUM_OF_ROOMED_PARTNERS_TO_REMEMBER', '3'))
@@ -399,8 +398,6 @@ class UserStateMachine(UserModel):
 
             elif event.transition.dest == UserState.WAITING_PARTNER_CONFIRM:
                 timeout = PARTNER_CONFIRMATION_TIMEOUT_SEC
-            elif event.transition.dest == UserState.ROOMED:
-                timeout = ROOMED_STATE_TIMEOUT_SEC
             else:
                 timeout = random.randint(SWIPER_STATE_MIN_TIMEOUT_SEC, SWIPER_STATE_MAX_TIMEOUT_SEC)
 
