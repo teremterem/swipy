@@ -192,7 +192,7 @@ responses:
   utter_thanks_for_feedback:
   - custom:
       parse_mode: html
-      reply_markup: '{{"keyboard":[[{{"text":"/restart"}}]],"resize_keyboard":true,"one_time_keyboard":true}}'
+      reply_markup: '{{"keyboard":[[{{"text":"New video call"}}],[{{"text":"/restart"}}]],"resize_keyboard":true,"one_time_keyboard":true}}'
       text: Thank you! Your feedback will help me improve.
 actions:
 - action_session_start
