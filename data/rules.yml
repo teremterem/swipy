@@ -190,8 +190,6 @@ rules:
   steps:
   - action: report_problem_form
   - active_loop: null
-  - slot_was_set:
-    - requested_slot: null
   - action: action_clear_feedback_problem_slots
   - action: utter_thanks_for_problem_report
 - rule: user wants to give feedback
@@ -206,8 +204,6 @@ rules:
   steps:
   - action: give_feedback_form
   - active_loop: null
-  - slot_was_set:
-    - requested_slot: null
   - action: action_clear_feedback_problem_slots
   - action: utter_thanks_for_feedback
 
