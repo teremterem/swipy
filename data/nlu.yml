@@ -133,9 +133,9 @@ nlu:
     - I stell you
 - intent: feedback
   examples: |
-    - Leave feedback / report problem
     - Leave feedback
     - Give feedback
     - Report problem
     - Feedback
     - Problem
+    - bug

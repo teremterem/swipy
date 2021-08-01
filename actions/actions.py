@@ -131,7 +131,7 @@ NEW_VIDEO_CALL_GIVE_FEEDBACK_MARKUP = (
     '{"keyboard":['
 
     '[{"text":"New video call"}],'
-    '[{"text":"Leave feedback / report problem"}]'
+    '[{"text":"Leave feedback"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
