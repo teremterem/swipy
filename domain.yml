@@ -31,6 +31,12 @@ intents:
     use_entities: true
 - out_of_scope:
     use_entities: true
+- feedback:
+    use_entities: true
+- restart:
+    use_entities: true
+- nlu_fallback:
+    use_entities: true
 - bot_challenge:
     use_entities: true
 - EXTERNAL_ask_to_join:
@@ -50,14 +56,6 @@ intents:
 - EXTERNAL_room_disposal_report:
     use_entities: true
 - EXTERNAL_room_expiration_report:
-    use_entities: true
-- nlu_fallback:
-    use_entities: true
-- restart:
-    use_entities: true
-- report_problem:
-    use_entities: true
-- give_feedback:
     use_entities: true
 entities:
 - partner_id
@@ -83,6 +81,7 @@ slots:
     - roomed
     - rejected_join
     - rejected_confirm
+    - take_a_break
     - do_not_disturb
     - bot_blocked
     - user_banned
@@ -159,11 +158,6 @@ slots:
     initial_value: null
     auto_fill: true
     influence_conversation: false
-  problem_text:
-    type: rasa.shared.core.slots.TextSlot
-    initial_value: null
-    auto_fill: false
-    influence_conversation: false
   feedback_text:
     type: rasa.shared.core.slots.TextSlot
     initial_value: null
@@ -190,16 +184,6 @@ responses:
       parse_mode: html
       reply_markup: '{{"keyboard":[[{{"text":"Look again now"}}]],"resize_keyboard":true,"one_time_keyboard":true}}'
       text: "Ok, not looking actively ❌\n\n I will, however, let you know if someone shows up \U0001F609"
-  utter_ask_problem_text:
-  - custom:
-      parse_mode: html
-      reply_markup: '{{"keyboard":[[{{"text":"Cancel"}}]],"resize_keyboard":true,"one_time_keyboard":true}}'
-      text: Ok, what's wrong?
-  utter_thanks_for_problem_report:
-  - custom:
-      parse_mode: html
-      reply_markup: '{{"keyboard":[[{{"text":"/restart"}}]],"resize_keyboard":true,"one_time_keyboard":true}}'
-      text: Thank you! Your report will help me improve.
   utter_ask_feedback_text:
   - custom:
       parse_mode: html
@@ -208,7 +192,7 @@ responses:
   utter_thanks_for_feedback:
   - custom:
       parse_mode: html
-      reply_markup: '{{"keyboard":[[{{"text":"/restart"}}]],"resize_keyboard":true,"one_time_keyboard":true}}'
+      reply_markup: '{{"keyboard":[[{{"text":"New video call"}}],[{{"text":"How does it work?"}}]],"resize_keyboard":true,"one_time_keyboard":true}}'
       text: Thank you! Your feedback will help me improve.
 actions:
 - action_session_start
@@ -228,29 +212,13 @@ actions:
 - action_schedule_room_disposal_report
 - action_room_disposal_report
 - action_room_expiration_report
-- action_clear_feedback_problem_slots
+- action_clear_feedback_slot
 - action_take_a_short_break
 forms:
-  report_problem_form:
-    required_slots:
-      problem_text:
-      - entity: problem_text
-        not_intent:
-        - EXTERNAL_ask_to_join
-        - EXTERNAL_ask_to_confirm
-        - EXTERNAL_join_room
-        - EXTERNAL_find_partner
-        - EXTERNAL_expire_partner_confirmation
-        - EXTERNAL_partner_did_not_confirm
-        - EXTERNAL_schedule_room_disposal_report
-        - EXTERNAL_room_disposal_report
-        - EXTERNAL_room_expiration_report
-        type: from_text
   give_feedback_form:
     required_slots:
       feedback_text:
-      - entity: feedback_text
-        not_intent:
+      - not_intent:
         - EXTERNAL_ask_to_join
         - EXTERNAL_ask_to_confirm
         - EXTERNAL_join_room

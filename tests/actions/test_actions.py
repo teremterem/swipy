@@ -141,14 +141,6 @@ RESTART_COMMAND_MARKUP = (
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
-RESTART_COMMAND_DND_MARKUP = (
-    '{"keyboard":['
-
-    '[{"text":"/restart"}],'
-    '[{"text":"Do not disturb me"}]'
-
-    '],"resize_keyboard":true,"one_time_keyboard":true}'
-)
 CANCEL_MARKUP = (
     '{"keyboard":['
 
@@ -156,11 +148,10 @@ CANCEL_MARKUP = (
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
-STOP_THE_CALL_REPORT_PROBLEM_MARKUP = (
+STOP_THE_CALL_MARKUP = (
     '{"keyboard":['
 
-    '[{"text":"❌ Stop the call"}],'
-    '[{"text":"Report problem"}]'
+    '[{"text":"❌ Stop the call"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
@@ -996,7 +987,7 @@ async def test_action_ask_to_join(
             state_timeout_ts=1619945501 + (60 * 60 * 5),
             state_timeout_ts_str='2021-05-02 13:51:41 Z',
         )
-        wrap_random_randint.assert_called_once_with(60 * 60 * 4, 60 * 60 * (24 * 3 - 5))
+        wrap_random_randint.assert_called_once_with(60 * 60 * 4, 60 * 60 * (24 * 2 - 5))
 
     else:  # an error is expected (and hence we do not expect swiper state to change)
         assert user_vault.get_user('unit_test_user') == UserStateMachine(
@@ -1476,6 +1467,7 @@ async def test_action_join_room(
         tracker: Tracker,
         dispatcher: CollectingDispatcher,
         domain: Dict[Text, Any],
+        wrap_random_randint: MagicMock,
         latest_intent: Text,
         source_swiper_state: Text,
         wrong_partner: bool,
@@ -1527,7 +1519,7 @@ async def test_action_join_room(
             'custom': {
                 'text': UTTER_PARTNER_READY_ROOM_URL_TEXT if expect_as_external else UTTER_ROOM_URL_TEXT,
                 'parse_mode': 'html',
-                'reply_markup': STOP_THE_CALL_REPORT_PROBLEM_MARKUP,
+                'reply_markup': STOP_THE_CALL_MARKUP,
             },
             'elements': [],
             'image': None,
@@ -1546,11 +1538,12 @@ async def test_action_join_room(
             newbie=False,  # accepting the very first video chitchat graduates the user from newbie
             state_timestamp=1619945501,
             state_timestamp_str='2021-05-02 08:51:41 Z',
-            state_timeout_ts=1619945501 + (60 * 30),
-            state_timeout_ts_str='2021-05-02 09:21:41 Z',
+            state_timeout_ts=1619945501 + (60 * 60 * 5),
+            state_timeout_ts_str='2021-05-02 13:51:41 Z',
             activity_timestamp=0 if expect_as_external else 1619945501,
             activity_timestamp_str=None if expect_as_external else '2021-05-02 08:51:41 Z',
         )
+        wrap_random_randint.assert_called_once_with(60 * 60 * 4, 60 * 60 * (24 * 2 - 5))
 
     else:
         expected_events = [
@@ -1600,6 +1593,7 @@ async def test_action_join_room(
             activity_timestamp=0 if expect_as_external else 1619945501,
             activity_timestamp_str=None if expect_as_external else '2021-05-02 08:51:41 Z',
         )
+        wrap_random_randint.assert_not_called()
 
 
 @pytest.mark.asyncio
@@ -1756,7 +1750,7 @@ async def test_action_reject_invitation(
                 'custom': {
                     'text': UTTER_INVITATION_DECLINED,
                     'parse_mode': 'html',
-                    'reply_markup': RESTART_COMMAND_DND_MARKUP,
+                    'reply_markup': RESTART_COMMAND_MARKUP,
                 },
                 'elements': [],
                 'image': None,
@@ -1784,7 +1778,7 @@ async def test_action_reject_invitation(
             activity_timestamp=1619945501,
             activity_timestamp_str='2021-05-02 08:51:41 Z',
         )
-        wrap_random_randint.assert_called_once_with(60 * 60 * 4, 60 * 60 * (24 * 3 - 5))
+        wrap_random_randint.assert_called_once_with(60 * 60 * 4, 60 * 60 * (24 * 2 - 5))
 
     else:  # an error is expected
         assert actual_events == [

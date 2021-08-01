@@ -17,7 +17,8 @@ from actions import daily_co
 from actions import rasa_callbacks
 from actions import telegram_helpers
 from actions.rasa_callbacks import EXTERNAL_ASK_TO_JOIN_INTENT, EXTERNAL_ASK_TO_CONFIRM_INTENT
-from actions.user_state_machine import UserStateMachine, UserState, NATIVE_UNKNOWN, PARTNER_CONFIRMATION_TIMEOUT_SEC
+from actions.user_state_machine import UserStateMachine, UserState, NATIVE_UNKNOWN, PARTNER_CONFIRMATION_TIMEOUT_SEC, \
+    SHORT_BREAK_TIMEOUT_SEC
 from actions.user_vault import UserVault, IUserVault
 from actions.utils import stack_trace_to_str, datetime_now, get_intent_of_latest_message_reliably, SwiperError, \
     current_timestamp_int, SwiperRasaCallbackError
@@ -43,7 +44,6 @@ SWIPER_ERROR_SLOT = 'swiper_error'
 SWIPER_ERROR_TRACE_SLOT = 'swiper_error_trace'
 
 PARTNER_SEARCH_START_TS_SLOT = 'partner_search_start_ts'
-PROBLEM_TEXT_SLOT = 'problem_text'
 FEEDBACK_TEXT_SLOT = 'feedback_text'
 
 VIDEOCHAT_INTENT = 'videochat'
@@ -87,14 +87,6 @@ RESTART_COMMAND_MARKUP = (
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
-RESTART_COMMAND_DND_MARKUP = (
-    '{"keyboard":['
-
-    '[{"text":"/restart"}],'
-    '[{"text":"Do not disturb me"}]'
-
-    '],"resize_keyboard":true,"one_time_keyboard":true}'
-)
 CANCEL_MARKUP = (
     '{"keyboard":['
 
@@ -102,11 +94,10 @@ CANCEL_MARKUP = (
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
-STOP_THE_CALL_REPORT_PROBLEM_MARKUP = (
+STOP_THE_CALL_MARKUP = (
     '{"keyboard":['
 
-    '[{"text":"❌ Stop the call"}],'
-    '[{"text":"Report problem"}]'
+    '[{"text":"❌ Stop the call"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
@@ -140,7 +131,7 @@ NEW_VIDEO_CALL_GIVE_FEEDBACK_MARKUP = (
     '{"keyboard":['
 
     '[{"text":"New video call"}],'
-    '[{"text":"Give feedback"}]'
+    '[{"text":"Leave feedback"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
@@ -517,9 +508,8 @@ class ActionStopTheCall(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        room_deleted = False
         if current_user.latest_room_name:
-            room_deleted = await daily_co.delete_room(current_user.latest_room_name)
+            await daily_co.delete_room(current_user.latest_room_name)
 
             if current_user.partner_id:
                 partner = user_vault.get_user(current_user.partner_id)
@@ -532,27 +522,15 @@ class ActionStopTheCall(BaseSwiperAction):
                         suppress_callback_errors=True,
                     )
 
-        current_user.latest_room_name = None
-        # noinspection PyUnresolvedReferences
-        current_user.take_a_short_break()
-        current_user.save()
+            current_user.latest_room_name = None
+            current_user.save()
 
-        if room_deleted:
-            dispatcher.utter_message(json_message={
-                'text': "Thank you!\n"
-                        "\n"
-                        "The call will be stopped shortly (if it hasn't already).",
+        dispatcher.utter_message(json_message={
+            'text': 'Thank you!',
 
-                'parse_mode': 'html',
-                'reply_markup': NEW_VIDEO_CALL_GIVE_FEEDBACK_MARKUP,
-            })
-        else:
-            dispatcher.utter_message(json_message={
-                'text': 'Thank you!',
-
-                'parse_mode': 'html',
-                'reply_markup': NEW_VIDEO_CALL_GIVE_FEEDBACK_MARKUP,
-            })
+            'parse_mode': 'html',
+            'reply_markup': NEW_VIDEO_CALL_GIVE_FEEDBACK_MARKUP,
+        })
 
         return [
             SlotSet(
@@ -633,8 +611,6 @@ class ActionRoomDisposalReport(BaseSwiperAction):
         })
 
         current_user.latest_room_name = None
-        # noinspection PyUnresolvedReferences
-        current_user.take_a_short_break()
         current_user.save()
 
         return [
@@ -673,8 +649,6 @@ class ActionRoomExpirationReport(BaseSwiperAction):
         })
 
         current_user.latest_room_name = None
-        # noinspection PyUnresolvedReferences
-        current_user.take_a_short_break()
         current_user.save()
 
         return [
@@ -1085,7 +1059,7 @@ def utter_room_url(dispatcher: CollectingDispatcher, room_url: Text, after_confi
                 f"{room_url}",
 
         'parse_mode': 'html',
-        'reply_markup': STOP_THE_CALL_REPORT_PROBLEM_MARKUP,
+        'reply_markup': STOP_THE_CALL_MARKUP,
     })
 
 
@@ -1170,7 +1144,7 @@ class ActionRejectInvitation(BaseSwiperAction):
             dispatcher.utter_message(json_message={
                 'text': UTTER_INVITATION_DECLINED,
                 'parse_mode': 'html',
-                'reply_markup': RESTART_COMMAND_DND_MARKUP,
+                'reply_markup': RESTART_COMMAND_MARKUP,
             })
 
         current_user.save()
@@ -1276,9 +1250,9 @@ class ActionExpirePartnerConfirmation(BaseSwiperAction):
         ]
 
 
-class ActionClearFeedbackProblemSlots(BaseSwiperAction):
+class ActionClearFeedbackSlot(BaseSwiperAction):
     def name(self) -> Text:
-        return 'action_clear_feedback_problem_slots'
+        return 'action_clear_feedback_slot'
 
     def should_update_user_activity_timestamp(self, tracker: Tracker) -> bool:
         return False
@@ -1291,10 +1265,6 @@ class ActionClearFeedbackProblemSlots(BaseSwiperAction):
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
         return [
-            SlotSet(
-                key=PROBLEM_TEXT_SLOT,
-                value=None,
-            ),
             SlotSet(
                 key=FEEDBACK_TEXT_SLOT,
                 value=None,
@@ -1320,9 +1290,10 @@ class ActionTakeAShortBreak(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        # noinspection PyUnresolvedReferences
-        current_user.take_a_short_break()
-        current_user.save()
+        if current_user.chitchat_can_be_offered(seconds_later=SHORT_BREAK_TIMEOUT_SEC):
+            # noinspection PyUnresolvedReferences
+            current_user.take_a_short_break()
+            current_user.save()
 
         return [
             SlotSet(

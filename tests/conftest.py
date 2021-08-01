@@ -32,7 +32,6 @@ def pytest_configure(*args, **kwargs) -> None:
     os.environ.pop('PARTNER_SEARCH_TIMEOUT_SEC', None)
     os.environ.pop('SWIPER_STATE_MIN_TIMEOUT_SEC', None)
     os.environ.pop('SWIPER_STATE_MAX_TIMEOUT_SEC', None)
-    os.environ.pop('ROOMED_STATE_TIMEOUT_SEC', None)
     os.environ.pop('GREETING_MAKES_USER_OK_TO_CHITCHAT', None)
     os.environ.pop('SEARCH_CANCELLATION_TAKES_A_BREAK', None)
     os.environ.pop('WAITING_CANCELLATION_REJECTS_INVITATION', None)
