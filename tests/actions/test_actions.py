@@ -987,7 +987,7 @@ async def test_action_ask_to_join(
             state_timeout_ts=1619945501 + (60 * 60 * 5),
             state_timeout_ts_str='2021-05-02 13:51:41 Z',
         )
-        wrap_random_randint.assert_called_once_with(60 * 60 * 4, 60 * 60 * (24 * 3 - 5))
+        wrap_random_randint.assert_called_once_with(60 * 60 * 4, 60 * 60 * (24 * 2 - 5))
 
     else:  # an error is expected (and hence we do not expect swiper state to change)
         assert user_vault.get_user('unit_test_user') == UserStateMachine(
@@ -1543,7 +1543,7 @@ async def test_action_join_room(
             activity_timestamp=0 if expect_as_external else 1619945501,
             activity_timestamp_str=None if expect_as_external else '2021-05-02 08:51:41 Z',
         )
-        wrap_random_randint.assert_called_once_with(60 * 60 * 4, 60 * 60 * (24 * 3 - 5))
+        wrap_random_randint.assert_called_once_with(60 * 60 * 4, 60 * 60 * (24 * 2 - 5))
 
     else:
         expected_events = [
@@ -1778,7 +1778,7 @@ async def test_action_reject_invitation(
             activity_timestamp=1619945501,
             activity_timestamp_str='2021-05-02 08:51:41 Z',
         )
-        wrap_random_randint.assert_called_once_with(60 * 60 * 4, 60 * 60 * (24 * 3 - 5))
+        wrap_random_randint.assert_called_once_with(60 * 60 * 4, 60 * 60 * (24 * 2 - 5))
 
     else:  # an error is expected
         assert actual_events == [
