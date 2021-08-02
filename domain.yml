@@ -206,7 +206,8 @@ responses:
   utter_partner_shared_username:
   - custom:
       parse_mode: html
-      text: "(Psst! {partner_first_name} shared their contact with you: @{partner_username}\nMake sure to follow the link and say hello to them to stay in touch)"
+      reply_markup: '{{"keyboard":[[{{"text":"Call another person"}}]],"resize_keyboard":true,"one_time_keyboard":true}}'
+      text: "{partner_first_name} has shared their contact with you:\n\nhttps://t.me/{partner_username}\n\nMake sure to follow the link and say hello to stay in touch."
 actions:
 - action_session_start
 - action_offer_chitchat
