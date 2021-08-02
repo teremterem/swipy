@@ -106,7 +106,7 @@ YES_NO_SOMEONE_ELSE_MARKUP = (
 
     '[{"text":"Yes"}],'
     '[{"text":"No"}],'
-    '[{"text":"Someone else"}]'
+    '[{"text":"Connect me with someone else"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
