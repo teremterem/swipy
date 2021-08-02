@@ -206,7 +206,7 @@ responses:
   utter_partner_shared_username:
   - custom:
       parse_mode: html
-      text: "{partner_first_name} has shared their contact with you:\nhttps://t.me/{partner_username}\n<b>Make sure to follow the link and say hello to stay in touch.</b>"
+      text: "Psst! {partner_first_name} has shared their contact with you: @{partner_username}"
 actions:
 - action_session_start
 - action_offer_chitchat
