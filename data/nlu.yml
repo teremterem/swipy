@@ -19,7 +19,7 @@ nlu:
 - intent: videochat
   examples: |
     - Connect me with someone else
-    - New video call
+    - Call another person
     - Look again now
     - Someone else
     - someone else
@@ -28,7 +28,7 @@ nlu:
     - one more
 - intent: affirm
   examples: |
-    - Yes
+    - Yes!
     - yes
     - ok
     - yes please
@@ -76,6 +76,8 @@ nlu:
     - -
 - intent: another_time
   examples:
+  - text: |
+      Not now
   - text: |
       Maybe tomorrow
   - text: |
@@ -140,3 +142,7 @@ nlu:
     - Feedback
     - Problem
     - bug
+- intent: share_contact
+  examples: |
+    - Share my contact
+    - Share my username

@@ -1,5 +1,4 @@
 import datetime
-import html
 import logging
 import os
 from abc import ABC, abstractmethod
@@ -21,7 +20,7 @@ from actions.user_state_machine import UserStateMachine, UserState, NATIVE_UNKNO
     SHORT_BREAK_TIMEOUT_SEC
 from actions.user_vault import UserVault, IUserVault
 from actions.utils import stack_trace_to_str, datetime_now, get_intent_of_latest_message_reliably, SwiperError, \
-    current_timestamp_int, SwiperRasaCallbackError
+    current_timestamp_int, SwiperRasaCallbackError, present_partner_name
 
 logger = logging.getLogger(__name__)
 
@@ -104,8 +103,8 @@ STOP_THE_CALL_MARKUP = (
 YES_NO_SOMEONE_ELSE_MARKUP = (
     '{"keyboard":['
 
-    '[{"text":"Yes"}],'
-    '[{"text":"No"}],'
+    '[{"text":"Yes!"}],'
+    '[{"text":"Not now"}],'
     '[{"text":"Connect me with someone else"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
@@ -127,11 +126,11 @@ YES_NO_HOW_DOES_IT_WORK_MARKUP = (
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
-NEW_VIDEO_CALL_GIVE_FEEDBACK_MARKUP = (
+NEW_VIDEO_CALL_SHARE_CONTACT_MARKUP = (
     '{"keyboard":['
 
-    '[{"text":"New video call"}],'
-    '[{"text":"Leave feedback"}]'
+    '[{"text":"Share my contact"}],'
+    '[{"text":"Call another person"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
@@ -494,6 +493,34 @@ class ActionStopPartnerSearch(BaseSwiperAction):
         ]
 
 
+class ActionShareContact(BaseSwiperAction):
+    def name(self) -> Text:
+        return 'action_share_contact'
+
+    def should_update_user_activity_timestamp(self, tracker: Tracker) -> bool:
+        return True
+
+    async def swipy_run(
+            self, dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
+            current_user: UserStateMachine,
+            user_vault: IUserVault,
+    ) -> List[Dict[Text, Any]]:
+        username = (current_user.telegram_from or {}).get('username')
+        if username:
+            dispatcher.utter_message(text=f"@{username}")
+        else:
+            dispatcher.utter_message(text="You don't have a username")
+
+        return [
+            SlotSet(
+                key=SWIPER_ACTION_RESULT_SLOT,
+                value=SwiperActionResult.SUCCESS,
+            ),
+        ]
+
+
 class ActionStopTheCall(BaseSwiperAction):
     def name(self) -> Text:
         return 'action_stop_the_call'
@@ -529,7 +556,7 @@ class ActionStopTheCall(BaseSwiperAction):
             'text': 'Thank you!',
 
             'parse_mode': 'html',
-            'reply_markup': NEW_VIDEO_CALL_GIVE_FEEDBACK_MARKUP,
+            'reply_markup': NEW_VIDEO_CALL_SHARE_CONTACT_MARKUP,
         })
 
         return [
@@ -607,7 +634,7 @@ class ActionRoomDisposalReport(BaseSwiperAction):
             'text': f"{presented_partner} has stopped the call.",
 
             'parse_mode': 'html',
-            'reply_markup': NEW_VIDEO_CALL_GIVE_FEEDBACK_MARKUP,
+            'reply_markup': NEW_VIDEO_CALL_SHARE_CONTACT_MARKUP,
         })
 
         current_user.latest_room_name = None
@@ -645,7 +672,7 @@ class ActionRoomExpirationReport(BaseSwiperAction):
             'text': f"Video call has expired.",
 
             'parse_mode': 'html',
-            'reply_markup': NEW_VIDEO_CALL_GIVE_FEEDBACK_MARKUP,
+            'reply_markup': NEW_VIDEO_CALL_SHARE_CONTACT_MARKUP,
         })
 
         current_user.latest_room_name = None
@@ -796,7 +823,7 @@ class ActionAskToJoin(BaseSwiperAction):
     ) -> List[Dict[Text, Any]]:
         partner_id = tracker.get_slot(rasa_callbacks.PARTNER_ID_SLOT)
         partner_photo_file_id = tracker.get_slot(rasa_callbacks.PARTNER_PHOTO_FILE_ID_SLOT)
-        partner_first_name = tracker.get_slot(rasa_callbacks.PARTNER_FIRST_NAME)
+        partner_first_name = tracker.get_slot(rasa_callbacks.PARTNER_FIRST_NAME_SLOT)
 
         latest_intent = get_intent_of_latest_message_reliably(tracker)
 
@@ -1255,7 +1282,7 @@ class ActionClearFeedbackSlot(BaseSwiperAction):
         return 'action_clear_feedback_slot'
 
     def should_update_user_activity_timestamp(self, tracker: Tracker) -> bool:
-        return False
+        return True
 
     async def swipy_run(
             self, dispatcher: CollectingDispatcher,
@@ -1281,7 +1308,7 @@ class ActionTakeAShortBreak(BaseSwiperAction):
         return 'action_take_a_short_break'
 
     def should_update_user_activity_timestamp(self, tracker: Tracker) -> bool:
-        return False
+        return True
 
     async def swipy_run(
             self, dispatcher: CollectingDispatcher,
@@ -1301,12 +1328,6 @@ class ActionTakeAShortBreak(BaseSwiperAction):
                 value=SwiperActionResult.SUCCESS,
             ),
         ]
-
-
-def present_partner_name(first_name: Text, placeholder: Text) -> Text:
-    if first_name:
-        return f"<b><i>{html.escape(first_name)}</i></b>"
-    return placeholder
 
 
 def utter_partner_already_gone(dispatcher: CollectingDispatcher, partner_first_name: Text):

@@ -1,9 +1,16 @@
+import html
 import time
 import traceback
 from datetime import datetime
 from typing import Text, Optional, Union, Any, List, Tuple
 
 from rasa_sdk import Tracker
+
+
+def present_partner_name(first_name: Text, placeholder: Text) -> Text:
+    if first_name:
+        return f"<b><i>{html.escape(first_name)}</i></b>"
+    return placeholder
 
 
 def current_timestamp_int() -> int:
