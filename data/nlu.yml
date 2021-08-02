@@ -144,5 +144,5 @@ nlu:
     - bug
 - intent: share_contact
   examples: |
-    - Share my contact
+    - Share my contact info
     - Share my username

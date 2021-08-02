@@ -129,7 +129,7 @@ YES_NO_HOW_DOES_IT_WORK_MARKUP = (
 SHARE_MY_CONTACT_CALL_ANOTHER_PERSON_MARKUP = (
     '{"keyboard":['
 
-    '[{"text":"Share my contact"}],'
+    '[{"text":"Share my contact info"}],'
     '[{"text":"Call another person"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
@@ -1125,7 +1125,7 @@ def would_you_like_to_share_contact_with(partner_first_name: Text) -> Text:
         partner_first_name,
         'your last chit-chat partner',
     )
-    return f"Would you like to share your Telegram contact with {partner_display_name} to stay in touch?"
+    return f"Would you like to share your Telegram contact info with {partner_display_name} to stay in touch?"
 
 
 def utter_room_url(dispatcher: CollectingDispatcher, room_url: Text, after_confirming_with_partner: bool):

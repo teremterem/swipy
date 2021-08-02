@@ -193,15 +193,24 @@ rules:
   - active_loop: null
   - action: action_clear_feedback_slot
   - action: utter_thanks_for_feedback
-- rule: user chose to share their contact with the last partner
-  steps:
-  - intent: share_contact
-  - action: action_share_contact
 - rule: partner shared their contact with the user
   steps:
   - intent: EXTERNAL_partner_shared_username
   - action: utter_partner_shared_username
   - action: action_rewind
+
+- rule: user chose to share their contact info with the last partner
+  steps:
+  - intent: share_contact
+  - action: action_share_contact
+- rule: user said yes to sharing their contact info with the last partner
+  steps:
+  - or:
+    - action: action_stop_the_call
+    - action: action_room_disposal_report
+    - action: action_room_expiration_report
+  - intent: affirm
+  - action: action_share_contact
 
 - rule: action_listen after action_find_partner
   steps:
