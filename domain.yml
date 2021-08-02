@@ -187,8 +187,8 @@ responses:
   utter_ask_feedback_text:
   - custom:
       parse_mode: html
-      reply_markup: '{{"keyboard":[[{{"text":"Cancel"}}]],"resize_keyboard":true,"one_time_keyboard":true}}'
-      text: Ok, what's your verdict?
+      reply_markup: '{{"remove_keyboard":true}}'
+      text: "Ok, please type your feedback:"
   utter_thanks_for_feedback:
   - custom:
       parse_mode: html
