@@ -28,7 +28,7 @@ nlu:
     - one more
 - intent: affirm
   examples: |
-    - Yes!
+    - Yes
     - yes
     - ok
     - yes please

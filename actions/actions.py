@@ -103,7 +103,7 @@ STOP_THE_CALL_MARKUP = (
 YES_NO_SOMEONE_ELSE_MARKUP = (
     '{"keyboard":['
 
-    '[{"text":"Yes!"}],'
+    '[{"text":"Yes"}],'
     '[{"text":"Not now"}],'
     '[{"text":"Connect me with someone else"}]'
 
@@ -569,6 +569,7 @@ class ActionStopTheCall(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
+        partner = None
         if current_user.latest_room_name:
             await daily_co.delete_room(current_user.latest_room_name)
 
@@ -586,12 +587,22 @@ class ActionStopTheCall(BaseSwiperAction):
             current_user.latest_room_name = None
             current_user.save()
 
-        dispatcher.utter_message(json_message={
-            'text': 'Thank you!',
+        if partner:
+            dispatcher.utter_message(json_message={
+                'text': f"Thank you!\n"
+                        f"\n"
+                        f"{would_you_like_to_share_contact_with(partner.get_first_name())}",
 
-            'parse_mode': 'html',
-            'reply_markup': SHARE_MY_CONTACT_CALL_ANOTHER_PERSON_MARKUP,
-        })
+                'parse_mode': 'html',
+                'reply_markup': SHARE_MY_CONTACT_CALL_ANOTHER_PERSON_MARKUP,
+            })
+        else:
+            dispatcher.utter_message(json_message={
+                'text': 'Thank you!\n',
+
+                'parse_mode': 'html',
+                'reply_markup': CALL_ANOTHER_PERSON_MARKUP,
+            })
 
         return [
             SlotSet(
@@ -655,17 +666,12 @@ class ActionRoomDisposalReport(BaseSwiperAction):
                 UserUtteranceReverted(),
             ]
 
-        partner_first_name = None
-        if current_user.partner_id:
-            partner = user_vault.get_user(current_user.partner_id)
-            partner_first_name = partner.get_first_name()
+        partner = user_vault.get_user(current_user.partner_id)
 
-        presented_partner = present_partner_name(
-            partner_first_name,
-            'Your chit-chat partner',
-        )
         dispatcher.utter_message(json_message={
-            'text': f"{presented_partner} has stopped the call.",
+            'text': f"The call has been stopped.\n"
+                    f"\n"
+                    f"{would_you_like_to_share_contact_with(partner.get_first_name())}",
 
             'parse_mode': 'html',
             'reply_markup': SHARE_MY_CONTACT_CALL_ANOTHER_PERSON_MARKUP,
@@ -702,8 +708,12 @@ class ActionRoomExpirationReport(BaseSwiperAction):
                 UserUtteranceReverted(),
             ]
 
+        partner = user_vault.get_user(current_user.partner_id)
+
         dispatcher.utter_message(json_message={
-            'text': f"Video call has expired.",
+            'text': f"Video call has expired.\n"
+                    f"\n"
+                    f"{would_you_like_to_share_contact_with(partner.get_first_name())}",
 
             'parse_mode': 'html',
             'reply_markup': SHARE_MY_CONTACT_CALL_ANOTHER_PERSON_MARKUP,
@@ -1108,6 +1118,14 @@ class ActionJoinRoom(BaseSwiperAction):
                 },
             ),
         ]
+
+
+def would_you_like_to_share_contact_with(partner_first_name: Text) -> Text:
+    partner_display_name = present_partner_name(
+        partner_first_name,
+        'your last chit-chat partner',
+    )
+    return f"Would you like to share your Telegram contact with {partner_display_name} to stay in touch?"
 
 
 def utter_room_url(dispatcher: CollectingDispatcher, room_url: Text, after_confirming_with_partner: bool):
