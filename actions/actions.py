@@ -27,8 +27,8 @@ logger = logging.getLogger(__name__)
 TELL_USER_ABOUT_ERRORS = strtobool(os.getenv('TELL_USER_ABOUT_ERRORS', 'yes'))
 SEND_ERROR_STACK_TRACE_TO_SLOT = strtobool(os.getenv('SEND_ERROR_STACK_TRACE_TO_SLOT', 'yes'))
 CLEAR_REJECTED_LIST_WHEN_NO_ONE_FOUND = strtobool(os.getenv('CLEAR_REJECTED_LIST_WHEN_NO_ONE_FOUND', 'yes'))
-FIND_PARTNER_FREQUENCY_SEC = float(os.getenv('FIND_PARTNER_FREQUENCY_SEC', '5'))
-PARTNER_SEARCH_TIMEOUT_SEC = int(os.getenv('PARTNER_SEARCH_TIMEOUT_SEC', '114'))  # 1 minute 54 seconds
+FIND_PARTNER_FREQUENCY_SEC = float(os.getenv('FIND_PARTNER_FREQUENCY_SEC', '3'))
+PARTNER_SEARCH_TIMEOUT_SEC = int(os.getenv('PARTNER_SEARCH_TIMEOUT_SEC', '116'))  # 1 minute 56 seconds
 ROOM_DISPOSAL_REPORT_DELAY_SEC = int(os.getenv('ROOM_DISPOSAL_REPORT_DELAY_SEC', '60'))  # 1 minute
 GREETING_MAKES_USER_OK_TO_CHITCHAT = strtobool(os.getenv('GREETING_MAKES_USER_OK_TO_CHITCHAT', 'no'))
 SEARCH_CANCELLATION_TAKES_A_BREAK = strtobool(os.getenv('SEARCH_CANCELLATION_TAKES_A_BREAK', 'no'))
@@ -126,10 +126,17 @@ YES_NO_HOW_DOES_IT_WORK_MARKUP = (
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
-NEW_VIDEO_CALL_SHARE_CONTACT_MARKUP = (
+SHARE_MY_CONTACT_CALL_ANOTHER_PERSON_MARKUP = (
     '{"keyboard":['
 
     '[{"text":"Share my contact"}],'
+    '[{"text":"Call another person"}]'
+
+    '],"resize_keyboard":true,"one_time_keyboard":true}'
+)
+CALL_ANOTHER_PERSON_MARKUP = (
+    '{"keyboard":['
+
     '[{"text":"Call another person"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
@@ -511,23 +518,34 @@ class ActionShareContact(BaseSwiperAction):
         if username:
             if current_user.partner_id:
                 partner = user_vault.get_user(current_user.partner_id)
-                partner_display_name = present_partner_name(partner.get_first_name(), 'Your previous chit-chat partner')
+                user_display_name = present_partner_name(current_user.get_first_name(), 'Your last chit-chat partner')
 
-                await rasa_callbacks.share_username(current_user.user_id, partner, partner_display_name, username)
+                await rasa_callbacks.share_username(current_user.user_id, partner, user_display_name, username)
 
+                partner_display_name = present_partner_name(partner.get_first_name(), 'your last chit-chat partner')
                 dispatcher.utter_message(
-                    text=f"Your Telegram username has been shared with {partner_display_name}.",
+                    json_message={
+                        'text': f"Your Telegram username has been shared with {partner_display_name}.",
+
+                        'parse_mode': 'html',
+                        'reply_markup': CALL_ANOTHER_PERSON_MARKUP,
+                    }
                 )
             else:
                 return [
                     FollowupAction(ACTION_DEFAULT_FALLBACK_NAME),
                 ]
         else:
-            dispatcher.utter_message(text=(
-                "You don't seem to have a username.\n"
-                "\n"
-                "Please set up a username in your Telegram profile and then try again."
-            ))
+            dispatcher.utter_message(
+                json_message={
+                    'text': "You don't seem to have a username.\n"
+                            "\n"
+                            "Please set up a username in your Telegram profile and then try again.",
+
+                    'parse_mode': 'html',
+                    'reply_markup': SHARE_MY_CONTACT_CALL_ANOTHER_PERSON_MARKUP,
+                }
+            )
 
         return [
             SlotSet(
@@ -572,7 +590,7 @@ class ActionStopTheCall(BaseSwiperAction):
             'text': 'Thank you!',
 
             'parse_mode': 'html',
-            'reply_markup': NEW_VIDEO_CALL_SHARE_CONTACT_MARKUP,
+            'reply_markup': SHARE_MY_CONTACT_CALL_ANOTHER_PERSON_MARKUP,
         })
 
         return [
@@ -650,7 +668,7 @@ class ActionRoomDisposalReport(BaseSwiperAction):
             'text': f"{presented_partner} has stopped the call.",
 
             'parse_mode': 'html',
-            'reply_markup': NEW_VIDEO_CALL_SHARE_CONTACT_MARKUP,
+            'reply_markup': SHARE_MY_CONTACT_CALL_ANOTHER_PERSON_MARKUP,
         })
 
         current_user.latest_room_name = None
@@ -688,7 +706,7 @@ class ActionRoomExpirationReport(BaseSwiperAction):
             'text': f"Video call has expired.",
 
             'parse_mode': 'html',
-            'reply_markup': NEW_VIDEO_CALL_SHARE_CONTACT_MARKUP,
+            'reply_markup': SHARE_MY_CONTACT_CALL_ANOTHER_PERSON_MARKUP,
         })
 
         current_user.latest_room_name = None
