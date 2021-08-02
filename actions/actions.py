@@ -525,7 +525,7 @@ class ActionShareContact(BaseSwiperAction):
                 partner_display_name = present_partner_name(partner.get_first_name(), 'your last chit-chat partner')
                 dispatcher.utter_message(
                     json_message={
-                        'text': f"Your Telegram username has been shared with {partner_display_name}.",
+                        'text': f"Your Telegram contact has been shared with {partner_display_name}.",
 
                         'parse_mode': 'html',
                         'reply_markup': CALL_ANOTHER_PERSON_MARKUP,
