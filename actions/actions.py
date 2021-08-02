@@ -509,9 +509,25 @@ class ActionShareContact(BaseSwiperAction):
     ) -> List[Dict[Text, Any]]:
         username = (current_user.telegram_from or {}).get('username')
         if username:
-            dispatcher.utter_message(text=f"@{username}")
+            if current_user.partner_id:
+                partner = user_vault.get_user(current_user.partner_id)
+                partner_display_name = present_partner_name(partner.get_first_name(), 'Your previous chit-chat partner')
+
+                await rasa_callbacks.share_username(current_user.user_id, partner, partner_display_name, username)
+
+                dispatcher.utter_message(
+                    text=f"Your Telegram username has been shared with {partner_display_name}.",
+                )
+            else:
+                return [
+                    FollowupAction(ACTION_DEFAULT_FALLBACK_NAME),
+                ]
         else:
-            dispatcher.utter_message(text="You don't have a username")
+            dispatcher.utter_message(text=(
+                "You don't seem to have a username.\n"
+                "\n"
+                "Please set up a username in your Telegram profile and then try again."
+            ))
 
         return [
             SlotSet(

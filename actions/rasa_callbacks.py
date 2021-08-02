@@ -6,7 +6,7 @@ from typing import Text, Dict, Any, Optional
 import aiohttp
 
 from actions.user_state_machine import UserStateMachine
-from actions.utils import SwiperRasaCallbackError, present_partner_name
+from actions.utils import SwiperRasaCallbackError
 
 logger = logging.getLogger(__name__)
 
@@ -128,7 +128,7 @@ async def schedule_room_disposal_report(
 async def share_username(
         sender_id: Text,
         receiver: UserStateMachine,
-        sender_first_name: Text,
+        sender_display_name: Text,
         sender_username: Text,
         suppress_callback_errors: bool = False,
 ) -> Optional[Dict[Text, Any]]:
@@ -137,7 +137,7 @@ async def share_username(
         receiver,
         EXTERNAL_PARTNER_SHARED_USERNAME_INTENT,
         {
-            PARTNER_FIRST_NAME_SLOT: present_partner_name(sender_first_name, 'Your previous chit-chat partner'),
+            PARTNER_FIRST_NAME_SLOT: sender_display_name,
             PARTNER_USERNAME_SLOT: sender_username,
         },
         suppress_callback_errors,
