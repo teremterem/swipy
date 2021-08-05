@@ -69,6 +69,7 @@ nlu:
     - Any updates?
 - intent: deny
   examples: |
+    - No, thanks
     - No
     - no
     - nope

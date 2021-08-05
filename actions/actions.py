@@ -109,6 +109,14 @@ YES_NO_SOMEONE_ELSE_MARKUP = (
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
+SOMEONE_ELSE_NO_MARKUP = (
+    '{"keyboard":['
+
+    '[{"text":"Connect me with someone else"}],'
+    '[{"text":"No, thanks"}]'
+
+    '],"resize_keyboard":true,"one_time_keyboard":true}'
+)
 YES_NO_MARKUP = (
     '{"keyboard":['
 
@@ -362,9 +370,9 @@ class ActionOfferChitchat(BaseSwiperAction):
                         '\n'
                         'Here is how it works:\n'
                         '\n'
-                        '- I find someone who also wants to chitchat.\n'
-                        '- I confirm with you and them that you are both ready.\n'
-                        '- I send both of you a video chat link.\n'
+                        '• I find someone who also wants to chitchat.\n'
+                        '• I confirm with you and them that you are both ready.\n'
+                        '• I send both of you a video chat link.\n'
                         '\n'
                         '<b>Would you like to give it a try?</b>',
 
@@ -379,10 +387,13 @@ class ActionOfferChitchat(BaseSwiperAction):
             dispatcher.utter_message(json_message={
                 'text': 'Hi, my name is Swipy 🙂\n'
                         '\n'
-                        'I can connect you with a stranger in a video chat '
-                        'so you could practice your English speaking skills 🇬🇧\n'
+                        'I randomly connect IT people in one-on-one video calls so they can:\n'
                         '\n'
-                        '<b>Would you like to give it a try?</b>',
+                        '• chit-chat\n'
+                        '• expand their network\n'
+                        '• practice spoken English 🇬🇧 (unless you are a native speaker)\n'
+                        '\n'
+                        '<b>Would you like to have a video call with a random person?</b>',
 
                 'parse_mode': 'html',
                 'reply_markup': YES_NO_HOW_DOES_IT_WORK_MARKUP,
@@ -1058,7 +1069,6 @@ class ActionAcceptInvitation(BaseSwiperAction):
                 key=SWIPER_ACTION_RESULT_SLOT,
                 value=SwiperActionResult.PARTNER_NOT_WAITING_ANYMORE,
             ),
-            FollowupAction(ACTION_FIND_PARTNER_NAME),
         ]
 
 
@@ -1098,11 +1108,18 @@ class ActionJoinRoom(BaseSwiperAction):
         current_user.join_room(partner_id, room_name)
         current_user.save()
 
+        is_intent_external = self.is_intent_external(tracker)
         utter_room_url(
             dispatcher,
             room_url,
-            after_confirming_with_partner=self.is_intent_external(tracker),
+            after_confirming_with_partner=is_intent_external,
         )
+
+        expiration_reminder_delay_sec = daily_co.DAILY_CO_MEETING_DURATION_SEC
+        if is_intent_external:
+            # make sure room expiration reports arrive to partners at slightly different time (otherwise we seem to be
+            # hitting telegram limits sometimes - one of the partners doesn't always receive this report)
+            expiration_reminder_delay_sec += 1
 
         return [
             SlotSet(
@@ -1112,7 +1129,7 @@ class ActionJoinRoom(BaseSwiperAction):
             reschedule_reminder(
                 current_user.user_id,
                 EXTERNAL_ROOM_EXPIRATION_REPORT_INTENT,
-                daily_co.DAILY_CO_MEETING_DURATION_SEC,
+                expiration_reminder_delay_sec,
                 entities={
                     rasa_callbacks.DISPOSED_ROOM_NAME_SLOT: room_name,
                 },
@@ -1325,7 +1342,6 @@ class ActionExpirePartnerConfirmation(BaseSwiperAction):
                 key=SWIPER_ACTION_RESULT_SLOT,
                 value=SwiperActionResult.SUCCESS,
             ),
-            FollowupAction(ACTION_FIND_PARTNER_NAME),
         ]
 
 
@@ -1386,13 +1402,10 @@ def utter_partner_already_gone(dispatcher: CollectingDispatcher, partner_first_n
     dispatcher.utter_message(json_message={
         'text': f"{present_partner_name(partner_first_name, 'That person')} has become unavailable 😵\n"
                 f"\n"
-                f"Fear not!\n"
-                f"\n"
-                f"I am already looking for someone else to connect you with "
-                f"and will get back to you within two minutes ⏳",
+                f"<b>Would you like to connect with someone else?</b>",
 
         'parse_mode': 'html',
-        'reply_markup': CANCEL_MARKUP,
+        'reply_markup': SOMEONE_ELSE_NO_MARKUP,
     })
 
 
