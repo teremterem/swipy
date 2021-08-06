@@ -18,6 +18,7 @@ nlu:
     - hi
 - intent: videochat
   examples: |
+    - Yes, connect me
     - Connect me with someone else
     - Call another person
     - Look again now

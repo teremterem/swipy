@@ -125,12 +125,20 @@ YES_NO_MARKUP = (
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
-YES_NO_HOW_DOES_IT_WORK_MARKUP = (
+YES_CONNECT_HOW_DOES_IT_WORK_NO_THANKS_MARKUP = (
     '{"keyboard":['
 
-    '[{"text":"Yes"}],'
-    '[{"text":"No"}],'
-    '[{"text":"How does it work?"}]'
+    '[{"text":"Yes, connect me"}],'
+    '[{"text":"How does it work?"}],'
+    '[{"text":"No, thanks"}]'
+
+    '],"resize_keyboard":true,"one_time_keyboard":true}'
+)
+YES_CONNECT_NO_THANKS_MARKUP = (
+    '{"keyboard":['
+
+    '[{"text":"Yes, connect me"}],'
+    '[{"text":"No, thanks"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
@@ -377,7 +385,7 @@ class ActionOfferChitchat(BaseSwiperAction):
                         '<b>Would you like to give it a try?</b>',
 
                 'parse_mode': 'html',
-                'reply_markup': YES_NO_MARKUP,
+                'reply_markup': YES_CONNECT_NO_THANKS_MARKUP,
             })
 
         elif latest_intent == 'out_of_scope':
@@ -398,7 +406,7 @@ class ActionOfferChitchat(BaseSwiperAction):
                         '<b>Would you like to have a video call with a random person?</b>',
 
                 'parse_mode': 'html',
-                'reply_markup': YES_NO_HOW_DOES_IT_WORK_MARKUP,
+                'reply_markup': YES_CONNECT_HOW_DOES_IT_WORK_NO_THANKS_MARKUP,
             })
 
     # noinspection PyMethodMayBeStatic
@@ -409,7 +417,7 @@ class ActionOfferChitchat(BaseSwiperAction):
                     f"<b>Would you like to have a video call with a random person?</b>",
 
             'parse_mode': 'html',
-            'reply_markup': YES_NO_HOW_DOES_IT_WORK_MARKUP,
+            'reply_markup': YES_CONNECT_HOW_DOES_IT_WORK_NO_THANKS_MARKUP,
         })
 
     async def swipy_run(
