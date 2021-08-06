@@ -390,6 +390,7 @@ class ActionOfferChitchat(BaseSwiperAction):
                         'I randomly connect IT people in one-on-one video calls.\n'
                         '\n'
                         'Here you can:\n'
+                        '\n'
                         '• chit-chat 🗣\n'
                         '• expand your network 🕸\n'
                         '• practice spoken English 🇬🇧\n'
@@ -405,8 +406,7 @@ class ActionOfferChitchat(BaseSwiperAction):
         dispatcher.utter_message(json_message={
             'text': f"{intro}\n"
                     f"\n"
-                    f"<b>Would you like to practice your spoken English 🇬🇧 "
-                    f"on a video call with a stranger?</b>",
+                    f"<b>Would you like to have a video call with a random person?</b>",
 
             'parse_mode': 'html',
             'reply_markup': YES_NO_HOW_DOES_IT_WORK_MARKUP,
