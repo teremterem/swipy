@@ -1063,6 +1063,10 @@ class ActionAcceptInvitation(BaseSwiperAction):
             current_user: UserStateMachine,
             partner: UserStateMachine,
     ) -> List[Dict[Text, Any]]:
+        # noinspection PyUnresolvedReferences
+        current_user.become_ok_to_chitchat()
+        current_user.save()
+
         utter_partner_already_gone(dispatcher, partner.get_first_name())
 
         return [
@@ -1334,6 +1338,10 @@ class ActionExpirePartnerConfirmation(BaseSwiperAction):
                 return [
                     UserUtteranceReverted(),
                 ]
+
+        # noinspection PyUnresolvedReferences
+        current_user.become_ok_to_chitchat()
+        current_user.save()
 
         partner = user_vault.get_user(current_user.partner_id)
         utter_partner_already_gone(dispatcher, partner.get_first_name())
