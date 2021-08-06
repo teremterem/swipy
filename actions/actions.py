@@ -70,12 +70,7 @@ class SwiperActionResult:
     ERROR = 'error'
 
 
-UTTER_INVITATION_DECLINED = (
-    'Ok, declined ❌\n'
-    '\n'
-    'Should you decide that you want to practice your English speaking skills 🇬🇧 '
-    'on a video call with a stranger just let me know 😉'
-)
+UTTER_INVITATION_DECLINED = 'Ok, declined ❌\n'
 UTTER_OK_LOOKING_FOR_PARTNER_TEMPLATE = 'utter_ok_looking_for_partner'
 
 REMOVE_KEYBOARD_MARKUP = '{"remove_keyboard":true}'
@@ -104,7 +99,7 @@ YES_NO_SOMEONE_ELSE_MARKUP = (
     '{"keyboard":['
 
     '[{"text":"Yes"}],'
-    '[{"text":"No"}],'
+    '[{"text":"Not, now"}],'
     '[{"text":"Connect me with someone else"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
@@ -837,9 +832,11 @@ class ActionFindPartner(BaseSwiperAction):
             ]
 
         dispatcher.utter_message(json_message={
-            'text': "Unfortunately, I couldn't find anyone in two minutes 😞\n"
+            'text': "I've been reaching out to people for two minutes, but no one has responded just yet.\n"
                     "\n"
-                    "<b>Would you like me to try searching again?</b>",
+                    "Which is ok - people rarely respond immediately...\n"
+                    "\n"
+                    "<b>Would you like me to try some more?</b>",
 
             'parse_mode': 'html',
             'reply_markup': YES_NO_MARKUP,
@@ -1419,7 +1416,7 @@ class ActionTakeAShortBreak(BaseSwiperAction):
 
 def utter_partner_already_gone(dispatcher: CollectingDispatcher, partner_first_name: Text):
     dispatcher.utter_message(json_message={
-        'text': f"{present_partner_name(partner_first_name, 'That person')} has become unavailable 😵\n"
+        'text': f"Unfortunately, {present_partner_name(partner_first_name, 'that person')} has become unavailable 😵\n"
                 f"\n"
                 f"<b>Would you like to connect with someone else?</b>",
 
