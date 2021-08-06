@@ -387,11 +387,11 @@ class ActionOfferChitchat(BaseSwiperAction):
             dispatcher.utter_message(json_message={
                 'text': 'Hi, my name is Swipy 🙂\n'
                         '\n'
-                        'I randomly connect IT people in one-on-one video calls so they can:\n'
+                        'I randomly connect IT people in one-on-one video calls. Here you can:\n'
                         '\n'
-                        '• chit-chat\n'
-                        '• expand their network\n'
-                        '• practice spoken English 🇬🇧 (unless you are a native speaker)\n'
+                        '• chit-chat 🗣\n'
+                        '• expand your network 🕸\n'
+                        '• practice spoken English 🇬🇧\n'
                         '\n'
                         '<b>Would you like to have a video call with a random person?</b>',
 
