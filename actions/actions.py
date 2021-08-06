@@ -1347,11 +1347,13 @@ class ActionExpirePartnerConfirmation(BaseSwiperAction):
                     UserUtteranceReverted(),
                 ]
 
+        partner_id = current_user.partner_id
+
         # noinspection PyUnresolvedReferences
         current_user.become_ok_to_chitchat()
         current_user.save()
 
-        partner = user_vault.get_user(current_user.partner_id)
+        partner = user_vault.get_user(partner_id)
         utter_partner_already_gone(dispatcher, partner.get_first_name())
 
         return [
