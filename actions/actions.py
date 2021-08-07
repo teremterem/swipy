@@ -944,14 +944,6 @@ class ActionAskToJoin(BaseSwiperAction):
         ]
 
 
-def does_invitation_go_right_before(tracker: Tracker):
-    filtered_reversed_applied_events = filter(
-        lambda e: e.get('event') == 'action' and e.get('name') not in [ACTION_LISTEN_NAME, ACTION_SESSION_START_NAME],
-        reversed(tracker.applied_events()),
-    )
-    return next(filtered_reversed_applied_events, {}).get('name') == ACTION_ASK_TO_JOIN_NAME
-
-
 class ActionAcceptInvitation(BaseSwiperAction):
     def name(self) -> Text:
         return ACTION_ACCEPT_INVITATION_NAME
@@ -966,7 +958,7 @@ class ActionAcceptInvitation(BaseSwiperAction):
             current_user: UserStateMachine,
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
-        if not does_invitation_go_right_before(tracker):
+        if not does_invitation_go_right_before(tracker, current_user):
             # user said yes to something but it wasn't an invitation
             return [
                 ActionReverted(),
@@ -1219,7 +1211,7 @@ class ActionRejectInvitation(BaseSwiperAction):
         latest_intent = tracker.get_intent_of_latest_message()
         user_wants_a_different_partner = latest_intent == SOMEONE_ELSE_INTENT
 
-        if not does_invitation_go_right_before(tracker):
+        if not does_invitation_go_right_before(tracker, current_user):
             if user_wants_a_different_partner:
                 # it's not a rejection at all - user simply asked for videochat
                 dispatcher.utter_message(response=UTTER_OK_LOOKING_FOR_PARTNER_TEMPLATE)
@@ -1411,6 +1403,22 @@ class ActionTakeAShortBreak(BaseSwiperAction):
                 key=SWIPER_ACTION_RESULT_SLOT,
                 value=SwiperActionResult.SUCCESS,
             ),
+        ]
+
+
+def does_invitation_go_right_before(tracker: Tracker, current_user: UserStateMachine):
+    filtered_reversed_applied_events = filter(
+        lambda e: e.get('event') == 'action' and e.get('name') not in [ACTION_LISTEN_NAME, ACTION_SESSION_START_NAME],
+        reversed(tracker.applied_events()),
+    )
+    try:
+        previous_action = next(filtered_reversed_applied_events)
+        return previous_action.get('name') == ACTION_ASK_TO_JOIN_NAME
+    except StopIteration:
+        # event history is lost (probably due to redeploy) => let's resort to a less precise way of checking
+        return current_user.state in [
+            UserState.ASKED_TO_JOIN,
+            UserState.ASKED_TO_CONFIRM,
         ]
 
 
