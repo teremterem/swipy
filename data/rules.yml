@@ -71,12 +71,16 @@ rules:
 - rule: user aggrees to join the call
   steps:
   - action: action_ask_to_join
-  - intent: affirm
+  - or:
+    - intent: affirm
+    - intent: videochat
   - action: action_accept_invitation
 - rule: user aggrees to something (maybe it's a video chat invitation from the previous session)
   conversation_start: true
   steps:
-  - intent: affirm
+  - or:
+    - intent: affirm
+    - intent: videochat
   - action: action_accept_invitation
 - rule: user refuses to join the call
   steps:
@@ -85,7 +89,7 @@ rules:
     - intent: deny
     - intent: another_time
     - intent: stop
-    - intent: videochat
+    - intent: someone_else
   - action: action_reject_invitation
 - rule: user rejected something (maybe it's a video chat invitation from the previous session)
   conversation_start: true
@@ -94,7 +98,7 @@ rules:
     - intent: deny
     - intent: another_time
     - intent: stop
-    - intent: videochat
+    - intent: someone_else
   - action: action_reject_invitation
 - rule: ask next random partner
   steps:
@@ -172,7 +176,9 @@ rules:
 
 - rule: user asks for video chat directly
   steps:
-  - intent: videochat
+  - or:
+    - intent: videochat
+    - intent: someone_else
   - action: utter_ok_looking_for_partner
   - action: action_find_partner
 - rule: user asks not to bother them
