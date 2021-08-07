@@ -45,6 +45,7 @@ SWIPER_ERROR_TRACE_SLOT = 'swiper_error_trace'
 PARTNER_SEARCH_START_TS_SLOT = 'partner_search_start_ts'
 FEEDBACK_TEXT_SLOT = 'feedback_text'
 
+VIDEOCHAT_INTENT = 'videochat'
 SOMEONE_ELSE_INTENT = 'someone_else'
 EXTERNAL_FIND_PARTNER_INTENT = 'EXTERNAL_find_partner'
 EXTERNAL_EXPIRE_PARTNER_CONFIRMATION_INTENT = 'EXTERNAL_expire_partner_confirmation'
@@ -959,11 +960,21 @@ class ActionAcceptInvitation(BaseSwiperAction):
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
         if not does_invitation_go_right_before(tracker, current_user):
-            # user said yes to something but it wasn't an invitation
-            return [
-                ActionReverted(),
-                FollowupAction(ACTION_DEFAULT_FALLBACK_NAME),
-            ]
+            latest_intent = tracker.get_intent_of_latest_message()
+            if latest_intent == VIDEOCHAT_INTENT:
+                # user simply asked for videochat
+                dispatcher.utter_message(response=UTTER_OK_LOOKING_FOR_PARTNER_TEMPLATE)
+
+                return [
+                    ActionReverted(),
+                    FollowupAction(ACTION_FIND_PARTNER_NAME),
+                ]
+            else:
+                # user said yes to something but it wasn't an invitation
+                return [
+                    ActionReverted(),
+                    FollowupAction(ACTION_DEFAULT_FALLBACK_NAME),
+                ]
 
         partner = user_vault.get_user(current_user.partner_id)
 
