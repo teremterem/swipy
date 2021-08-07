@@ -45,7 +45,7 @@ SWIPER_ERROR_TRACE_SLOT = 'swiper_error_trace'
 PARTNER_SEARCH_START_TS_SLOT = 'partner_search_start_ts'
 FEEDBACK_TEXT_SLOT = 'feedback_text'
 
-VIDEOCHAT_INTENT = 'videochat'
+SOMEONE_ELSE_INTENT = 'someone_else'
 EXTERNAL_FIND_PARTNER_INTENT = 'EXTERNAL_find_partner'
 EXTERNAL_EXPIRE_PARTNER_CONFIRMATION_INTENT = 'EXTERNAL_expire_partner_confirmation'
 EXTERNAL_ROOM_DISPOSAL_REPORT_INTENT = 'EXTERNAL_room_disposal_report'
@@ -1217,7 +1217,7 @@ class ActionRejectInvitation(BaseSwiperAction):
             user_vault: IUserVault,
     ) -> List[Dict[Text, Any]]:
         latest_intent = tracker.get_intent_of_latest_message()
-        user_wants_a_different_partner = latest_intent == VIDEOCHAT_INTENT
+        user_wants_a_different_partner = latest_intent == SOMEONE_ELSE_INTENT
 
         if not does_invitation_go_right_before(tracker):
             if user_wants_a_different_partner:
