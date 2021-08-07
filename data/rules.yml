@@ -136,6 +136,41 @@ rules:
   - intent: EXTERNAL_room_expiration_report
   - action: action_room_expiration_report
 
+- rule: partner became unavailable and the user agreed to connect with someone else
+  condition:
+  - slot_was_set:
+    - swiper_action_result: partner_not_waiting_anymore
+  steps:
+  - action: action_accept_invitation
+  - intent: affirm
+  - action: utter_ok_looking_for_partner
+  - action: action_find_partner
+- rule: partner became unavailable and the user agreed to connect with someone else
+  steps:
+  - action: action_expire_partner_confirmation
+  - intent: affirm
+  - action: utter_ok_looking_for_partner
+  - action: action_find_partner
+- rule: partner became unavailable and the user refused to connect with someone else
+  condition:
+  - slot_was_set:
+    - swiper_action_result: partner_not_waiting_anymore
+  steps:
+  - action: action_accept_invitation
+  - or:
+    - intent: deny
+    - intent: another_time
+    - intent: stop
+  - action: utter_ok_let_me_know
+- rule: partner became unavailable and the user refused to connect with someone else
+  steps:
+  - action: action_expire_partner_confirmation
+  - or:
+    - intent: deny
+    - intent: another_time
+    - intent: stop
+  - action: utter_ok_let_me_know
+
 - rule: bot starts looking for a partner and the user confirms that they are waiting
   condition:
   - slot_was_set:
