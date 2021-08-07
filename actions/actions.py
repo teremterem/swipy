@@ -99,7 +99,7 @@ YES_NO_SOMEONE_ELSE_MARKUP = (
     '{"keyboard":['
 
     '[{"text":"Yes"}],'
-    '[{"text":"Not, now"}],'
+    '[{"text":"Not now"}],'
     '[{"text":"Connect me with someone else"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
