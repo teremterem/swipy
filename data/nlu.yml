@@ -18,12 +18,16 @@ nlu:
     - hi
 - intent: videochat
   examples: |
-    - New video call
+    - Yes, connect me
     - Look again now
-    - Someone else
-    - someone else
     - run
     - now
+- intent: someone_else
+  examples: |
+    - Connect me with someone else
+    - Call another person
+    - Someone else
+    - someone else
     - one more
 - intent: affirm
   examples: |
@@ -68,6 +72,7 @@ nlu:
     - Any updates?
 - intent: deny
   examples: |
+    - No, thanks
     - No
     - no
     - nope
@@ -75,6 +80,8 @@ nlu:
     - -
 - intent: another_time
   examples:
+  - text: |
+      Not now
   - text: |
       Maybe tomorrow
   - text: |
@@ -139,3 +146,7 @@ nlu:
     - Feedback
     - Problem
     - bug
+- intent: share_contact
+  examples: |
+    - Share my contact info
+    - Share my username

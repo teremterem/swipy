@@ -71,12 +71,16 @@ rules:
 - rule: user aggrees to join the call
   steps:
   - action: action_ask_to_join
-  - intent: affirm
+  - or:
+    - intent: affirm
+    - intent: videochat
   - action: action_accept_invitation
 - rule: user aggrees to something (maybe it's a video chat invitation from the previous session)
   conversation_start: true
   steps:
-  - intent: affirm
+  - or:
+    - intent: affirm
+    - intent: videochat
   - action: action_accept_invitation
 - rule: user refuses to join the call
   steps:
@@ -85,7 +89,7 @@ rules:
     - intent: deny
     - intent: another_time
     - intent: stop
-    - intent: videochat
+    - intent: someone_else
   - action: action_reject_invitation
 - rule: user rejected something (maybe it's a video chat invitation from the previous session)
   conversation_start: true
@@ -94,7 +98,7 @@ rules:
     - intent: deny
     - intent: another_time
     - intent: stop
-    - intent: videochat
+    - intent: someone_else
   - action: action_reject_invitation
 - rule: ask next random partner
   steps:
@@ -131,6 +135,41 @@ rules:
   steps:
   - intent: EXTERNAL_room_expiration_report
   - action: action_room_expiration_report
+
+- rule: partner became unavailable and the user agreed to connect with someone else
+  condition:
+  - slot_was_set:
+    - swiper_action_result: partner_not_waiting_anymore
+  steps:
+  - action: action_accept_invitation
+  - intent: affirm
+  - action: utter_ok_looking_for_partner
+  - action: action_find_partner
+- rule: partner became unavailable and the user agreed to connect with someone else
+  steps:
+  - action: action_expire_partner_confirmation
+  - intent: affirm
+  - action: utter_ok_looking_for_partner
+  - action: action_find_partner
+- rule: partner became unavailable and the user refused to connect with someone else
+  condition:
+  - slot_was_set:
+    - swiper_action_result: partner_not_waiting_anymore
+  steps:
+  - action: action_accept_invitation
+  - or:
+    - intent: deny
+    - intent: another_time
+    - intent: stop
+  - action: utter_ok_let_me_know
+- rule: partner became unavailable and the user refused to connect with someone else
+  steps:
+  - action: action_expire_partner_confirmation
+  - or:
+    - intent: deny
+    - intent: another_time
+    - intent: stop
+  - action: utter_ok_let_me_know
 
 - rule: bot starts looking for a partner and the user confirms that they are waiting
   condition:
@@ -172,7 +211,9 @@ rules:
 
 - rule: user asks for video chat directly
   steps:
-  - intent: videochat
+  - or:
+    - intent: videochat
+    - intent: someone_else
   - action: utter_ok_looking_for_partner
   - action: action_find_partner
 - rule: user asks not to bother them
@@ -193,6 +234,31 @@ rules:
   - active_loop: null
   - action: action_clear_feedback_slot
   - action: utter_thanks_for_feedback
+- rule: partner shared their contact with the user
+  steps:
+  - intent: EXTERNAL_partner_shared_username
+  - action: utter_partner_shared_username
+  - action: action_rewind
+
+- rule: user chose to share their contact info with the last partner
+  steps:
+  - intent: share_contact
+  - action: action_share_contact
+- rule: user said yes to sharing their contact info with the last partner
+  steps:
+  - action: action_stop_the_call
+  - intent: affirm
+  - action: action_share_contact
+- rule: user said yes to sharing their contact info with the last partner
+  steps:
+  - action: action_room_disposal_report
+  - intent: affirm
+  - action: action_share_contact
+- rule: user said yes to sharing their contact info with the last partner
+  steps:
+  - action: action_room_expiration_report
+  - intent: affirm
+  - action: action_share_contact
 
 - rule: action_listen after action_find_partner
   steps:

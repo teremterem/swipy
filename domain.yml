@@ -11,6 +11,8 @@ intents:
     use_entities: true
 - videochat:
     use_entities: true
+- someone_else:
+    use_entities: true
 - affirm:
     use_entities: true
 - waiting:
@@ -32,6 +34,8 @@ intents:
 - out_of_scope:
     use_entities: true
 - feedback:
+    use_entities: true
+- share_contact:
     use_entities: true
 - restart:
     use_entities: true
@@ -56,6 +60,8 @@ intents:
 - EXTERNAL_room_disposal_report:
     use_entities: true
 - EXTERNAL_room_expiration_report:
+    use_entities: true
+- EXTERNAL_partner_shared_username:
     use_entities: true
 entities:
 - partner_id
@@ -143,6 +149,11 @@ slots:
     initial_value: null
     auto_fill: true
     influence_conversation: true
+  partner_username:
+    type: rasa.shared.core.slots.TextSlot
+    initial_value: null
+    auto_fill: true
+    influence_conversation: true
   room_url:
     type: rasa.shared.core.slots.TextSlot
     initial_value: null
@@ -187,13 +198,17 @@ responses:
   utter_ask_feedback_text:
   - custom:
       parse_mode: html
-      reply_markup: '{{"keyboard":[[{{"text":"Cancel"}}]],"resize_keyboard":true,"one_time_keyboard":true}}'
-      text: Ok, what's your verdict?
+      reply_markup: '{{"remove_keyboard":true}}'
+      text: 'Ok, please type your feedback:'
   utter_thanks_for_feedback:
   - custom:
       parse_mode: html
-      reply_markup: '{{"keyboard":[[{{"text":"New video call"}}],[{{"text":"How does it work?"}}]],"resize_keyboard":true,"one_time_keyboard":true}}'
+      reply_markup: '{{"keyboard":[[{{"text":"/restart"}}]],"resize_keyboard":true,"one_time_keyboard":true}}'
       text: Thank you! Your feedback will help me improve.
+  utter_partner_shared_username:
+  - custom:
+      parse_mode: html
+      text: '(Psst! {partner_first_name} has shared their Telegram contact info with you: @{partner_username})'
 actions:
 - action_session_start
 - action_offer_chitchat
@@ -208,6 +223,7 @@ actions:
 - action_default_fallback
 - action_rewind
 - action_stop_partner_search
+- action_share_contact
 - action_stop_the_call
 - action_schedule_room_disposal_report
 - action_room_disposal_report
@@ -228,5 +244,6 @@ forms:
         - EXTERNAL_schedule_room_disposal_report
         - EXTERNAL_room_disposal_report
         - EXTERNAL_room_expiration_report
+        - EXTERNAL_partner_shared_username
         type: from_text
 e2e_actions: []
