@@ -85,7 +85,7 @@ RESTART_COMMAND_MARKUP = (
 CANCEL_MARKUP = (
     '{"keyboard":['
 
-    '[{"text":"Cancel"}]'
+    '[{"text":"❌ Cancel"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
@@ -99,17 +99,16 @@ STOP_THE_CALL_MARKUP = (
 YES_NO_SOMEONE_ELSE_MARKUP = (
     '{"keyboard":['
 
-    '[{"text":"Yes"}],'
-    '[{"text":"Not now"}],'
-    '[{"text":"Connect me with someone else"}]'
+    '[{"text":"✅ Yes"},{"text":"❌ Not now"}],'
+    '[{"text":"👤 Someone else"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
 SOMEONE_ELSE_NO_MARKUP = (
     '{"keyboard":['
 
-    '[{"text":"Connect me with someone else"}],'
-    '[{"text":"No, thanks"}]'
+    '[{"text":"👤 Someone else"}],'
+    '[{"text":"❌ No, thanks"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
@@ -124,32 +123,31 @@ YES_NO_MARKUP = (
 YES_CONNECT_HOW_DOES_IT_WORK_NO_THANKS_MARKUP = (
     '{"keyboard":['
 
-    '[{"text":"Yes, connect me"}],'
-    '[{"text":"How does it work?"}],'
-    '[{"text":"No, thanks"}]'
+    '[{"text":"✅ Yes, connect me"}],'
+    '[{"text":"💡 How does it work?"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
 YES_CONNECT_NO_THANKS_MARKUP = (
     '{"keyboard":['
 
-    '[{"text":"Yes, connect me"}],'
-    '[{"text":"No, thanks"}]'
+    '[{"text":"✅ Yes, connect me"}],'
+    '[{"text":"❌ No, thanks"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
 SHARE_MY_CONTACT_CALL_ANOTHER_PERSON_MARKUP = (
     '{"keyboard":['
 
-    '[{"text":"Share my contact info"}],'
-    '[{"text":"Call another person"}]'
+    '[{"text":"🤵 Share my username"}],'
+    '[{"text":"♻️ Call another person"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
 CALL_ANOTHER_PERSON_MARKUP = (
     '{"keyboard":['
 
-    '[{"text":"Call another person"}]'
+    '[{"text":"♻️ Call another person"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
@@ -541,7 +539,7 @@ class ActionShareContact(BaseSwiperAction):
                 partner_display_name = present_partner_name(partner.get_first_name(), 'your last chit-chat partner')
                 dispatcher.utter_message(
                     json_message={
-                        'text': f"Your Telegram contact info has been shared with {partner_display_name}.",
+                        'text': f"Your Telegram username has been shared with {partner_display_name}.",
 
                         'parse_mode': 'html',
                         'reply_markup': CALL_ANOTHER_PERSON_MARKUP,

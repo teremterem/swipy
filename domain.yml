@@ -183,7 +183,7 @@ responses:
   utter_ok_looking_for_partner:
   - custom:
       parse_mode: html
-      reply_markup: '{{"keyboard":[[{{"text":"Cancel"}}]],"resize_keyboard":true,"one_time_keyboard":true}}'
+      reply_markup: '{{"keyboard":[[{{"text":"❌ Cancel"}}]],"resize_keyboard":true,"one_time_keyboard":true}}'
       text: "Great! Let me find someone for you to chitchat with \U0001F5E3\n\nI will get back to you within two minutes ⏳"
   utter_ok_let_me_know:
   - custom:
@@ -208,7 +208,7 @@ responses:
   utter_partner_shared_username:
   - custom:
       parse_mode: html
-      text: '(Psst! {partner_first_name} has shared their Telegram contact info with you: @{partner_username})'
+      text: '(Psst! {partner_first_name} has shared their username with you: @{partner_username})'
 actions:
 - action_session_start
 - action_offer_chitchat
