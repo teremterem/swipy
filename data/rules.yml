@@ -272,3 +272,8 @@ rules:
 - rule: action_listen after action_stop_partner_search
   steps:
   - action: action_stop_partner_search
+
+- rule: make everyone available
+  steps:
+  - intent: rrrrrr
+  - action: action_make_everyone_available

@@ -1415,6 +1415,37 @@ class ActionTakeAShortBreak(BaseSwiperAction):
         ]
 
 
+class ActionMakeEveryoneAvailable(Action):  # TODO oleksandr: DO NOT SHIP IT TO PROD !!!!!!!!!!!!!!!!!!!!!!!!!
+    def name(self) -> Text:
+        return 'action_make_everyone_available'
+
+    async def run(
+            self, dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
+    ) -> List[Dict[Text, Any]]:
+        from actions.aws_resources import user_state_machine_table
+
+        counter = 0
+        for item in user_state_machine_table.scan()['Items']:
+            user_state_machine_table.update_item(
+                Key={'user_id': item['user_id']},
+                UpdateExpression='SET #state=:state REMOVE #roomed, #rejected, #seen',  # , #room_name',
+                ExpressionAttributeNames={
+                    # '#room_name': 'latest_room_name',
+                    '#roomed': 'roomed_partner_ids',
+                    '#rejected': 'rejected_partner_ids',
+                    '#seen': 'seen_partner_ids',
+                    '#state': 'state',
+                },
+                ExpressionAttributeValues={':state': UserState.OK_TO_CHITCHAT},
+            )
+            counter += 1
+
+        dispatcher.utter_message(text=f"DONE FOR {counter} ITEMS")
+        return []
+
+
 def does_invitation_go_right_before(tracker: Tracker, current_user: UserStateMachine):
     filtered_reversed_applied_events = filter(
         lambda e: e.get('event') == 'action' and e.get('name') not in [ACTION_LISTEN_NAME, ACTION_SESSION_START_NAME],

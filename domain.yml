@@ -63,6 +63,8 @@ intents:
     use_entities: true
 - EXTERNAL_partner_shared_username:
     use_entities: true
+- rrrrrr:
+    use_entities: true
 entities:
 - partner_id
 - partner_id_that_rejected
@@ -230,6 +232,7 @@ actions:
 - action_room_expiration_report
 - action_clear_feedback_slot
 - action_take_a_short_break
+- action_make_everyone_available
 forms:
   give_feedback_form:
     required_slots:
