@@ -120,11 +120,19 @@ YES_NO_MARKUP = (
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
-YES_CONNECT_HOW_DOES_IT_WORK_NO_THANKS_MARKUP = (
+YES_CONNECT_HOW_DOES_IT_WORK_MARKUP = (
     '{"keyboard":['
 
     '[{"text":"✅ Yes, connect me"}],'
     '[{"text":"💡 How does it work?"}]'
+
+    '],"resize_keyboard":true,"one_time_keyboard":true}'
+)
+YES_CONNECT_WHAT_TO_TALK_ABOUT_MARKUP = (
+    '{"keyboard":['
+
+    '[{"text":"✅ Yes, connect me"}],'
+    '[{"text":"❓ What to talk about?"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
@@ -367,19 +375,26 @@ class ActionOfferChitchat(BaseSwiperAction):
         latest_intent = tracker.get_intent_of_latest_message()
 
         if latest_intent == 'help':
-            dispatcher.utter_message(json_message={  # TODO oleksandr: rewrite this text ?
-                'text': 'I can arrange video chitchat with another human for you 🎥 🗣 ☎️\n'
-                        '\n'
-                        'Here is how it works:\n'
-                        '\n'
-                        '• I find someone who also wants to chitchat.\n'
-                        '• I confirm with you and them that you are both ready.\n'
-                        '• I send both of you a video chat link.\n'
-                        '\n'
-                        '<b>Would you like to give it a try?</b>',
+            dispatcher.utter_message(json_message={
+                'text': "Here is how it works:\n"
+                        "\n"
+                        "• You let me know that you want to connect with someone.\n"
+                        "• On your behalf I invite other users to join a video call with you.\n"
+                        "• In the invitation they see your first name and your profile picture (unless you have "
+                        "chosen not to show your profile picture to everyone, which is controlled in Telegram "
+                        "settings).\n"
+                        "• Someone eventually accepts an invitation to have a video call with you.\n"
+                        "• At that point you receive a cross invitation with the first name and the profile picture "
+                        "of the person that expressed a desire to talk.\n"
+                        "• You confirm that you are ready.\n"
+                        "• I send both of you a link to a video call (video calls are powered by daily.co "
+                        "and are limited to 20 minutes).\n"
+                        "\n"
+                        "If you decide that you want to stay in touch with your chit-chat partner, you will have an "
+                        "option to share your Telegram username with them after you or your partner stops the call.",
 
                 'parse_mode': 'html',
-                'reply_markup': YES_CONNECT_NO_THANKS_MARKUP,
+                'reply_markup': YES_CONNECT_WHAT_TO_TALK_ABOUT_MARKUP,
             })
 
         elif latest_intent == 'out_of_scope':
@@ -400,7 +415,7 @@ class ActionOfferChitchat(BaseSwiperAction):
                         '<b>Would you like to have a video call with a random person?</b>',
 
                 'parse_mode': 'html',
-                'reply_markup': YES_CONNECT_HOW_DOES_IT_WORK_NO_THANKS_MARKUP,
+                'reply_markup': YES_CONNECT_HOW_DOES_IT_WORK_MARKUP,
             })
 
     # noinspection PyMethodMayBeStatic
@@ -411,7 +426,7 @@ class ActionOfferChitchat(BaseSwiperAction):
                     f"<b>Would you like to have a video call with a random person?</b>",
 
             'parse_mode': 'html',
-            'reply_markup': YES_CONNECT_HOW_DOES_IT_WORK_NO_THANKS_MARKUP,
+            'reply_markup': YES_CONNECT_HOW_DOES_IT_WORK_MARKUP,
         })
 
     async def swipy_run(
