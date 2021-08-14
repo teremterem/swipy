@@ -89,6 +89,27 @@ def make_everyone_available_to_everyone() -> None:
 
 
 @swipy.command()
+def drop_all_rejections() -> None:
+    user_state_machine_table = _prompt_ddb_table()
+
+    counter = 0
+    for item in user_state_machine_table.scan()['Items']:
+        user_state_machine_table.update_item(
+            Key={'user_id': item['user_id']},
+            UpdateExpression='REMOVE #roomed, #rejected, #seen',
+            ExpressionAttributeNames={
+                '#roomed': 'roomed_partner_ids',
+                '#rejected': 'rejected_partner_ids',
+                '#seen': 'seen_partner_ids',
+            },
+        )
+        counter += 1
+        if counter % 10 == 0:
+            print(counter)
+    print('DONE FOR', counter, 'ITEMS')
+
+
+@swipy.command()
 def remove_obsolete_attributes() -> None:
     user_state_machine_table = _prompt_ddb_table()
 
