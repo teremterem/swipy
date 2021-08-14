@@ -132,14 +132,14 @@ YES_CONNECT_WHAT_TO_TALK_ABOUT_MARKUP = (
     '{"keyboard":['
 
     '[{"text":"✅ Yes, connect me"}],'
-    '[{"text":"❓ What to talk about?"}]'
+    '[{"text":"🙊 Chit-chat tips"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
 YES_CONNECT_NO_THANKS_MARKUP = (
     '{"keyboard":['
 
-    '[{"text":"✅ Yes, connect me"}],'
+    '[{"text":"✅ Ok, connect me"}],'
     '[{"text":"❌ No, thanks"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
@@ -395,6 +395,21 @@ class ActionOfferChitchat(BaseSwiperAction):
 
                 'parse_mode': 'html',
                 'reply_markup': YES_CONNECT_WHAT_TO_TALK_ABOUT_MARKUP,
+            })
+
+        elif latest_intent == 'instructions':
+            dispatcher.utter_message(json_message={
+                'text': "Here are some chit-chat tips:\n"
+                        "\n"
+                        "• One.\n"
+                        "• Two.\n"
+                        "• Three.\n"
+                        "\n"
+                        "If you decide that you want to stay in touch with your chit-chat partner, you will have an "
+                        "option to share your Telegram username with them after you or your partner stops the call.",
+
+                'parse_mode': 'html',
+                'reply_markup': YES_CONNECT_NO_THANKS_MARKUP,
             })
 
         elif latest_intent == 'out_of_scope':
@@ -913,7 +928,7 @@ class ActionAskToJoin(BaseSwiperAction):
             current_user.save()
 
             utter_text = (
-                f"Hey! {presented_partner} is looking to chitchat 🗣\n"
+                f"Hey! {presented_partner} is looking to chit-chat 🗣\n"
                 f"\n"
                 f"<b>Would you like to join a video call?</b> 🎥 ☎️"
             )
@@ -924,7 +939,7 @@ class ActionAskToJoin(BaseSwiperAction):
             current_user.save()
 
             utter_text = (
-                f"Hey! {presented_partner} is willing to chitchat with 👉 you 👈\n"
+                f"Hey! {presented_partner} is willing to chit-chat with 👉 you 👈\n"
                 f"\n"
                 f"<b>Are you ready for a video call?</b> 🎥 ☎️"
             )

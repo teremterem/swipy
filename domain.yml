@@ -29,6 +29,8 @@ intents:
     use_entities: true
 - help:
     use_entities: true
+- instructions:
+    use_entities: true
 - gratitude:
     use_entities: true
 - out_of_scope:

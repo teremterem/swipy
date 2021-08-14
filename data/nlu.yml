@@ -123,6 +123,9 @@ nlu:
     - Ok. How to call you?
     - Why?
     - Ha?
+- intent: instructions
+  examples: |
+    - 🙊 Chit-chat tips
 - intent: gratitude
   examples: |
     - Thanks

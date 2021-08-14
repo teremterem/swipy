@@ -6,6 +6,7 @@ rules:
     - intent: start
     - intent: greet
     - intent: help
+    - intent: instructions
     - intent: out_of_scope
   - action: action_offer_chitchat
 - rule: NLU prediction confidence is low
