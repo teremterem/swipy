@@ -189,11 +189,16 @@ responses:
       parse_mode: html
       reply_markup: '{{"keyboard":[[{{"text":"❌ Cancel"}}]],"resize_keyboard":true,"one_time_keyboard":true}}'
       text: "Great! Let me find someone for you to chitchat with \U0001F5E3\n\nI will get back to you within two minutes ⏳"
-  utter_ok_let_me_know:
+  utter_ok_rejected:
   - custom:
       parse_mode: html
       reply_markup: '{{"keyboard":[[{{"text":"/restart"}}]],"resize_keyboard":true,"one_time_keyboard":true}}'
-      text: "Ok, declined ❌\n\nLet me know if you change your mind \U0001F609"
+      text: Ok, rejected ❌
+  utter_ok_canceled:
+  - custom:
+      parse_mode: html
+      reply_markup: '{{"keyboard":[[{{"text":"/restart"}}]],"resize_keyboard":true,"one_time_keyboard":true}}'
+      text: Ok, canceled ❌
   utter_ok_i_will_keep_you_in_mind:
   - custom:
       parse_mode: html

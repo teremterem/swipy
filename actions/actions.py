@@ -71,7 +71,8 @@ class SwiperActionResult:
     ERROR = 'error'
 
 
-UTTER_INVITATION_DECLINED = 'Ok, declined ❌\n'
+UTTER_OK_REJECTED_TEMPLATE = 'utter_ok_rejected'
+UTTER_OK_CANCELED_TEMPLATE = 'utter_ok_canceled'
 UTTER_OK_LOOKING_FOR_PARTNER_TEMPLATE = 'utter_ok_looking_for_partner'
 
 REMOVE_KEYBOARD_MARKUP = '{"remove_keyboard":true}'
@@ -1283,11 +1284,7 @@ class ActionRejectInvitation(BaseSwiperAction):
             # noinspection PyUnresolvedReferences
             current_user.reject_invitation()
 
-            dispatcher.utter_message(json_message={
-                'text': UTTER_INVITATION_DECLINED,
-                'parse_mode': 'html',
-                'reply_markup': RESTART_COMMAND_MARKUP,
-            })
+            dispatcher.utter_message(response=UTTER_OK_REJECTED_TEMPLATE)
 
         current_user.save()
 
@@ -1335,11 +1332,7 @@ class ActionCancelAcceptedInvitation(BaseSwiperAction):
             current_user.become_ok_to_chitchat()
         current_user.save()
 
-        dispatcher.utter_message(json_message={
-            'text': UTTER_INVITATION_DECLINED,
-            'parse_mode': 'html',
-            'reply_markup': RESTART_COMMAND_MARKUP,
-        })
+        dispatcher.utter_message(response=UTTER_OK_CANCELED_TEMPLATE)
 
         return [
             SlotSet(
