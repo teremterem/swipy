@@ -27,8 +27,8 @@ logger = logging.getLogger(__name__)
 TELL_USER_ABOUT_ERRORS = strtobool(os.getenv('TELL_USER_ABOUT_ERRORS', 'yes'))
 SEND_ERROR_STACK_TRACE_TO_SLOT = strtobool(os.getenv('SEND_ERROR_STACK_TRACE_TO_SLOT', 'yes'))
 CLEAR_REJECTED_LIST_WHEN_NO_ONE_FOUND = strtobool(os.getenv('CLEAR_REJECTED_LIST_WHEN_NO_ONE_FOUND', 'yes'))
-FIND_PARTNER_FREQUENCY_SEC = float(os.getenv('FIND_PARTNER_FREQUENCY_SEC', '3'))
-PARTNER_SEARCH_TIMEOUT_SEC = int(os.getenv('PARTNER_SEARCH_TIMEOUT_SEC', '116'))  # 1 minute 56 seconds
+FIND_PARTNER_FREQUENCY_SEC = float(os.getenv('FIND_PARTNER_FREQUENCY_SEC', '5'))
+PARTNER_SEARCH_TIMEOUT_SEC = int(os.getenv('PARTNER_SEARCH_TIMEOUT_SEC', '114'))  # 1 minute 54 seconds
 ROOM_DISPOSAL_REPORT_DELAY_SEC = int(os.getenv('ROOM_DISPOSAL_REPORT_DELAY_SEC', '60'))  # 1 minute
 GREETING_MAKES_USER_OK_TO_CHITCHAT = strtobool(os.getenv('GREETING_MAKES_USER_OK_TO_CHITCHAT', 'no'))
 SEARCH_CANCELLATION_TAKES_A_BREAK = strtobool(os.getenv('SEARCH_CANCELLATION_TAKES_A_BREAK', 'no'))
@@ -71,7 +71,8 @@ class SwiperActionResult:
     ERROR = 'error'
 
 
-UTTER_INVITATION_DECLINED = 'Ok, declined ❌\n'
+UTTER_OK_REJECTED_TEMPLATE = 'utter_ok_rejected'
+UTTER_OK_CANCELED_TEMPLATE = 'utter_ok_canceled'
 UTTER_OK_LOOKING_FOR_PARTNER_TEMPLATE = 'utter_ok_looking_for_partner'
 
 REMOVE_KEYBOARD_MARKUP = '{"remove_keyboard":true}'
@@ -85,7 +86,7 @@ RESTART_COMMAND_MARKUP = (
 CANCEL_MARKUP = (
     '{"keyboard":['
 
-    '[{"text":"Cancel"}]'
+    '[{"text":"❌ Cancel"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
@@ -99,17 +100,16 @@ STOP_THE_CALL_MARKUP = (
 YES_NO_SOMEONE_ELSE_MARKUP = (
     '{"keyboard":['
 
-    '[{"text":"Yes"}],'
-    '[{"text":"Not now"}],'
-    '[{"text":"Connect me with someone else"}]'
+    '[{"text":"✅ Yes"},{"text":"❌ Not now"}],'
+    '[{"text":"👤 Someone else"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
 SOMEONE_ELSE_NO_MARKUP = (
     '{"keyboard":['
 
-    '[{"text":"Connect me with someone else"}],'
-    '[{"text":"No, thanks"}]'
+    '[{"text":"👤 Someone else"}],'
+    '[{"text":"❌ No, thanks"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
@@ -121,35 +121,42 @@ YES_NO_MARKUP = (
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
-YES_CONNECT_HOW_DOES_IT_WORK_NO_THANKS_MARKUP = (
+YES_CONNECT_HOW_DOES_IT_WORK_MARKUP = (
     '{"keyboard":['
 
-    '[{"text":"Yes, connect me"}],'
-    '[{"text":"How does it work?"}],'
-    '[{"text":"No, thanks"}]'
+    '[{"text":"✅ Yes, connect me"}],'
+    '[{"text":"💡 How does it work?"}]'
+
+    '],"resize_keyboard":true,"one_time_keyboard":true}'
+)
+YES_CONNECT_WHAT_TO_TALK_ABOUT_MARKUP = (
+    '{"keyboard":['
+
+    '[{"text":"✅ Yes, connect me"}],'
+    '[{"text":"🙊 Chit-chat tips"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
 YES_CONNECT_NO_THANKS_MARKUP = (
     '{"keyboard":['
 
-    '[{"text":"Yes, connect me"}],'
-    '[{"text":"No, thanks"}]'
+    '[{"text":"✅ Ok, connect me"}],'
+    '[{"text":"❌ No, thanks"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
 SHARE_MY_CONTACT_CALL_ANOTHER_PERSON_MARKUP = (
     '{"keyboard":['
 
-    '[{"text":"Share my contact info"}],'
-    '[{"text":"Call another person"}]'
+    '[{"text":"🤵 Share my username"}],'
+    '[{"text":"♻️ Call another person"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
 CALL_ANOTHER_PERSON_MARKUP = (
     '{"keyboard":['
 
-    '[{"text":"Call another person"}]'
+    '[{"text":"♻️ Call another person"}]'
 
     '],"resize_keyboard":true,"one_time_keyboard":true}'
 )
@@ -369,16 +376,43 @@ class ActionOfferChitchat(BaseSwiperAction):
         latest_intent = tracker.get_intent_of_latest_message()
 
         if latest_intent == 'help':
-            dispatcher.utter_message(json_message={  # TODO oleksandr: rewrite this text ?
-                'text': 'I can arrange video chitchat with another human for you 🎥 🗣 ☎️\n'
-                        '\n'
-                        'Here is how it works:\n'
-                        '\n'
-                        '• I find someone who also wants to chitchat.\n'
-                        '• I confirm with you and them that you are both ready.\n'
-                        '• I send both of you a video chat link.\n'
-                        '\n'
-                        '<b>Would you like to give it a try?</b>',
+            dispatcher.utter_message(json_message={
+                'text': "Here is how it works:\n"
+                        "\n"
+                        "• You let me know that you want to connect with someone.\n"
+                        "• On your behalf I invite other users to join a video call with you.\n"
+                        "• In the invitation they see your first name and your profile picture (unless you have "
+                        "chosen not to show your profile picture to everyone, which is controlled in Telegram "
+                        "settings).\n"
+                        "• Someone eventually accepts an invitation to have a video call with you.\n"
+                        "• At that point you receive a cross invitation with the first name and the profile picture "
+                        "of the person that expressed a desire to talk.\n"
+                        "• You confirm that you are ready.\n"
+                        "• I send both of you a link to a video call (video calls are powered by daily.co "
+                        "and are limited to 20 minutes).\n",
+
+                'parse_mode': 'html',
+                'reply_markup': YES_CONNECT_WHAT_TO_TALK_ABOUT_MARKUP,
+            })
+
+        elif latest_intent == 'instructions':
+            dispatcher.utter_message(json_message={
+                'text': "Here is a chit-chat \"algorithm\" for you (this is just to give you an idea, your actual "
+                        "conversation may have a completely different structure and touch completely different "
+                        "topics):\n"
+                        "\n"
+                        "• When a call starts say hello and ask how is your chit-chat partner doing (this is just "
+                        "simple courtesy).\n"
+                        "• Ask them what do they do for living. Don't forget to listen to the answer 🙂\n"
+                        "• Try to be curious and ask more questions about their work.\n"
+                        "• Ask them what they like about their job the most, what inspires them.\n"
+                        "• Don't forget to tell them what it is that you do for living too.\n"
+                        "• In general, try to find common interests.\n"
+                        "• If you want, you can also ask them what are their interests outside of work (as well as "
+                        "tell them about your interests).\n"
+                        "\n"
+                        "If you decide that you want to stay in touch with your chit-chat partner, you will have an "
+                        "option to share your Telegram username with them after you or your partner stops the call.",
 
                 'parse_mode': 'html',
                 'reply_markup': YES_CONNECT_NO_THANKS_MARKUP,
@@ -402,7 +436,7 @@ class ActionOfferChitchat(BaseSwiperAction):
                         '<b>Would you like to have a video call with a random person?</b>',
 
                 'parse_mode': 'html',
-                'reply_markup': YES_CONNECT_HOW_DOES_IT_WORK_NO_THANKS_MARKUP,
+                'reply_markup': YES_CONNECT_HOW_DOES_IT_WORK_MARKUP,
             })
 
     # noinspection PyMethodMayBeStatic
@@ -413,7 +447,7 @@ class ActionOfferChitchat(BaseSwiperAction):
                     f"<b>Would you like to have a video call with a random person?</b>",
 
             'parse_mode': 'html',
-            'reply_markup': YES_CONNECT_HOW_DOES_IT_WORK_NO_THANKS_MARKUP,
+            'reply_markup': YES_CONNECT_HOW_DOES_IT_WORK_MARKUP,
         })
 
     async def swipy_run(
@@ -541,7 +575,7 @@ class ActionShareContact(BaseSwiperAction):
                 partner_display_name = present_partner_name(partner.get_first_name(), 'your last chit-chat partner')
                 dispatcher.utter_message(
                     json_message={
-                        'text': f"Your Telegram contact info has been shared with {partner_display_name}.",
+                        'text': f"Your Telegram username has been shared with {partner_display_name}.",
 
                         'parse_mode': 'html',
                         'reply_markup': CALL_ANOTHER_PERSON_MARKUP,
@@ -900,7 +934,7 @@ class ActionAskToJoin(BaseSwiperAction):
             current_user.save()
 
             utter_text = (
-                f"Hey! {presented_partner} is looking to chitchat 🗣\n"
+                f"Hey! {presented_partner} is looking to chit-chat 🗣\n"
                 f"\n"
                 f"<b>Would you like to join a video call?</b> 🎥 ☎️"
             )
@@ -911,7 +945,7 @@ class ActionAskToJoin(BaseSwiperAction):
             current_user.save()
 
             utter_text = (
-                f"Hey! {presented_partner} is willing to chitchat with 👉 you 👈\n"
+                f"Hey! {presented_partner} is willing to chit-chat with 👉 you 👈\n"
                 f"\n"
                 f"<b>Are you ready for a video call?</b> 🎥 ☎️"
             )
@@ -1250,11 +1284,7 @@ class ActionRejectInvitation(BaseSwiperAction):
             # noinspection PyUnresolvedReferences
             current_user.reject_invitation()
 
-            dispatcher.utter_message(json_message={
-                'text': UTTER_INVITATION_DECLINED,
-                'parse_mode': 'html',
-                'reply_markup': RESTART_COMMAND_MARKUP,
-            })
+            dispatcher.utter_message(response=UTTER_OK_REJECTED_TEMPLATE)
 
         current_user.save()
 
@@ -1302,11 +1332,7 @@ class ActionCancelAcceptedInvitation(BaseSwiperAction):
             current_user.become_ok_to_chitchat()
         current_user.save()
 
-        dispatcher.utter_message(json_message={
-            'text': UTTER_INVITATION_DECLINED,
-            'parse_mode': 'html',
-            'reply_markup': RESTART_COMMAND_MARKUP,
-        })
+        dispatcher.utter_message(response=UTTER_OK_CANCELED_TEMPLATE)
 
         return [
             SlotSet(
@@ -1415,6 +1441,37 @@ class ActionTakeAShortBreak(BaseSwiperAction):
                 value=SwiperActionResult.SUCCESS,
             ),
         ]
+
+
+class ActionMakeEveryoneAvailable(Action):  # TODO oleksandr: DO NOT SHIP IT TO PROD !!!!!!!!!!!!!!!!!!!!!!!!!
+    def name(self) -> Text:
+        return 'action_make_everyone_available'
+
+    async def run(
+            self, dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any],
+    ) -> List[Dict[Text, Any]]:
+        from actions.aws_resources import user_state_machine_table
+
+        counter = 0
+        for item in user_state_machine_table.scan()['Items']:
+            user_state_machine_table.update_item(
+                Key={'user_id': item['user_id']},
+                UpdateExpression='SET #state=:state REMOVE #roomed, #rejected, #seen',  # , #room_name',
+                ExpressionAttributeNames={
+                    # '#room_name': 'latest_room_name',
+                    '#roomed': 'roomed_partner_ids',
+                    '#rejected': 'rejected_partner_ids',
+                    '#seen': 'seen_partner_ids',
+                    '#state': 'state',
+                },
+                ExpressionAttributeValues={':state': UserState.OK_TO_CHITCHAT},
+            )
+            counter += 1
+
+        dispatcher.utter_message(text=f"DONE FOR {counter} ITEMS")
+        return []
 
 
 def does_invitation_go_right_before(tracker: Tracker, current_user: UserStateMachine):

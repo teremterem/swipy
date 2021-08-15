@@ -25,6 +25,7 @@ sudo yum install git -y
 
 git clone git@github.com:teremterem/swipy.git
 ```
+https://serverfault.com/a/253314
 ```
 # https://gist.github.com/npearce/6f3c7826c7499587f00957fee62f8ee9
 

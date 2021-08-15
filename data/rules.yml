@@ -6,6 +6,7 @@ rules:
     - intent: start
     - intent: greet
     - intent: help
+    - intent: instructions
     - intent: out_of_scope
   - action: action_offer_chitchat
 - rule: NLU prediction confidence is low
@@ -25,7 +26,7 @@ rules:
     - intent: deny
     - intent: another_time
     - intent: stop
-  - action: utter_ok_let_me_know
+  - action: utter_ok_rejected
 - rule: bot falls back to offering chitchat and the user agrees
   steps:
   - action: action_default_fallback
@@ -39,7 +40,7 @@ rules:
     - intent: deny
     - intent: another_time
     - intent: stop
-  - action: utter_ok_let_me_know
+  - action: utter_ok_rejected
 - rule: bot was unable to find a partner, offers to try searching again and the user agrees
   condition:
   - slot_was_set:
@@ -161,7 +162,7 @@ rules:
     - intent: deny
     - intent: another_time
     - intent: stop
-  - action: utter_ok_let_me_know
+  - action: utter_ok_rejected
 - rule: partner became unavailable and the user refused to connect with someone else
   steps:
   - action: action_expire_partner_confirmation
@@ -169,7 +170,7 @@ rules:
     - intent: deny
     - intent: another_time
     - intent: stop
-  - action: utter_ok_let_me_know
+  - action: utter_ok_rejected
 
 - rule: bot starts looking for a partner and the user confirms that they are waiting
   condition:
@@ -188,7 +189,7 @@ rules:
   steps:
   - action: action_find_partner
   - intent: stop
-  - action: utter_ok_let_me_know
+  - action: utter_ok_canceled
   - action: action_stop_partner_search
 - rule: user confirms that they are waiting for partner to confirm readiness too
   condition:
@@ -272,3 +273,8 @@ rules:
 - rule: action_listen after action_stop_partner_search
   steps:
   - action: action_stop_partner_search
+
+- rule: make everyone available
+  steps:
+  - intent: rrrrrr
+  - action: action_make_everyone_available
