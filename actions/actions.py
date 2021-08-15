@@ -388,10 +388,7 @@ class ActionOfferChitchat(BaseSwiperAction):
                         "of the person that expressed a desire to talk.\n"
                         "• You confirm that you are ready.\n"
                         "• I send both of you a link to a video call (video calls are powered by daily.co "
-                        "and are limited to 20 minutes).\n"
-                        "\n"
-                        "If you decide that you want to stay in touch with your chit-chat partner, you will have an "
-                        "option to share your Telegram username with them after you or your partner stops the call.",
+                        "and are limited to 20 minutes).\n",
 
                 'parse_mode': 'html',
                 'reply_markup': YES_CONNECT_WHAT_TO_TALK_ABOUT_MARKUP,
@@ -399,11 +396,19 @@ class ActionOfferChitchat(BaseSwiperAction):
 
         elif latest_intent == 'instructions':
             dispatcher.utter_message(json_message={
-                'text': "Here are some chit-chat tips:\n"
+                'text': "Here is a chit-chat \"algorithm\" for you (this is just to give you an idea, your actual "
+                        "conversation may have a completely different structure and touch completely different "
+                        "topics):\n"
                         "\n"
-                        "• One.\n"
-                        "• Two.\n"
-                        "• Three.\n"
+                        "• When a call starts say hello and ask how is your chit-chat partner doing (this is just "
+                        "simple courtesy).\n"
+                        "• Ask them what do they do for living. Don't forget to listen to the answer 🙂\n"
+                        "• Try to be curious and ask more questions about their work.\n"
+                        "• Ask them what they like about their job the most, what inspires them.\n"
+                        "• Don't forget to tell them what it is that you do for living too.\n"
+                        "• In general, try to find common interests.\n"
+                        "• If you want, you can also ask them what are their interests outside of work (as well as "
+                        "tell them about your interests).\n"
                         "\n"
                         "If you decide that you want to stay in touch with your chit-chat partner, you will have an "
                         "option to share your Telegram username with them after you or your partner stops the call.",
